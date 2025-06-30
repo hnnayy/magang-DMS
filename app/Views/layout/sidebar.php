@@ -1,6 +1,6 @@
 <div class="sidebar">
         <ul class="menu">
-            <li><a href="<?= base_url('dashboard') ?>" class="<?= (uri_string() == 'dashboard') ? 'active' : '' ?>"><i class="fi fi-rr-dashboard"></i>Dashboard</a></li>
+            <li><a href="<?= base_url('/') ?>" class="<?= (uri_string() == 'dashboard') ? 'active' : '' ?>"><i class="fi fi-rr-dashboard"></i>Dashboard</a></li>
 
             <li class="has-submenu">
                 <div class="submenu-toggle" onclick="toggleSubmenu(this)">
@@ -29,7 +29,20 @@
             </li>
 
             <li><a href="<?= base_url('document/list') ?>" class="<?= (uri_string() == 'document/list') ? 'active' : '' ?>"><i class="fi fi-rr-list"></i>Daftar Dokumen</a></li>
-            <li><a href="<?= base_url('master-data') ?>" class="<?= (uri_string() == 'master-data') ? 'active' : '' ?>"><i class="fi fi-rr-database"></i>Data Master</a></li>
+
+            <li class="has-submenu <?= (strpos(uri_string(), 'document') !== false) ? 'open' : '' ?>">
+                <div class="submenu-toggle" onclick="toggleSubmenu(this)">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fi fi-rr-document"></i><span>Master Data</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-down arrow"></i>
+                </div>
+                <ul class="submenu">
+                    <li><a href="<?= base_url('document/create') ?>"><i class="fi fi-rr-add-document"></i>Tambah Unit</a></li>
+                    <li><a href="<?= base_url('document/submissions') ?>"><i class="fi fi-rr-clipboard-list"></i>Lihat Unit</a></li>
+                </ul>
+            </li>
+
             <li><a href="<?= base_url('document/approval') ?>" class="<?= (uri_string() == 'document/approval') ? 'active' : '' ?>"><i class="fi fi-rr-check-circle"></i>Persetujuan Dokumen</a></li>
         </ul>
 
