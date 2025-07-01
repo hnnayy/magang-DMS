@@ -2,10 +2,10 @@
 
 namespace App\Controllers;
 
-class Home extends BaseController
+class DaftarDokumen extends BaseController
 {
     public function index(): string
     {
-        return view('Dashboard');
+        return view('daftar-dokumen');
     }
 }
