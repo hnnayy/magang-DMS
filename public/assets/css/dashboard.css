@@ -145,7 +145,6 @@ body {
     top: 70px;
     height: calc(100vh - 70px);
     box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-    overflow-y: auto;
     padding-top: 20px;
 }
 
@@ -280,7 +279,7 @@ body {
     margin-left: 260px;
     margin-top: 70px;
     padding: 30px;
-    min-height: calc(100vh - 70px);
+    min-height: auto;
 }
 
 .welcome-box {

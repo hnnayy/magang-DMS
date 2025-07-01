@@ -6,6 +6,6 @@ class Home extends BaseController
 {
     public function index(): string
     {
-        return view('pengajuan');
+        return view('CreateUser/daftar-users');
     }
 }
