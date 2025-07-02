@@ -45,3 +45,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize any additional functionality here
     console.log('Dashboard loaded successfully');
 });
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    sidebar.classList.toggle('active');
+
+    if (sidebar.classList.contains('active')) {
+        overlay.style.display = 'block';
+    } else {
+        overlay.style.display = 'none';
+    }
+    }
