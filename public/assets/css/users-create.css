@@ -2,7 +2,7 @@
     max-width: 1500px;
     max-height: 60%;
     margin: 10px auto; 
-    background: white;
+    background: rgb(255, 255, 255);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -19,7 +19,7 @@
 }
 
 .illustration-section {
-    background: #e53e3e;
+    background: #c1c1c1;
     display: flex;
     align-items: center;
     justify-content: center;
