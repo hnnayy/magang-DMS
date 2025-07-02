@@ -34,13 +34,20 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" name="password" class="form-input" placeholder="Tulis Password disini..." required>
-            </div>
-
-            <div class="form-group">
                 <label class="form-label" for="fulllname">Full Name</label>
                 <input type="email" id="email" name="email" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
+            </div>
+
+        <id="roleForm">
+            <div class="form-group">
+                <label class="form-label" for="role">Role</label>
+                <select id="fakultas" name="fakultas" class="form-select" required>
+                    <option value="" disabled selected hidden>Pilih Role...</option>
+                    <option value="admin">Admin</option>
+                    <option value="kepalabagian">Kepala Bagian</option>
+                    <option value="kepalaunit">Kepala Unit</option>
+                    <option value="staff">Staff</option>
+                </select>
             </div>
 
         <id="statusForm">
@@ -56,16 +63,6 @@
                     <input class="form-check-input" type="radio" name="status" id="inactive" value="inactive" required>
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="jabatan">Jabatan</label>
-                <input type="text" id="jabatan" name="jabatan" class="form-input" placeholder="Tulis jabatan disini..." required>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="institusi">Institusi</label>
-                <input type="text" id="institusi" name="institusi" class="form-input" placeholder="Tulis institusi disini..." required>
             </div>
 
             <button type="submit" class="submit-btn">Submit</button>
