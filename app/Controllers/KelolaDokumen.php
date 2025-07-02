@@ -6,7 +6,7 @@ class KelolaDokumen extends BaseController
 {
     public function add()
     {
-        return view('KelolaDokumen/add-dokumen');
+        return view('KelolaDokumen/dokumen-create');
     }
 
     public function pengajuan()

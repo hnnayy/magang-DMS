@@ -7,9 +7,6 @@ use CodeIgniter\Router\RouteCollection;
  */
 $routes->get('/', 'Home::index');
 
-// Dashboard
-$routes->get('dashboard', 'Dashboard::index');
-
 // CreateUser
 $routes->get('create-user', 'CreateUser::index');
 $routes->get('create-user/list', 'CreateUser::list');
