@@ -74,8 +74,8 @@
                     <td>
                         <a href="#" class="text-primary me-2" title="Delete"><i class="bi bi-trash"></i></a>
                         <a href="#" class="text-primary me-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                        <a href="#" class="text-primary me-2" title="View"><i class="bi bi-eye"></i></a>
-                        <a href="#" class="text-primary" title="Close"><i class="bi bi-x-lg"></i></a>
+                        <a href="#" class="text-primary me-2" title="Approve"><i class="bi bi-check-lg"></i></a>
+                        <a href="#" class="text-primary" title="Not Approve"><i class="bi bi-x-lg"></i></a>
                     </td>
                 </tr>
                 <?php endfor; ?>

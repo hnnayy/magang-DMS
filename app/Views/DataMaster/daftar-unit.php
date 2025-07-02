@@ -57,7 +57,7 @@
                     <td><?= $data[1] ?></td>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                            <a href="#" class="text-primary" title="Download"><i class="bi bi-download"></i></a>
+                            <a href="#" class="text-primary" title="Delete"><i class="bi bi-trash"></i></a>
                             <a href="#" class="text-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
                             <a href="#" class="text-success" title="Approve"><i class="bi bi-check-lg"></i></a>
                         </div>
