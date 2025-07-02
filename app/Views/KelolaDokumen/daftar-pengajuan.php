@@ -3,7 +3,7 @@
 
 <div class="px-4 py-3 w-100">
     <h4>Document Management</h4>
-    <p>Lihat Dokumen</p>
+    <p>Daftar Pengajuan</p>
 
     <!-- Export Buttons and Search Section in one row -->
     <div class="row mb-3 align-items-center">
