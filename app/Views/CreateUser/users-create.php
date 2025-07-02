@@ -8,9 +8,9 @@
 
         <id="createUserForm">
             <div class="form-group">
-                <label class="form-label" for="fakultas">Faculty</label>
+                <label class="form-label" for="fakultas">Fakultas</label>
                 <select id="fakultas" name="fakultas" class="form-select" required onchange="updateProdi()">
-                    <option value="" disabled selected hidden>Please Select Your Faculty...</option>
+                    <option value="" disabled selected hidden>Pilih Fakultas...</option>
                     <option value="FTE">Fakultas Teknik Elektro (FTE)</option>
                     <option value="FRI">Fakultas Rekayasa Industri (FRI)</option>
                     <option value="FIF">Fakultas Informatika (FIF)</option>
@@ -22,9 +22,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="prodi">Program Study</label>
+                <label class="form-label" for="prodi">Program Studi</label>
                 <select id="prodi" name="prodi" class="form-select" required>
-                    <option value="" disabled selected hidden>Please Select Program Study...</option>
+                    <option value="" disabled selected hidden>Pilih Program Studi...</option>
                 </select>
             </div>
 
