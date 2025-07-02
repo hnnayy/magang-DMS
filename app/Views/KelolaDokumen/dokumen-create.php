@@ -81,7 +81,7 @@
     </div>
 
     <div class="illustration-section">
-        <img src="<?= base_url('assets/images/profil/profil.jpg') ?>" alt="User Illustration" class="illustration-img">
+        <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="User Illustration" class="illustration-img">
     </div>
 </div>
 
