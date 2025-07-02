@@ -38,26 +38,26 @@
                     <th>Directorate</th>
                     <th>Unit</th>
                     <th>Fullname</th>
-                    <th>Jabatan</th>
-                    <th>Institusi</th>
-                    <th>Tipe</th>
+                    <th>Role</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
+
             <tbody id="tableBody">
                 <?php 
                 $sampleData = [
-                    ['20443847284', 'Teknik Elektro', 'S3 Teknik Elektro', 'Saputra Maymuna', 'UGIDS5', 'Telkom University', 'Eksternal'],
-                    ['20443847285', 'Teknik Informatika', 'S1 Teknik Informatika', 'Ahmad Rizky', 'UGIDS3', 'Telkom University', 'Internal'],
-                    ['20443847286', 'Manajemen', 'S2 Manajemen', 'Siti Nurhaliza', 'UGIDS4', 'Telkom University', 'Eksternal'],
-                    ['20443847287', 'Teknik Industri', 'S1 Teknik Industri', 'Budi Santoso', 'UGIDS2', 'Telkom University', 'Internal'],
-                    ['20443847288', 'Komunikasi', 'S1 Komunikasi', 'Dewi Sartika', 'UGIDS3', 'Telkom University', 'Eksternal'],
-                    ['20443847289', 'Teknik Elektro', 'S2 Teknik Elektro', 'Rudi Hermawan', 'UGIDS4', 'Telkom University', 'Internal'],
-                    ['20443847290', 'Desain Komunikasi Visual', 'S1 DKV', 'Maya Sari', 'UGIDS2', 'Telkom University', 'Eksternal'],
-                    ['20443847291', 'Sistem Informasi', 'S1 Sistem Informasi', 'Andi Pratama', 'UGIDS3', 'Telkom University', 'Internal'],
-                    ['20443847292', 'Teknik Komputer', 'S1 Teknik Komputer', 'Lina Marlina', 'UGIDS4', 'Telkom University', 'Eksternal'],
-                    ['20443847293', 'Akuntansi', 'S1 Akuntansi', 'Fahmi Abdullah', 'UGIDS2', 'Telkom University', 'Internal']
+                    ['20443847284', 'Teknik Elektro', 'S3 Teknik Elektro', 'Saputra Maymuna', 'Staff'],
+                    ['20443847285', 'Teknik Informatika', 'S1 Teknik Informatika', 'Ahmad Rizky', 'Admin'],
+                    ['20443847286', 'Manajemen', 'S2 Manajemen', 'Siti Nurhaliza', 'Kepala Bagian'],
+                    ['20443847287', 'Teknik Industri', 'S1 Teknik Industri', 'Budi Santoso', 'Staff'],
+                    ['20443847288', 'Komunikasi', 'S1 Komunikasi', 'Dewi Sartika', 'Staff'],
+                    ['20443847289', 'Teknik Elektro', 'S2 Teknik Elektro', 'Rudi Hermawan', 'Staff'],
+                    ['20443847290', 'Desain Komunikasi Visual', 'S1 DKV', 'Maya Sari', 'Kepala Unit'],
+                    ['20443847291', 'Sistem Informasi', 'S1 Sistem Informasi', 'Andi Pratama', 'Admin'],
+                    ['20443847292', 'Teknik Komputer', 'S1 Teknik Komputer', 'Lina Marlina', 'Kepala Unit'],
+                    ['20443847293', 'Akuntansi', 'S1 Akuntansi', 'Fahmi Abdullah', 'Admin']
                 ];
+
                 
                 for ($i = 0; $i < count($sampleData); $i++): 
                     $data = $sampleData[$i];
@@ -69,8 +69,6 @@
                     <td><?= $data[2] ?></td>
                     <td><?= $data[3] ?></td>
                     <td><?= $data[4] ?></td>
-                    <td><?= $data[5] ?></td>
-                    <td><?= $data[6] ?></td>
                     <td>
                         <a href="#" class="text-primary me-2" title="Delete"><i class="bi bi-trash"></i></a>
                         <a href="#" class="text-primary me-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
