@@ -2,12 +2,19 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Create User</h4>
-    <p>Lihat User</p>
+    <h4>Lihat User</h4>
+    <hr>
 
-    <!-- Search Section -->
-    <div class="row mb-3">
+    <!-- Export Buttons and Search Section in one row -->
+    <div class="row mb-3 align-items-center">
         <div class="col-md-6">
+            <div class="export-buttons">
+                <button class="btn btn-purple border me-2">Copy</button>
+                <button class="btn btn-purple border me-2">CSV</button>
+                <button class="btn btn-purple border me-2">Excel</button>
+                <button class="btn btn-purple border me-2">PDF</button>
+                <button class="btn btn-purple border">Print</button>
+            </div>
         </div>
         <div class="col-md-6">
             <div class="input-group search-container">
@@ -19,14 +26,6 @@
         </div>
     </div>
 
-    <!-- Export Buttons -->
-    <div class="mb-2">
-        <button class="btn btn-purple border">Copy</button>
-        <button class="btn btn-purple border">CSV</button>
-        <button class="btn btn-purple border">Excel</button>
-        <button class="btn btn-purple border">PDF</button>
-        <button class="btn btn-purple border">Print</button>
-    </div>
 
     <!-- Table Section -->
     <div class="table-responsive shadow-sm rounded bg-white p-3">
