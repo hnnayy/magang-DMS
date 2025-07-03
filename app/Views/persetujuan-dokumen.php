@@ -3,7 +3,6 @@
 
 <div class="px-4 py-3 w-100">
     <h4>Persetujuan Dokumen</h4>
-    <p> </p>
 
     <!-- Export Buttons and Search Section in one row -->
     <div class="row mb-3 align-items-center">
@@ -36,7 +35,8 @@
                     <th style="width: 15%;">Bagian/Unit/ Program Studi</th>
                     <th style="width: 20%;">Nama Dokumen</th>
                     <th class="text-center" style="width: 8%;">Revisi</th>
-                    <th style="width: 15%;">Jenis Dokumen</th>
+                    <th style="width: 12%;">Jenis Dokumen</th>
+                    <th style="width: 25%;">Kode dan Nama Dokumen</th>
                     <th style="width: 12%;">File Dokumen</th>
                     <th style="width: 8%;">Keterangan</th>
                     <th class="text-center" style="width: 5%;">Aksi</th>
@@ -45,17 +45,13 @@
             <tbody id="tableBody">
                 <?php 
                 $sampleData = [
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang']
+                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur',  'IK', 'Perubahan Data', 'file.pdf', 'Keterangan 1'],
+                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur',  'IK', 'Revisi SOP', 'file.pdf', 'Keterangan 2'],
+                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'IK', 'Validasi Data', 'file.pdf', 'Keterangan 3'],
+                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur',  'IK', 'Formulir Baru', 'file.pdf', 'Keterangan 4'],
                 ];
                 
-                for ($i = 0; $i < count($sampleData); $i++): 
-                    $data = $sampleData[$i];
+                foreach ($sampleData as $i => $data):
                 ?>
                 <tr>
                     <td class="text-center"><?= $i + 1 ?></td>
@@ -64,20 +60,32 @@
                     <td><?= $data[2] ?></td>
                     <td class="text-center"><?= $data[3] ?></td>
                     <td><?= $data[4] ?></td>
-                    <td><?= $data[5] ?></td>
-                    <td><?= $data[6] ?></td>
+                    <td><?= $data[5] . ' - ' . $data[6] ?></td>
+                    <td><?= $data[7] ?></td>
+                    <td><?= $data[8] ?></td>
                     <td>
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                            <a href="#" class="text-primary" title="delete"><i class="bi bi-trash"></i></a>
-                            <a href="#" class="text-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                            <a href="#" class="text-success" title="Approve"><i class="bi bi-check-lg"></i></a>
+                            <!-- Tombol Delete -->
+                            <a href="#" class="text-danger" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </a>
+
+                            <!-- Tombol Edit (sesuai route) -->
+                            <a href="<?= base_url('dokumen/edit') ?>" class="text-primary" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <!-- Tombol Approve -->
+                            <a href="#" class="text-success" title="Approve">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>
-                <?php endfor; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
-        
+
         <!-- No Results Message -->
         <div id="noResults" class="text-center py-4" style="display: none;">
             <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
@@ -88,14 +96,12 @@
 
     <!-- Pagination -->
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <div id="entriesInfo">Showing <span id="entriesStart">1</span> to <span id="entriesEnd">7</span> of <span id="entriesTotal">7</span> entries</div>
+        <div id="entriesInfo">Showing <span id="entriesStart">1</span> to <span id="entriesEnd">4</span> of <span id="entriesTotal">4</span> entries</div>
         <nav>
             <ul class="pagination mb-0">
                 <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                <?php for ($p = 1; $p <= 3; $p++): ?>
-                    <li class="page-item <?= $p == 1 ? 'active' : '' ?>">
-                        <a class="page-link" href="#"><?= $p ?></a>
-                    </li>
+                <?php for ($p = 1; $p <= 1; $p++): ?>
+                    <li class="page-item active"><a class="page-link" href="#"><?= $p ?></a></li>
                 <?php endfor; ?>
                 <li class="page-item"><a class="page-link" href="#">Next</a></li>
             </ul>
@@ -103,92 +109,5 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const tableBody = document.getElementById('tableBody');
-    const noResults = document.getElementById('noResults');
-    const entriesStart = document.getElementById('entriesStart');
-    const entriesEnd = document.getElementById('entriesEnd');
-    const entriesTotal = document.getElementById('entriesTotal');
-
-    let allRows = Array.from(tableBody.querySelectorAll('tr'));
-    let filteredRows = [...allRows];
-
-    function performSearch() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-
-        filteredRows = allRows.filter(row => {
-            const cells = row.querySelectorAll('td');
-            const fakultas = cells[1].textContent.toLowerCase();
-            const bagian = cells[2].textContent.toLowerCase();
-            const namaDokumen = cells[3].textContent.toLowerCase();
-            const revisi = cells[4].textContent.toLowerCase();
-            const jenisDokumen = cells[5].textContent.toLowerCase();
-            const fileDokumen = cells[6].textContent.toLowerCase();
-            const keterangan = cells[7].textContent.toLowerCase();
-
-            // Search filter
-            return searchTerm === '' || 
-                fakultas.includes(searchTerm) ||
-                bagian.includes(searchTerm) ||
-                namaDokumen.includes(searchTerm) ||
-                revisi.includes(searchTerm) ||
-                jenisDokumen.includes(searchTerm) ||
-                fileDokumen.includes(searchTerm) ||
-                keterangan.includes(searchTerm);
-        });
-
-        displayResults();
-    }
-
-    function displayResults() {
-        // Hide all rows first
-        allRows.forEach(row => row.style.display = 'none');
-
-        if (filteredRows.length === 0) {
-            noResults.style.display = 'block';
-            tableBody.parentElement.style.display = 'none';
-        } else {
-            noResults.style.display = 'none';
-            tableBody.parentElement.style.display = 'table';
-            
-            // Show filtered rows and update row numbers
-            filteredRows.forEach((row, index) => {
-                row.style.display = '';
-                row.cells[0].textContent = index + 1;
-            });
-        }
-
-        // Update entries info
-        const total = filteredRows.length;
-        entriesStart.textContent = total > 0 ? '1' : '0';
-        entriesEnd.textContent = total.toString();
-        entriesTotal.textContent = total.toString();
-    }
-
-    function clearSearch() {
-        searchInput.value = '';
-        filteredRows = [...allRows];
-        displayResults();
-        searchInput.focus();
-    }
-
-    // Event listeners
-    searchInput.addEventListener('input', performSearch);
-    searchBtn.addEventListener('click', performSearch);
-
-    // Enter key support
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
-
-    // Initialize
-    displayResults();
-});
-</script>
 
 <?= $this->endSection() ?>

@@ -18,4 +18,6 @@ class CreateUser extends BaseController
     {
         return view('CreateUser/users-create');
     }
+
+    
 }

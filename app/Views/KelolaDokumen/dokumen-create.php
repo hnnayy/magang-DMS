@@ -28,9 +28,22 @@
                 <input type="text" id="revisi-dokumen" name="revisi-dokumen" class="form-input" placeholder="Tulis Revisi Dokumen disini..." required>
             </div>
 
+            <!-- ✅ Dropdown Jenis Dokumen -->
             <div class="form-group">
                 <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
-                <input type="text" id="jenis-dokumen" name="jenis-dokumen" class="form-input" placeholder="Tulis Jenis Dokumen disini..." required>
+                <select id="jenis-dokumen" name="jenis-dokumen" class="form-input" onchange="updateKodeOptions()" required>
+                    <option value="">-- Pilih Jenis --</option>
+                    <option value="internal">Internal</option>
+                    <option value="eksternal">Eksternal</option>
+                </select>
+            </div>
+
+            <!-- ✅ Dropdown Kode + Nama Dokumen -->
+            <div class="form-group">
+                <label class="form-label" for="kode-dokumen">Kode & Nama Dokumen</label>
+                <select id="kode-dokumen" name="kode-dokumen" class="form-input" required>
+                    <option value="">-- Pilih Dokumen --</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -84,5 +97,6 @@
         <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="User Illustration" class="illustration-img">
     </div>
 </div>
+
 
 <?= $this->endSection() ?>

@@ -1,193 +1,246 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<!-- Bootstrap CSS & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
 <div class="px-4 py-3 w-100">
-    <h4>Document Management</h4>
-    <p>Daftar Pengajuan</p>
+    <h4>Daftar Pengajuan</h4>
 
-    <!-- Export Buttons and Search Section in one row -->
-    <div class="row mb-3 align-items-center">
-        <div class="col-md-6">
-            <div class="export-buttons">
-                <button class="btn btn-purple border me-2">Copy</button>
-                <button class="btn btn-purple border me-2">CSV</button>
-                <button class="btn btn-purple border me-2">Excel</button>
-                <button class="btn btn-purple border me-2">PDF</button>
-                <button class="btn btn-purple border">Print</button>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="input-group search-container">
-                <input type="text" class="form-control search-input" id="searchInput" placeholder="Search">
-                <button class="btn search-btn" type="button" id="searchBtn">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </div>
+    <!-- Flash Messages -->
+    <?php if (session()->getFlashdata('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= session()->getFlashdata('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    <?php endif; ?>
 
-    <!-- Table Section -->
     <div class="table-responsive shadow-sm rounded bg-white p-3">
-        <table class="table table-bordered table-hover align-middle" id="documentTable">
+        <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="text-center" style="width: 5%;">No</th>
-                    <th style="width: 12%;">Fakultas/ Direktorat</th>
-                    <th style="width: 15%;">Bagian/Unit/ Program Studi</th>
-                    <th style="width: 20%;">Nama Dokumen</th>
-                    <th class="text-center" style="width: 8%;">Revisi</th>
-                    <th style="width: 15%;">Jenis Dokumen</th>
-                    <th style="width: 12%;">File Dokumen</th>
-                    <th style="width: 8%;">Keterangan</th>
-                    <th class="text-center" style="width: 5%;">Aksi</th>
+                    <th class="text-center">No</th>
+                    <th>Fakultas</th>
+                    <th>Bagian</th>
+                    <th>Nama Dokumen</th>
+                    <th class="text-center">Revisi</th>
+                    <th>Jenis</th>
+                    <th>Kode & Nama</th>
+                    <th>File</th>
+                    <th>Keterangan</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-                <?php 
-                $sampleData = [
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang'],
-                    ['FSAL', 'Yan CeLOE', 'Prosedur perubahan data', '00', 'Intruksi kerja dan prosedur', 'Keterangan Panjang', 'Keterangan Panjang']
-                ];
-                
-                for ($i = 0; $i < count($sampleData); $i++): 
-                    $data = $sampleData[$i];
-                ?>
+            <tbody>
+                <?php foreach ($documents as $i => $doc): ?>
                 <tr>
                     <td class="text-center"><?= $i + 1 ?></td>
-                    <td><?= $data[0] ?></td>
-                    <td><?= $data[1] ?></td>
-                    <td><?= $data[2] ?></td>
-                    <td class="text-center"><?= $data[3] ?></td>
-                    <td><?= $data[4] ?></td>
-                    <td><?= $data[5] ?></td>
-                    <td><?= $data[6] ?></td>
-                    <td>
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <a href="#" class="text-primary" title="delete"><i class="bi bi-trash"></i></a>
-                            <a href="#" class="text-primary" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                            <a href="#" class="text-success" title="Approve"><i class="bi bi-check-lg"></i></a>
+                    <td><?= esc($doc['fakultas']) ?></td>
+                    <td><?= esc($doc['bagian']) ?></td>
+                    <td><?= esc($doc['nama']) ?></td>
+                    <td class="text-center"><?= esc($doc['revisi']) ?></td>
+                    <td><?= esc($doc['jenis']) ?></td>
+                    <td><?= esc($doc['kode_nama']) ?></td>
+                    <td><?= esc($doc['file']) ?></td>
+                    <td><?= esc($doc['keterangan']) ?></td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <!-- Tombol Edit (modal) -->
+                            <a href="#" class="text-primary edit-btn" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#editModal" 
+                               data-id="<?= $doc['id'] ?>"
+                               data-fakultas="<?= esc($doc['fakultas']) ?>"
+                               data-bagian="<?= esc($doc['bagian']) ?>"
+                               data-nama="<?= esc($doc['nama']) ?>"
+                               data-revisi="<?= esc($doc['revisi']) ?>"
+                               data-jenis="<?= esc($doc['jenis']) ?>"
+                               data-kode="<?= esc($doc['kode_nama']) ?>"
+                               data-keterangan="<?= esc($doc['keterangan']) ?>"
+                               title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            <!-- Tombol Approve -->
+                            <a href="#" class="text-success approve-btn" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#approveModal"
+                               data-id="<?= $doc['id'] ?>"
+                               title="Approve">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+
+                            <!-- Tombol Delete -->
+                            <a href="<?= base_url('dokumen/delete/' . $doc['id']) ?>" 
+                               class="text-danger" 
+                               title="Hapus" 
+                               onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>
-                <?php endfor; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
-        
-        <!-- No Results Message -->
-        <div id="noResults" class="text-center py-4" style="display: none;">
-            <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
-            <h5 class="mt-3 text-muted">No results found</h5>
-            <p class="text-muted">Try adjusting your search criteria</p>
-        </div>
-    </div>
-
-    <!-- Pagination -->
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <div id="entriesInfo">Showing <span id="entriesStart">1</span> to <span id="entriesEnd">7</span> of <span id="entriesTotal">7</span> entries</div>
-        <nav>
-            <ul class="pagination mb-0">
-                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                <?php for ($p = 1; $p <= 3; $p++): ?>
-                    <li class="page-item <?= $p == 1 ? 'active' : '' ?>">
-                        <a class="page-link" href="#"><?= $p ?></a>
-                    </li>
-                <?php endfor; ?>
-                <li class="page-item"><a class="page-link" href="#">Next</a></li>
-            </ul>
-        </nav>
     </div>
 </div>
 
+<!-- Modal Edit Dokumen -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <form id="editDocumentForm" action="<?= base_url('dokumen/edit') ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="document_id" id="editDocumentId">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Dokumen</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Fakultas/Direktorat</label>
+              <input type="text" class="form-control" name="fakultas" id="editFakultas" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Bagian/Unit</label>
+              <input type="text" class="form-control" name="bagian" id="editBagian" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nama Dokumen</label>
+              <input type="text" class="form-control" name="nama" id="editNama" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Revisi</label>
+              <input type="text" class="form-control" name="revisi" id="editRevisi" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Jenis Dokumen</label>
+              <select class="form-select" name="jenis" id="editJenis" required>
+                <option value="">-- Pilih Jenis --</option>
+                <option value="internal">Internal</option>
+                <option value="eksternal">Eksternal</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Kode & Nama Dokumen</label>
+              <input type="text" class="form-control" name="kode_nama" id="editKode" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Keterangan</label>
+              <textarea class="form-control" name="keterangan" id="editKeterangan" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Unggah File (Opsional)</label>
+              <input type="file" class="form-control" name="file" id="editFile" accept=".pdf,.doc,.docx">
+              <div class="form-text">File yang didukung: PDF, DOC, DOCX. Kosongkan jika tidak ingin mengubah file.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Approve Dokumen -->
+<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <form action="<?= base_url('dokumen/approve') ?>" method="post">
+        <input type="hidden" name="document_id" id="approveDocumentId">
+        <div class="modal-header">
+          <h5 class="modal-title">Konfirmasi Approval</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="remark" class="form-label">Catatan/Remark</label>
+            <textarea 
+                class="form-control" 
+                name="remark" 
+                id="remark" 
+                rows="3" 
+                placeholder="Tulis catatan persetujuan (opsional)..."
+            ></textarea>
+            </div>
+
+            <div class="mb-3">
+            <label for="approved_by" class="form-label">Disetujui Oleh</label>
+            <input 
+                type="text" 
+                class="form-control" 
+                name="approved_by" 
+                id="approved_by" 
+                placeholder="Tulis nama pihak yang menyetujui"
+            >
+            </div>
+
+          <div class="alert alert-info small">
+            <i class="bi bi-info-circle"></i>
+            Setelah disetujui, dokumen akan dipindahkan ke menu <strong>Daftar Dokumen</strong> dan tidak bisa diedit lagi.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg"></i> Setujui
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
-    const tableBody = document.getElementById('tableBody');
-    const noResults = document.getElementById('noResults');
-    const entriesStart = document.getElementById('entriesStart');
-    const entriesEnd = document.getElementById('entriesEnd');
-    const entriesTotal = document.getElementById('entriesTotal');
+    // Handle Edit Button Click
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const fakultas = this.getAttribute('data-fakultas');
+            const bagian = this.getAttribute('data-bagian');
+            const nama = this.getAttribute('data-nama');
+            const revisi = this.getAttribute('data-revisi');
+            const jenis = this.getAttribute('data-jenis');
+            const kode = this.getAttribute('data-kode');
+            const keterangan = this.getAttribute('data-keterangan');
 
-    let allRows = Array.from(tableBody.querySelectorAll('tr'));
-    let filteredRows = [...allRows];
-
-    function performSearch() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-
-        filteredRows = allRows.filter(row => {
-            const cells = row.querySelectorAll('td');
-            const fakultas = cells[1].textContent.toLowerCase();
-            const bagian = cells[2].textContent.toLowerCase();
-            const namaDokumen = cells[3].textContent.toLowerCase();
-            const revisi = cells[4].textContent.toLowerCase();
-            const jenisDokumen = cells[5].textContent.toLowerCase();
-            const fileDokumen = cells[6].textContent.toLowerCase();
-            const keterangan = cells[7].textContent.toLowerCase();
-
-            // Search filter
-            return searchTerm === '' || 
-                fakultas.includes(searchTerm) ||
-                bagian.includes(searchTerm) ||
-                namaDokumen.includes(searchTerm) ||
-                revisi.includes(searchTerm) ||
-                jenisDokumen.includes(searchTerm) ||
-                fileDokumen.includes(searchTerm) ||
-                keterangan.includes(searchTerm);
+            // Populate form fields
+            document.getElementById('editDocumentId').value = id;
+            document.getElementById('editFakultas').value = fakultas;
+            document.getElementById('editBagian').value = bagian;
+            document.getElementById('editNama').value = nama;
+            document.getElementById('editRevisi').value = revisi;
+            document.getElementById('editJenis').value = jenis;
+            document.getElementById('editKode').value = kode;
+            document.getElementById('editKeterangan').value = keterangan;
         });
-
-        displayResults();
-    }
-
-    function displayResults() {
-        // Hide all rows first
-        allRows.forEach(row => row.style.display = 'none');
-
-        if (filteredRows.length === 0) {
-            noResults.style.display = 'block';
-            tableBody.parentElement.style.display = 'none';
-        } else {
-            noResults.style.display = 'none';
-            tableBody.parentElement.style.display = 'table';
-            
-            // Show filtered rows and update row numbers
-            filteredRows.forEach((row, index) => {
-                row.style.display = '';
-                row.cells[0].textContent = index + 1;
-            });
-        }
-
-        // Update entries info
-        const total = filteredRows.length;
-        entriesStart.textContent = total > 0 ? '1' : '0';
-        entriesEnd.textContent = total.toString();
-        entriesTotal.textContent = total.toString();
-    }
-
-    function clearSearch() {
-        searchInput.value = '';
-        filteredRows = [...allRows];
-        displayResults();
-        searchInput.focus();
-    }
-
-    // Event listeners
-    searchInput.addEventListener('input', performSearch);
-    searchBtn.addEventListener('click', performSearch);
-
-    // Enter key support
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
     });
 
-    // Initialize
-    displayResults();
+    // Handle Approve Button Click
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const documentId = this.getAttribute('data-id');
+            document.getElementById('approveDocumentId').value = documentId;
+        });
+    });
+
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
 });
 </script>
 
