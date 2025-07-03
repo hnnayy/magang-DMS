@@ -89,6 +89,93 @@
     </div>
 </div>
 
+<!-- Modal Edit User -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="<?= base_url('user/update') ?>">
+        <input type="hidden" name="id" id="editUserId">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit User</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Employee ID</label>
+              <input type="text" class="form-control" name="employee" id="editEmployee" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fakultas/Direktorat</label>
+              <select class="form-select" name="fakultas" id="editFakultas" onchange="updateProdi('edit')" required>
+                <option value="" disabled selected hidden>Pilih Fakultas...</option>
+                <option value="FTE">Fakultas Teknik Elektro (FTE)</option>
+                <option value="FRI">Fakultas Rekayasa Industri (FRI)</option>
+                <option value="FIF">Fakultas Informatika (FIF)</option>
+                <option value="FEB">Fakultas Ekonomi dan Bisnis (FEB)</option>
+                <option value="FKS">Fakultas Komunikasi dan Ilmu Sosial (FKS)</option>
+                <option value="FIK">Fakultas Industri Kreatif (FIK)</option>
+                <option value="FIT">Fakultas Ilmu Terapan (FIT)</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Bagian/Unit/Program Studi</label>
+              <select class="form-select" name="unit" id="editProdi" required>
+                <option value="" disabled selected hidden>Pilih Bagian ...</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fullname</label>
+              <input type="text" class="form-control" name="fullname" id="editFullname" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="role">Role</label>
+                <select id="fakultas" name="fakultas" class="form-select" required>
+                    <option value="" disabled selected hidden>Pilih Role...</option>
+                    <option value="admin">Admin</option>
+                    <option value="kepalabagian">Kepala Bagian</option>
+                    <option value="kepalaunit">Kepala Unit</option>
+                    <option value="staff">Staff</option>
+                </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Not Approve User -->
+<div class="modal fade" id="notApproveUserModal" tabindex="-1" aria-labelledby="notApproveUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+            <form action="<?= base_url('user/notapprove') ?>" method="post">
+                <input type="hidden" name="id" id="notApproveUserId">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tolak User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                <div class="mb-3">
+                    <label for="remark" class="form-label">Alasan Penolakan</label>
+                    <textarea class="form-control" name="remark" id="notApproveRemark" rows="3" placeholder="Tulis alasan penolakan..."></textarea>
+                </div>
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-circle"></i> User tidak akan ditambahkan ke sistem.
+                </div>
+                </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-x-lg"></i> Tolak</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');

@@ -41,16 +41,16 @@ class KelolaDokumen extends BaseController
     // Dummy data kode dokumen
     private $kodeDokumen = [
         'internal' => [
-            ['kode' => 'IK-001', 'nama' => 'Instruksi Kerja - Perubahan Data'],
-            ['kode' => 'IK-002', 'nama' => 'Instruksi Kerja - Backup Data'],
-            ['kode' => 'SOP-001', 'nama' => 'Standard Operating Procedure - Admin'],
-            ['kode' => 'MAN-001', 'nama' => 'Manual - Penggunaan Sistem'],
+            ['id' => 1, 'kode' => 'IK-001', 'nama' => 'Instruksi Kerja - Perubahan Data'],
+            ['id' => 2, 'kode' => 'IK-002', 'nama' => 'Instruksi Kerja - Backup Data'],
+            ['id' => 3, 'kode' => 'SOP-001', 'nama' => 'Standard Operating Procedure - Admin'],
+            ['id' => 4, 'kode' => 'MAN-001', 'nama' => 'Manual - Penggunaan Sistem'],
         ],
         'eksternal' => [
-            ['kode' => 'EXT-001', 'nama' => 'Dokumen Eksternal - Kerjasama'],
-            ['kode' => 'EXT-002', 'nama' => 'Dokumen Eksternal - Vendor'],
-            ['kode' => 'REG-001', 'nama' => 'Regulasi - Pemerintah'],
-            ['kode' => 'REG-002', 'nama' => 'Regulasi - Industri'],
+            ['id' => 5, 'kode' => 'EXT-001', 'nama' => 'Dokumen Eksternal - Kerjasama'],
+            ['id' => 6, 'kode' => 'EXT-002', 'nama' => 'Dokumen Eksternal - Vendor'],
+            ['id' => 7, 'kode' => 'REG-001', 'nama' => 'Regulasi - Pemerintah'],
+            ['id' => 8, 'kode' => 'REG-002', 'nama' => 'Regulasi - Industri'],
         ]
     ];
 
@@ -120,47 +120,198 @@ class KelolaDokumen extends BaseController
 
     // View konfigurasi kategori
     public function configJenisDokumen()
-{
-    // Dummy kategori dan kode dokumen (bisa diganti ke DB kalau sudah siap)
-    $data['kategori_dokumen'] = $this->kategoriDokumen;
-    $data['kode_dokumen'] = $this->kodeDokumen;
-    return view('KelolaDokumen/config-jenis-dokumen', $data);
-}
+    {
+        // Dummy kategori dan kode dokumen (bisa diganti ke DB kalau sudah siap)
+        $data['kategori_dokumen'] = $this->kategoriDokumen;
+        $data['kode_dokumen'] = $this->kodeDokumen;
+        return view('KelolaDokumen/config-jenis-dokumen', $data);
+    }
+
+    // ==================== CRUD KATEGORI DOKUMEN ====================
 
     // Tambah kategori dokumen
     public function addKategori()
     {
+        $nama = $this->request->getPost('nama');
+        $kode = $this->request->getPost('kode');
+        $use_predefined = $this->request->getPost('use_predefined_codes') ? true : false;
+
         $data = [
-            'nama' => $this->request->getPost('nama'),
-            'kode' => strtolower(str_replace(' ', '_', $this->request->getPost('nama'))),
-            'use_predefined_codes' => $this->request->getPost('use_predefined_codes') ? true : false,
-            'status' => 1
+            'id' => count($this->kategoriDokumen) + 1, // Auto increment dummy
+            'nama' => $nama,
+            'kode' => $kode,
+            'use_predefined_codes' => $use_predefined,
+            'status' => 1,
+            'created_at' => date('Y-m-d H:i:s')
         ];
 
         log_message('info', 'ADD KATEGORI: ' . json_encode($data));
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori berhasil ditambahkan.');
+        
+        // Simulate success/failure
+        if (empty($nama) || empty($kode)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Nama dan kode kategori harus diisi.');
+        }
+        
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $nama . '" berhasil ditambahkan.');
     }
 
     // Edit kategori dokumen
-    public function editKategori($id)
+    public function editKategori()
     {
+        $id = $this->request->getPost('id');
+        $nama = $this->request->getPost('nama');
+        $kode = $this->request->getPost('kode');
+        $use_predefined = $this->request->getPost('use_predefined_codes') ? true : false;
+
         $data = [
-            'nama' => $this->request->getPost('nama'),
-            'kode' => strtolower(str_replace(' ', '_', $this->request->getPost('nama'))),
-            'use_predefined_codes' => $this->request->getPost('use_predefined_codes') ? true : false,
+            'id' => $id,
+            'nama' => $nama,
+            'kode' => $kode,
+            'use_predefined_codes' => $use_predefined,
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
         log_message('info', 'EDIT KATEGORI ID ' . $id . ': ' . json_encode($data));
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori berhasil diupdate.');
+        
+        // Simulate validation
+        if (empty($nama) || empty($kode)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Nama dan kode kategori harus diisi.');
+        }
+        
+        // Check if ID exists (dummy check)
+        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['id'] == $id);
+        if (empty($kategori)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kategori tidak ditemukan.');
+        }
+        
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $nama . '" berhasil diupdate.');
     }
 
     // Hapus kategori dokumen
-    public function deleteKategori($id)
+    public function deleteKategori()
     {
+        $id = $this->request->getPost('id');
+        
         log_message('info', 'DELETE KATEGORI: ID ' . $id);
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori berhasil dihapus.');
+        
+        // Check if ID exists (dummy check)
+        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['id'] == $id);
+        if (empty($kategori)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kategori tidak ditemukan.');
+        }
+        
+        $kategori = reset($kategori);
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $kategori['nama'] . '" berhasil dihapus.');
     }
+
+    // ==================== CRUD KODE DOKUMEN ====================
+
+    // Tambah kode dokumen
+    public function addKode()
+    {
+        $jenis = $this->request->getPost('jenis');
+        $kode = $this->request->getPost('kode');
+        $nama = $this->request->getPost('nama');
+
+        $data = [
+            'id' => rand(100, 999), // Random ID untuk dummy
+            'jenis' => $jenis,
+            'kode' => $kode,
+            'nama' => $nama,
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        log_message('info', 'ADD KODE: ' . json_encode($data));
+        
+        // Simulate validation
+        if (empty($jenis) || empty($kode) || empty($nama)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Semua field harus diisi.');
+        }
+        
+        // Check if jenis exists
+        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['kode'] === $jenis);
+        if (empty($kategori)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Jenis dokumen tidak ditemukan.');
+        }
+        
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kode . '" berhasil ditambahkan.');
+    }
+
+    // Edit kode dokumen
+    public function editKode()
+    {
+        $id = $this->request->getPost('id');
+        $jenis = $this->request->getPost('jenis');
+        $kode = $this->request->getPost('kode');
+        $nama = $this->request->getPost('nama');
+
+        $data = [
+            'id' => $id,
+            'jenis' => $jenis,
+            'kode' => $kode,
+            'nama' => $nama,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        log_message('info', 'EDIT KODE ID ' . $id . ': ' . json_encode($data));
+        
+        // Simulate validation
+        if (empty($jenis) || empty($kode) || empty($nama)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Semua field harus diisi.');
+        }
+        
+        // Check if jenis exists
+        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['kode'] === $jenis);
+        if (empty($kategori)) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Jenis dokumen tidak ditemukan.');
+        }
+        
+        // Dummy check if kode exists
+        $found = false;
+        foreach ($this->kodeDokumen as $jenisKode => $kodes) {
+            foreach ($kodes as $item) {
+                if ($item['id'] == $id) {
+                    $found = true;
+                    break 2;
+                }
+            }
+        }
+        
+        if (!$found) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kode dokumen tidak ditemukan.');
+        }
+        
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kode . '" berhasil diupdate.');
+    }
+
+    // Hapus kode dokumen
+    public function deleteKode()
+    {
+        $id = $this->request->getPost('id');
+        
+        log_message('info', 'DELETE KODE: ID ' . $id);
+        
+        // Dummy check if kode exists
+        $found = false;
+        $kodeToDelete = null;
+        foreach ($this->kodeDokumen as $jenisKode => $kodes) {
+            foreach ($kodes as $item) {
+                if ($item['id'] == $id) {
+                    $found = true;
+                    $kodeToDelete = $item;
+                    break 2;
+                }
+            }
+        }
+        
+        if (!$found) {
+            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kode dokumen tidak ditemukan.');
+        }
+        
+        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kodeToDelete['kode'] . '" berhasil dihapus.');
+    }
+
+    // ==================== EXISTING METHODS ====================
 
     // View modal approval
     public function approveForm($id)

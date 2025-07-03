@@ -46,6 +46,7 @@
                     <td><?= esc($doc['keterangan']) ?></td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
+                            
                             <!-- Tombol Edit (modal) -->
                             <a href="#" class="text-primary edit-btn" 
                                data-bs-toggle="modal" 
@@ -110,6 +111,10 @@
             <div class="col-md-6">
               <label class="form-label">Nama Dokumen</label>
               <input type="text" class="form-control" name="nama" id="editNama" required>
+            </div>
+             <div class="col-md-6">
+              <label class="form-label">Nomor Dokumen</label>
+              <input type="text" class="form-control" name="nomor" id="editnomor" required>
             </div>
             <div class="col-md-6">
               <label class="form-label">Revisi</label>

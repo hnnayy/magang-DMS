@@ -124,13 +124,126 @@ class CreateUser extends Controller
             ->join('role', 'role.id = user_role.role_id', 'left')
             ->findAll();
 
+        // Ambil semua data unit_parent (fakultas/direktorat), unit, dan role
+        $unitParents = $this->unitParentModel->findAll();
+        $units = $this->unitModel->findAll();
+        $roles = $this->roleModel->findAll();
+
         return view('CreateUser/daftar-users', [
-            'users' => $users
+            'users' => $users,
+            'unitParents' => $unitParents,
+            'units' => $units,
+            'roles' => $roles,
         ]);
     }
+
 
     public function index()
     {
         return redirect()->to('CreateUser/list');
+    }
+
+    // Method untuk Delete User
+    public function delete($id)
+    {
+        try {
+            // Hapus user_role terlebih dahulu
+            $this->userRoleModel->where('user_id', $id)->delete();
+            
+            // Hapus user
+            $this->userModel->delete($id);
+            
+            return redirect()->to('CreateUser/list')->with('success', 'User berhasil dihapus!');
+        } catch (\Exception $e) {
+            log_message('error', 'Delete Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus user.');
+        }
+    }
+
+    // Method untuk Update User
+    public function update()
+    {
+        $id = $this->request->getPost('id');
+        $employee = $this->request->getPost('employee');
+        $fakultas = $this->request->getPost('fakultas');
+        $unit = $this->request->getPost('unit');
+        $fullname = $this->request->getPost('fullname');
+        $role = $this->request->getPost('role');
+
+        // Validasi input
+        if (empty($employee) || empty($fakultas) || empty($unit) || empty($fullname) || empty($role)) {
+            return redirect()->back()->with('error', 'Semua field wajib diisi.');
+        }
+
+        try {
+            // Update user data
+            $userData = [
+                'username' => $employee,
+                'fullname' => $fullname,
+                'unit_id' => $unit // Pastikan unit_id sesuai dengan dropdown
+            ];
+            
+            $this->userModel->update($id, $userData);
+            
+            // Update user role jika ada
+            $roleData = $this->roleModel->where('name', ucfirst($role))->first();
+            if ($roleData) {
+                $this->userRoleModel->where('user_id', $id)->set(['role_id' => $roleData['id']])->update();
+            }
+
+            return redirect()->to('CreateUser/list')->with('success', 'User berhasil diupdate!');
+        } catch (\Exception $e) {
+            log_message('error', 'Update Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengupdate user.');
+        }
+    }
+
+    // Method untuk Approve User
+    public function approve($id)
+    {
+        try {
+            // Update status user menjadi approved (1)
+            $this->userModel->update($id, ['status' => 1]);
+            
+            // Update status user_role juga
+            $this->userRoleModel->where('user_id', $id)->set(['status' => 1])->update();
+            
+            return redirect()->to('CreateUser/list')->with('success', 'User berhasil disetujui!');
+        } catch (\Exception $e) {
+            log_message('error', 'Approve Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menyetujui user.');
+        }
+    }
+
+    // Method untuk Not Approve User
+    public function notapprove()
+    {
+        $id = $this->request->getPost('id');
+        $remark = $this->request->getPost('remark');
+
+        try {
+            // Update status user menjadi tidak disetujui (0) dan simpan remark
+            $userData = [
+                'status' => 0,
+                'remark' => $remark
+            ];
+            
+            $this->userModel->update($id, $userData);
+            
+            // Update status user_role juga
+            $this->userRoleModel->where('user_id', $id)->set(['status' => 0])->update();
+            
+            return redirect()->to('CreateUser/list')->with('success', 'User berhasil ditolak!');
+        } catch (\Exception $e) {
+            log_message('error', 'Not Approve Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menolak user.');
+        }
+    }
+
+    // Method untuk get unit berdasarkan parent (untuk AJAX)
+    public function getUnits($parentId)
+    {
+        $units = $this->unitModel->where('parent_id', $parentId)->findAll();
+        return $this->response->setJSON($units);
     }
 }
