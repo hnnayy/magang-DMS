@@ -68,6 +68,9 @@
             <button type="submit" class="submit-btn">Submit</button>
         </form>
 
+        <?php if (session()->getFlashdata('error')) : ?>
+            <div class="error"><?= session()->getFlashdata('error') ?></div>
+        <?php endif; ?>
     </div>
 
     <div class="illustration-section">
@@ -77,23 +80,70 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Dropdown Prodi
+    // Daftar prodi berdasarkan fakultas
     const prodiOptions = {
-        'Fakultas Teknik Elektro (FTE)': ['Electrical Energy Engineering', 'Teknik Biomedis', 'Teknik Telekomunikasi', 'Teknik Elektro', 'Smart Science and Technology (Teknik Fisika)', 'Teknik Komputer', 'Teknik Pangan'],
-        'Fakultas Rekayasa Industri (FRI)': ['Teknik Industri', 'Sistem Informasi', 'Digital Supply Chain', 'Manajemen Rekayasa Industri'],
-        'Fakultas Informatika (FIF)': ['Informatika', 'Rekayasa Perangkat Lunak', 'Cybersecurity', 'Teknologi Informasi', 'Sains Data'],
-        'Fakultas Ekonomi dan Bisnis (FEB)': ['Akuntansi', 'Manajemen', 'Leisure Management', 'Administrasi Bisnis', 'Digital Business'],
-        'Fakultas Komunikasi dan Ilmu Sosial (FKS)': ['Ilmu Komunikasi', 'Digital Public Relation', 'Digital Content Broadcasting', 'Psikologi (Digital Psychology)'],
-        'Fakultas Industri Kreatif (FIK)': ['Visual Arts', 'Desain Komunikasi Visual', 'Desain Produk & Inovasi', 'Desain Interior', 'Kriya (Fashion & Textile Design)', 'Film dan Animasi'],
-        'Fakultas Ilmu Terapan (FIT)': ['Ilmu Komunikasi', 'Digital Public Relation', 'Digital Content Broadcasting', 'Psikologi (Digital Psychology)']
+        'Fakultas Teknik Elektro (FTE)': [
+            'Electrical Energy Engineering',
+            'Teknik Biomedis',
+            'Teknik Telekomunikasi',
+            'Teknik Elektro',
+            'Smart Science and Technology (Teknik Fisika)',
+            'Teknik Komputer',
+            'Teknik Pangan'
+        ],
+        'Fakultas Rekayasa Industri (FRI)': [
+            'Teknik Industri',
+            'Sistem Informasi',
+            'Digital Supply Chain',
+            'Manajemen Rekayasa Industri'
+        ],
+        'Fakultas Informatika (FIF)': [
+            'Informatika',
+            'Rekayasa Perangkat Lunak',
+            'Cybersecurity',
+            'Teknologi Informasi',
+            'Sains Data'
+        ],
+        'Fakultas Ekonomi dan Bisnis (FEB)': [
+            'Akuntansi',
+            'Manajemen',
+            'Leisure Management',
+            'Administrasi Bisnis',
+            'Digital Business'
+        ],
+        'Fakultas Komunikasi dan Ilmu Sosial (FKS)': [
+            'Ilmu Komunikasi',
+            'Digital Public Relation',
+            'Digital Content Broadcasting',
+            'Psikologi (Digital Psychology)'
+        ],
+        'Fakultas Industri Kreatif (FIK)': [
+            'Visual Arts',
+            'Desain Komunikasi Visual',
+            'Desain Produk & Inovasi',
+            'Desain Interior',
+            'Kriya (Fashion & Textile Design)',
+            'Film dan Animasi'
+        ],
+        'Fakultas Ilmu Terapan (FIT)': [
+            'Ilmu Komunikasi',
+            'Digital Public Relation',
+            'Digital Content Broadcasting',
+            'Psikologi (Digital Psychology)'
+        ]
     };
 
+    // Fungsi untuk memperbarui dropdown prodi saat fakultas berubah
     function updateProdi() {
         const fakultas = document.getElementById('fakultas').value;
         const prodiSelect = document.getElementById('prodi');
+
+        // Reset dropdown prodi
         prodiSelect.innerHTML = '<option value="" disabled selected hidden>Pilih Bagian...</option>';
+
+        // Tampilkan opsi prodi sesuai fakultas
         if (fakultas && prodiOptions[fakultas]) {
-            prodiOptions[fakultas].forEach(prodi => {
+            prodiOptions[fakultas].forEach(function (prodi) {
                 const option = document.createElement('option');
                 option.value = prodi;
                 option.textContent = prodi;
@@ -102,25 +152,17 @@
         }
     }
 
-    // SweetAlert Success
+    // Tampilkan pop-up jika data berhasil disimpan
     <?php if (session()->getFlashdata('success') && session()->getFlashdata('showPopup')) : ?>
         Swal.fire({
             icon: 'success',
             title: 'Success!',
             text: '<?= session()->getFlashdata('success') ?>',
             confirmButtonText: 'OK'
-        }).then(() => {
-            window.location.href = '<?= base_url('CreateUser/create') ?>';
-        });
-    <?php endif; ?>
-
-    // SweetAlert Error
-    <?php if (session()->getFlashdata('error') && session()->getFlashdata('showPopupError')) : ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '<?= base_url('CreateUser/create') ?>';
+            }
         });
     <?php endif; ?>
 </script>
