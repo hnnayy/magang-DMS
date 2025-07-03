@@ -55,7 +55,6 @@ class CreateUser extends Controller
         return view('CreateUser/users-create', $data);
     }
 
-<<<<<<< HEAD
     public function store()
     {
         // Ambil data dari form
@@ -147,7 +146,3 @@ class CreateUser extends Controller
     }
 
 }
-=======
-    
-}
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
