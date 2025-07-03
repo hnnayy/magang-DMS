@@ -61,6 +61,7 @@
     <?php endforeach; ?>
 </tbody>
 
+
         </table>
         
         <!-- No Results Message -->
