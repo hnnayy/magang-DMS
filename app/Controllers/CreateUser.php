@@ -1,5 +1,31 @@
 <?php
 
+<<<<<<< HEAD
+=======
+// namespace App\Controllers;
+
+// class CreateUser extends BaseController
+// {
+//     public function index()
+//     {
+//         return view('CreateUser/daftar-users', $data);
+//     }
+
+//     public function list()
+//     {
+//         return view('CreateUser/daftar-users');
+//     }
+
+//     public function create()
+//     {
+//         $rules  =>
+//         return view('CreateUser/users-create');
+//     }
+
+    
+// }
+
+>>>>>>> e3c8e8bf5bc2f122ef9af754c25f12600a9a16dd
 namespace App\Controllers;
 
 use App\Models\UnitParentModel;
@@ -26,6 +52,7 @@ class CreateUser extends Controller
         $this->userRoleModel = new UserRoleModel();
     }
 
+    
     public function create()
     {
         $data = [
@@ -36,6 +63,7 @@ class CreateUser extends Controller
 
         return view('CreateUser/users-create', $data);
     }
+    
 
     public function store()
     {
@@ -124,6 +152,7 @@ class CreateUser extends Controller
             ->join('role', 'role.id = user_role.role_id', 'left')
             ->findAll();
 
+<<<<<<< HEAD
         return view('CreateUser/daftar-users', [
             'users' => $users
         ]);
@@ -135,3 +164,9 @@ class CreateUser extends Controller
         return redirect()->to('CreateUser/list');
     }
 }
+=======
+        return view('CreateUser/daftar-users', ['users' => $users]);
+    }
+
+}
+>>>>>>> e3c8e8bf5bc2f122ef9af754c25f12600a9a16dd
