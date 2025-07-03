@@ -23,6 +23,7 @@ $routes->get('data-master/create', 'DataMaster::create');
 $routes->get('dokumen/add', 'KelolaDokumen::add');
 $routes->get('dokumen/pengajuan', 'KelolaDokumen::pengajuan');
 $routes->get('dokumen/edit', 'KelolaDokumen::edit');
+$routes->get('dokumen/config-jenis-dokumen', 'KelolaDokumen::configJenisDokumen');
 
 
 // DaftarDokumen 

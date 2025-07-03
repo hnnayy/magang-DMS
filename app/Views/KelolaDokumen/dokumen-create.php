@@ -4,9 +4,9 @@
 
 <div class="container">
     <div class="form-section">
-            <div class="form-section-divider">
-                <h2>Tambah Dokumen</h2>
-            </div
+        <div class="form-section-divider">
+            <h2>Tambah Dokumen</h2>
+        </div>
 
         <form id="addDocumentForm">
             <div class="form-row">
@@ -29,18 +29,28 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
-                    <select id="jenis-dokumen" name="jenis-dokumen" class="form-input" onchange="updateKodeOptions()" required>
+                    <select id="jenis-dokumen" name="jenis-dokumen" class="form-input" onchange="handleJenisChange()" required>
                         <option value="">-- Pilih Jenis --</option>
-                        <option value="internal">Internal</option>
-                        <option value="eksternal">Eksternal</option>
+                        <?php foreach ($kategori_dokumen as $kategori): ?>
+                        <option value="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
+                            <?= $kategori['nama'] ?>
+                        </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="kode-dokumen">Kode & Nama Dokumen</label>
-                    <select id="kode-dokumen" name="kode-dokumen" class="form-input" required>
+                <!-- Untuk jenis dengan predefined codes -->
+                <div class="form-group" id="kode-dokumen-group">
+                    <label class="form-label" for="kode-dokumen">Kode- Nama Dokumen</label>
+                    <select id="kode-dokumen" name="kode-dokumen" class="form-input">
                         <option value="">-- Pilih Dokumen --</option>
                     </select>
+                </div>
+
+                <!-- Untuk jenis tanpa predefined codes -->
+                <div class="form-group" id="kode-dokumen-custom-group" style="display: none;">
+                    <label class="form-label" for="kode-dokumen-custom">Kode & Nama Dokumen</label>
+                    <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
                 </div>
             </div>
 
@@ -101,6 +111,73 @@
     </div>
 </div>
 
+<script>
+function handleJenisChange() {
+    const jenisSelect = document.getElementById('jenis-dokumen');
+    const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
+    const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
+    
+    const kodeGroup = document.getElementById('kode-dokumen-group');
+    const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
+    const kodeSelect = document.getElementById('kode-dokumen');
+    const kodeCustomInput = document.getElementById('kode-dokumen-custom');
+    
+    if (usePredefined) {
+        // Show predefined codes dropdown
+        kodeGroup.style.display = 'block';
+        kodeCustomGroup.style.display = 'none';
+        kodeSelect.required = true;
+        kodeCustomInput.required = false;
+        
+        // Load kode dokumen options
+        loadKodeDokumen(jenisSelect.value);
+    } else {
+        // Show custom input
+        kodeGroup.style.display = 'none';
+        kodeCustomGroup.style.display = 'block';
+        kodeSelect.required = false;
+        kodeCustomInput.required = true;
+        
+        // Clear predefined options
+        kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+    }
+}
 
+function loadKodeDokumen(jenis) {
+    const kodeSelect = document.getElementById('kode-dokumen');
+    
+    // Clear existing options
+    kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+    
+    // AJAX call to get kode dokumen
+    fetch('<?= base_url('dokumen/get-kode-dokumen') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'jenis=' + encodeURIComponent(jenis)
+    })
+    .then(response => response.json())
+    .then(data => {
+        data.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.kode + ' - ' + item.nama;
+            option.textContent = item.kode + ' - ' + item.nama;
+            kodeSelect.appendChild(option);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading kode dokumen:', error);
+    });
+}
+
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide both kode groups initially
+    document.getElementById('kode-dokumen-group').style.display = 'none';
+    document.getElementById('kode-dokumen-custom-group').style.display = 'none';
+});
+</script>
 
 <?= $this->endSection() ?>

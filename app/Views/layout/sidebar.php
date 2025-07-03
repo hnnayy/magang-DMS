@@ -25,6 +25,13 @@
             <ul class="submenu">
                 <li><a href="<?= base_url('dokumen/add') ?>"><i class="fi fi-rr-add-document"></i>Tambah Dokumen</a></li>
                 <li><a href="<?= base_url(relativePath: 'dokumen/pengajuan') ?>"><i class="fi fi-rr-clipboard-list"></i>Daftar Pengajuan</a></li>
+            <li>
+                <a href="<?= base_url('dokumen/config-jenis-dokumen') ?>">
+                    <i class="fi fi-rr-clipboard-list"></i> Jenis & Kode Dokumen
+                </a>
+            </li>
+
+
             </ul>
         </li>
 
