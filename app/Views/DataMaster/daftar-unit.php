@@ -2,8 +2,8 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Data Master</h4>
-    <p>Lihat Unit</p>
+    <h4>Lihat Unit</h4>
+    <hr>
 
     <!-- Export + Search -->
     <div class="row mb-3 align-items-center">
