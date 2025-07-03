@@ -3,20 +3,15 @@
 
 <div class="container">
     <div class="form-section">
-        <div class="form-section-divider">
-                <h2>Tambah User</h2>
-            </div
+        <h1 class="form-title">Create User</h1>
+        <p class="form-subtitle">Tambah User</p>
 
-<<<<<<< HEAD
         <form id="createUserForm" method="post" action="<?= base_url('CreateUser/store') ?>">
             <?= csrf_field() ?>
 
-=======
-        <form>
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
             <div class="form-group">
                 <label class="form-label" for="fakultas">Fakultas/Direktorat</label>
-                <select id="fakultas" name="fakultas" class="form-input" required onchange="updateProdi()">
+                <select id="fakultas" name="fakultas" class="form-select" required onchange="updateProdi()">
                     <option value="" disabled selected hidden>Pilih Fakultas...</option>
                     <option value="Fakultas Teknik Elektro (FTE)">Fakultas Teknik Elektro (FTE)</option>
                     <option value="Fakultas Rekayasa Industri (FRI)">Fakultas Rekayasa Industri (FRI)</option>
@@ -30,13 +25,8 @@
 
             <div class="form-group">
                 <label class="form-label" for="prodi">Bagian/Unit/Program Studi</label>
-<<<<<<< HEAD
                 <select id="prodi" name="prodi" class="form-select" required>
                     <option value="" disabled selected hidden>Pilih Bagian...</option>
-=======
-                <select id="prodi" name="prodi" class="form-input" required>
-                    <option value="" disabled selected hidden>Pilih Bagian ...</option>
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
                 </select>
             </div>
 
@@ -50,15 +40,9 @@
                 <input type="text" id="fullname" name="fullname" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
             </div>
 
-<<<<<<< HEAD
             <div id="roleForm" class="form-group">
                 <label class="form-label" for="role">Role</label>
                 <select id="role" name="role" class="form-select" required>
-=======
-            <div class="form-group">
-                <label class="form-label" for="role">Role</label>
-                <select id="role" name="role" class="form-input" required>
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
                     <option value="" disabled selected hidden>Pilih Role...</option>
                     <option value="admin">Admin</option>
                     <option value="kepalabagian">Kepala Bagian</option>
@@ -67,11 +51,7 @@
                 </select>
             </div>
 
-<<<<<<< HEAD
             <div id="statusForm" class="form-group">
-=======
-            <div class="form-group">
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
                 <label class="form-label d-block">Status</label>
 
                 <div class="form-check form-check-inline">
@@ -98,7 +78,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Daftar prodi berdasarkan fakultas
@@ -188,7 +167,4 @@
     <?php endif; ?>
 </script>
 
-=======
-
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
 <?= $this->endSection() ?>
