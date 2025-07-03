@@ -22,6 +22,7 @@
 
     
 // }
+
 namespace App\Controllers;
 
 use App\Models\UnitParentModel;
@@ -45,6 +46,7 @@ class CreateUser extends Controller
         $this->roleModel = new RoleModel();
     }
 
+    
     public function create()
     {
         $data = [
@@ -54,6 +56,7 @@ class CreateUser extends Controller
         ];
         return view('CreateUser/users-create', $data);
     }
+    
 
     public function store()
     {
@@ -128,21 +131,17 @@ class CreateUser extends Controller
         }
     }
 
-
-    
     public function list()
     {
-    $users = $this->userModel
-        ->select('user.id, user.username, user.fullname, unit.name as unit_name, unit_parent.name as parent_name, role.name as role_name')
-        ->join('unit', 'unit.id = user.unit_id')
-        ->join('unit_parent', 'unit_parent.id = unit.parent_id')
-        ->join('user_role', 'user_role.user_id = user.id', 'left')
-        ->join('role', 'role.id = user_role.role_id', 'left')
-        ->findAll();
+        $users = $this->userModel
+            ->select('user.id, user.username, user.fullname, unit.name as unit_name, unit_parent.name as parent_name, role.name as role_name')
+            ->join('unit', 'unit.id = user.unit_id')
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->findAll();
 
-    return view('CreateUser/daftar-users', [
-        'users' => $users
-        ]);
+        return view('CreateUser/daftar-users', ['users' => $users]);
     }
 
 }
