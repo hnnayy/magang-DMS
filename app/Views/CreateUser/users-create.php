@@ -6,25 +6,27 @@
         <h1 class="form-title">Create User</h1>
         <p class="form-subtitle">Tambah User</p>
 
-        <id="createUserForm">
+        <form id="createUserForm" method="post" action="<?= base_url('CreateUser/store') ?>">
+            <?= csrf_field() ?>
+
             <div class="form-group">
                 <label class="form-label" for="fakultas">Fakultas/Direktorat</label>
                 <select id="fakultas" name="fakultas" class="form-select" required onchange="updateProdi()">
                     <option value="" disabled selected hidden>Pilih Fakultas...</option>
-                    <option value="FTE">Fakultas Teknik Elektro (FTE)</option>
-                    <option value="FRI">Fakultas Rekayasa Industri (FRI)</option>
-                    <option value="FIF">Fakultas Informatika (FIF)</option>
-                    <option value="FEB">Fakultas Ekonomi dan Bisnis (FEB)</option>
-                    <option value="FKS">Fakultas Komunikasi dan Ilmu Sosial (FKS)</option>
-                    <option value="FIK">Fakultas Industri Kreatif (FIK)</option>
-                    <option value="FIT">Fakultas Ilmu Terapan (FIT)</option>
+                    <option value="Fakultas Teknik Elektro (FTE)">Fakultas Teknik Elektro (FTE)</option>
+                    <option value="Fakultas Rekayasa Industri (FRI)">Fakultas Rekayasa Industri (FRI)</option>
+                    <option value="Fakultas Informatika (FIF)">Fakultas Informatika (FIF)</option>
+                    <option value="Fakultas Ekonomi dan Bisnis (FEB)">Fakultas Ekonomi dan Bisnis (FEB)</option>
+                    <option value="Fakultas Komunikasi dan Ilmu Sosial (FKS)">Fakultas Komunikasi dan Ilmu Sosial (FKS)</option>
+                    <option value="Fakultas Industri Kreatif (FIK)">Fakultas Industri Kreatif (FIK)</option>
+                    <option value="Fakultas Ilmu Terapan (FIT)">Fakultas Ilmu Terapan (FIT)</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="prodi">Bagian/Unit/Program Studi</label>
                 <select id="prodi" name="prodi" class="form-select" required>
-                    <option value="" disabled selected hidden>Pilih Bagian ...</option>
+                    <option value="" disabled selected hidden>Pilih Bagian...</option>
                 </select>
             </div>
 
@@ -34,14 +36,13 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="fulllname">Full Name</label>
-                <input type="email" id="email" name="email" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
+                <label class="form-label" for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
             </div>
 
-        <id="roleForm">
-            <div class="form-group">
+            <div id="roleForm" class="form-group">
                 <label class="form-label" for="role">Role</label>
-                <select id="fakultas" name="fakultas" class="form-select" required>
+                <select id="role" name="role" class="form-select" required>
                     <option value="" disabled selected hidden>Pilih Role...</option>
                     <option value="admin">Admin</option>
                     <option value="kepalabagian">Kepala Bagian</option>
@@ -50,8 +51,7 @@
                 </select>
             </div>
 
-        <id="statusForm">
-            <div class="form-group">
+            <div id="statusForm" class="form-group">
                 <label class="form-label d-block">Status</label>
 
                 <div class="form-check form-check-inline">
@@ -60,13 +60,17 @@
                 </div>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="inactive" value="inactive" required>
+                    <input class="form-check-input" type="radio" name="status" id="inactive" value="inactive">
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
             </div>
 
             <button type="submit" class="submit-btn">Submit</button>
         </form>
+
+        <?php if (session()->getFlashdata('error')) : ?>
+            <div class="error"><?= session()->getFlashdata('error') ?></div>
+        <?php endif; ?>
     </div>
 
     <div class="illustration-section">
@@ -74,10 +78,11 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Daftar prodi berdasarkan fakultas
     const prodiOptions = {
-        FTE: [
+        'Fakultas Teknik Elektro (FTE)': [
             'Electrical Energy Engineering',
             'Teknik Biomedis',
             'Teknik Telekomunikasi',
@@ -86,33 +91,33 @@
             'Teknik Komputer',
             'Teknik Pangan'
         ],
-        FRI: [
+        'Fakultas Rekayasa Industri (FRI)': [
             'Teknik Industri',
             'Sistem Informasi',
             'Digital Supply Chain',
             'Manajemen Rekayasa Industri'
         ],
-        FIF: [
+        'Fakultas Informatika (FIF)': [
             'Informatika',
             'Rekayasa Perangkat Lunak',
             'Cybersecurity',
             'Teknologi Informasi',
             'Sains Data'
         ],
-        FEB: [
+        'Fakultas Ekonomi dan Bisnis (FEB)': [
             'Akuntansi',
             'Manajemen',
             'Leisure Management',
             'Administrasi Bisnis',
             'Digital Business'
         ],
-        FKS: [
+        'Fakultas Komunikasi dan Ilmu Sosial (FKS)': [
             'Ilmu Komunikasi',
             'Digital Public Relation',
             'Digital Content Broadcasting',
             'Psikologi (Digital Psychology)'
         ],
-        FIK: [
+        'Fakultas Industri Kreatif (FIK)': [
             'Visual Arts',
             'Desain Komunikasi Visual',
             'Desain Produk & Inovasi',
@@ -120,7 +125,7 @@
             'Kriya (Fashion & Textile Design)',
             'Film dan Animasi'
         ],
-        FIT: [
+        'Fakultas Ilmu Terapan (FIT)': [
             'Ilmu Komunikasi',
             'Digital Public Relation',
             'Digital Content Broadcasting',
@@ -134,7 +139,7 @@
         const prodiSelect = document.getElementById('prodi');
 
         // Reset dropdown prodi
-        prodiSelect.innerHTML = '<option value="" disabled selected hidden>Please Select Program Study...</option>';
+        prodiSelect.innerHTML = '<option value="" disabled selected hidden>Pilih Bagian...</option>';
 
         // Tampilkan opsi prodi sesuai fakultas
         if (fakultas && prodiOptions[fakultas]) {
@@ -146,7 +151,20 @@
             });
         }
     }
-</script>
 
+    // Tampilkan pop-up jika data berhasil disimpan
+    <?php if (session()->getFlashdata('success') && session()->getFlashdata('showPopup')) : ?>
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: '<?= session()->getFlashdata('success') ?>',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '<?= base_url('CreateUser/create') ?>';
+            }
+        });
+    <?php endif; ?>
+</script>
 
 <?= $this->endSection() ?>
