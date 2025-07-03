@@ -11,6 +11,11 @@ $routes->get('/', 'Home::index');
 $routes->get('create-user', 'CreateUser::index');
 $routes->get('create-user/list', 'CreateUser::list');
 $routes->get('create-user/create', 'CreateUser::create');
+$routes->get('CreateUser/create', 'CreateUser::create');
+$routes->post('CreateUser/store', 'CreateUser::store');
+
+$routes->get('KelolaDokumen/getUserUnitData', 'KelolaDokumen::getUserUnitData');
+
 
 // DataMaster
 $routes->get('data-master', 'DataMaster::index');
@@ -26,5 +31,3 @@ $routes->get('dokumen/daftar', 'DaftarDokumen::index');
 
 // PersetujuanDokumen 
 $routes->get('dokumen/persetujuan', 'PersetujuanDokumen::index');
-
-
