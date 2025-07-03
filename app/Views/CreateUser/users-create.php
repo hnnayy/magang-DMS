@@ -3,13 +3,14 @@
 
 <div class="container">
     <div class="form-section">
-        <h1 class="form-title">Create User</h1>
-        <p class="form-subtitle">Tambah User</p>
+        <div class="form-section-divider">
+                <h2>Tambah User</h2>
+            </div
 
-        <id="createUserForm">
+        <form>
             <div class="form-group">
                 <label class="form-label" for="fakultas">Fakultas/Direktorat</label>
-                <select id="fakultas" name="fakultas" class="form-select" required onchange="updateProdi()">
+                <select id="fakultas" name="fakultas" class="form-input" required onchange="updateProdi()">
                     <option value="" disabled selected hidden>Pilih Fakultas...</option>
                     <option value="FTE">Fakultas Teknik Elektro (FTE)</option>
                     <option value="FRI">Fakultas Rekayasa Industri (FRI)</option>
@@ -23,7 +24,7 @@
 
             <div class="form-group">
                 <label class="form-label" for="prodi">Bagian/Unit/Program Studi</label>
-                <select id="prodi" name="prodi" class="form-select" required>
+                <select id="prodi" name="prodi" class="form-input" required>
                     <option value="" disabled selected hidden>Pilih Bagian ...</option>
                 </select>
             </div>
@@ -34,14 +35,13 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="fulllname">Full Name</label>
-                <input type="email" id="email" name="email" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
+                <label class="form-label" for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" class="form-input" placeholder="Tulis Nama Lengkap disini..." required>
             </div>
 
-        <id="roleForm">
             <div class="form-group">
                 <label class="form-label" for="role">Role</label>
-                <select id="fakultas" name="fakultas" class="form-select" required>
+                <select id="role" name="role" class="form-input" required>
                     <option value="" disabled selected hidden>Pilih Role...</option>
                     <option value="admin">Admin</option>
                     <option value="kepalabagian">Kepala Bagian</option>
@@ -50,7 +50,6 @@
                 </select>
             </div>
 
-        <id="statusForm">
             <div class="form-group">
                 <label class="form-label d-block">Status</label>
 
@@ -73,80 +72,6 @@
         <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="User Illustration" class="illustration-img">
     </div>
 </div>
-
-<script>
-    // Daftar prodi berdasarkan fakultas
-    const prodiOptions = {
-        FTE: [
-            'Electrical Energy Engineering',
-            'Teknik Biomedis',
-            'Teknik Telekomunikasi',
-            'Teknik Elektro',
-            'Smart Science and Technology (Teknik Fisika)',
-            'Teknik Komputer',
-            'Teknik Pangan'
-        ],
-        FRI: [
-            'Teknik Industri',
-            'Sistem Informasi',
-            'Digital Supply Chain',
-            'Manajemen Rekayasa Industri'
-        ],
-        FIF: [
-            'Informatika',
-            'Rekayasa Perangkat Lunak',
-            'Cybersecurity',
-            'Teknologi Informasi',
-            'Sains Data'
-        ],
-        FEB: [
-            'Akuntansi',
-            'Manajemen',
-            'Leisure Management',
-            'Administrasi Bisnis',
-            'Digital Business'
-        ],
-        FKS: [
-            'Ilmu Komunikasi',
-            'Digital Public Relation',
-            'Digital Content Broadcasting',
-            'Psikologi (Digital Psychology)'
-        ],
-        FIK: [
-            'Visual Arts',
-            'Desain Komunikasi Visual',
-            'Desain Produk & Inovasi',
-            'Desain Interior',
-            'Kriya (Fashion & Textile Design)',
-            'Film dan Animasi'
-        ],
-        FIT: [
-            'Ilmu Komunikasi',
-            'Digital Public Relation',
-            'Digital Content Broadcasting',
-            'Psikologi (Digital Psychology)'
-        ]
-    };
-
-    // Fungsi untuk memperbarui dropdown prodi saat fakultas berubah
-    function updateProdi() {
-        const fakultas = document.getElementById('fakultas').value;
-        const prodiSelect = document.getElementById('prodi');
-
-        // Reset dropdown prodi
-        prodiSelect.innerHTML = '<option value="" disabled selected hidden>Please Select Program Study...</option>';
-
-        // Tampilkan opsi prodi sesuai fakultas
-        if (fakultas && prodiOptions[fakultas]) {
-            prodiOptions[fakultas].forEach(function (prodi) {
-                const option = document.createElement('option');
-                option.value = prodi;
-                option.textContent = prodi;
-                prodiSelect.appendChild(option);
-            });
-        }
-    }
-</script>
 
 
 <?= $this->endSection() ?>
