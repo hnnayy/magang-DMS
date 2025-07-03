@@ -8,11 +8,13 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 // CreateUser
-$routes->get('create-user', 'CreateUser::index');
-$routes->get('create-user/list', 'CreateUser::list');
-$routes->get('create-user/create', 'CreateUser::create');
-$routes->get('CreateUser/create', 'CreateUser::create');
-$routes->post('CreateUser/store', 'CreateUser::store');
+// CreateUser
+$routes->get('create-user', 'CreateUser::index');       // GET: /create-user
+$routes->get('create-user/list', 'CreateUser::list');   // GET: /create-user/list
+$routes->get('create-user/create', 'CreateUser::create'); // GET: /create-user/create
+$routes->get('CreateUser/create', 'CreateUser::create'); // GET: /CreateUser/create (beda kapital, tapi boleh kalau memang mau support dua-duanya)
+$routes->post('CreateUser/store', 'CreateUser::store'); // POST: /CreateUser/store
+
 // DataMaster
 $routes->get('data-master', 'DataMaster::index');
 $routes->get('data-master/list', 'DataMaster::list');
