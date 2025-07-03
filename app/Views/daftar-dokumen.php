@@ -47,7 +47,6 @@
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
             <h4 class="mb-1">Daftar Dokumen</h4>
-            <p class="text-muted mb-0">Daftar Dokumen yang ada di Unit Yan CeLOE</p>
         </div>
         <div class="header-controls">
             <a href="#" class="excel-button">

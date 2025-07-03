@@ -157,3 +157,75 @@ document.addEventListener('DOMContentLoaded', function() {
       kodeSelect.appendChild(option);
     });
   }
+
+// Daftar prodi berdasarkan fakultas
+    const prodiOptions = {
+        FTE: [
+            'Electrical Energy Engineering',
+            'Teknik Biomedis',
+            'Teknik Telekomunikasi',
+            'Teknik Elektro',
+            'Smart Science and Technology (Teknik Fisika)',
+            'Teknik Komputer',
+            'Teknik Pangan'
+        ],
+        FRI: [
+            'Teknik Industri',
+            'Sistem Informasi',
+            'Digital Supply Chain',
+            'Manajemen Rekayasa Industri'
+        ],
+        FIF: [
+            'Informatika',
+            'Rekayasa Perangkat Lunak',
+            'Cybersecurity',
+            'Teknologi Informasi',
+            'Sains Data'
+        ],
+        FEB: [
+            'Akuntansi',
+            'Manajemen',
+            'Leisure Management',
+            'Administrasi Bisnis',
+            'Digital Business'
+        ],
+        FKS: [
+            'Ilmu Komunikasi',
+            'Digital Public Relation',
+            'Digital Content Broadcasting',
+            'Psikologi (Digital Psychology)'
+        ],
+        FIK: [
+            'Visual Arts',
+            'Desain Komunikasi Visual',
+            'Desain Produk & Inovasi',
+            'Desain Interior',
+            'Kriya (Fashion & Textile Design)',
+            'Film dan Animasi'
+        ],
+        FIT: [
+            'Ilmu Komunikasi',
+            'Digital Public Relation',
+            'Digital Content Broadcasting',
+            'Psikologi (Digital Psychology)'
+        ]
+    };
+
+    // Fungsi untuk memperbarui dropdown prodi saat fakultas berubah
+    function updateProdi() {
+        const fakultas = document.getElementById('fakultas').value;
+        const prodiSelect = document.getElementById('prodi');
+
+        // Reset dropdown prodi
+        prodiSelect.innerHTML = '<option value="" disabled selected hidden>Please Select Program Study...</option>';
+
+        // Tampilkan opsi prodi sesuai fakultas
+        if (fakultas && prodiOptions[fakultas]) {
+            prodiOptions[fakultas].forEach(function (prodi) {
+                const option = document.createElement('option');
+                option.value = prodi;
+                option.textContent = prodi;
+                prodiSelect.appendChild(option);
+            });
+        }
+    }

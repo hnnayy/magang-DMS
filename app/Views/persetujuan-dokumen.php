@@ -3,6 +3,7 @@
 
 <div class="px-4 py-3 w-100">
     <h4>Persetujuan Dokumen</h4>
+    <hr>
 
     <!-- Export Buttons and Search Section in one row -->
     <div class="row mb-3 align-items-center">
