@@ -42,41 +42,26 @@
                 </tr>
             </thead>
 
-            <tbody id="tableBody">
-                <?php 
-                $sampleData = [
-                    ['20443847284', 'Teknik Elektro', 'S3 Teknik Elektro', 'Saputra Maymuna', 'Staff'],
-                    ['20443847285', 'Teknik Informatika', 'S1 Teknik Informatika', 'Ahmad Rizky', 'Admin'],
-                    ['20443847286', 'Manajemen', 'S2 Manajemen', 'Siti Nurhaliza', 'Kepala Bagian'],
-                    ['20443847287', 'Teknik Industri', 'S1 Teknik Industri', 'Budi Santoso', 'Staff'],
-                    ['20443847288', 'Komunikasi', 'S1 Komunikasi', 'Dewi Sartika', 'Staff'],
-                    ['20443847289', 'Teknik Elektro', 'S2 Teknik Elektro', 'Rudi Hermawan', 'Staff'],
-                    ['20443847290', 'Desain Komunikasi Visual', 'S1 DKV', 'Maya Sari', 'Kepala Unit'],
-                    ['20443847291', 'Sistem Informasi', 'S1 Sistem Informasi', 'Andi Pratama', 'Admin'],
-                    ['20443847292', 'Teknik Komputer', 'S1 Teknik Komputer', 'Lina Marlina', 'Kepala Unit'],
-                    ['20443847293', 'Akuntansi', 'S1 Akuntansi', 'Fahmi Abdullah', 'Admin']
-                ];
+           <tbody id="tableBody">
+    <?php $i = 1; foreach ($users as $user): ?>
+    <tr>
+        <td><?= $i++ ?></td>
+        <td><?= $user['id'] ?></td> <!-- Employee ID -->
+        <td><?= esc($user['parent_name']) ?></td> <!-- Directorate -->
+        <td><?= esc($user['unit_name']) ?></td> <!-- Unit -->
+        <td><?= esc($user['fullname']) ?></td> <!-- Full Name -->
+        <td><?= esc($user['role_name'] ?? 'N/A') ?></td> <!-- Role -->
+        <td>
+            <a href="#" class="text-primary me-2" title="Delete"><i class="bi bi-trash"></i></a>
+            <a href="#" class="text-primary me-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
+            <a href="#" class="text-primary me-2" title="Approve"><i class="bi bi-check-lg"></i></a>
+            <a href="#" class="text-primary" title="Not Approve"><i class="bi bi-x-lg"></i></a>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+</tbody>
 
-                
-                for ($i = 0; $i < count($sampleData); $i++): 
-                    $data = $sampleData[$i];
-                ?>
-                <tr>
-                    <td><?= $i + 1 ?></td>
-                    <td><?= $data[0] ?></td>
-                    <td><?= $data[1] ?></td>
-                    <td><?= $data[2] ?></td>
-                    <td><?= $data[3] ?></td>
-                    <td><?= $data[4] ?></td>
-                    <td>
-                        <a href="#" class="text-primary me-2" title="Delete"><i class="bi bi-trash"></i></a>
-                        <a href="#" class="text-primary me-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                        <a href="#" class="text-primary me-2" title="Approve"><i class="bi bi-check-lg"></i></a>
-                        <a href="#" class="text-primary" title="Not Approve"><i class="bi bi-x-lg"></i></a>
-                    </td>
-                </tr>
-                <?php endfor; ?>
-            </tbody>
+
         </table>
         
         <!-- No Results Message -->
