@@ -10,16 +10,11 @@ $routes->get('/', 'Home::index');
 // CreateUser
 $routes->get('create-user', 'CreateUser::index');
 $routes->get('create-user/list', 'CreateUser::list');
-<<<<<<< HEAD
 $routes->get('create-user/create', 'CreateUser::create');
 $routes->get('CreateUser/create', 'CreateUser::create');
 $routes->post('CreateUser/store', 'CreateUser::store');
 
 $routes->get('KelolaDokumen/getUserUnitData', 'KelolaDokumen::getUserUnitData');
-=======
-$routes->get('create-user/create', to: 'CreateUser::create');
-$routes->get('create-user/create', to: 'CreateUser::edit');
->>>>>>> 8a3a31be84a52a9674b4c649a5ebbadb4d36f9d6
 
 
 // DataMaster
