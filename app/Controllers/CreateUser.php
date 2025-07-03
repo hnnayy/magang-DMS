@@ -1,31 +1,5 @@
 <?php
 
-<<<<<<< HEAD
-=======
-// namespace App\Controllers;
-
-// class CreateUser extends BaseController
-// {
-//     public function index()
-//     {
-//         return view('CreateUser/daftar-users', $data);
-//     }
-
-//     public function list()
-//     {
-//         return view('CreateUser/daftar-users');
-//     }
-
-//     public function create()
-//     {
-//         $rules  =>
-//         return view('CreateUser/users-create');
-//     }
-
-    
-// }
-
->>>>>>> e3c8e8bf5bc2f122ef9af754c25f12600a9a16dd
 namespace App\Controllers;
 
 use App\Models\UnitParentModel;
@@ -52,7 +26,6 @@ class CreateUser extends Controller
         $this->userRoleModel = new UserRoleModel();
     }
 
-    
     public function create()
     {
         $data = [
@@ -63,7 +36,6 @@ class CreateUser extends Controller
 
         return view('CreateUser/users-create', $data);
     }
-    
 
     public function store()
     {
@@ -73,17 +45,17 @@ class CreateUser extends Controller
         $username = $this->request->getPost('username');
         $fullname = $this->request->getPost('fullname');
         $role = $this->request->getPost('role');
-        $status = $this->request->getPost('status') === 'active' ? 1 : 2; // 1: aktif, 2: nonaktif
+        $status = $this->request->getPost('status') === 'active' ? 1 : 2;
 
         // Log untuk debug
         log_message('debug', 'Form Data: ' . print_r($this->request->getPost(), true));
 
-        // ✅ Validasi input kosong
+        // Validasi input kosong
         if (empty($fakultas) || empty($prodi) || empty($username) || empty($fullname) || empty($role)) {
             return redirect()->back()->withInput()->with('error', 'Semua field wajib diisi.')->with('showPopupError', true);
         }
 
-        // ✅ Validasi karakter khusus (tidak boleh ada . , ; : " ' dan sejenisnya)
+        // Validasi karakter khusus
         if (preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $username) || preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $fullname)) {
             return redirect()->back()->withInput()->with('error', 'Username atau Full Name tidak boleh mengandung karakter khusus.')->with('showPopupError', true);
         }
@@ -152,21 +124,13 @@ class CreateUser extends Controller
             ->join('role', 'role.id = user_role.role_id', 'left')
             ->findAll();
 
-<<<<<<< HEAD
         return view('CreateUser/daftar-users', [
             'users' => $users
         ]);
     }
 
-    // (Opsional) Tambahan halaman index → redirect ke list
     public function index()
     {
         return redirect()->to('CreateUser/list');
     }
 }
-=======
-        return view('CreateUser/daftar-users', ['users' => $users]);
-    }
-
-}
->>>>>>> e3c8e8bf5bc2f122ef9af754c25f12600a9a16dd
