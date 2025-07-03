@@ -1,33 +1,12 @@
 <?php
 
-// namespace App\Controllers;
-
-// class CreateUser extends BaseController
-// {
-//     public function index()
-//     {
-//         return view('CreateUser/daftar-users', $data);
-//     }
-
-//     public function list()
-//     {
-//         return view('CreateUser/daftar-users');
-//     }
-
-//     public function create()
-//     {
-//         $rules  =>
-//         return view('CreateUser/users-create');
-//     }
-
-    
-// }
 namespace App\Controllers;
 
 use App\Models\UnitParentModel;
 use App\Models\UnitModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
+use App\Models\UserRoleModel;
 use CodeIgniter\Controller;
 
 class CreateUser extends Controller
@@ -36,6 +15,7 @@ class CreateUser extends Controller
     protected $unitModel;
     protected $userModel;
     protected $roleModel;
+    protected $userRoleModel;
 
     public function __construct()
     {
@@ -43,6 +23,7 @@ class CreateUser extends Controller
         $this->unitModel = new UnitModel();
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
+        $this->userRoleModel = new UserRoleModel();
     }
 
     public function create()
@@ -52,6 +33,7 @@ class CreateUser extends Controller
             'roles' => $this->roleModel->findAll(),
             'title' => 'Create User'
         ];
+
         return view('CreateUser/users-create', $data);
     }
 
@@ -63,86 +45,93 @@ class CreateUser extends Controller
         $username = $this->request->getPost('username');
         $fullname = $this->request->getPost('fullname');
         $role = $this->request->getPost('role');
-        $status = $this->request->getPost('status') === 'active' ? 1 : 2; // Konversi ke 1/2
+        $status = $this->request->getPost('status') === 'active' ? 1 : 2; // 1: aktif, 2: nonaktif
 
-        // Log data untuk debugging
+        // Log untuk debug
         log_message('debug', 'Form Data: ' . print_r($this->request->getPost(), true));
 
-        // Validasi data
-        if (empty($fakultas) || empty($prodi) || empty($username) || empty($fullname) || empty($role) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'All fields are required.');
+        // ✅ Validasi input kosong
+        if (empty($fakultas) || empty($prodi) || empty($username) || empty($fullname) || empty($role)) {
+            return redirect()->back()->withInput()->with('error', 'Semua field wajib diisi.')->with('showPopupError', true);
         }
 
-        // Cari unit_parent_id berdasarkan fakultas
+        // ✅ Validasi karakter khusus (tidak boleh ada . , ; : " ' dan sejenisnya)
+        if (preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $username) || preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $fullname)) {
+            return redirect()->back()->withInput()->with('error', 'Username atau Full Name tidak boleh mengandung karakter khusus.')->with('showPopupError', true);
+        }
+
+        // Cek unit_parent_id
         $unitParent = $this->unitParentModel->where('name', $fakultas)->first();
         if (!$unitParent) {
-            log_message('debug', 'Unit Parent Query: ' . $this->unitParentModel->getLastQuery()); // Debugging
-            return redirect()->back()->withInput()->with('error', 'Invalid Faculty/Directorate selected. Expected: ' . $fakultas);
+            return redirect()->back()->withInput()->with('error', 'Fakultas/Direktorat tidak valid.')->with('showPopupError', true);
         }
+
         $unitParentId = $unitParent['id'];
 
-        // Cari unit_id berdasarkan prodi dan parent_id
+        // Cek unit_id
         $unit = $this->unitModel->where('name', $prodi)->where('parent_id', $unitParentId)->first();
         if (!$unit) {
-            log_message('debug', 'Unit Query: ' . $this->unitModel->getLastQuery()); // Debugging query
-            return redirect()->back()->withInput()->with('error', 'Invalid Program Study selected for the chosen Faculty.');
+            return redirect()->back()->withInput()->with('error', 'Program Studi tidak cocok dengan Fakultas yang dipilih.')->with('showPopupError', true);
         }
+
         $unitId = $unit['id'];
 
-        // Cari role_id berdasarkan role
+        // Cek role_id
         $roleData = $this->roleModel->where('name', ucfirst($role))->first();
         if (!$roleData) {
-            return redirect()->back()->withInput()->with('error', 'Invalid Role selected.');
+            return redirect()->back()->withInput()->with('error', 'Role tidak valid.')->with('showPopupError', true);
         }
+
         $roleId = $roleData['id'];
 
-        // Siapkan data untuk tabel user
+        // Siapkan data user
         $userData = [
             'unit_id' => $unitId,
             'username' => $username,
             'fullname' => $fullname,
-            'status' => $status, // Gunakan 1 atau 2
+            'status' => $status,
             'createdby' => session()->get('user_id') ?? 1
         ];
 
-        // Simpan ke database
         try {
+            // Simpan user
             $this->userModel->insert($userData);
             $userId = $this->userModel->getInsertID();
 
-            // Simpan hubungan user-role
+            // Simpan user_role
             $userRoleData = [
                 'user_id' => $userId,
                 'role_id' => $roleId,
                 'status' => $status,
                 'createdby' => session()->get('user_id') ?? 1
             ];
+            $this->userRoleModel->insert($userRoleData);
 
-            $userRoleModel = new \App\Models\UserRoleModel();
-            $userRoleModel->insert($userRoleData);
-
-            return redirect()->to('CreateUser/create')->with('success', 'User created successfully!')->with('showPopup', true);
+            return redirect()->to('CreateUser/create')->with('success', 'User berhasil ditambahkan!')->with('showPopup', true);
         } catch (\Exception $e) {
             log_message('error', 'Database Error: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'An error occurred while saving data.');
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data.')->with('showPopupError', true);
         }
     }
 
-
-    
     public function list()
     {
-    $users = $this->userModel
-        ->select('user.id, user.username, user.fullname, unit.name as unit_name, unit_parent.name as parent_name, role.name as role_name')
-        ->join('unit', 'unit.id = user.unit_id')
-        ->join('unit_parent', 'unit_parent.id = unit.parent_id')
-        ->join('user_role', 'user_role.user_id = user.id', 'left')
-        ->join('role', 'role.id = user_role.role_id', 'left')
-        ->findAll();
+        $users = $this->userModel
+            ->select('user.id, user.username, user.fullname, unit.name as unit_name, unit_parent.name as parent_name, role.name as role_name')
+            ->join('unit', 'unit.id = user.unit_id')
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->findAll();
 
-    return view('CreateUser/daftar-users', [
-        'users' => $users
+        return view('CreateUser/daftar-users', [
+            'users' => $users
         ]);
     }
 
+    // (Opsional) Tambahan halaman index → redirect ke list
+    public function index()
+    {
+        return redirect()->to('CreateUser/list');
+    }
 }
