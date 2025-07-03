@@ -318,7 +318,7 @@ body {
 /* ====== FORM SECTION ====== */
 .container {
     max-width: 1500px;
-    max-height: 60%;
+    max-height: 40%;
     margin: 10px auto;
     background: white;
     border-radius: 20px;
@@ -329,10 +329,10 @@ body {
 }
 
 .form-section {
-    padding: 30px;
+    padding: 5px;
     background: white;
-    margin-left: 30px;
-    padding-bottom: 40px;
+    margin-left: 10px;
+    padding-bottom: 10px;
 }
 
 .illustration-section {
@@ -354,19 +354,19 @@ body {
     font-size: 30px;
     font-weight: 700;
     color: #2d3748;
-    margin-bottom: 8px;
+    margin-bottom: 0px;
     margin-left: 20px;
 }
 
 .form-subtitle {
     color: #718096;
     font-size: 16px;
-    margin-bottom: 30px;
+    margin-bottom: 0px;
     margin-left: 20px;
 }
 
 .form-group {
-    margin: 20px;
+    margin: 10px;
     margin-right: 100px;
 }
 
@@ -381,13 +381,15 @@ body {
 .form-input,
 .form-select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 6px 10px;
     border: 2px solid #e2e8f0;
     border-radius: 20px;
     font-size: 15px;
     background: #f8fafc;
     transition: all 0.3s ease;
 }
+
+
 
 .form-input:focus,
 .form-select:focus {
@@ -402,7 +404,7 @@ body {
 }
 
 .submit-btn {
-    width: 82%;
+    width: 81%;
     background: #e53e3e;
     color: white;
     border: none;
@@ -412,7 +414,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-left: 20px;
+    margin-left: 8px;
 }
 
 .submit-btn:hover {
@@ -427,7 +429,32 @@ body {
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 0px;
+}
+
+/* Tambahkan ke file CSS yang sudah ada */
+
+/* Section dividers untuk form */
+.form-section-divider {
+    margin: 20px 10px 15px 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    width: 80%;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    margin-left: 10px;
+}
+
+/* Textarea styling */
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
 }
 
 /* ====== TABLE & DOCUMENT VIEW ====== */
@@ -636,7 +663,7 @@ body {
 
 .btn-purple:hover {
     background-color: #9b1414;
-    border-color: #9b1414;
+    border-color: #970e0e;
     color: white;
 }
 
@@ -644,7 +671,6 @@ body {
 .upload-area {
     border: 2px dashed #e2e8f0;
     border-radius: 12px;
-    padding: 20px;
     text-align: center;
     transition: all 0.3s ease;
     cursor: pointer;
