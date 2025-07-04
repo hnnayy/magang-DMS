@@ -70,11 +70,14 @@
                         <th>Standar</th>
                         <th>Klausul</th>
                         <th>Jenis Dokumen</th>
+                        <th>No Dokumen</th>
                         <th>Nama Dokumen</th>
                         <th>Pemilik Dokumen</th>
                         <th>File Dokumen</th>
                         <th>Revisi Dokumen</th>
                         <th>Tanggal Efektif</th>
+                        <th>Disetujui Oleh</th>
+                        <th>Tanggal Disetujui</th>
                         <th>Last Update</th>
                         <th>Aksi</th>
                     </tr>
@@ -85,10 +88,9 @@
                         <td>8.4</td>
                         <td>7.1/ 8.2.2, 9.1</td>
                         <td>Prosedur</td>
+                        <td>Tel_U-UT-WR1-DPC-BLC-DI-DP-001</td>
                         <td>
-                            <div class="document-code">Dokumen ISO 2000-1-2016</div>
-                            <div class="document-title">Prosedur Kebertungutan Layanan LMS</div>
-                            <div class="document-code">Dokumen ISO 210813816</div>
+                            <div class="document-title">Prosedur Keberlangsungan Layanan LMS</div>
                         </td>
                         <td><a href="#" class="owner-link">Layanan CENTER OF E-learning of Open Education Yan CeLOE</a></td>
                         <td>
@@ -96,6 +98,8 @@
                         </td>
                         <td><span class="revision-badge">00</span></td>
                         <td>22-Jun-2022</td>
+                        <td>Kepala Yan CeLOE</td>
+                        <td>01-Jul-2022</td>
                         <td>
                             <div>15-Aug-2024</div>
                             <div class="text-muted" style="font-size: 0.75rem;">09:08:24</div>
@@ -130,31 +134,31 @@
 
 <!-- Optional JS -->
 <script>
-    document.querySelector('.btn-primary').addEventListener('click', function() {
+    document.querySelector('.btn-primary').addEventListener('click', function () {
         alert('Filter functionality would be implemented here');
     });
 
     document.querySelectorAll('.download-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             alert('Download functionality would be implemented here');
         });
     });
 
     document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             alert('Edit functionality would be implemented here');
         });
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             if (confirm('Are you sure you want to delete this document?')) {
                 alert('Delete functionality would be implemented here');
             }
         });
     });
 
-    document.querySelector('.search-container input').addEventListener('keyup', function(e) {
+    document.querySelector('.search-container input').addEventListener('keyup', function (e) {
         if (e.key === 'Enter') {
             alert('Search functionality would be implemented here');
         }
