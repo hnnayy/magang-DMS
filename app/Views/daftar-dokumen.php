@@ -88,7 +88,7 @@
                         <td>8.4</td>
                         <td>7.1/ 8.2.2, 9.1</td>
                         <td>Prosedur</td>
-                        <td>ISO-210813816</td>
+                        <td>Tel_U-UT-WR1-DPC-BLC-DI-DP-001</td>
                         <td>
                             <div class="document-title">Prosedur Keberlangsungan Layanan LMS</div>
                         </td>
@@ -98,7 +98,7 @@
                         </td>
                         <td><span class="revision-badge">00</span></td>
                         <td>22-Jun-2022</td>
-                        <td>Admin ISO</td>
+                        <td>Kepala Yan CeLOE</td>
                         <td>01-Jul-2022</td>
                         <td>
                             <div>15-Aug-2024</div>

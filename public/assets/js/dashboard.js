@@ -281,4 +281,3 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
             document.getElementById('filterJenis').value = '';
         }
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
