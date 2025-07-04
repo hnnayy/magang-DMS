@@ -4,66 +4,55 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class Document extends Migration
+class DocumentRevision extends Migration
 {
-    public function up()
+     public function up()
     {
         $this->forge->addField([
-            'id' => [
+            'id'           => [
                 'type'           => 'INT',
                 'constraint'     => 10,
                 'unsigned'       => true,
                 'auto_increment' => true,
                 'null'           => false,
             ],
-            'type' => [
-                'type'       => 'SMALLINT',
-                'constraint' => 4,
-                'unsigned'   => true,
-                'null'       => false,
-            ],
-            'number' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 40,
-                'null'       => false,
-            ],
-            'date_published' => [
-                'type' => 'DATE',
-                'null' => false,
-            ],
-            'revision' => [
-                'type'       => 'CHAR',
-                'constraint' => 3,
-                'null'       => false,
-            ],
-            'title' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 100,
-                'null'       => false,
-            ],
-            'description' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 200,
-                'null'       => true,
-            ],
-            'unit_id' => [
+            'document_id'   => [
                 'type'       => 'INT',
                 'constraint' => 10,
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            'status' => [
-                'type'       => 'TINYINT',
-                'constraint' => 1,
+            'revision'      => [
+                'type'       => 'CHAR',
+                'constraint' => 3,
                 'null'       => false,
-                'comment'    => '0=Not Approved, 1=Approved, 2=Disapproved',
             ],
-            'createddate' => [
-                'type'    => 'DATETIME',
-                'null'    => true,
-                'default' => null,
+            'filename'      => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => false,
             ],
-            'createdby' => [
+            'filepath'      => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => false,
+            ],
+            'filesize'      => [
+                'type'       => 'INT',
+                'constraint' => 10,
+                'unsigned'   => true,
+                'null'       => false,
+            ],
+            'remark'        => [
+                'type'       => 'VARCHAR',
+                'constraint' => 200,
+                'null'       => true,
+            ],
+            'createddate'   => [
+                'type' => 'DATETIME',
+                'null' => false,
+            ],
+            'createdby'     => [
                 'type'       => 'INT',
                 'constraint' => 10,
                 'unsigned'   => true,
@@ -72,11 +61,11 @@ class Document extends Migration
         ]);
 
         $this->forge->addKey('id', true); 
-        $this->forge->createTable('document');
+        $this->forge->createTable('document_revision');
     }
 
     public function down()
     {
-        $this->forge->dropTable('document');
+        $this->forge->dropTable('document_revision');
     }
 }
