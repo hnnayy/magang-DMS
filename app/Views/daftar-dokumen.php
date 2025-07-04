@@ -71,6 +71,7 @@
                         <th>Klausul</th>
                         <th>Jenis Dokumen</th>
                         <th>No Dokumen</th>
+                        <th>Nomor</th> <!-- Tambahan kolom -->
                         <th>Nama Dokumen</th>
                         <th>Pemilik Dokumen</th>
                         <th>File Dokumen</th>
@@ -89,6 +90,7 @@
                         <td>7.1/ 8.2.2, 9.1</td>
                         <td>Prosedur</td>
                         <td>Tel_U-UT-WR1-DPC-BLC-DI-DP-001</td>
+                        <td>001</td> <!-- Isi dari kolom baru -->
                         <td>
                             <div class="document-title">Prosedur Keberlangsungan Layanan LMS</div>
                         </td>
@@ -111,7 +113,6 @@
                             </div>
                         </td>
                     </tr>
-                    <!-- Tambah baris dokumen lain sesuai kebutuhan -->
                 </tbody>
             </table>
         </div>
