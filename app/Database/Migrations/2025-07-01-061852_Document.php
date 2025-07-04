@@ -46,11 +46,6 @@ class Document extends Migration
                 'constraint' => 200,
                 'null'       => true,
             ],
-            'filepath' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 200,
-                'null'       => false,
-            ],
             'unit_id' => [
                 'type'       => 'INT',
                 'constraint' => 10,
