@@ -8,7 +8,7 @@ class DocumentModel extends Model
     protected $table = 'document';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
-    protected $allowedFields = ['type', 'number', 'date_published', 'revision', 'title', 'description', 'filepath', 'unit_id', 'status', 'createddate', 'createdby'];
+    protected $allowedFields = ['type', 'number', 'date_published', 'revision', 'title', 'description', 'unit_id', 'status', 'createddate', 'createdby'];
     
     protected $useTimestamps = false;
     protected $beforeInsert = ['setCreatedDate'];

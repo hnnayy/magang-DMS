@@ -17,9 +17,18 @@ $routes->post('CreateUser/store', 'CreateUser::store'); // POST: /CreateUser/sto
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
 
 // DataMaster
-$routes->get('data-master', 'DataMaster::index');
-$routes->get('data-master/list', 'DataMaster::list');
-$routes->get('data-master/create', 'DataMaster::create');
+$routes->get('data-master', 'DataMaster::index'); //daftar unit
+$routes->get('data-master/list', 'DataMaster::list'); // alias (opsional)
+$routes->get('data-master/create', 'DataMaster::create'); // form Tambah Unit
+$routes->post('data-master/store',  'DataMaster::store');   // proses submit
+$routes->get ('data-master/unit/(:num)/edit',    'DataMaster::edit/$1');    // form Edit Unit
+$routes->post('data-master/unit/(:num)/update',  'DataMaster::update/$1');  // simpan perubahan
+$routes->post('data-master/unit/(:num)/delete',  'DataMaster::delete/$1');  // hapus unit
+$routes->get('data-master/export/csv',   'DataMaster::exportCsv');
+$routes->get('data-master/export/excel', 'DataMaster::exportExcel');
+$routes->get('data-master/export/pdf',   'DataMaster::exportPdf');
+$routes->get('data-master/export/print', 'DataMaster::exportPrint');
+
 
 // KelolaDokumen 
 $routes->get('dokumen/add', 'KelolaDokumen::add');
