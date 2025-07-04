@@ -34,7 +34,7 @@
                 <tr>
                     <th>No</th>
                     <th>Employee ID</th>
-                    <th>Directorate</th>
+                    <th>Direktorat</th>
                     <th>Unit</th>
                     <th>Fullname</th>
                     <th>Role</th>
@@ -46,19 +46,44 @@
     <?php $i = 1; foreach ($users as $user): ?>
     <tr>
         <td><?= $i++ ?></td>
-        <td><?= $user['id'] ?></td> <!-- Employee ID -->
+        <td><?= esc($user['id']) ?></td> <!-- Employee ID -->
         <td><?= esc($user['parent_name']) ?></td> <!-- Directorate -->
         <td><?= esc($user['unit_name']) ?></td> <!-- Unit -->
         <td><?= esc($user['fullname']) ?></td> <!-- Full Name -->
         <td><?= esc($user['role_name'] ?? 'N/A') ?></td> <!-- Role -->
         <td>
             <a href="#" class="text-primary me-2" title="Delete"><i class="bi bi-trash"></i></a>
-            <a href="#" class="text-primary me-2" title="Edit"><i class="bi bi-pencil-square"></i></a>
-            <a href="#" class="text-primary me-2" title="Approve"><i class="bi bi-check-lg"></i></a>
-            <a href="#" class="text-primary" title="Not Approve"><i class="bi bi-x-lg"></i></a>
+            <a href="#" class="text-primary edit-user" 
+                data-bs-toggle="modal" 
+                data-bs-target="#editUserModal"
+                data-id="<?= $user['id'] ?>"
+                data-employee="<?= esc($user['id']) ?>"
+                data-directorate="<?= esc($user['parent_name']) ?>"
+                data-unit="<?= esc($user['unit_name']) ?>"
+                data-fullname="<?= esc($user['fullname']) ?>"
+                data-role="<?= esc($user['role_name'] ?? '') ?>">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+
         </td>
     </tr>
     <?php endforeach; ?>
+
+    <!-- DataTables core -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+    <!-- Buttons Extension -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.flash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+
 </tbody>
 
 
@@ -89,93 +114,7 @@
     </div>
 </div>
 
-<!-- Modal Edit User -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content">
-      <form method="post" action="<?= base_url('user/update') ?>">
-        <input type="hidden" name="id" id="editUserId">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit User</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Employee ID</label>
-              <input type="text" class="form-control" name="employee" id="editEmployee" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Fakultas/Direktorat</label>
-              <select class="form-select" name="fakultas" id="editFakultas" onchange="updateProdi('edit')" required>
-                <option value="" disabled selected hidden>Pilih Fakultas...</option>
-                <option value="FTE">Fakultas Teknik Elektro (FTE)</option>
-                <option value="FRI">Fakultas Rekayasa Industri (FRI)</option>
-                <option value="FIF">Fakultas Informatika (FIF)</option>
-                <option value="FEB">Fakultas Ekonomi dan Bisnis (FEB)</option>
-                <option value="FKS">Fakultas Komunikasi dan Ilmu Sosial (FKS)</option>
-                <option value="FIK">Fakultas Industri Kreatif (FIK)</option>
-                <option value="FIT">Fakultas Ilmu Terapan (FIT)</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Bagian/Unit/Program Studi</label>
-              <select class="form-select" name="unit" id="editProdi" required>
-                <option value="" disabled selected hidden>Pilih Bagian ...</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Fullname</label>
-              <input type="text" class="form-control" name="fullname" id="editFullname" required>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label" for="role">Role</label>
-                <select id="fakultas" name="fakultas" class="form-select" required>
-                    <option value="" disabled selected hidden>Pilih Role...</option>
-                    <option value="admin">Admin</option>
-                    <option value="kepalabagian">Kepala Bagian</option>
-                    <option value="kepalaunit">Kepala Unit</option>
-                    <option value="staff">Staff</option>
-                </select>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
-<!-- Modal Not Approve User -->
-<div class="modal fade" id="notApproveUserModal" tabindex="-1" aria-labelledby="notApproveUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content">
-            <form action="<?= base_url('user/notapprove') ?>" method="post">
-                <input type="hidden" name="id" id="notApproveUserId">
-                <div class="modal-header">
-                    <h5 class="modal-title">Tolak User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                <div class="mb-3">
-                    <label for="remark" class="form-label">Alasan Penolakan</label>
-                    <textarea class="form-control" name="remark" id="notApproveRemark" rows="3" placeholder="Tulis alasan penolakan..."></textarea>
-                </div>
-                <div class="alert alert-warning small">
-                    <i class="bi bi-exclamation-circle"></i> User tidak akan ditambahkan ke sistem.
-                </div>
-                </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-warning"><i class="bi bi-x-lg"></i> Tolak</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
@@ -199,7 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const unit = cells[3].textContent.toLowerCase();
             const fullname = cells[4].textContent.toLowerCase();
             const jabatan = cells[5].textContent.toLowerCase();
-            const institusi = cells[6].textContent.toLowerCase();
 
             // Search filter
             return searchTerm === '' || 
@@ -207,8 +145,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 directorate.includes(searchTerm) ||
                 unit.includes(searchTerm) ||
                 fullname.includes(searchTerm) ||
-                jabatan.includes(searchTerm) ||
-                institusi.includes(searchTerm);
+                jabatan.includes(searchTerm);
+
         });
 
         displayResults();
@@ -262,6 +200,178 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+$(document).ready(function () {
+    const table = $('#userTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'copy',
+                className: 'btn-copy-dt',
+                title: 'Data User',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+            },
+            {
+                extend: 'csv',
+                className: 'btn-csv-dt',
+                title: 'Data_User',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+            },
+            {
+                extend: 'excel',
+                className: 'btn-excel-dt',
+                title: 'Data_User',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+            },
+            {
+                extend: 'pdfHtml5',
+                className: 'btn-pdf-dt',
+                title: 'Data User', // <- untuk nama file, bukan isi PDF
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                customize: function (doc) {
+                const now = new Date();
+                const waktuCetak = now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                // Cek apakah item pertama adalah string title dan hapus jika perlu
+                if (typeof doc.content[0].text === 'string' && doc.content[0].text === 'Data User') {
+                    doc.content.splice(0, 1);
+                }
+
+                // Tambahkan logo & judul custom
+                doc.content.splice(0, 0,
+                    {
+                        text: 'Data User',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 16,
+                        margin: [0, 0, 0, 10]
+                    }
+                );
+
+                // Style header tabel
+                doc.styles.tableHeader = {
+                    fillColor: '#ececec',
+                    color: '#000000',
+                    alignment: 'center',
+                    bold: true,
+                    fontSize: 10
+                };
+
+                // Style baris
+                doc.styles.tableBodyEven = { fillColor: '#ffffff' };
+                doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+
+                // Footer
+                doc.footer = function (currentPage, pageCount) {
+                    return {
+                        columns: [
+                            { text: `${waktuCetak}`, alignment: 'left', margin: [30, 0] },
+                            { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
+                            { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30] }
+                        ],
+                        fontSize: 9
+                    };
+                };
+
+                // Atur garis & padding tabel
+                doc.content[doc.content.length - 1].layout = {
+                    hLineWidth: function () { return 0.5; },
+                    vLineWidth: function () { return 0.5; },
+                    hLineColor: function () { return '#000'; },
+                    vLineColor: function () { return '#000'; },
+                    paddingLeft: function () { return 4; },
+                    paddingRight: function () { return 4; }
+                };
+
+                // Tambahkan catatan akhir
+                doc.content.push({
+                    text: '* Daftar Pengguna Sistem',
+                    alignment: 'left',
+                    italics: true,
+                    fontSize: 9,
+                    margin: [0, 10, 0, 0]
+                });
+            }
+        },
+
+            {
+                extend: 'print',
+                className: 'btn-print-dt',
+                title: '',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+                customize: function (win) {
+                    const now = new Date();
+                    const waktuCetak = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    const tanggalCetak = now.toLocaleDateString('en-GB');
+
+                    $(win.document.body)
+                        .css('font-size', '12px')
+                        .prepend(`
+                            <h3 style="margin-bottom: 0;">Data User</h3>
+                            <hr>
+                        `);
+
+                    $(win.document.body).append(
+                        '<p style="font-style: italic; margin-top: 20px;">* Daftar Pengguna Sistem</p>'
+                    );
+
+                    $(win.document.body).append(`
+                        <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
+                            © 2025 Telkom University – Document Management System
+                        </div>
+                    `);
+
+                    // Styling tabel agar rapi
+                    const table = $(win.document.body).find('table');
+                    table.css('border-collapse', 'collapse');
+                    table.css('width', '100%');
+                    table.find('th, td').css({
+                        'border': '1px solid #000',
+                        'padding': '6px',
+                        'text-align': 'left',
+                        'vertical-align': 'top'
+                    });
+                }
+            }
+
+        ],
+        paging: false,
+        info: false,
+        ordering: false,
+        searching: false
+    });
+
+    $('.dt-buttons').hide();
+
+    $('.export-buttons .btn:contains("Copy")').on('click', function () {
+        $('.btn-copy-dt').click();
+    });
+    $('.export-buttons .btn:contains("CSV")').on('click', function () {
+        $('.btn-csv-dt').click();
+    });
+    $('.export-buttons .btn:contains("Excel")').on('click', function () {
+        $('.btn-excel-dt').click();
+    });
+    $('.export-buttons .btn:contains("PDF")').on('click', function () {
+        $('.btn-pdf-dt').click();
+    });
+    $('.export-buttons .btn:contains("Print")').on('click', function () {
+        $('.btn-print-dt').click();
+    });
+});
+
+</script>
 
 
 <?= $this->endSection() ?>
