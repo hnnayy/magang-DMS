@@ -12,5 +12,10 @@
     </div>
 
     <?= $this->include('layout/footer') ?>
+
+    <!-- Tambahkan ini untuk render JS dari setiap halaman -->
+    <?= $this->renderSection('script') ?>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
