@@ -940,3 +940,22 @@ body {
         max-width: 100%;
     }
 }
+
+/* daftar-unit */
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #b41414 !important;
+    color: white !important;
+    border-radius: 6px;
+}
+
+/* Pagination aktif */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #b41414 !important;
+    color: white !important;
+    border-radius: 6px;
+}
+
+/* Jarak dropdown entries */
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 12px;
+}

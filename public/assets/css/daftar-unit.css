@@ -1,0 +1,14 @@
+.search-container {
+    display: flex;
+    justify-content: end;
+}
+
+.search-input {
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.search-btn {
+    border-radius: 0 0.375rem 0.375rem 0;
+    background-color: #b41616;
+    color: white;
+}

@@ -9,7 +9,7 @@
         th { background:#eee; }
 
         /* ── footer di pojok kiri bawah ── */
-        .footer    {
+        .footer-pdf    {
             position: fixed;
             bottom: 0;
             left:   0;
@@ -44,8 +44,8 @@
         <?php endforeach ?>
     </tbody>
 </table>
-<!-- FOOTER -->
-<div class="footer">
+<!-- FOOTER-pdf -->
+<div class="footer-pdf">
     © <?= date('Y') ?> Nama Institusi · Halaman <span class="pagenum"></span>
 </div>
 
