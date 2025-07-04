@@ -11,6 +11,13 @@ class UnitModel extends Model
     protected $returnType = 'array';
     protected $allowedFields = ['parent_id', 'name', 'status'];
 
+    //validasi otomatis
+    protected $validationRules = [
+        'parent_id' => 'required|is_natural_no_zero',
+        'name'      => 'required|alpha_space|max_length[40]',
+        'status'    => 'permit_empty|in_list[1,2]',   // 1=Active, 2=Inactive
+    ];
+
     // Method untuk join dengan unit_parent
     public function getWithParent()
     {
