@@ -52,3 +52,5 @@ $routes->post('dokumen/delete-kategori', 'KelolaDokumen::deleteKategori');
 $routes->post('dokumen/add-kode', 'KelolaDokumen::addKode');
 $routes->post('dokumen/edit-kode', 'KelolaDokumen::editKode');
 $routes->post('dokumen/delete-kode', 'KelolaDokumen::deleteKode');
+
+$routes->get('profile', 'Profil::index');
