@@ -6,6 +6,6 @@ class PersetujuanDokumen extends BaseController
 {
     public function index(): string
     {
-        return view('persetujuan-dokumen');
+        return view('PersetujuanDokumen/persetujuan-dokumen');
     }
 }

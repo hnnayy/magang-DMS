@@ -16,6 +16,10 @@ $routes->post('CreateUser/store', 'CreateUser::store');
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
 $routes->delete('CreateUser/delete/(:num)', 'CreateUser::delete/$1');
 $routes->post('CreateUser/update', 'CreateUser::update');
+$routes->get('create-user/UserRole', 'CreateUser::CreateRole');
+$routes->get('create-user/user-privilege', 'CreateUser::privilege');
+
+
 
 // DataMaster
 $routes->get('data-master', 'DataMaster::index');

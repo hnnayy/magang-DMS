@@ -292,4 +292,38 @@ class CreateUser extends Controller
         $units = $this->unitModel->where('parent_id', $parentId)->findAll();
         return $this->response->setJSON($units);
     }
+
+
+//Create role
+    public function CreateRole()
+    {
+        $data = [
+            'title' => 'Tambah Role Baru'
+        ];
+
+        return view('CreateUser/users-role', $data);
+    }
+
+    public function storeRole()
+    {
+        $nama   = $this->request->getPost('nama');
+        $level  = $this->request->getPost('level');
+        $desc   = $this->request->getPost('desc');
+        $status = $this->request->getPost('status');
+
+        // Validasi sederhana (tanpa database)
+        if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
+            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
+        }
+
+        // Simulasi penyimpanan berhasil (tidak simpan ke DB)
+        return redirect()->to('/create-role')->with('success', 'Role baru berhasil divalidasi (simulasi).');
+    }
+
+    public function privilege()
+    {
+        return view('CreateUser/privilege');
+    }
+
+
 }

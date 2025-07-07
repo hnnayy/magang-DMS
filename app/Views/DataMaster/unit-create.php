@@ -3,9 +3,8 @@
 
 <div class="container">
     <div class="form-section">
-        <h1 class="form-title">Data Master</h1>
-        <p class="form-subtitle">Tambah Unit</p>
-
+        <h1 class="form-title">Tambah Unit</h1>
+        <hr>
         <!-- Flash message (opsional) -->
         <?php if (session('success')) : ?>
             <div class="alert alert-success"><?= session('success') ?></div>

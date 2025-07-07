@@ -9,10 +9,14 @@
                 </div>
                 <i class="fi fi-rr-angle-small-down arrow"></i>
             </div>
-            <ul class="submenu">
-                <li><a href="<?= base_url('create-user/create') ?>"><i class="fi fi-rr-user-pen"></i>Tambah User</a></li>
-                <li><a href="<?= base_url('create-user/list') ?>"><i class="fi fi-rr-users-alt"></i>Lihat User</a></li>
+           <ul class="submenu">
+                <li><a href="<?= base_url('create-user/create') ?>"><i class="fi fi-rr-user-add"></i>Tambah User</a></li>
+                <li><a href="<?= base_url('create-user/list') ?>"><i class="fi fi-rr-users-alt"></i> Lihat User</a></li>
+                <li><a href="<?= base_url('create-user/UserRole') ?>"><i class="fi fi-rr-user-pen"></i> User Role</a></li>
+                <li><a href="<?= base_url('create-user/user-privilege') ?>"><i class="fas fa-user-cog"></i> Privilege User</a></li>
+
             </ul>
+
         </li>
 
         <li class="has-submenu <?= (strpos(uri_string(), 'dokumen') !== false) ? 'open' : '' ?>">

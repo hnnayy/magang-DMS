@@ -101,54 +101,105 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
 
 <script>
-$(function () {
-    const dt = $('#documentTable').DataTable({
-        dom: '<"row mb-3"<"col-md-6 d-flex gap-2 export-buttons"B><"col-md-6 text-end"f>>' +
-             'rt' +
-             '<"row mt-3"<"col-md-6"l><"col-md-6 text-end"p>>',
+$(document).ready(function () {
+    const table = $('#documentTable').DataTable({
+        dom: '<"row mb-3"<"col-md-6 export-buttons d-flex gap-2"B><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"l><"col-md-6 text-end"p>>',
         pageLength: 5,
         order: [],
-        columnDefs: [{ orderable: false, targets: 9 }],
+        columnDefs: [
+            { orderable: false, targets: 9 },
+            { className: 'text-center', targets: 9 }
+        ],
         buttons: [
-            {
-                extend: 'copyHtml5',
-                text: 'Copy',
-                className: 'btn'
-            },
-            {
-                extend: 'csvHtml5',
-                text: 'CSV',
-                className: 'btn'
-            },
-            {
-                extend: 'excelHtml5',
-                text: 'Excel',
-                className: 'btn'
-            },
+            { extend: 'copyHtml5', text: 'Copy', className: 'btn' },
+            { extend: 'csvHtml5', text: 'CSV', className: 'btn' },
+            { extend: 'excelHtml5', text: 'Excel', className: 'btn' },
             {
                 extend: 'pdfHtml5',
                 text: 'PDF',
-                className: 'btn'
+                className: 'btn',
+                exportOptions: { columns: [0,1,2,3,4,5,6,7,8] },
+                customize: function (doc) {
+                    const now = new Date().toLocaleString('en-GB');
+                    doc.pageMargins = [0, 30, 0, 30];
+                    doc.content.splice(0, 1);
+                    doc.content.unshift({
+                        text: 'Daftar Dokumen',
+                        alignment: 'center',
+                        fontSize: 14,
+                        bold: true,
+                        margin: [0, 0, 0, 10]
+                    });
+                    doc.styles.tableHeader = {
+                        fillColor: '#e8e4e4',
+                        color: '#000',
+                        alignment: 'center',
+                        bold: true
+                    };
+                    doc.content[doc.content.length - 1].layout = {
+                        hLineWidth: () => 0.5,
+                        vLineWidth: () => 0.5,
+                        hLineColor: () => '#000',
+                        vLineColor: () => '#000',
+                        paddingLeft: () => 4,
+                        paddingRight: () => 4
+                    };
+                    doc.footer = (currentPage, pageCount) => ({
+                        columns: [
+                            { text: now, alignment: 'left', margin: [30, 0] },
+                            { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
+                            { text: currentPage + '/' + pageCount, alignment: 'right', margin: [0, 0, 30] }
+                        ],
+                        fontSize: 9
+                    });
+                    doc.content.push({
+                        text: '* Dokumen ini berisi daftar dokumen yang perlu persetujuan.',
+                        italics: true,
+                        fontSize: 9,
+                        margin: [0, 10, 0, 0]
+                    });
+                }
             },
             {
                 extend: 'print',
                 text: 'Print',
-                className: 'btn'
+                className: 'btn',
+                exportOptions: { columns: [0,1,2,3,4,5,6,7,8] },
+                customize: function (win) {
+                    const now = new Date().toLocaleString('en-GB');
+                    $(win.document.body).css('font-size', '10px').css('margin', '20px');
+                    $(win.document.body).append(` 
+                        <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar dokumen yang perlu persetujuan.</p>
+                        <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
+                            © 2025 Telkom University – Document Management System
+                        </div>
+                    `);
+                    const table = $(win.document.body).find('table');
+                    table.css({
+                        'border-collapse': 'collapse',
+                        'width': '100%'
+                    });
+                    table.find('th').css({
+                        'background-color': '#e8e4e4',
+                        'border': '1px solid #000',
+                        'padding': '6px',
+                        'text-align': 'center'
+                    });
+                    table.find('td').css({
+                        'border': '1px solid #000',
+                        'padding': '6px',
+                        'vertical-align': 'top'
+                    });
+                }
             }
         ]
     });
-
-    dt.buttons().container().appendTo('.export-buttons');
-
-    $('#searchInput').on('keyup', function () {
-        dt.search(this.value).draw();
-    });
-
-    $('#searchBtn').on('click', function () {
-        dt.search($('#searchInput').val()).draw();
-    });
 });
+
+
 </script>
 <?= $this->endSection() ?>
