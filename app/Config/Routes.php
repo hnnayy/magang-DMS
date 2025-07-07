@@ -14,6 +14,8 @@ $routes->get('create-user/create', 'CreateUser::create');
 $routes->get('CreateUser/create', 'CreateUser::create');
 $routes->post('CreateUser/store', 'CreateUser::store');
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
+$routes->delete('CreateUser/delete/(:num)', 'CreateUser::delete/$1');
+$routes->post('CreateUser/update', 'CreateUser::update');
 
 // DataMaster
 $routes->get('data-master', 'DataMaster::index');
@@ -55,3 +57,9 @@ $routes->post('admin/dokumen/delete-kategori', 'KelolaDokumen::deleteKategori');
 $routes->post('admin/dokumen/add-kode', 'KelolaDokumen::addKode');
 $routes->post('admin/dokumen/edit-kode', 'KelolaDokumen::editKode');
 $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::deleteKode');
+// CRUD routes for codes
+$routes->post('dokumen/add-kode', 'KelolaDokumen::addKode');
+$routes->post('dokumen/edit-kode', 'KelolaDokumen::editKode');
+$routes->post('dokumen/delete-kode', 'KelolaDokumen::deleteKode');
+
+$routes->get('profile', 'Profil::index');

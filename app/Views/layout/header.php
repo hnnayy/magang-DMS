@@ -48,7 +48,6 @@
         </div>
 
         <div class="user-info">
-            <i class="fi fi-rr-envelope"></i>
             <i class="fi fi-rr-bell"></i>
             <i class="fi fi-rr-search"></i>
 
@@ -58,7 +57,6 @@
                 <i class="fi fi-rr-caret-down dropdown-arrow"></i>
                 <div class="profile-menu">
                     <a href="<?= base_url('profile') ?>"><i class="fi fi-rr-user"></i> Profil Saya</a>
-                    <a href="<?= base_url('settings') ?>"><i class="fi fi-rr-settings"></i> Pengaturan</a>
                     <a href="<?= base_url('logout') ?>"><i class="fi fi-rr-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
