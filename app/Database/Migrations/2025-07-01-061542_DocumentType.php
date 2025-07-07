@@ -33,6 +33,12 @@ class DocumentType extends Migration
                 'null'       => false,
                 'comment'    => '1=Active, 2=Inactive',
             ],
+                    'kode' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 10,
+                    'null'       => true,
+                    'after'      => 'name' 
+                ],
         ]);
 
         $this->forge->addKey('id', true); 
