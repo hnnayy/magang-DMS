@@ -28,4 +28,9 @@ class UserModel extends Model
                     ->join('user creator', 'creator.id = user.createdby', 'left')
                     ->findAll();
     }
+
+    public function getUnitsByDirectorate($directorateId)
+    {
+        return $this->where('parent_name', $directorateId)->findAll(); // Sesuaikan logika
+    }
 }
