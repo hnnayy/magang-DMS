@@ -15,6 +15,8 @@ $routes->get('create-user/create', 'CreateUser::create'); // GET: /create-user/c
 $routes->get('CreateUser/create', 'CreateUser::create'); // GET: /CreateUser/create (beda kapital, tapi boleh kalau memang mau support dua-duanya)
 $routes->post('CreateUser/store', 'CreateUser::store'); // POST: /CreateUser/store
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
+$routes->delete('CreateUser/delete/(:num)', 'CreateUser::delete/$1');
+$routes->post('CreateUser/update', 'CreateUser::update');
 
 // DataMaster
 $routes->get('data-master', 'DataMaster::index'); //daftar unit
