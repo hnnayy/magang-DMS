@@ -16,7 +16,7 @@
                 <select id="fakultas" name="fakultas" class="form-input" required onchange="updateProdiOptions()">
                     <option value="" disabled selected hidden>Pilih Fakultas...</option>
                     <?php foreach ($unitParents as $parent): ?>
-                        <option value="<?= esc($parent['name']) ?>" data-id="<?= $parent['id'] ?>">
+                        <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
                             <?= esc($parent['name']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -26,7 +26,7 @@
             <!-- Unit / Prodi -->
             <div class="form-group">
                 <label class="form-label" for="prodi">Bagian/Unit/Program Studi</label>
-                <select id="prodi" name="prodi" class="form-input" required>
+                <select id="prodi" name="unit" class="form-input" required>
                     <option value="" disabled selected hidden>Pilih Bagian...</option>
                 </select>
             </div>
@@ -56,11 +56,13 @@
             <div class="form-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="active" value="active" required>
+                    <input class="form-check-input" type="radio"
+                            name="status" id="active" value="1" required>
                     <label class="form-check-label" for="active">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="inactive" value="inactive">
+                    <input class="form-check-input" type="radio"
+                            name="status" id="inactive" value="0">
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
             </div>
@@ -80,7 +82,7 @@
     function updateProdiOptions() {
         const fakultasSelect = document.getElementById('fakultas');
         const selectedOption = fakultasSelect.options[fakultasSelect.selectedIndex];
-        const parentId = selectedOption.getAttribute('data-id');
+        const parentId = fakultasSelect.value;
         const prodiSelect = document.getElementById('prodi');
 
         prodiSelect.innerHTML = '<option value="" disabled selected hidden>Loading...</option>';
@@ -91,7 +93,7 @@
                 prodiSelect.innerHTML = '<option value="" disabled selected hidden>Pilih Bagian...</option>';
                 data.forEach(unit => {
                     const option = document.createElement('option');
-                    option.value = unit.name;
+                    option.value = unit.id;
                     option.textContent = unit.name;
                     prodiSelect.appendChild(option);
                 });
