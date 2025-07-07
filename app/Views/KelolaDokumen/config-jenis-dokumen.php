@@ -23,6 +23,8 @@
     </div>
     <?php endif; ?>
 
+    
+
     <!-- Tabel Jenis Dokumen -->
     <div class="table-responsive shadow-sm rounded bg-white p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -143,11 +145,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Nama Jenis</label>
-                            <input type="text" class="form-control" name="nama" required>
+                            <input type="text" class="form-control" name="nama" style="text-transform: uppercase;" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" required>
+                            <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
@@ -183,11 +185,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Nama Jenis</label>
-                            <input type="text" class="form-control" name="nama" id="editKategoriNama" required>
+                            <input type="text" class="form-control" name="nama" id="editKategoriNama" style="text-transform: uppercase;" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" id="editKategoriKode" required>
+                            <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" required>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
@@ -225,13 +227,15 @@
                             <select class="form-select" name="jenis" required>
                                 <option value="">Pilih Jenis Dokumen</option>
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= $kategori['kode'] ?>"><?= esc($kategori['nama']) ?></option>
+                                    <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
                                 <?php endforeach; ?>
                             </select>
+
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" required>
+                            <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
+
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Nama Dokumen</label>
@@ -266,17 +270,22 @@
                             <select class="form-select" name="jenis" id="editKodeJenis" required>
                                 <option value="">Pilih Jenis Dokumen</option>
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= $kategori['kode'] ?>"><?= esc($kategori['nama']) ?></option>
+                                    <option 
+                                        value="<?= esc($kategori['kode']) ?>" 
+                                        data-nama="<?= esc($kategori['nama']) ?>">
+                                        <?= esc($kategori['nama']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
+
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" id="editKodeKode" required>
+                            <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Masukkan kode..." required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Nama Dokumen</label>
-                            <input type="text" class="form-control" name="nama" id="editKodeNama" required>
+                            <input type="text" class="form-control" name="nama" id="editKodeNama" placeholder="Masukkan nama dokumen..." required>
                         </div>
                     </div>
                 </div>
@@ -372,5 +381,9 @@ function deleteKode(id, kode) {
     }
 }
 </script>
+
+</script>
+
+
 
 <?= $this->endSection() ?>
