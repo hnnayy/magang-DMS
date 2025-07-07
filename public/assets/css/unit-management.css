@@ -1,0 +1,227 @@
+/* units/assets/css/unit-management.css */
+
+/* Table improvements */
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* Action buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    padding: 0.25rem;
+    border: none;
+    background: none;
+    transition: transform 0.2s ease;
+}
+
+.action-buttons .btn:hover {
+    transform: scale(1.1);
+}
+
+.action-buttons .btn i {
+    font-size: 1.1rem;
+}
+
+/* Modal improvements */
+.modal-content {
+    border-radius: 0.75rem;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+/* Form improvements */
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    padding: 0.75rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* DataTable customizations */
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    padding: 0.25rem 0.5rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 0.375rem;
+    margin: 0 0.125rem;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: #007bff;
+    color: white !important;
+}
+
+/* Export buttons */
+.export-buttons .btn {
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+/* No results section */
+#noResults {
+    padding: 3rem 1rem;
+}
+
+#noResults i {
+    opacity: 0.6;
+}
+
+#noResults h5 {
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+#noResults p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .export-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .export-buttons .btn {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .table th {
+        background-color: #343a40;
+        color: #fff;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #495057;
+    }
+    
+    .modal-content {
+        background-color: #343a40;
+        color: #fff;
+    }
+    
+    .form-control {
+        background-color: #495057;
+        border-color: #6c757d;
+        color: #fff;
+    }
+    
+    .form-control:focus {
+        background-color: #495057;
+        border-color: #80bdff;
+        color: #fff;
+    }
+}
