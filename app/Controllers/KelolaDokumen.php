@@ -3,66 +3,75 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\DocumentCodeModel;
+use App\Models\DocumentTypeModel;
 
 class KelolaDokumen extends BaseController
 {
-    // Dummy data kategori dokumen
-    private $kategoriDokumen = [
-        [
-            'id' => 1,
-            'nama' => 'Internal',
-            'kode' => 'internal',
-            'use_predefined_codes' => true,
-            'status' => 1
-        ],
-        [
-            'id' => 2,
-            'nama' => 'Eksternal',
-            'kode' => 'eksternal',
-            'use_predefined_codes' => true,
-            'status' => 1
-        ],
-        [
-            'id' => 3,
-            'nama' => 'Formulir',
-            'kode' => 'formulir',
-            'use_predefined_codes' => false,
-            'status' => 1
-        ],
-        [
-            'id' => 4,
-            'nama' => 'Lainnya',
-            'kode' => 'lainnya',
-            'use_predefined_codes' => false,
-            'status' => 1
-        ]
-    ];
+    protected $kategoriDokumen = [];
+    protected $kodeDokumen = [];
 
-    // Dummy data kode dokumen
-    private $kodeDokumen = [
-        'internal' => [
-            ['id' => 1, 'kode' => 'IK-001', 'nama' => 'Instruksi Kerja - Perubahan Data'],
-            ['id' => 2, 'kode' => 'IK-002', 'nama' => 'Instruksi Kerja - Backup Data'],
-            ['id' => 3, 'kode' => 'SOP-001', 'nama' => 'Standard Operating Procedure - Admin'],
-            ['id' => 4, 'kode' => 'MAN-001', 'nama' => 'Manual - Penggunaan Sistem'],
-        ],
-        'eksternal' => [
-            ['id' => 5, 'kode' => 'EXT-001', 'nama' => 'Dokumen Eksternal - Kerjasama'],
-            ['id' => 6, 'kode' => 'EXT-002', 'nama' => 'Dokumen Eksternal - Vendor'],
-            ['id' => 7, 'kode' => 'REG-001', 'nama' => 'Regulasi - Pemerintah'],
-            ['id' => 8, 'kode' => 'REG-002', 'nama' => 'Regulasi - Industri'],
-        ]
-    ];
+    public function __construct()
+    {
+        $this->documentTypeModel = new DocumentTypeModel();
+        $this->kodeDokumenModel = new DocumentCodeModel();
 
-    // View tambah dokumen
+        // Ambil dan bentuk ulang kategori dokumen
+        $kategori = $this->documentTypeModel->where('status', 1)->findAll();
+        $this->kategoriDokumen = array_map(function ($item) {
+            return [
+                'id' => $item['id'],
+                'nama' => $item['name'],
+                'kode' => strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $item['name'])),
+                'use_predefined_codes' => str_contains($item['description'] ?? '', '[predefined]'),
+            ];
+        }, $kategori);
+
+        // Ambil dan kelompokkan kode dokumen berdasarkan jenis
+ $kodeList = $this->kodeDokumenModel
+    ->select('kode_dokumen.*, document_type.name as jenis_nama')
+    ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
+    ->where('kode_dokumen.status', 1)
+    ->where('document_type.status', 1)
+    ->where('kode_dokumen.document_type_id !=', 0) // Jangan ambil yang tidak terkait
+    ->like('document_type.description', '[predefined]') // Ambil yang predefined
+    ->findAll();
+
+
+
+
+        $grouped = [];
+        foreach ($kodeList as $item) {
+            $key = $item['document_type_id']; 
+            $grouped[$key][] = [
+                'id' => $item['id'],
+                'kode' => $item['kode'],
+                'nama' => $item['nama']
+            ];
+        }
+        $this->kodeDokumen = $grouped;
+    }
+
     public function add(): string
     {
         $data['kategori_dokumen'] = $this->kategoriDokumen;
-        $data['kode_dokumen'] = $this->kodeDokumen;
+
+        $kodeDokumen = $this->kodeDokumenModel
+            ->select('kode_dokumen.*, document_type.name as jenis_nama')
+            ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
+            ->where('kode_dokumen.status', 1)
+            ->orderBy('document_type.name', 'ASC')
+            ->orderBy('kode_dokumen.kode', 'ASC')
+            ->findAll();
+
+        $data['kode_dokumen'] = [];
+        foreach ($kodeDokumen as $item) {
+            $data['kode_dokumen'][$item['jenis_nama']][] = $item;
+        }
+
         return view('KelolaDokumen/dokumen-create', $data);
     }
 
-    // Untuk ambil data kode berdasarkan jenis via AJAX
     public function getKodeDokumen()
     {
         $jenis = $this->request->getPost('jenis');
@@ -77,7 +86,28 @@ class KelolaDokumen extends BaseController
         return $this->response->setJSON($kodes);
     }
 
-    // Dummy daftar dokumen pengajuan
+    public function getKodeByJenis()
+    {
+        $jenis = $this->request->getPost('jenis');
+
+        $documentType = $this->documentTypeModel
+            ->where('name', $jenis)
+            ->where('status', 1)
+            ->first();
+
+        if (!$documentType) {
+            return $this->response->setJSON(['kode' => '']);
+        }
+
+        $kode = $this->kodeDokumenModel
+            ->where('document_type_id', $documentType['id'])
+            ->where('status', 1)
+            ->orderBy('id', 'ASC')
+            ->first();
+
+        return $this->response->setJSON(['kode' => $kode['kode'] ?? '']);
+    }
+
     public function pengajuan()
     {
         $data['documents'] = [
@@ -118,209 +148,175 @@ class KelolaDokumen extends BaseController
         return view('KelolaDokumen/daftar-pengajuan', $data);
     }
 
-    // View konfigurasi kategori
     public function configJenisDokumen()
-    {
-        // Dummy kategori dan kode dokumen (bisa diganti ke DB kalau sudah siap)
-        $data['kategori_dokumen'] = $this->kategoriDokumen;
-        $data['kode_dokumen'] = $this->kodeDokumen;
-        return view('KelolaDokumen/config-jenis-dokumen', $data);
+{
+    // Ambil jenis dokumen aktif
+    $kategori = $this->documentTypeModel->where('status', 1)->findAll();
+
+    // Map kategori
+    $data['kategori_dokumen'] = array_map(function ($item) {
+        return [
+            'id' => $item['id'],
+            'nama' => $item['name'],
+            'kode' => $item['kode'],
+            'use_predefined_codes' => str_contains($item['description'] ?? '', '[predefined]'),
+        ];
+    }, $kategori);
+
+    // Ambil hanya kode_dokumen yang terkait jenis dokumen predefined
+    $kodeList = $this->kodeDokumenModel
+        ->select('kode_dokumen.*, document_type.name as jenis_nama')
+        ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
+        ->where('kode_dokumen.status', 1)
+        ->where('document_type.status', 1)
+        ->where('document_type.description', '[predefined]') // << ini yang penting
+        ->findAll();
+
+    // Kelompokkan berdasarkan jenis
+    $grouped = [];
+    foreach ($kodeList as $item) {
+        $key = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $item['jenis_nama']));
+        $grouped[$key][] = [
+            'id' => $item['id'],
+            'kode' => $item['kode'],
+            'nama' => $item['nama']
+        ];
     }
 
-    // ==================== CRUD KATEGORI DOKUMEN ====================
+    $data['kode_dokumen'] = $grouped;
 
-    // Tambah kategori dokumen
+    return view('KelolaDokumen/config-jenis-dokumen', $data);
+}
+
+
     public function addKategori()
     {
-        $nama = $this->request->getPost('nama');
-        $kode = $this->request->getPost('kode');
+        $nama = strtoupper($this->request->getPost('nama'));
+        $kode = strtoupper($this->request->getPost('kode'));
         $use_predefined = $this->request->getPost('use_predefined_codes') ? true : false;
 
-        $data = [
-            'id' => count($this->kategoriDokumen) + 1, // Auto increment dummy
-            'nama' => $nama,
-            'kode' => $kode,
-            'use_predefined_codes' => $use_predefined,
-            'status' => 1,
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-
-        log_message('info', 'ADD KATEGORI: ' . json_encode($data));
-        
-        // Simulate success/failure
         if (empty($nama) || empty($kode)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Nama dan kode kategori harus diisi.');
+            return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('error', 'Nama dan kode kategori harus diisi.');
         }
-        
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $nama . '" berhasil ditambahkan.');
+
+        $description = $use_predefined ? '[predefined]' : null;
+
+        $this->documentTypeModel->save([
+            'name' => $nama,
+            'kode' => $kode,
+            'description' => $description,
+            'status' => 1,
+        ]);
+
+        return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
-    // Edit kategori dokumen
     public function editKategori()
     {
         $id = $this->request->getPost('id');
-        $nama = $this->request->getPost('nama');
-        $kode = $this->request->getPost('kode');
+        $nama = strtoupper($this->request->getPost('nama'));
+        $kode = strtoupper($this->request->getPost('kode'));
         $use_predefined = $this->request->getPost('use_predefined_codes') ? true : false;
 
-        $data = [
-            'id' => $id,
-            'nama' => $nama,
-            'kode' => $kode,
-            'use_predefined_codes' => $use_predefined,
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
+        if (empty($id) || empty($nama) || empty($kode)) {
+            return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('error', 'Semua field harus diisi.');
+        }
 
-        log_message('info', 'EDIT KATEGORI ID ' . $id . ': ' . json_encode($data));
-        
-        // Simulate validation
-        if (empty($nama) || empty($kode)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Nama dan kode kategori harus diisi.');
-        }
-        
-        // Check if ID exists (dummy check)
-        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['id'] == $id);
-        if (empty($kategori)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kategori tidak ditemukan.');
-        }
-        
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $nama . '" berhasil diupdate.');
+        $description = $use_predefined ? '[predefined]' : null;
+
+        $this->documentTypeModel->update($id, [
+            'name' => $nama,
+            'kode' => $kode,
+            'description' => $description,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('success', 'Kategori berhasil diupdate.');
     }
 
-    // Hapus kategori dokumen
     public function deleteKategori()
     {
         $id = $this->request->getPost('id');
-        
-        log_message('info', 'DELETE KATEGORI: ID ' . $id);
-        
-        // Check if ID exists (dummy check)
-        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['id'] == $id);
-        if (empty($kategori)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kategori tidak ditemukan.');
+
+        if (!$id) {
+            return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('error', 'ID tidak valid.');
         }
-        
-        $kategori = reset($kategori);
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kategori "' . $kategori['nama'] . '" berhasil dihapus.');
+
+        $this->documentTypeModel->update($id, [
+            'status' => 0,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('success', 'Kategori berhasil dihapus.');
     }
 
-    // ==================== CRUD KODE DOKUMEN ====================
+        public function addKode()
+        {
+            $jenis = $this->request->getPost('jenis'); // <- ID dari select option
+            $kode = strtoupper($this->request->getPost('kode'));
+            $nama = $this->request->getPost('nama');
 
-    // Tambah kode dokumen
-    public function addKode()
-    {
-        $jenis = $this->request->getPost('jenis');
-        $kode = $this->request->getPost('kode');
-        $nama = $this->request->getPost('nama');
+            $kategori = $this->documentTypeModel
+            ->where('id', $jenis)
+            ->where('status', 1)
+            ->first();
 
-        $data = [
-            'id' => rand(100, 999), // Random ID untuk dummy
-            'jenis' => $jenis,
-            'kode' => $kode,
-            'nama' => $nama,
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-
-        log_message('info', 'ADD KODE: ' . json_encode($data));
-        
-        // Simulate validation
-        if (empty($jenis) || empty($kode) || empty($nama)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Semua field harus diisi.');
+        if (!$kategori) {
+            return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('error', 'Jenis dokumen tidak ditemukan.');
         }
-        
-        // Check if jenis exists
-        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['kode'] === $jenis);
-        if (empty($kategori)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Jenis dokumen tidak ditemukan.');
-        }
-        
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kode . '" berhasil ditambahkan.');
-    }
 
-    // Edit kode dokumen
+
+            // Optional: Cek duplikasi
+            $existing = $this->kodeDokumenModel
+                ->where('kode', $kode)
+                ->where('document_type_id', $kategori['id'])
+                ->first();
+
+            if ($existing) {
+                return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('error', 'Kode dokumen sudah ada.');
+            }
+
+            $this->kodeDokumenModel->save([
+                'document_type_id' => $kategori['id'],
+                'kode' => $kode,
+                'nama' => $nama,
+                'status' => 1,
+            ]);
+
+            return redirect()->to('/kelola-dokumen/configJenisDokumen')->with('success', 'Kode dokumen berhasil ditambahkan.');
+        }
+
+
     public function editKode()
     {
         $id = $this->request->getPost('id');
-        $jenis = $this->request->getPost('jenis');
-        $kode = $this->request->getPost('kode');
-        $nama = $this->request->getPost('nama');
-
         $data = [
-            'id' => $id,
-            'jenis' => $jenis,
-            'kode' => $kode,
-            'nama' => $nama,
-            'updated_at' => date('Y-m-d H:i:s')
+            'kode' => strtoupper($this->request->getPost('kode')),
+            'nama' => $this->request->getPost('nama')
         ];
 
-        log_message('info', 'EDIT KODE ID ' . $id . ': ' . json_encode($data));
-        
-        // Simulate validation
-        if (empty($jenis) || empty($kode) || empty($nama)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Semua field harus diisi.');
-        }
-        
-        // Check if jenis exists
-        $kategori = array_filter($this->kategoriDokumen, fn($item) => $item['kode'] === $jenis);
-        if (empty($kategori)) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Jenis dokumen tidak ditemukan.');
-        }
-        
-        // Dummy check if kode exists
-        $found = false;
-        foreach ($this->kodeDokumen as $jenisKode => $kodes) {
-            foreach ($kodes as $item) {
-                if ($item['id'] == $id) {
-                    $found = true;
-                    break 2;
-                }
-            }
-        }
-        
-        if (!$found) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kode dokumen tidak ditemukan.');
-        }
-        
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kode . '" berhasil diupdate.');
+        $this->kodeDokumenModel->update($id, $data);
+
+        return redirect()->back()->with('success', 'Kode dokumen berhasil diperbarui.');
     }
 
-    // Hapus kode dokumen
-    public function deleteKode()
+    public function delete_kode()
     {
         $id = $this->request->getPost('id');
-        
-        log_message('info', 'DELETE KODE: ID ' . $id);
-        
-        // Dummy check if kode exists
-        $found = false;
-        $kodeToDelete = null;
-        foreach ($this->kodeDokumen as $jenisKode => $kodes) {
-            foreach ($kodes as $item) {
-                if ($item['id'] == $id) {
-                    $found = true;
-                    $kodeToDelete = $item;
-                    break 2;
-                }
-            }
+        if (!$id) {
+            return redirect()->back()->with('error', 'ID tidak valid.');
         }
-        
-        if (!$found) {
-            return redirect()->to('/dokumen/config-kategori')->with('error', 'Kode dokumen tidak ditemukan.');
-        }
-        
-        return redirect()->to('/dokumen/config-kategori')->with('success', 'Kode dokumen "' . $kodeToDelete['kode'] . '" berhasil dihapus.');
+
+        $this->kodeDokumenModel->delete($id);
+        return redirect()->back()->with('success', 'Kode dokumen berhasil dihapus.');
     }
 
-    // ==================== EXISTING METHODS ====================
-
-    // View modal approval
     public function approveForm($id)
     {
         $data['document_id'] = $id;
         return view('KelolaDokumen/modal-approve', $data);
     }
 
-    // Simulasi aksi approval dokumen
     public function approve()
     {
         $data = [
@@ -328,14 +324,13 @@ class KelolaDokumen extends BaseController
             'remark' => $this->request->getPost('remark'),
             'status' => 1,
             'approvedate' => date('Y-m-d H:i:s'),
-            'approveby' => 1 // user login dummy
+            'approveby' => 1
         ];
 
         log_message('info', 'APPROVAL: ' . json_encode($data));
         return redirect()->to('/dokumen/pengajuan')->with('success', 'Dokumen berhasil di-approve.');
     }
 
-    // Simulasi edit dokumen
     public function edit()
     {
         $data = [
@@ -359,7 +354,6 @@ class KelolaDokumen extends BaseController
         return redirect()->to('/dokumen/pengajuan')->with('success', 'Dokumen berhasil diupdate.');
     }
 
-    // Simulasi hapus dokumen
     public function delete($id)
     {
         log_message('info', 'DELETE: Document ID ' . $id);
