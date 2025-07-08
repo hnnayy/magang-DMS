@@ -221,7 +221,7 @@ $(document).ready(function () {
                     };
 
                     doc.content.push({
-                        text: '* Dokumen ini berisi daftar dokumen yang menunggu persetujuan.',
+                        text: '* Dokumen ini berisi daftar dokumen yang sudah disetujui.',
                         alignment: 'left',
                         italics: true,
                         fontSize: 9,
@@ -246,7 +246,7 @@ $(document).ready(function () {
                     `);
 
                     $(win.document.body).append(`
-                        <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar dokumen yang menunggu persetujuan.</p>
+                        <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar dokumen yang sudah disetujui.</p>
                         <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
                             © 2025 Telkom University – Document Management System
                         </div>
