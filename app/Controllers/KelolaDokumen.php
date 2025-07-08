@@ -375,7 +375,7 @@ public function tambah()
     $file = $this->request->getFile('file');
     $model = new DocumentModel();
 
-    if (!$file || !$file->isValid()) {
+    if (!$file->isValid()) {
         return redirect()->back()->with('error', 'File tidak valid.');
     }
 
@@ -388,24 +388,23 @@ public function tambah()
         return redirect()->back()->with('error', 'Upload file gagal: ' . $e->getMessage());
     }
 
-    $data = [
-        'fakultas' => $this->request->getPost('fakultas-direktorat'),
-        'bagian' => $this->request->getPost('bagian'),
-        'nama' => $this->request->getPost('nama-dokumen'),
-        'jenis' => $this->request->getPost('jenis-dokumen'),
-        'kode_nama' => $this->request->getPost('kode-dokumen') ?: $this->request->getPost('kode-dokumen-custom'),
-        'nomor' => $this->request->getPost('no-dokumen'),
-        'keterangan' => $this->request->getPost('keterangan'),
-        'file' => $newName,
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
+   $model->save([
+    'type'         => $this->request->getPost('jenis-dokumen'),
+    'number'       => $this->request->getPost('no-dokumen'),
+    'title'        => $this->request->getPost('nama-dokumen'),
+    'description'  => $this->request->getPost('keterangan'),
+    'filepath'     => $newName,
+    'unit_id'      => 99,
+    'createddate'  => date('Y-m-d H:i:s'),
+    'createdby'    => 1, // atau ID user dummy, bisa 99 atau 123 asal valid
+]);
 
-    $model->save($data);
 
-    log_message('info', 'UPLOAD FILE: ' . $newName);
+
+
     return redirect()->back()->with('success', 'Dokumen berhasil ditambahkan!');
 }
+
 
 
 

@@ -10,15 +10,14 @@ class DocumentModel extends Model
     protected $table = 'document'; // atau 'document' kalau migrasinya pakai itu
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'fakultas',
-        'bagian',
-        'nama',
-        'jenis',
-        'kode_nama',
-        'nomor',
-        'keterangan',
-        'file',
-        'created_at',
-        'updated_at'
-    ];
+    'type',
+    'number',
+    'title',
+    'description',
+    'filepath',
+    'unit_id',
+    'createddate',
+    'createdby'
+];
+
 }

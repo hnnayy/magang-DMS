@@ -107,6 +107,7 @@ input[type="text"]:focus {
     border: 2px solid #e1e5e9;
 }
 
+
 .privileges-options label {
     display: flex;
     align-items: center;

@@ -57,15 +57,16 @@
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio"
-                            name="status" id="active" value="1" required>
+                        name="status" id="active" value="1" checked required>
                     <label class="form-check-label" for="active">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio"
-                            name="status" id="inactive" value="0">
+                        name="status" id="inactive" value="0">
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
             </div>
+
 
             <button type="submit" class="submit-btn">Submit</button>
         </form>

@@ -2,6 +2,10 @@
 
 <?= $this->section('content') ?>
 
+<!-- Bootstrap CDN untuk bagian upload -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
@@ -39,7 +43,6 @@
                     </select>
                 </div>
 
-                <!-- Untuk jenis dengan predefined codes -->
                 <div class="form-group" id="kode-dokumen-group">
                     <label class="form-label" for="kode-dokumen">Kode-Nama Dokumen</label>
                     <select id="kode-dokumen" name="kode-dokumen" class="form-input">
@@ -47,7 +50,6 @@
                     </select>
                 </div>
 
-                <!-- Untuk jenis tanpa predefined codes -->
                 <div class="form-group" id="kode-dokumen-custom-group" style="display: none;">
                     <label class="form-label" for="kode-dokumen-custom">Kode & Nama Dokumen</label>
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
@@ -64,43 +66,55 @@
                 <textarea id="keterangan" name="keterangan" class="form-input" rows="1" placeholder="Tulis Keterangan disini..." required></textarea>
             </div>
 
+                        <!-- Bagian Upload Bootstrap -->
             <div class="form-group">
                 <label class="form-label" for="file-upload">Unggah Berkas</label>
 
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon"></div>
-                    <div class="upload-text">
-                        <button type="button" class="choose-file-btn" id="chooseFileBtn">Choose File</button>
-                        <span class="no-file-text" id="noFileText">No file chosen</span>
+                <!-- Area Upload -->
+                <div id="uploadArea"
+                    class="border border-2 rounded-3 p-4 text-center mb-3 bg-light position-relative"
+                    style="cursor: pointer; border-style: dashed; border-color: #b41616;"
+                    onmouseover="this.style.borderColor='#b41616';"
+                    onmouseout="this.style.borderColor='#b41616';"
+                >
+                    <div class="d-flex flex-column align-items-center">
+                        <i class="bi bi-cloud-arrow-up-fill" style="font-size: 2rem; color: #b41616;"></i>
+                        <strong class="mt-2">Seret dan lepas file di sini</strong>
+                        <span class="text-muted" id="noFileText" style="font-size: 0.85rem;">Belum ada file dipilih</span>
+                        <button
+                            type="button"
+                            class="btn mt-3"
+                            id="chooseFileBtn"
+                            style="border: 1px solid #b41616; color: #b41616; background-color: transparent;"
+                            onmouseover="this.style.backgroundColor='#b41616'; this.style.color='white';"
+                            onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b41616';"
+                        >
+                            Pilih File
+                        </button>
+
                     </div>
-                    <p style="font-size: 12px; color: #a0aec0; margin-top: 6px;">
-                        atau seret dan lepas file di sini
-                    </p>
                 </div>
 
-                <input type="file" id="fileInput" name="file" class="file-input" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
+                <!-- Input File -->
+                <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
 
-                <div class="file-info" id="fileInfo">
-                    <div class="file-details">
-                        <div class="file-icon" id="fileIcon"></div>
-                        <div class="file-text-info">
-                            <div class="file-name" id="fileName"></div>
-                            <div class="file-size" id="fileSize"></div>
-                        </div>
-                        <button type="button" class="remove-btn" id="removeBtn" title="Hapus file">×</button>
+                <!-- Preview File -->
+                <div id="fileInfo" class="alert alert-secondary border d-flex justify-content-between align-items-center d-none">
+                    <div>
+                        <strong id="fileName">NamaFile.pdf</strong><br>
+                        <small class="text-muted" id="fileSize">Ukuran: 123 KB</small>
                     </div>
+                    <button type="button" class="btn-close" id="removeBtn"></button>
                 </div>
 
-                <div class="error-message" id="errorMessage"></div>
-                <div class="success-message" id="successMessage"></div>
-
-                <div class="file-requirements">
-                    <div class="requirements-title"></div>
-                    <div class="requirements-text">
+                <!-- Info -->
+                <div class="file-requirements mt-1">
+                    <div class="requirements-text text-primary" style="font-size: 13px;">
                         File Upload .doc, .docx, .xlsx, .pdf, .jpg, .png
                     </div>
                 </div>
             </div>
+
 
             <button type="submit" class="submit-btn">Submit</button>
         </form>
@@ -116,40 +130,31 @@ function handleJenisChange() {
     const jenisSelect = document.getElementById('jenis-dokumen');
     const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
     const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
-    
+
     const kodeGroup = document.getElementById('kode-dokumen-group');
     const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
     const kodeSelect = document.getElementById('kode-dokumen');
     const kodeCustomInput = document.getElementById('kode-dokumen-custom');
-    
+
     if (usePredefined) {
-        // Show predefined codes dropdown
         kodeGroup.style.display = 'block';
         kodeCustomGroup.style.display = 'none';
         kodeSelect.required = true;
         kodeCustomInput.required = false;
-        
-        // Load kode dokumen options
         loadKodeDokumen(jenisSelect.value);
     } else {
-        // Show custom input
         kodeGroup.style.display = 'none';
         kodeCustomGroup.style.display = 'block';
         kodeSelect.required = false;
         kodeCustomInput.required = true;
-        
-        // Clear predefined options
         kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
     }
 }
 
 function loadKodeDokumen(jenis) {
     const kodeSelect = document.getElementById('kode-dokumen');
-    
-    // Clear existing options
     kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
-    
-    // AJAX call to get kode dokumen
+
     fetch('<?= base_url('dokumen/get-kode-dokumen') ?>', {
         method: 'POST',
         headers: {
@@ -172,39 +177,33 @@ function loadKodeDokumen(jenis) {
     });
 }
 
-// Initialize form on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Hide both kode groups initially
+document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('kode-dokumen-group').style.display = 'none';
     document.getElementById('kode-dokumen-custom-group').style.display = 'none';
 });
 
-// Event saat tombol "Choose File" diklik
 document.getElementById('chooseFileBtn').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
 
-// Event saat file dipilih
 document.getElementById('fileInput').addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
         document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
-        document.getElementById('fileInfo').style.display = 'block';
-        document.getElementById('noFileText').textContent = file.name;
+        document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
+        document.getElementById('fileInfo').classList.remove('d-none');
+        document.getElementById('uploadArea').classList.add('d-none');
     }
 });
 
-// Event saat tombol "×" (hapus file) diklik
 document.getElementById('removeBtn').addEventListener('click', function () {
     const fileInput = document.getElementById('fileInput');
-    fileInput.value = ''; // kosongkan file
+    fileInput.value = '';
     document.getElementById('fileName').textContent = '';
     document.getElementById('fileSize').textContent = '';
-    document.getElementById('fileInfo').style.display = 'none';
-    document.getElementById('noFileText').textContent = 'No file chosen';
+    document.getElementById('fileInfo').classList.add('d-none');
+    document.getElementById('uploadArea').classList.remove('d-none');
 });
-
 </script>
 
 <?= $this->endSection() ?>

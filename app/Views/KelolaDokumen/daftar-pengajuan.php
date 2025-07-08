@@ -247,11 +247,22 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg me-2"></i>Simpan Perubahan
-                        </button>
+                        <div class="row w-100">
+                            <div class="col-6 pe-2">
+                    <button type="button" class="btn w-100 text-white" style="background-color: #b41616;" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                </div>
+
+                            <div class="col-6 ps-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-check-lg me-2"></i>Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
                     </div>
+
+
                 </form>
             </div>
         </div>
@@ -259,138 +270,53 @@
 
     <!-- Modal Approve Dokumen -->
     <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-sm">
-                <form onsubmit="handleApproveSubmit(event)">
+                <form onsubmit="handleApproveSubmit(event)" class="p-3">
                     <input type="hidden" name="document_id" id="approveDocumentId">
 
                     <!-- Header -->
-                    <div class="modal-header border-bottom">
+                    <div class="modal-header border-bottom-0 pb-2">
                         <h5 class="modal-title fw-bold" id="approveModalLabel">Persetujuan Dokumen</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
 
-                    <div class="modal-body p-4">
-                        <div class="row g-4">
-
-                            <!-- Approver Info -->
-                            <div class="col-md-6">
-                                <div class="card border-0 bg-white h-100">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3">Informasi Approver</h6>
-                                        <div class="mb-3">
-                                            <label for="approved_by" class="form-label">Nama Pihak yang Menyetujui</label>
-                                            <input type="text" class="form-control" name="approved_by" id="approved_by" placeholder="Masukkan nama lengkap" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="approval_date" class="form-label">Tanggal Persetujuan</label>
-                                            <input type="date" class="form-control" name="approval_date" id="approval_date" value="2025-07-04" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ISO Standards -->
-                            <div class="col-md-6">
-                                <div class="card border-0 bg-white h-100">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3">Standar ISO</h6>
-                                        <div class="iso-standards-grid">
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="iso_standards[]" value="ISO 9001" id="iso9001">
-                                                <label class="form-check-label" for="iso9001">
-                                                    ISO 9001 - Sistem Manajemen Mutu
-                                                </label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="iso_standards[]" value="ISO 14001" id="iso14001">
-                                                <label class="form-check-label" for="iso14001">
-                                                    ISO 14001 - Manajemen Lingkungan
-                                                </label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="iso_standards[]" value="ISO 45001" id="iso45001">
-                                                <label class="form-check-label" for="iso45001">
-                                                    ISO 45001 - Kesehatan & Keselamatan Kerja
-                                                </label>
-                                            </div>
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" name="iso_standards[]" value="ISO 27001" id="iso27001">
-                                                <label class="form-check-label" for="iso27001">
-                                                    ISO 27001 - Keamanan Informasi
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Clauses -->
-                            <div class="col-md-12">
-                                <div class="card border-0 bg-white">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3">Klausul Terkait</h6>
-                                        <div class="row g-3">
-                                            <div class="col-md-3">
-                                                <label class="form-label">ISO 9001</label>
-                                                <select class="form-select" name="clause_9001[]" multiple>
-                                                    <option value="4.1">4.1 Konteks Organisasi</option>
-                                                    <option value="5.1">5.1 Kepemimpinan</option>
-                                                    <option value="6.1">6.1 Risiko & Peluang</option>
-                                                    <option value="8.5">8.5 Produksi</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">ISO 14001</label>
-                                                <select class="form-select" name="clause_14001[]" multiple>
-                                                    <option value="6.1">6.1 Aspek Lingkungan</option>
-                                                    <option value="7.2">7.2 Kompetensi</option>
-                                                    <option value="8.1">8.1 Operasional</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">ISO 45001</label>
-                                                <select class="form-select" name="clause_45001[]" multiple>
-                                                    <option value="5.4">5.4 Konsultasi</option>
-                                                    <option value="6.2">6.2 Tujuan</option>
-                                                    <option value="8.1">8.1 Operasional</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">ISO 27001</label>
-                                                <select class="form-select" name="clause_27001[]" multiple>
-                                                    <option value="6.1.3">6.1.3 Risiko Keamanan</option>
-                                                    <option value="7.2.2">7.2.2 Kesadaran</option>
-                                                    <option value="A.9">A.9 Kontrol Akses</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Remarks -->
-                            <div class="col-12">
-                                <div class="card border-0 bg-white">
-                                    <div class="card-body">
-                                        <h6 class="fw-semibold mb-3">Catatan Tambahan</h6>
-                                        <textarea class="form-control" name="remarks" id="remarks" rows="4" placeholder="Masukkan catatan tambahan jika ada..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-
+                    <!-- Body -->
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="approved_by" class="form-label">Nama Pihak yang Menyetujui</label>
+                            <input type="text" class="form-control" name="approved_by" id="approved_by" placeholder="Masukkan nama lengkap" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="approval_date" class="form-label">Tanggal Persetujuan</label>
+                            <input type="date" class="form-control" name="approval_date" id="approval_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">Catatan Tambahan</label>
+                            <textarea class="form-control" name="remarks" id="remarks" rows="3" placeholder="Masukkan catatan tambahan jika ada..."></textarea>
                         </div>
                     </div>
 
                     <!-- Footer -->
-                    <div class="modal-footer border-top">
-                        <button type="submit" class="btn btn-primary">Setujui Dokumen</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <div class="row w-100">
+                            <div class="col-6 pe-1">
+                                <button type="button" class="btn w-100 text-white" style="background-color: #b41616;" data-bs-dismiss="modal">
+                                    Not Approve
+                                </button>
+                            </div>
+                            <div class="col-6 ps-1">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-check-lg me-2"></i>Approve
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
