@@ -222,7 +222,7 @@ body {
 }
 
 .has-submenu.open .submenu {
-    max-height: 200px;
+    max-height: 250px;
 }
 
 .submenu li {
