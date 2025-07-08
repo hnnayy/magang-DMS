@@ -9,6 +9,18 @@
 
     <div class="form-content">
         <form method="post" action="#" id="privilegeForm">
+            <!-- Role -->
+            <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" name="role" required>
+                    <option value="" disabled selected hidden>Pilih Role...</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                    <option value="kepalabagian">Kepala Bagian</option>
+                    <option value="kepalaunit">Kepala Unit</option>
+                </select>
+            </div>
+
             <!-- Submenu -->
             <div class="form-group">
                 <label for="submenu">Submenu</label>
@@ -19,18 +31,6 @@
                     <option value="Dokumen">Dokumen</option>
                     <option value="Persetujuan">Persetujuan</option>
                     <option value="Reporting > Monthly Report">Reporting > Monthly Report</option>
-                </select>
-            </div>
-
-            <!-- Role -->
-            <div class="form-group">
-                <label for="role">Role</label>
-                <select id="role" name="role" required>
-                    <option value="" disabled selected hidden>Pilih Role...</option>
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
-                    <option value="kepalabagian">Kepala Bagian</option>
-                    <option value="kepalaunit">Kepala Unit</option>
                 </select>
             </div>
 
