@@ -16,9 +16,10 @@ $routes->post('CreateUser/store', 'CreateUser::store');
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
 $routes->delete('CreateUser/delete/(:num)', 'CreateUser::delete/$1');
 $routes->post('CreateUser/update', 'CreateUser::update');
-$routes->get('create-user/UserRole', 'CreateUser::CreateRole');
-$routes->get('create-user/user-privilege', 'CreateUser::privilege');
 
+$routes->get('create-user/user-role', 'CreateUser::createRole');
+$routes->get('create-user/user-privilege', 'CreateUser::privilege');
+$routes->post('create-user/store-role', 'CreateUser::storeRole'); // jika ada form post
 
 
 // DataMaster
@@ -39,12 +40,11 @@ $routes->get('dokumen/add', 'KelolaDokumen::add');
 $routes->get('dokumen/pengajuan', 'KelolaDokumen::pengajuan');
 $routes->get('dokumen/config-jenis-dokumen', 'KelolaDokumen::configJenisDokumen');
 
+
 $routes->get('kelola-dokumen/configJenisDokumen', 'KelolaDokumen::configJenisDokumen');
 $routes->get('dokumen/config-kategori', 'KelolaDokumen::configJenisDokumen');
 $routes->post('/kelola-dokumen/get-kode-by-jenis', 'KelolaDokumen::getKodeByJenis');
 $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::delete_kode');
-
-
 
 // DaftarDokumen
 $routes->get('dokumen/daftar', 'DaftarDokumen::index');
@@ -57,13 +57,10 @@ $routes->post('admin/dokumen/add-kategori', 'KelolaDokumen::addKategori');
 $routes->post('admin/dokumen/edit-kategori', 'KelolaDokumen::editKategori');
 $routes->post('admin/dokumen/delete-kategori', 'KelolaDokumen::deleteKategori');
 
-// CRUD routes for codes (gunakan prefiks admin untuk konsistensi dengan form)
+// CRUD routes for codes
 $routes->post('admin/dokumen/add-kode', 'KelolaDokumen::addKode');
 $routes->post('admin/dokumen/edit-kode', 'KelolaDokumen::editKode');
 $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::deleteKode');
-// CRUD routes for codes
-$routes->post('dokumen/add-kode', 'KelolaDokumen::addKode');
-$routes->post('dokumen/edit-kode', 'KelolaDokumen::editKode');
-$routes->post('dokumen/delete-kode', 'KelolaDokumen::deleteKode');
+
 
 $routes->get('profile', 'Profil::index');

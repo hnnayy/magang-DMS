@@ -295,12 +295,9 @@ class CreateUser extends Controller
 
 
 //Create role
-    public function CreateRole()
+    public function createRole()
     {
-        $data = [
-            'title' => 'Tambah Role Baru'
-        ];
-
+        $data = ['title' => 'Tambah Role Baru'];
         return view('CreateUser/users-role', $data);
     }
 
@@ -311,13 +308,11 @@ class CreateUser extends Controller
         $desc   = $this->request->getPost('desc');
         $status = $this->request->getPost('status');
 
-        // Validasi sederhana (tanpa database)
         if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
             return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
         }
 
-        // Simulasi penyimpanan berhasil (tidak simpan ke DB)
-        return redirect()->to('/create-role')->with('success', 'Role baru berhasil divalidasi (simulasi).');
+        return redirect()->to('/create-user/user-role')->with('success', 'Role baru berhasil divalidasi (simulasi).');
     }
 
     public function privilege()

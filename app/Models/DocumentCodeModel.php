@@ -9,6 +9,7 @@ class DocumentCodeModel extends Model
     protected $table = 'kode_dokumen';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
+    
     protected $allowedFields = [
         'document_type_id', 
         'kode',
@@ -17,5 +18,6 @@ class DocumentCodeModel extends Model
         'created_at',
         'updated_at',
     ];
+    
     protected $useTimestamps = true;
 }
