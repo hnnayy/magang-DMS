@@ -77,4 +77,25 @@
     <?php endif; ?>
 </script>
 
+<script>
+    // Fungsi untuk kapitalisasi setiap kata
+    function capitalizeWords(str) {
+        return str.replace(/\b\w/g, function(char) {
+            return char.toUpperCase();
+        });
+    }
+
+    // Event saat user mengetik di field nama
+    document.getElementById('nama').addEventListener('input', function () {
+        const lower = this.value.toLowerCase();
+        this.value = capitalizeWords(lower);
+    });
+
+    // Pastikan input terformat benar saat form disubmit
+    document.getElementById('createRoleForm').addEventListener('submit', function () {
+        const input = document.getElementById('nama');
+        input.value = capitalizeWords(input.value.toLowerCase());
+    });
+</script>
+
 <?= $this->endSection() ?>
