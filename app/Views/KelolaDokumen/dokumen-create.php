@@ -8,7 +8,7 @@
             <h2>Tambah Dokumen</h2>
         </div>
 
-        <form id="addDocumentForm">
+        <form id="addDocumentForm" action="<?= base_url('kelola-dokumen/tambah') ?>" method="post" enctype="multipart/form-data">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
@@ -41,7 +41,7 @@
 
                 <!-- Untuk jenis dengan predefined codes -->
                 <div class="form-group" id="kode-dokumen-group">
-                    <label class="form-label" for="kode-dokumen">Kode- Nama Dokumen</label>
+                    <label class="form-label" for="kode-dokumen">Kode-Nama Dokumen</label>
                     <select id="kode-dokumen" name="kode-dokumen" class="form-input">
                         <option value="">-- Pilih Dokumen --</option>
                     </select>
@@ -55,8 +55,8 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="revisi-dokumen">Revisi Dokumen</label>
-                <input type="text" id="revisi-dokumen" name="revisi-dokumen" class="form-input" placeholder="Tulis Revisi Dokumen disini..." required>
+                <label class="form-label" for="no-dokumen">Nomor Dokumen</label>
+                <input type="text" id="no-dokumen" name="no-dokumen" class="form-input" placeholder="Tulis Nomor Dokumen disini..." required>
             </div>
 
             <div class="form-group">
@@ -78,7 +78,7 @@
                     </p>
                 </div>
 
-                <input type="file" id="fileInput" class="file-input" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
+                <input type="file" id="fileInput" name="file" class="file-input" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
 
                 <div class="file-info" id="fileInfo">
                     <div class="file-details">
@@ -178,6 +178,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('kode-dokumen-group').style.display = 'none';
     document.getElementById('kode-dokumen-custom-group').style.display = 'none';
 });
+
+// Event saat tombol "Choose File" diklik
+document.getElementById('chooseFileBtn').addEventListener('click', function () {
+    document.getElementById('fileInput').click();
+});
+
+// Event saat file dipilih
+document.getElementById('fileInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        document.getElementById('fileInfo').style.display = 'block';
+        document.getElementById('noFileText').textContent = file.name;
+    }
+});
+
+// Event saat tombol "×" (hapus file) diklik
+document.getElementById('removeBtn').addEventListener('click', function () {
+    const fileInput = document.getElementById('fileInput');
+    fileInput.value = ''; // kosongkan file
+    document.getElementById('fileName').textContent = '';
+    document.getElementById('fileSize').textContent = '';
+    document.getElementById('fileInfo').style.display = 'none';
+    document.getElementById('noFileText').textContent = 'No file chosen';
+});
+
 </script>
 
 <?= $this->endSection() ?>
