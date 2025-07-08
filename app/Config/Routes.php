@@ -20,7 +20,12 @@ $routes->post('CreateUser/update', 'CreateUser::update');
 $routes->get('create-user/user-role', 'CreateUser::createRole');
 $routes->get('create-user/user-privilege', 'CreateUser::privilege');
 $routes->post('create-user/store-role', 'CreateUser::storeRole'); // jika ada form post
+//cipa
+$routes->post('create-role/store', 'CreateUser::storeRole');
 
+//Privilege
+$routes->get('create-user/privilege',        'CreateUser::privilege');
+$routes->post('create-user/privilege/store', 'CreateUser::storePrivilege');
 
 // DataMaster
 $routes->get('data-master', 'DataMaster::index');
@@ -64,3 +69,4 @@ $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::deleteKode');
 
 
 $routes->get('profile', 'Profil::index');
+

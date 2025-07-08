@@ -19,4 +19,10 @@ class PrivilegeModel extends Model
                     ->join('menu', 'menu.id = submenu.parent', 'left')
                     ->findAll();
     }
+    public function exists($roleId, $submenuId)
+    {
+        return $this->where(['role_id' => $roleId, 'submenu_id' => $submenuId])
+                    ->countAllResults() > 0;
+    }
+
 }

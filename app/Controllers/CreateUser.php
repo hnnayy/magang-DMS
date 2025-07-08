@@ -16,7 +16,10 @@ class CreateUser extends Controller
     protected $userModel;
     protected $roleModel;
     protected $userRoleModel;
+    protected $submenuModel;
+    protected $privilegeModel;
 
+    
     public function __construct()
     {
         $this->unitParentModel = new UnitParentModel();
@@ -24,6 +27,8 @@ class CreateUser extends Controller
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
         $this->userRoleModel = new UserRoleModel();
+        $this->submenuModel   = new \App\Models\SubmenuModel();
+        $this->privilegeModel = new \App\Models\PrivilegeModel();
     }
 
     public function create()
@@ -302,10 +307,10 @@ class CreateUser extends Controller
         return $this->response->setJSON($units);
     }
 
-   public function privilege()
-    {
-        return view('CreateUser/privilege');
-}
+//    public function privilege()
+//     {
+//         return view('CreateUser/privilege');
+// }
 
 //Create role
     public function createRole()
@@ -336,5 +341,55 @@ class CreateUser extends Controller
         return redirect()->to('/create-user/user-role')->with('success', 'Role baru berhasil ditambahkan.');
     }
 
+    public function privilege()
+    {
+        $data = [
+            'title'    => 'Tambah Privilege',
+            'roles'    => $this->roleModel
+                               ->where('status', 1)
+                               ->orderBy('name')
+                               ->findAll(),
+            'submenus' => $this->submenuModel
+                               ->select('submenu.id, submenu.name,
+                                         menu.name as menu_name')
+                               ->join('menu','menu.id = submenu.parent','left')
+                               ->where('submenu.status', 1)
+                               ->orderBy('menu.name, submenu.name')
+                               ->findAll(),
+        ];
+        return view('CreateUser/privilege', $data);
+    }
 
+    public function storePrivilege()
+    {
+        $roleId   = $this->request->getPost('role');
+        $submenu  = $this->request->getPost('submenu');   // array id
+        $actions  = $this->request->getPost('privileges'); // create/update/delete/read
+
+        // validasi role & submenu (pastikan ada di DB)
+        if (! $this->roleModel->find($roleId))
+            return $this->response->setJSON(['error'=>'Role tidak ditemukan'])->setStatusCode(404);
+
+        if (empty($submenu))
+            return $this->response->setJSON(['error'=>'Pilih minimal satu submenu'])->setStatusCode(400);
+
+        // masukkan satu‑per‑satu submenu
+        foreach ($submenu as $sid) {
+            if (! $this->submenuModel->find($sid)) continue; // lewati yg tak valid
+
+            $this->privilegeModel->insert([
+                'role_id'    => $roleId,
+                'submenu_id' => $sid,
+                'create'     => in_array('create',  $actions) ? 1 : 0,
+                'update'     => in_array('update',  $actions) ? 1 : 0,
+                'delete'     => in_array('delete',  $actions) ? 1 : 0,
+                'approve'    => in_array('read',    $actions) ? 1 : 0, // atau `read`
+            ]);
+        }
+
+        return $this->response->setJSON(['message'=>'Privilege berhasil disimpan']);
+    }
 }
+
+
+

@@ -13,11 +13,12 @@
             <div class="form-group">
                 <label for="role">Role</label>
                 <select id="role" name="role" required>
-                    <option value="" disabled selected hidden>Pilih Role...</option>
-                    <option value="admin">Admin</option>
-                    <option value="staff">Staff</option>
-                    <option value="kepalabagian">Kepala Bagian</option>
-                    <option value="kepalaunit">Kepala Unit</option>
+                    <option value="" hidden>Pilih Role...</option>
+                    <?php foreach ($roles as $r): ?>
+                        <option value="<?= $r['id']; ?>">
+                            <?= esc($r['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -25,12 +26,11 @@
             <div class="form-group">
                 <label for="submenu">Submenu</label>
                 <select id="submenu" name="submenu[]" multiple="multiple" required>
-                    <option value="User Management > User List">User Management > User List</option>
-                    <option value="Role Management > Role Settings">Role Management > Role Settings</option>
-                    <option value="Dashboard">Dashboard</option>
-                    <option value="Dokumen">Dokumen</option>
-                    <option value="Persetujuan">Persetujuan</option>
-                    <option value="Reporting > Monthly Report">Reporting > Monthly Report</option>
+                    <?php foreach ($submenus as $s): ?>
+                        <option value="<?= $s['id']; ?>">
+                            <?= esc($s['menu_name'] . ' > ' . $s['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
@@ -57,21 +57,31 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-    $(document).ready(function () {
-        $('#submenu').select2({
-            placeholder: "Pilih Submenu...",
-            width: '100%',
-            allowClear: true,
-            tags: false,
-            createTag: function () { return null; },
-            insertTag: function () { return null; }
-        });
+$(function () {
 
-        $('.btn-primary').on('click', function (e) {
-            e.preventDefault();
-            alert('Save button clicked');
-        });
+    /* ───────── Inisialisasi Select2 ───────── */
+    $('#submenu').select2({
+        placeholder : 'Pilih Submenu...',
+        width       : '100%',
+        allowClear  : true,
+        tags        : false,              // non‑editable
+        createTag   : () => null,
+        insertTag   : () => null
     });
+
+    /* ───────── Submit Form Privilege ───────── */
+    $('#privilegeForm').on('submit', function (e) {
+        e.preventDefault();
+
+        $.post('/create-user/privilege/store', $(this).serialize())
+         .done(res  => Swal.fire({icon:'success', title:'Berhasil', text:res.message}))
+         .fail(xhr => {
+              const msg = xhr.responseJSON?.error ?? 'Gagal menyimpan privilege';
+              Swal.fire({icon:'error', title:'Error', text: msg});
+         });
+    });
+
+});
 </script>
 
 <?= $this->endSection() ?>
