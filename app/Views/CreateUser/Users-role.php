@@ -19,8 +19,13 @@
             <!-- Level -->
             <div class="form-group">
                 <label class="form-label" for="level">Level</label>
-                <input type="number" id="level" name="level" class="form-input" placeholder="Masukkan Level..." required>
+                <select id="level" name="level" class="form-input" required>
+                    <option value="">-- Pilih Level --</option>
+                    <option value="1">1 - Directorate / Faculty</option>
+                    <option value="2">2 - Unit</option>
+                </select>
             </div>
+
 
             <!-- Deskripsi -->
             <div class="form-group">
