@@ -21,8 +21,8 @@
                 <label class="form-label" for="level">Level</label>
                 <select id="level" name="level" class="form-input" required>
                     <option value="">-- Pilih Level --</option>
-                    <option value="1">1 - Directorate / Faculty</option>
-                    <option value="2">2 - Unit</option>
+                    <option value="1">Directorate / Faculty</option>
+                    <option value="2">Unit</option>
                 </select>
             </div>
 
