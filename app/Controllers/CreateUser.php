@@ -28,14 +28,23 @@ class CreateUser extends Controller
 
     public function create()
     {
+        $unitParents = $this->unitParentModel->findAll();
+
+        // Ambil role unik berdasarkan nama (misalnya admin, kepala unit, dll)
+        $roles = $this->roleModel
+                    ->select('MIN(id) as id, name') // ambil satu id acak (terkecil)
+                    ->groupBy('name')
+                    ->findAll();
+
         $data = [
-            'unitParents' => $this->unitParentModel->findAll(),
-            'roles' => $this->roleModel->findAll(),
-            'title' => 'Create User'
+            'unitParents' => $unitParents,
+            'roles'       => $roles,
+            'title'       => 'Create User'
         ];
 
         return view('CreateUser/users-create', $data);
     }
+
 
     /* ─────────────────────────  SIMPAN USER BARU  ───────────────────────── */
     public function store()
@@ -293,6 +302,10 @@ class CreateUser extends Controller
         return $this->response->setJSON($units);
     }
 
+   public function privilege()
+    {
+        return view('CreateUser/privilege');
+}
 
 //Create role
     public function createRole()
