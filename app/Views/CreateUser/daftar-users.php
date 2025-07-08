@@ -151,7 +151,7 @@ $(document).ready(function () {
 
             doc.content.splice(0, 0,
                 {
-                    text: 'Data User',
+                    text: 'Data Users',
                     alignment: 'center',
                     bold: true,
                     fontSize: 16,
