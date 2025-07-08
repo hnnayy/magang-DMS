@@ -120,14 +120,16 @@ $(document).ready(function () {
         text: 'CSV', 
         className: 'btn',
         title: 'Data Users',             
-        filename: 'data_users'           
+        filename: 'data_users',
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }  // Exclude column 6 (Action)
       },
       { 
         extend: 'excelHtml5', 
         text: 'Excel', 
         className: 'btn',
         title: 'Data Users',             
-        filename: 'data_users'           
+        filename: 'data_users',
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }  // Exclude column 6 (Action)
       },
       {
         extend: 'pdfHtml5',

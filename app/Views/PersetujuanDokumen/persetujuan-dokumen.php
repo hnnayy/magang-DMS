@@ -142,10 +142,134 @@ $(document).ready(function () {
         ],
         buttons: [
             { extend: 'copyHtml5', text: 'Copy', className: 'btn' },
-            { extend: 'csvHtml5', text: 'CSV', className: 'btn' },
-            { extend: 'excelHtml5', text: 'Excel', className: 'btn' },
-            { extend: 'pdfHtml5', text: 'PDF', className: 'btn' },
-            { extend: 'print', text: 'Print', className: 'btn' }
+            { 
+                extend: 'csvHtml5', 
+                text: 'CSV', 
+                className: 'btn',
+                title: 'Persetujuan Dokumen',             
+                filename: 'persetujuan_dokumen',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] }
+            },
+            { 
+                extend: 'excelHtml5', 
+                text: 'Excel', 
+                className: 'btn',
+                title: 'Persetujuan Dokumen',             
+                filename: 'persetujuan_dokumen',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] } 
+            },
+            {
+                extend: 'pdfHtml5',
+                className: 'btn-pdf-dt',
+                title: 'Persetujuan Dokumen', 
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+                customize: function (doc) {
+                    const now = new Date();
+                    const waktuCetak = now.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+
+                    if (typeof doc.content[0].text === 'string' && doc.content[0].text === 'Persetujuan Dokumen') {
+                        doc.content.splice(0, 1);
+                    }
+
+                    doc.content.splice(0, 0,
+                        {
+                            text: 'Persetujuan Dokumen',
+                            alignment: 'center',
+                            bold: true,
+                            fontSize: 16,
+                            margin: [0, 0, 0, 10]
+                        }
+                    );
+
+                    doc.styles.tableHeader = {
+                        fillColor: '#ececec',
+                        color: '#000000',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 9
+                    };
+
+                    doc.styles.tableBodyEven = { fillColor: '#ffffff' };
+                    doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+
+                    // Footer
+                    doc.footer = function (currentPage, pageCount) {
+                        return {
+                            columns: [
+                                { text: `${waktuCetak}`, alignment: 'left', margin: [30, 0] },
+                                { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
+                                { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30] }
+                            ],
+                            fontSize: 9
+                        };
+                    };
+
+                    doc.content[doc.content.length - 1].layout = {
+                        hLineWidth: function () { return 0.5; },
+                        vLineWidth: function () { return 0.5; },
+                        hLineColor: function () { return '#000'; },
+                        vLineColor: function () { return '#000'; },
+                        paddingLeft: function () { return 4; },
+                        paddingRight: function () { return 4; }
+                    };
+
+                    doc.content.push({
+                        text: '* Dokumen ini berisi daftar dokumen yang menunggu persetujuan.',
+                        alignment: 'left',
+                        italics: true,
+                        fontSize: 9,
+                        margin: [0, 10, 0, 0]
+                    });
+                }
+            },
+            {
+                extend: 'print',
+                text: 'Print',
+                className: 'btn',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
+                customize: function (win) {
+                    const now = new Date().toLocaleString('en-GB');
+                    $(win.document.body).css('font-size', '12px').css('margin', '20px');
+
+                    $(win.document.body).find('h1, .page-title').remove();
+
+                    $(win.document.body).prepend(`
+                        <h2 style="text-align:center; margin-bottom: 0;">Persetujuan Dokumen</h2>
+                        <hr>
+                    `);
+
+                    $(win.document.body).append(`
+                        <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar dokumen yang menunggu persetujuan.</p>
+                        <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
+                            © 2025 Telkom University – Document Management System
+                        </div>
+                    `);
+
+                    const table = $(win.document.body).find('table');
+                    table.css({
+                        'border-collapse': 'collapse',
+                        'width': '100%'
+                    });
+                    table.find('th').css({
+                        'background-color': '#e8e4e4',
+                        'border': '1px solid #000',
+                        'padding': '6px',
+                        'text-align': 'center'
+                    });
+                    table.find('td').css({
+                        'border': '1px solid #000',
+                        'padding': '6px',
+                        'vertical-align': 'top'
+                    });
+                }
+            }
         ]
     });
 
