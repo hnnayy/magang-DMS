@@ -312,12 +312,15 @@ class CreateUser extends Controller
             return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
         }
 
-        return redirect()->to('/create-user/user-role')->with('success', 'Role baru berhasil divalidasi (simulasi).');
-    }
+        // Simpan ke database
+        $this->roleModel->insert([
+            'name'         => $nama,
+            'access_level' => $level,
+            'description'  => $desc,
+            'status'       => ($status === 'active') ? 1 : 2,
+        ]);
 
-    public function privilege()
-    {
-        return view('CreateUser/privilege');
+        return redirect()->to('/create-user/user-role')->with('success', 'Role baru berhasil ditambahkan.');
     }
 
 
