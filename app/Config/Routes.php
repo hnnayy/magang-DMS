@@ -70,3 +70,8 @@ $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::deleteKode');
 
 $routes->get('profile', 'Profil::index');
 
+
+//cipa
+$routes->post('create-role/store', 'CreateUser::storeRole');
+$routes->post('dokumen/get-kode-dokumen', 'KelolaDokumen::getKodeDokumen');
+$routes->post('kelola-dokumen/tambah', 'KelolaDokumen::tambah');
