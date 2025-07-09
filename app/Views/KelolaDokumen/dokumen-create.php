@@ -5,13 +5,16 @@
 <!-- Bootstrap CDN untuk bagian upload -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
             <h2>Tambah Dokumen</h2>
         </div>
-
+    
         <form id="addDocumentForm" action="<?= base_url('kelola-dokumen/tambah') ?>" method="post" enctype="multipart/form-data">
             <div class="form-row">
                 <div class="form-group">
@@ -205,5 +208,24 @@ document.getElementById('removeBtn').addEventListener('click', function () {
     document.getElementById('uploadArea').classList.remove('d-none');
 });
 </script>
+
+<script>
+<?php if (session()->getFlashdata('success')): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: '<?= session()->getFlashdata('success') ?>',
+        confirmButtonText: 'Okay'
+    });
+<?php elseif (session()->getFlashdata('error')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: '<?= session()->getFlashdata('error') ?>',
+        confirmButtonText: 'Okay'
+    });
+<?php endif; ?>
+</script>
+
 
 <?= $this->endSection() ?>

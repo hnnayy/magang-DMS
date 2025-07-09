@@ -26,11 +26,18 @@ body {
     z-index: 1000;
     height: 70px;
 }
-
-.logo {
+.topbar-left {
     display: flex;
     align-items: center;
-    height: 100%;
+    gap: 20px; /* atur jarak antar toggle & logo */
+}
+
+.logo {
+    margin-right: auto;
+    margin-left: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .logo img {
@@ -38,8 +45,23 @@ body {
     width: auto;
 }
 
+@media (max-width: 1000px) {
+    .logo {
+        justify-content: flex-start;
+        margin-left: 45px;
+    }
+}
+
+@media (max-width: 600px) {
+    .logo {
+        display: none;
+    }
+}
+
+
 /* ====== USER INFO & DROPDOWN ====== */
 .user-info {
+    margin-left: auto;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -850,6 +872,7 @@ body {
 @media (max-width: 1000px) {
     .sidebar-toggle {
         display: block;
+        margin-left: 5px;
     }
 
     .sidebar {
@@ -903,6 +926,10 @@ body {
         min-height: 200px;
     }
 
+    .illustration-section {
+    display: none !important;
+    }
+
     .form-section {
         padding: 20px;
     }
@@ -937,6 +964,12 @@ body {
     background-color: #b41414 !important;
     color: white !important;
     border-radius: 6px;
+}
+
+@media (min-width: 1001px) {
+  .sidebar-toggle {
+    display: none !important;
+  }
 }
 
 /* Pagination aktif */

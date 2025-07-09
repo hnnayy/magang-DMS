@@ -15,5 +15,6 @@ class DocumentTypeModel extends Model
         'kode',
         'description',
         'status',
+        'type',
     ];
 }
