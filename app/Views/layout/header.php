@@ -35,14 +35,16 @@
 <body>
 
     <div class="topbar">
-        <div class="sidebar-toggle" onclick="toggleSidebar()">
-            <i class="fi fi-rr-menu-burger"></i>
-        </div>
+        <div class="topbar-left">
+            <div class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fi fi-rr-menu-burger"></i>
+            </div>
 
-        <div class="logo">
-            <a href="<?= base_url('/') ?>">
-                <img src="<?= base_url('assets/images/logo/telkom-logo.png') ?>" alt="Telkom-logo" />
-            </a>
+            <div class="logo">
+                <a href="<?= base_url('/') ?>">
+                    <img src="<?= base_url('assets/images/logo/telkom-logo.png') ?>" alt="Telkom-logo" class="logo-img" />
+                </a>
+            </div>
         </div>
 
         <div class="user-info">

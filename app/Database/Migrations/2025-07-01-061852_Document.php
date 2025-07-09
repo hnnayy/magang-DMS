@@ -17,8 +17,8 @@ class Document extends Migration
                 'null'           => false,
             ],
             'type' => [
-                'type'       => 'SMALLINT',
-                'constraint' => 4,
+                'type'       => 'INT',
+                'constraint' => 10,
                 'unsigned'   => true,
                 'null'       => false,
             ],
@@ -69,6 +69,11 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
+            'filepath' => [
+            'type'       => 'VARCHAR',
+            'constraint' => 255,
+            'null'       => true,
+        ],
         ]);
 
         $this->forge->addKey('id', true); 
