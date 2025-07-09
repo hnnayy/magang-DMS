@@ -118,7 +118,6 @@ function SwalConfirmDelete(elem) {
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
@@ -132,20 +131,8 @@ $(function () {
         columnDefs: [{ orderable: false, targets: 3 }],
         buttons: [
             {
-                extend: 'copyHtml5',
-                text: 'Copy',
-                className: "btn btn-danger"
-            },
-            {
-                text: 'CSV',
-                className: "btn btn-danger",
-                action: function () {
-                    window.location = '<?= site_url('data-master/export/csv') ?>';
-                }
-            },
-            {
                 text: 'Excel',
-                className: "btn btn-danger",
+                className: "btn btn-success",
                 action: function () {
                     window.location = '<?= site_url('data-master/export/excel') ?>';
                 }
@@ -155,13 +142,6 @@ $(function () {
                 className: "btn btn-danger",
                 action: function () {
                     window.location = '<?= site_url('data-master/export/pdf') ?>';
-                }
-            },
-            {
-                text: 'Print',
-                className: "btn btn-danger",
-                action: function () {
-                    window.open('<?= site_url('data-master/export/print') ?>', '_blank');
                 }
             }
         ]
