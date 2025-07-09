@@ -17,8 +17,8 @@ class Document extends Migration
                 'null'           => false,
             ],
             'type' => [
-                'type'       => 'SMALLINT',
-                'constraint' => 4,
+                'type'       => 'INT',
+                'constraint' => 10,
                 'unsigned'   => true,
                 'null'       => false,
             ],

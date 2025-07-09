@@ -147,6 +147,7 @@ class CreateUser extends Controller
             ->join('unit_parent', 'unit_parent.id = unit.parent_id')
             ->join('user_role', 'user_role.user_id = user.id', 'left')
             ->join('role', 'role.id = user_role.role_id', 'left')
+            ->where('user.status', 1) // Tambahkan baris ini
             ->findAll();
 
         // Ambil semua data unit_parent (fakultas/direktorat), unit, dan role
@@ -171,23 +172,20 @@ class CreateUser extends Controller
     // Method untuk Delete User
     public function delete($id)
     {
-        // Cek apakah ID ada
         if (! $this->userModel->find($id)) {
             return $this->response->setStatusCode(404)
                                 ->setJSON(['error' => 'User tidak ditemukan']);
         }
 
-        try {
-            $this->userRoleModel->where('user_id', $id)->delete();
-            $this->userModel->delete($id);
-
-            return $this->response->setJSON(['message' => 'User berhasil dihapus']);
-        } catch (\Throwable $e) {
-            log_message('error', $e->getMessage());
-            return $this->response->setStatusCode(500)
-                                ->setJSON(['error' => 'Gagal menghapus user']);
+        // status = 0  ➜ dianggap soft‑deleted
+        if ($this->userModel->softDeleteById($id)) {
+            return $this->response->setJSON(['message' => 'User berhasil dihapus (soft)']);
         }
+
+        return $this->response->setStatusCode(500)
+                            ->setJSON(['error' => 'Gagal menghapus user']);
     }
+
 
 
 
@@ -388,6 +386,14 @@ class CreateUser extends Controller
         }
 
         return $this->response->setJSON(['message'=>'Privilege berhasil disimpan']);
+    }
+
+    public function softDelete($id)
+    {
+        if ($this->userModel->delete($id)) {
+            return $this->response->setJSON(['status' => 'ok']);
+        }
+        return $this->response->setStatusCode(500);
     }
 }
 

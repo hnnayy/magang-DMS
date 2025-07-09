@@ -64,8 +64,8 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('Menu/create') ?>" class="<?= (uri_string() == 'Menu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
-                    <li><a href="<?= base_url('Menu/list') ?>" class="<?= (uri_string() == 'Menu/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
+                    <li><a href="<?= base_url('Menu/create-menu') ?>" class="<?= (uri_string() == 'Menu/create-menu') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
+                    <li><a href="<?= base_url('Menu/lihat-menu') ?>" class="<?= (uri_string() == 'Menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
                 </ul>
             </li>
 
