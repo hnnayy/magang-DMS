@@ -19,8 +19,6 @@
                 <ul class="submenu">
                     <li><a href="<?= base_url('create-user/create') ?>" class="<?= (uri_string() == 'create-user/create') ? 'active' : '' ?>"><i class="fi fi-rr-user-add"></i>Tambah User</a></li>
                     <li><a href="<?= base_url('create-user/list') ?>" class="<?= (uri_string() == 'create-user/list') ? 'active' : '' ?>"><i class="fi fi-rr-users-alt"></i>Lihat User</a></li>
-                    <li><a href="<?= base_url('create-user/user-role') ?>" class="<?= (uri_string() == 'create-user/user-role') ? 'active' : '' ?>"><i class="fi fi-rr-user-pen"></i>User Role</a></li>
-                    <li><a href="<?= base_url('create-user/user-privilege') ?>" class="<?= (uri_string() == 'create-user/user-privilege') ? 'active' : '' ?>"><i class="fas fa-user-cog"></i>Privilege User</a></li>
                 </ul>
             </li>
 
@@ -64,7 +62,7 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('Menu/create-menu') ?>" class="<?= (uri_string() == 'Menu/create-menu') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
+                    <li><a href="<?= base_url('menu/create') ?>" class="<?= (uri_string() == 'menu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
                     <li><a href="<?= base_url('Menu/lihat-menu') ?>" class="<?= (uri_string() == 'Menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
                 </ul>
             </li>
@@ -78,8 +76,8 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('SubMenu/create') ?>" class="<?= (uri_string() == 'SubMenu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah SubMenu</a></li>
-                    <li><a href="<?= base_url('SubMenu/list') ?>" class="<?= (uri_string() == 'SubMenu/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat SubMenu</a></li>
+                    <li><a href="<?= base_url('submenu/create') ?>" class="<?= (uri_string() == 'submenu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Submenu</a></li>
+                    <li><a href="<?= base_url('submenu/lihat-submenu') ?>" class="<?= (uri_string() == 'submenu/lihat-submenu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Submenu</a></li>
                 </ul>
             </li>
 
@@ -92,7 +90,7 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('Role/create') ?>" class="<?= (uri_string() == 'Role/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Role</a></li>
+                    <li><a href="<?= base_url('role/create') ?>" class="<?= (uri_string() == 'Role/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Role</a></li>
                     <li><a href="<?= base_url('Role/list') ?>" class="<?= (uri_string() == 'Role/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Role</a></li>
                 </ul>
             </li>
@@ -106,7 +104,7 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('Privilege/create') ?>" class="<?= (uri_string() == 'Privilege/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Privilege</a></li>
+                    <li><a href="<?= base_url('privilege/create') ?>" class="<?= (uri_string() == 'Privilege/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Privilege</a></li>
                     <li><a href="<?= base_url('Privilege/list') ?>" class="<?= (uri_string() == 'Privilege/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Privilege</a></li>
                 </ul>
             </li>

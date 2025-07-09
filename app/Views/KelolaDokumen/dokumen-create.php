@@ -8,7 +8,6 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
@@ -19,12 +18,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
-                    <input type="text" id="fakultas-direktorat" name="fakultas-direktorat" class="form-input" placeholder="Tulis Fakultas disini..." required>
+                    <input type="text" id="fakultas-direktorat" name="fakultas" class="form-input" placeholder="Tulis Fakultas disini..." required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="bagian">Bagian/Unit/Program Studi</label>
-                    <input type="text" id="bagian" name="bagian" class="form-input" placeholder="Tulis Bagian disini..." required>
+                    <input type="text" id="bagian" name="unit_id" class="form-input" placeholder="Tulis Bagian disini..." required>
                 </div>
             </div>
 
@@ -36,7 +35,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
-                    <select id="jenis-dokumen" name="jenis-dokumen" class="form-input" onchange="handleJenisChange()" required>
+                    <select id="jenis-dokumen" name="jenis" class="form-input" onchange="handleJenisChange()" required>
                         <option value="">-- Pilih Jenis --</option>
                         <?php foreach ($kategori_dokumen as $kategori): ?>
                         <option value="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
@@ -65,43 +64,30 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label" for="revisi">Revisi</label>
+                <input type="text" id="revisi" name="revisi" class="form-input" placeholder="Misal: Rev. 0">
+            </div>
+
+            <div class="form-group">
                 <label class="form-label" for="keterangan">Keterangan</label>
                 <textarea id="keterangan" name="keterangan" class="form-input" rows="1" placeholder="Tulis Keterangan disini..." required></textarea>
             </div>
 
-                        <!-- Bagian Upload Bootstrap -->
             <div class="form-group">
                 <label class="form-label" for="file-upload">Unggah Berkas</label>
-
-                <!-- Area Upload -->
-                <div id="uploadArea"
-                    class="border border-2 rounded-3 p-4 text-center mb-3 bg-light position-relative"
-                    style="cursor: pointer; border-style: dashed; border-color: #b41616;"
-                    onmouseover="this.style.borderColor='#b41616';"
-                    onmouseout="this.style.borderColor='#b41616';"
-                >
+                <div id="uploadArea" class="border border-2 rounded-3 p-4 text-center mb-3 bg-light position-relative" style="cursor: pointer; border-style: dashed; border-color: #b41616;" onmouseover="this.style.borderColor='#b41616';" onmouseout="this.style.borderColor='#b41616';">
                     <div class="d-flex flex-column align-items-center">
                         <i class="bi bi-cloud-arrow-up-fill" style="font-size: 2rem; color: #b41616;"></i>
                         <strong class="mt-2">Seret dan lepas file di sini</strong>
                         <span class="text-muted" id="noFileText" style="font-size: 0.85rem;">Belum ada file dipilih</span>
-                        <button
-                            type="button"
-                            class="btn mt-3"
-                            id="chooseFileBtn"
-                            style="border: 1px solid #b41616; color: #b41616; background-color: transparent;"
-                            onmouseover="this.style.backgroundColor='#b41616'; this.style.color='white';"
-                            onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b41616';"
-                        >
+                        <button type="button" class="btn mt-3" id="chooseFileBtn" style="border: 1px solid #b41616; color: #b41616; background-color: transparent;" onmouseover="this.style.backgroundColor='#b41616'; this.style.color='white';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b41616';">
                             Pilih File
                         </button>
-
                     </div>
                 </div>
 
-                <!-- Input File -->
                 <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
 
-                <!-- Preview File -->
                 <div id="fileInfo" class="alert alert-secondary border d-flex justify-content-between align-items-center d-none">
                     <div>
                         <strong id="fileName">NamaFile.pdf</strong><br>
@@ -110,14 +96,12 @@
                     <button type="button" class="btn-close" id="removeBtn"></button>
                 </div>
 
-                <!-- Info -->
                 <div class="file-requirements mt-1">
                     <div class="requirements-text text-primary" style="font-size: 13px;">
                         File Upload .doc, .docx, .xlsx, .pdf, .jpg, .png
                     </div>
                 </div>
             </div>
-
 
             <button type="submit" class="submit-btn">Submit</button>
         </form>
@@ -226,6 +210,5 @@ document.getElementById('removeBtn').addEventListener('click', function () {
     });
 <?php endif; ?>
 </script>
-
 
 <?= $this->endSection() ?>

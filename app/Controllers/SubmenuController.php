@@ -4,18 +4,17 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 
-class Menu extends BaseController
+class SubmenuController extends BaseController
 {
     
     public function create()
     {
-        return view('Menu/create-menu');
+        return view('Submenu/submenu-create');
           
     }
-
     public function list()
     {
-        return view('Menu/lihat-menu');
+        return view('Submenu/lihat-submenu');
           
     }
 

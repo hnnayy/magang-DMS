@@ -179,7 +179,7 @@ class CreateUser extends Controller
 
         // status = 0  ➜ dianggap soft‑deleted
         if ($this->userModel->softDeleteById($id)) {
-            return $this->response->setJSON(['message' => 'User berhasil dihapus (soft)']);
+            return $this->response->setJSON(['message' => 'User berhasil dihapus']);
         }
 
         return $this->response->setStatusCode(500)

@@ -77,9 +77,21 @@ $routes->post('dokumen/get-kode-dokumen', 'KelolaDokumen::getKodeDokumen');
 $routes->post('kelola-dokumen/tambah', 'KelolaDokumen::tambah');
 
 
-// hanin
+// Role
 $routes->get('role/create', 'Role::create');
 $routes->post('role/store', 'Role::store');
 
+//Privilege
 $routes->get('privilege/create', 'Privilege::create');
 $routes->post('privilege/store', 'Privilege::store');
+
+//Menu
+$routes->get('menu/create', 'Menu::create');
+$routes->get('menu/lihat-menu', 'Menu::list');
+
+
+
+//submenu9
+$routes->get('submenu/create', 'SubmenuController::create');
+$routes->get('submenu/lihat-submenu', 'SubmenuController::list');
+
