@@ -69,6 +69,11 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
+            'filepath' => [
+            'type'       => 'VARCHAR',
+            'constraint' => 255,
+            'null'       => true,
+        ],
         ]);
 
         $this->forge->addKey('id', true); 
