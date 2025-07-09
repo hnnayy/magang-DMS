@@ -77,94 +77,103 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Sample Data -->
-                        <tr>
-                            <td class="text-center">1</td>
-                            <td>Fakultas Teknik</td>
-                            <td>Teknik Informatika</td>
-                            <td>Prosedur Operasional Standar Laboratorium</td>
-                            <td>POS-TI-001</td>
-                            <td class="text-center">Rev. 2</td>
-                            <td><span class="badge bg-primary">Internal</span></td>
-                            <td>LAB-001 - Prosedur Lab Komputer</td>
-                            <td><i class="bi bi-file-pdf text-danger"></i> dokumen.pdf</td>
-                            <td>Dokumen SOP untuk laboratorium komputer</td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-sm btn-outline-primary edit-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editModal" 
-                                            data-id="1"
-                                            data-fakultas="Fakultas Teknik"
-                                            data-bagian="Teknik Informatika"
-                                            data-nama="Prosedur Operasional Standar Laboratorium"
-                                            data-nomor="POS-TI-001"
-                                            data-revisi="Rev. 2"
-                                            data-jenis="internal"
-                                            data-kode="LAB-001 - Prosedur Lab Komputer"
-                                            data-keterangan="Dokumen SOP untuk laboratorium komputer"
-                                            title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success approve-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#approveModal"
-                                            data-id="1"
-                                            title="Approve">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            title="Hapus" 
-                                            onclick="deleteDocument(1)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-center">2</td>
-                            <td>Fakultas Ekonomi</td>
-                            <td>Manajemen</td>
-                            <td>Standar Operasional Prosedur Keuangan</td>
-                            <td>SOP-FE-002</td>
-                            <td class="text-center">Rev. 1</td>
-                            <td><span class="badge bg-success">Eksternal</span></td>
-                            <td>FIN-002 - Prosedur Keuangan</td>
-                            <td><i class="bi bi-file-word text-primary"></i> dokumen.docx</td>
-                            <td>SOP untuk pengelolaan keuangan fakultas</td>
-                            <td class="text-center">
-                                <div class="d-flex justify-content-center gap-2">
-                                    <button class="btn btn-sm btn-outline-primary edit-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#editModal" 
-                                            data-id="2"
-                                            data-fakultas="Fakultas Ekonomi"
-                                            data-bagian="Manajemen"
-                                            data-nama="Standar Operasional Prosedur Keuangan"
-                                            data-nomor="SOP-FE-002"
-                                            data-revisi="Rev. 1"
-                                            data-jenis="eksternal"
-                                            data-kode="FIN-002 - Prosedur Keuangan"
-                                            data-keterangan="SOP untuk pengelolaan keuangan fakultas"
-                                            title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-success approve-btn" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#approveModal"
-                                            data-id="2"
-                                            title="Approve">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            title="Hapus" 
-                                            onclick="deleteDocument(2)">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+<?php if (!empty($documents)): ?>
+    <?php $no = 1; foreach ($documents as $doc): ?>
+    <tr>
+        <td class="text-center"><?= $no++ ?></td>
+        <td><?= esc($doc['fakultas_name'] ?? '-') ?></td>
+<td><?= esc($doc['unit_name'] ?? '-') ?></td>
+
+        <td><?= esc($doc['title']) ?></td>
+        <td><?= esc($doc['number']) ?></td>
+        <td class="text-center"><?= esc($doc['revision']) ?></td>
+       <td>
+   <?php
+$jenis_dokumen = '-';
+$badgeClass = 'bg-secondary';
+
+foreach ($kategori_dokumen as $kategori) {
+    if ($kategori['id'] == $doc['type']) {
+        $jenis_dokumen = esc($kategori['nama']);
+
+        if (str_contains(strtolower($kategori['nama']), 'internal')) {
+            $badgeClass = 'bg-primary';
+        } elseif (str_contains(strtolower($kategori['nama']), 'eksternal')) {
+            $badgeClass = 'bg-success';
+        } else {
+            $badgeClass = 'bg-info';
+        }
+        break;
+    }
+}
+?>
+<span class="badge <?= $badgeClass ?>">
+    <?= $jenis_dokumen ?>
+</span>
+
+</td>
+
+
+<td>
+    <?php if (!empty($doc['kode_dokumen']) && !empty($doc['nama_kode_dokumen'])): ?>
+        <span class="d-block fw-bold"><?= esc($doc['kode_dokumen']) ?></span>
+        <span class="text-muted"><?= esc($doc['nama_kode_dokumen']) ?></span>
+    <?php else: ?>
+        <span class="text-muted">-</span>
+    <?php endif; ?>
+</td>
+
+        <td>
+            <?php if (!empty($doc['filepath'])): ?>
+                <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank">
+                    <i class="bi bi-file-earmark-text"></i> <?= esc($doc['filepath']) ?>
+                </a>
+            <?php else: ?>
+                <span class="text-muted">Tidak ada file</span>
+            <?php endif; ?>
+        </td>
+        <td><?= esc($doc['description']) ?></td>
+        <td class="text-center">
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-sm btn-outline-primary edit-btn" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#editModal" 
+                        data-id="<?= $doc['id'] ?>"
+                        data-fakultas="<?= esc($doc['unit_id']) ?>"
+                        data-nama="<?= esc($doc['title']) ?>"
+                        data-nomor="<?= esc($doc['number']) ?>"
+                        data-revisi="<?= esc($doc['revision']) ?>"
+                        data-jenis="<?= esc($doc['type']) ?>"
+
+
+                        data-keterangan="<?= esc($doc['description']) ?>"
+                        data-kode="-"  <!-- Placeholder -->
+                        
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-success approve-btn" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#approveModal"
+                        data-id="<?= $doc['id'] ?>"
+                        title="Approve">
+                    <i class="bi bi-check-lg"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" 
+                        title="Hapus" 
+                        onclick="deleteDocument(<?= $doc['id'] ?>)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    <?php endforeach; ?>
+<?php else: ?>
+    <tr>
+        <td colspan="11" class="text-center text-muted">Belum ada dokumen pengajuan.</td>
+    </tr>
+<?php endif; ?>
+</tbody>
+
                 </table>
             </div>
 
@@ -193,7 +202,8 @@
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <form id="editDocumentForm" onsubmit="handleEditSubmit(event)">
+                <form action="<?= base_url('/kelola-dokumen/edit') ?>" method="post" enctype="multipart/form-data">
+
                     <input type="hidden" name="document_id" id="editDocumentId">
                     <div class="modal-header">
                         <h5 class="modal-title" id="editModalLabel">
@@ -224,13 +234,16 @@
                                 <input type="text" class="form-control" name="revisi" id="editRevisi" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Jenis Dokumen</label>
-                                <select class="form-select" name="jenis" id="editJenis" required>
-                                    <option value="">-- Pilih Jenis --</option>
-                                    <option value="internal">Internal</option>
-                                    <option value="eksternal">Eksternal</option>
-                                </select>
-                            </div>
+    <label class="form-label">Jenis Dokumen</label>
+    <select class="form-select" name="jenis" id="editJenis" required>
+    <option value="">-- Pilih Jenis --</option>
+    <?php foreach ($kategori_dokumen as $kategori): ?>
+        <option value="<?= esc($kategori['id']) ?>">
+            <?= esc($kategori['nama']) ?>
+        </option>
+    <?php endforeach; ?>
+</select>
+</div>
                             <div class="col-md-6">
                                 <label class="form-label">Kode & Nama Dokumen</label>
                                 <input type="text" class="form-control" name="kode_nama" id="editKode" required>
@@ -323,6 +336,36 @@
     <script src="assets/js/daftar_pengajuan.js"></script>
 </body>
 </html>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle edit button click
+    const editButtons = document.querySelectorAll('.edit-btn');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const fakultas = this.getAttribute('data-fakultas'); // unit_id
+            const nama = this.getAttribute('data-nama');
+            const nomor = this.getAttribute('data-nomor');
+            const revisi = this.getAttribute('data-revisi');
+            const jenis = this.getAttribute('data-jenis'); // document_type_id
+            const keterangan = this.getAttribute('data-keterangan');
+            const kode = this.getAttribute('data-kode');
+
+            // Fill modal fields
+            document.getElementById('editDocumentId').value = id;
+            document.getElementById('editFakultas').value = fakultas;
+            document.getElementById('editBagian').value = ''; // Adjust if bagian is available
+            document.getElementById('editNama').value = nama;
+            document.getElementById('editNomor').value = nomor;
+            document.getElementById('editRevisi').value = revisi;
+            document.getElementById('editJenis').value = jenis;
+            document.getElementById('editKeterangan').value = keterangan;
+            document.getElementById('editKode').value = kode;
+        });
+    });
+});
+</script>
 
 <?= $this->endSection() ?>
 
