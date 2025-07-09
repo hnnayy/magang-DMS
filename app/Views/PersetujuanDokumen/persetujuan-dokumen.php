@@ -124,7 +124,6 @@
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
@@ -141,26 +140,18 @@ $(document).ready(function () {
             { className: 'text-center', targets: [0, 4, 9] }
         ],
         buttons: [
-            { extend: 'copyHtml5', text: 'Copy', className: 'btn' },
-            { 
-                extend: 'csvHtml5', 
-                text: 'CSV', 
-                className: 'btn',
-                title: 'Persetujuan Dokumen',             
-                filename: 'persetujuan_dokumen',
-                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] }
-            },
             { 
                 extend: 'excelHtml5', 
                 text: 'Excel', 
-                className: 'btn',
+                className: 'btn btn-success',
                 title: 'Persetujuan Dokumen',             
                 filename: 'persetujuan_dokumen',
                 exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] } 
             },
             {
                 extend: 'pdfHtml5',
-                className: 'btn-pdf-dt',
+                text: 'PDF',
+                className: 'btn btn-danger',
                 title: 'Persetujuan Dokumen', 
                 exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
                 customize: function (doc) {
@@ -226,47 +217,6 @@ $(document).ready(function () {
                         italics: true,
                         fontSize: 9,
                         margin: [0, 10, 0, 0]
-                    });
-                }
-            },
-            {
-                extend: 'print',
-                text: 'Print',
-                className: 'btn',
-                exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] },
-                customize: function (win) {
-                    const now = new Date().toLocaleString('en-GB');
-                    $(win.document.body).css('font-size', '12px').css('margin', '20px');
-
-                    $(win.document.body).find('h1, .page-title').remove();
-
-                    $(win.document.body).prepend(`
-                        <h2 style="text-align:center; margin-bottom: 0;">Persetujuan Dokumen</h2>
-                        <hr>
-                    `);
-
-                    $(win.document.body).append(`
-                        <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar dokumen yang sudah disetujui.</p>
-                        <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
-                            © 2025 Telkom University – Document Management System
-                        </div>
-                    `);
-
-                    const table = $(win.document.body).find('table');
-                    table.css({
-                        'border-collapse': 'collapse',
-                        'width': '100%'
-                    });
-                    table.find('th').css({
-                        'background-color': '#e8e4e4',
-                        'border': '1px solid #000',
-                        'padding': '6px',
-                        'text-align': 'center'
-                    });
-                    table.find('td').css({
-                        'border': '1px solid #000',
-                        'padding': '6px',
-                        'vertical-align': 'top'
                     });
                 }
             }

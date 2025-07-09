@@ -97,7 +97,6 @@
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
@@ -114,22 +113,13 @@ $(document).ready(function () {
       { className: 'text-center', targets: 6 }
     ],
     buttons: [
-      { extend: 'copyHtml5', text: 'Copy', className: 'btn' },
-      { 
-        extend: 'csvHtml5', 
-        text: 'CSV', 
-        className: 'btn',
-        title: 'Data Users',             
-        filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }  // Exclude column 6 (Action)
-      },
       { 
         extend: 'excelHtml5', 
         text: 'Excel', 
         className: 'btn',
         title: 'Data Users',             
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }  // Exclude column 6 (Action)
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
       },
       {
         extend: 'pdfHtml5',
@@ -138,28 +128,15 @@ $(document).ready(function () {
         exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
         customize: function (doc) {
             const now = new Date();
-            const waktuCetak = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
+            const waktuCetak = now.toLocaleString('en-GB');
+
+            doc.content.splice(0, 0, {
+                text: 'Data Users',
+                alignment: 'center',
+                bold: true,
+                fontSize: 16,
+                margin: [0, 0, 0, 10]
             });
-
-            if (typeof doc.content[0].text === 'string' && doc.content[0].text === 'Data Users') {
-                doc.content.splice(0, 1);
-            }
-
-            doc.content.splice(0, 0,
-                {
-                    text: 'Data Users',
-                    alignment: 'center',
-                    bold: true,
-                    fontSize: 16,
-                    margin: [0, 0, 0, 10]
-                }
-            );
 
             doc.styles.tableHeader = {
                 fillColor: '#ececec',
@@ -169,10 +146,6 @@ $(document).ready(function () {
                 fontSize: 10
             };
 
-            doc.styles.tableBodyEven = { fillColor: '#ffffff' };
-            doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-
-            // Footer
             doc.footer = function (currentPage, pageCount) {
                 return {
                     columns: [
@@ -184,15 +157,6 @@ $(document).ready(function () {
                 };
             };
 
-            doc.content[doc.content.length - 1].layout = {
-                hLineWidth: function () { return 0.5; },
-                vLineWidth: function () { return 0.5; },
-                hLineColor: function () { return '#000'; },
-                vLineColor: function () { return '#000'; },
-                paddingLeft: function () { return 4; },
-                paddingRight: function () { return 4; }
-            };
-
             doc.content.push({
                 text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
                 alignment: 'left',
@@ -200,48 +164,6 @@ $(document).ready(function () {
                 fontSize: 9,
                 margin: [0, 10, 0, 0]
             });
-        }
-    },
-
-      {
-        extend: 'print',
-        text: 'Print',
-        className: 'btn',
-        exportOptions: { columns: [0,1,2,3,4,5] },
-        customize: function (win) {
-          const now = new Date().toLocaleString('en-GB');
-          $(win.document.body).css('font-size', '12px').css('margin', '20px');
-
-          $(win.document.body).find('h1, .page-title').remove();
-
-          $(win.document.body).prepend(`
-            <h2 style="text-align:center; margin-bottom: 0;">Data Users</h2>
-            <hr>
-          `);
-
-          $(win.document.body).append(`
-            <p style="font-style: italic; margin-top: 20px;">* Dokumen ini berisi daftar pengguna aktif dalam sistem.</p>
-            <div style="position: fixed; bottom: 20px; width: 100%; text-align: center; font-size: 10px;">
-              © 2025 Telkom University – Document Management System
-            </div>
-          `);
-
-          const table = $(win.document.body).find('table');
-          table.css({
-            'border-collapse': 'collapse',
-            'width': '100%'
-          });
-          table.find('th').css({
-            'background-color': '#e8e4e4',
-            'border': '1px solid #000',
-            'padding': '6px',
-            'text-align': 'center'
-          });
-          table.find('td').css({
-            'border': '1px solid #000',
-            'padding': '6px',
-            'vertical-align': 'top'
-          });
         }
       }
     ]
@@ -255,7 +177,6 @@ $(document).ready(function () {
     $('#editRole').val($(this).data('role'));
   });
 
-  // Submit form edit
   $('#editUserForm').submit(function (e) {
     e.preventDefault();
     $.ajax({
@@ -282,7 +203,6 @@ $(document).ready(function () {
     });
   });
 
-  // Delete user
   $(document).on('click', '.delete-user', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
