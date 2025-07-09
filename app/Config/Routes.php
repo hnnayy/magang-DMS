@@ -75,3 +75,11 @@ $routes->get('profile', 'Profil::index');
 $routes->post('create-role/store', 'CreateUser::storeRole');
 $routes->post('dokumen/get-kode-dokumen', 'KelolaDokumen::getKodeDokumen');
 $routes->post('kelola-dokumen/tambah', 'KelolaDokumen::tambah');
+
+
+// hanin
+$routes->get('role/create', 'Role::create');
+$routes->post('role/store', 'Role::store');
+
+$routes->get('privilege/create', 'Privilege::create');
+$routes->post('privilege/store', 'Privilege::store');

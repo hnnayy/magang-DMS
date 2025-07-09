@@ -7,7 +7,7 @@
             <h2><?= $title ?? 'Tambah Role Baru' ?></h2>
         </div>
 
-        <form id="createRoleForm" method="post" action="<?= base_url('create-role/store') ?>">
+        <form id="createRoleForm" method="post" action="<?= base_url('role/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Nama Role -->
@@ -18,14 +18,16 @@
 
             <!-- Level -->
             <div class="form-group">
-                <label class="form-label" for="level">Level</label>
-                <select id="level" name="level" class="form-input" required>
-                    <option value="">-- Pilih Level --</option>
-                    <option value="1">Directorate / Faculty</option>
-                    <option value="2">Unit</option>
-                </select>
+                <label class="form-label d-block">Level</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="level" id="level1" value="1">
+                    <label class="form-check-label" for="level1">Directorate / Faculty</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="level" id="level2" value="2" checked>
+                    <label class="form-check-label" for="level2">Unit</label>
+                </div>
             </div>
-
 
             <!-- Deskripsi -->
             <div class="form-group">
@@ -45,7 +47,6 @@
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
             </div>
-
 
             <button type="submit" class="submit-btn">Submit</button>
         </form>
