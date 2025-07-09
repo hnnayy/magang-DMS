@@ -8,10 +8,12 @@ class UserModel extends Model
     protected $table = 'user';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
+    protected $useSoftDeletes   = false;    
+    protected $useTimestamps    = false;   
+  
     protected $allowedFields = ['unit_id', 'username', 'fullname', 'status', 'createddate', 'createdby'];
     
     // Auto set created date
-    protected $useTimestamps = false;
     protected $beforeInsert = ['setCreatedDate'];
     
     protected function setCreatedDate(array $data)
@@ -32,5 +34,15 @@ class UserModel extends Model
     public function getUnitsByDirectorate($directorateId)
     {
         return $this->where('parent_name', $directorateId)->findAll(); // Sesuaikan logika
+    }
+
+    public function softDeleteById($id): bool
+    {
+        return $this->update($id, ['status' => 0]);
+    }
+
+     public function findAllActive()
+    {
+        return $this->where('status', 1)->findAll();
     }
 }
