@@ -42,17 +42,15 @@
                 </tr>
                 <?php endforeach; ?>
             <?php else : ?>
-                <tr><td colspan="4" class="text-center">Belum ada data.</td></tr>
+                <tr>
+                    <td class="text-center">-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="text-center text-muted">Belum ada data</td>
+                </tr>
             <?php endif; ?>
             </tbody>
         </table>
-    </div>
-
-    <!-- No Results -->
-    <div id="noResults" class="text-center py-4" style="display: none;">
-        <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
-        <h5 class="mt-3 text-muted">No results found</h5>
-        <p class="text-muted">Try adjusting your search criteria</p>
     </div>
 </div>
 
@@ -85,7 +83,7 @@
   </div>
 </div>
 
-<!-- JS Modal -->
+<!-- JS Modal & Delete -->
 <script>
 function openEditModal(id, parentName, unitName) {
     const form = document.getElementById('editUnitForm');
@@ -119,6 +117,7 @@ function SwalConfirmDelete(elem) {
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(function () {
@@ -129,6 +128,9 @@ $(function () {
         pageLength: 10,
         order: [],
         columnDefs: [{ orderable: false, targets: 3 }],
+        language: {
+            emptyTable: "Belum ada data"
+        },
         buttons: [
             {
                 text: 'Excel',
@@ -145,14 +147,6 @@ $(function () {
                 }
             }
         ]
-    });
-
-    $('#searchInput').on('keyup', function () {
-        dt.search(this.value).draw();
-    });
-
-    $('#searchBtn').on('click', function () {
-        dt.search($('#searchInput').val()).draw();
     });
 });
 </script>

@@ -64,8 +64,8 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('menu/create') ?>" class="<?= (uri_string() == 'menu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
-                    <li><a href="<?= base_url('menu/lihat-menu') ?>" class="<?= (uri_string() == 'menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
+                    <li><a href="<?= base_url('Menu/create') ?>" class="<?= (uri_string() == 'Menu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
+                    <li><a href="<?= base_url('Menu/lihat-menu') ?>" class="<?= (uri_string() == 'Menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
                 </ul>
             </li>
 
@@ -93,7 +93,7 @@
                 </div>
                 <ul class="submenu">
                     <li><a href="<?= base_url('role/create') ?>" class="<?= (uri_string() == 'Role/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Role</a></li>
-                    <li><a href="<?= base_url('role/lihat-role') ?>" class="<?= (uri_string() == 'role/lihat-role') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Role</a></li>
+                    <li><a href="<?= base_url('role/list') ?>" class="<?= (uri_string() == 'role/lihat-role') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Role</a></li>
                 </ul>
             </li>
 
@@ -107,9 +107,10 @@
                 </div>
                 <ul class="submenu">
                     <li><a href="<?= base_url('privilege/create') ?>" class="<?= (uri_string() == 'Privilege/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Privilege</a></li>
-                    <li><a href="<?= base_url('privilege/lihat-privilege') ?>" class="<?= (uri_string() == 'privilege/lihat-privilege') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Privilege</a></li>
+                    <li><a href="<?= base_url('privilege/list') ?>" class="<?= (uri_string() == 'privilege/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Privilege</a></li>
                 </ul>
             </li>
+
         </ul>
     </div>
 </div>

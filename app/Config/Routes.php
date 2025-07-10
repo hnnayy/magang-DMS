@@ -77,21 +77,47 @@ $routes->post('dokumen/get-kode-dokumen', 'KelolaDokumen::getKodeDokumen');
 $routes->post('kelola-dokumen/tambah', 'KelolaDokumen::tambah');
 
 
-// Role
-$routes->get('role/create', 'Role::create');
-$routes->post('role/store', 'Role::store');
 
-//Privilege
-$routes->get('privilege/create', 'Privilege::create');
-$routes->post('privilege/store', 'Privilege::store');
+// Role
+$routes->get('role/create', 'Role::create');              // Menampilkan form tambah role
+$routes->post('role/store', 'Role::store');              // Menyimpan role baru ke database
+$routes->get('role/list', 'Role::list');                // Menampilkan daftar role (tidak dihapus)
+$routes->post('role/delete/(:num)', 'Role::delete/$1'); // "Menghapus" role (soft delete), param $1 = id
+$routes->post('role/update/(:num)', 'Role::update/$1'); // Mengupdate role, param $1 = id
+
+
+//privilege
+$routes->get('privilege/create', 'Privilege::create');          // Form tambah privilege
+$routes->post('privilege/store', 'Privilege::store');    // Proses simpan
+$routes->get('privilege/list', 'Privilege::list');       // Lihat daftar privilege
+
 
 //Menu
-$routes->get('menu/create', 'Menu::create');
-$routes->get('menu/lihat-menu', 'Menu::list');
+//Cipa menu
+$routes->get('Menu', 'Menu::index');
+$routes->get('Menu/create', 'Menu::create');
+$routes->post('Menu/store', 'Menu::store');
+$routes->get('Menu/list', 'Menu::list');
+$routes->get('Menu/lihat-menu', 'Menu::list');
+$routes->get('Menu', 'Menu::index');
+$routes->get('Menu/create', 'Menu::create');
+$routes->post('Menu/store', 'Menu::store');
+$routes->post('Menu/update/(:num)', 'Menu::update/$1');
+$routes->post('Menu/delete/(:num)', 'Menu::delete/$1'); 
 
 
-
-//submenu9
+// submenu
 $routes->get('submenu/create', 'SubmenuController::create');
-$routes->get('submenu/lihat-submenu', 'SubmenuController::list');
+$routes->post('submenu/store', 'SubmenuController::store'); //  untuk submit form create
+$routes->get('submenu/lihat-submenu', 'SubmenuController::list'); //  list submenu
 
+$routes->get('submenu/edit/(:num)', 'SubmenuController::edit/$1'); //  form edit
+$routes->post('submenu/update/(:num)', 'SubmenuController::update/$1'); //  simpan edit
+$routes->post('submenu/delete/(:num)', 'SubmenuController::delete/$1'); 
+
+
+
+//CIP
+$routes->post('kelola-dokumen/edit', 'KelolaDokumen::edit');
+
+$routes->get('daftar-pengajuan', 'KelolaDokumen::daftarPengajuan');
