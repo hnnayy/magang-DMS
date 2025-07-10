@@ -54,14 +54,15 @@
                                 <?php 
                                 $fakultas_list = [];
                                 foreach ($documents as $doc) {
-                                    $fakultas_name = $doc['parent_name'] ?? $doc['unit_name'] ?? '-';
-                                    if (!in_array($fakultas_name, $fakultas_list) && $fakultas_name !== '-') {
-                                        $fakultas_list[] = $fakultas_name;
+                                    $fakultas_id = $doc['unit_parent_id'] ?? null;
+                                    $fakultas_name = $doc['parent_name'] ?? '-';
+                                    if ($fakultas_id && !in_array($fakultas_name, $fakultas_list) && $fakultas_name !== '-') {
+                                        $fakultas_list[$fakultas_id] = $fakultas_name;
                                     }
                                 }
-                                sort($fakultas_list);
-                                foreach ($fakultas_list as $fakultas): ?>
-                                    <option value="<?= esc($fakultas) ?>"><?= esc($fakultas) ?></option>
+                                ksort($fakultas_list);
+                                foreach ($fakultas_list as $id => $fakultas): ?>
+                                    <option value="<?= esc($id) ?>"><?= esc($fakultas) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -70,12 +71,12 @@
                             <select class="form-select" id="filterJenis">
                                 <option value="">Semua Jenis</option>
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= esc($kategori['nama']) ?>"><?= esc($kategori['nama']) ?></option>
+                                    <option value="<?= esc($kategori['id']) ?>"><?= esc($kategori['nama']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
+                            <label class="form-label"> </label>
                             <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
                                 <i class="bi bi-arrow-counterclockwise"></i> Reset
                             </button>
@@ -106,10 +107,12 @@
                             <?php foreach ($documents as $doc): ?>
                                 <tr>
                                     <td class="text-center"></td> <!-- Will be handled by DataTables -->
-                                    <td data-fakultas="<?= esc($doc['parent_name'] ?? $doc['unit_name'] ?? '-') ?>">
-                                        <?= esc($doc['parent_name'] ?? $doc['unit_name'] ?? '-') ?>
+                                    <td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
+                                        <?= esc($doc['parent_name'] ?? '-') ?>
                                     </td>
-                                    <td><?= esc($doc['unit_name'] ?? '-') ?></td>
+                                    <td data-bagian="<?= esc($doc['unit_id'] ?? '') ?>">
+                                        <?= esc($doc['unit_name'] ?? '-') ?>
+                                    </td>
                                     <td>
                                         <div class="text-truncate" style="max-width: 200px;" title="<?= esc($doc['title']) ?>">
                                             <?= esc($doc['title']) ?>
@@ -122,7 +125,6 @@
                                             $jenis_dokumen = $doc['jenis_dokumen'] ?? '-';
                                             $badgeClass = 'bg-secondary';
                                             
-                                            // Determine badge class based on document type
                                             if (str_contains(strtolower($jenis_dokumen), 'internal')) {
                                                 $badgeClass = 'bg-primary';
                                             } elseif (str_contains(strtolower($jenis_dokumen), 'eksternal')) {
@@ -164,8 +166,8 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#editModal"
                                                 data-id="<?= $doc['id'] ?>"
-                                                data-fakultas="<?= esc($doc['unit_id']) ?>"
-                                                data-bagian="<?= esc($doc['unit_name']) ?>"
+                                                data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>"
+                                                data-bagian="<?= esc($doc['unit_id'] ?? '') ?>"
                                                 data-nama="<?= esc($doc['title']) ?>"
                                                 data-nomor="<?= esc($doc['number']) ?>"
                                                 data-revisi="<?= esc($doc['revision']) ?>"
@@ -261,23 +263,29 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <form method="POST" action="<?= base_url('kelola-dokumen/edit') ?>" enctype="multipart/form-data">
+      <form method="POST" action="<?= site_url('kelola-dokumen/edit') ?>" enctype="multipart/form-data">
+
         <div class="modal-body py-2">
           <input type="hidden" name="document_id" id="editDocumentId">
-
+                            
           <div class="row">
             <div class="col-md-6 mb-2">
               <label for="editFakultas" class="form-label">Fakultas</label>
               <select class="form-select form-select-sm" name="fakultas" id="editFakultas" required>
                 <option value="">Pilih Fakultas</option>
-                <?php foreach ($fakultas_list as $fakultas): ?>
-                  <option value="<?= esc($fakultas) ?>"><?= esc($fakultas) ?></option>
+                <?php foreach ($unit_parents as $parent): ?>
+                  <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div class="col-md-6 mb-2">
               <label for="editBagian" class="form-label">Bagian</label>
-              <input type="text" class="form-control form-control-sm" name="bagian" id="editBagian" required>
+              <select class="form-select form-select-sm" name="bagian" id="editBagian" required>
+                <option value="">Pilih Bagian</option>
+                <?php foreach ($units as $unit): ?>
+                  <option value="<?= $unit['id'] ?>"><?= esc($unit['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
             </div>
           </div>
 
@@ -308,7 +316,7 @@
             </div>
             <div class="col-md-6 mb-2">
               <label for="editkodeNamadok" class="form-label">Kode - Nama Dokumen</label>
-              <input type="text" class="form-control form-control-sm" name="nama" id="editkodeNamadok" required>
+              <input type="text" class="form-control form-control-sm" name="kode_nama" id="editkodeNamadok" required>
             </div>
           </div>
 
@@ -335,88 +343,6 @@
 
     
     <!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow-sm">
-      <form method="POST" action="<?= base_url('kelola-dokumen/edit') ?>" enctype="multipart/form-data" class="p-3">
-        <input type="hidden" name="document_id" id="editDocumentId">
-
-        <!-- Header -->
-        <div class="modal-header border-bottom-0 pb-2">
-          <h5 class="modal-title fw-bold" id="editModalLabel">Edit Dokumen</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-        </div>
-
-        <!-- Body -->
-        <div class="modal-body pt-1">
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="editFakultas" class="form-label">Fakultas</label>
-              <select class="form-select form-select-sm" name="fakultas" id="editFakultas" required>
-                <option value="">Pilih Fakultas</option>
-                <?php foreach ($fakultas_list as $fakultas): ?>
-                  <option value="<?= esc($fakultas) ?>"><?= esc($fakultas) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="editBagian" class="form-label">Bagian</label>
-              <input type="text" class="form-control form-control-sm" name="bagian" id="editBagian" required>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="editNama" class="form-label">Nama Dokumen</label>
-              <input type="text" class="form-control form-control-sm" name="nama" id="editNama" required>
-            </div>
-            <div class="col-md-3">
-              <label for="editNomor" class="form-label">No Dokumen</label>
-              <input type="text" class="form-control form-control-sm" name="nomor" id="editNomor" required>
-            </div>
-            <div class="col-md-3">
-              <label for="editRevisi" class="form-label">Revisi</label>
-              <input type="text" class="form-control form-control-sm" name="revisi" id="editRevisi" required>
-            </div>
-          </div>
-
-          <div class="row mb-3">
-            <div class="col-md-6">
-              <label for="editJenis" class="form-label">Jenis Dokumen</label>
-              <select class="form-select form-select-sm" name="jenis" id="editJenis" required>
-                <option value="">Pilih Jenis</option>
-                <?php foreach ($kategori_dokumen as $kategori): ?>
-                  <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="editkodeNamadok" class="form-label">Kode - Nama Dokumen</label>
-              <input type="text" class="form-control form-control-sm" name="nama" id="editkodeNamadok" required>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label for="editKeterangan" class="form-label">Keterangan</label>
-            <textarea class="form-control form-control-sm" name="keterangan" id="editKeterangan" rows="2"></textarea>
-          </div>
-
-          <div class="mb-3">
-            <label for="editFile" class="form-label">File Dokumen</label>
-            <input type="file" class="form-control form-control-sm" name="file" id="editFile" accept=".pdf,.doc,.docx,.xls,.xlsx">
-            <small class="form-text text-muted"><span id="currentFileName"></span></small>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="modal-footer border-top-0 pt-0">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-primary btn-sm">Simpan Perubahan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 
 <script>
@@ -462,7 +388,7 @@ $(document).ready(function() {
         table.search(this.value).draw();
     });
 
-    // Custom filtering for Fakultas
+    // Custom filtering for Fakultas (unit_parent_id)
     $('#filterFakultas').on('change', function() {
         var val = this.value;
         table.column(1).search(val ? '^' + val + '$' : '', true, false).draw();
@@ -483,8 +409,7 @@ $(document).ready(function() {
         $('#editNomor').val($(this).data('nomor'));
         $('#editRevisi').val($(this).data('revisi'));
         $('#editJenis').val($(this).data('jenis'));
-        $('#editKodeDokumen').val($(this).data('kode'));
-        $('#editNamaKodeDokumen').val($(this).data('nama-kode'));
+        $('#editkodeNamadok').val($(this).data('nama-kode'));
         $('#editKeterangan').val($(this).data('keterangan'));
         
         // Display current file name
@@ -575,5 +500,18 @@ function deleteDocument(id) {
 
 </body>
 </html>
+
+<?php if (session()->getFlashdata('success')): ?>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: '<?= session()->getFlashdata('success') ?>',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+    });
+</script>
+<?php endif; ?>
 
 <?= $this->endSection() ?>
