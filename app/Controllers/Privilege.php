@@ -30,7 +30,7 @@ class Privilege extends Controller
                                ->findAll(),
             'submenus' => $this->submenuModel
                                ->select('submenu.id, submenu.name, menu.name as menu_name')
-                               ->join('menu','menu.id = submenu.parent','left')
+                               ->join('menu', 'menu.id = submenu.parent', 'left')
                                ->where('submenu.status', 1)
                                ->orderBy('menu.name, submenu.name')
                                ->findAll(),
@@ -46,11 +46,11 @@ class Privilege extends Controller
         $actions  = $this->request->getPost('privileges');
 
         if (! $this->roleModel->find($roleId)) {
-            return $this->response->setJSON(['error'=>'Role tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error' => 'Role tidak ditemukan'])->setStatusCode(404);
         }
 
         if (empty($submenu)) {
-            return $this->response->setJSON(['error'=>'Pilih minimal satu submenu'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => 'Pilih minimal satu submenu'])->setStatusCode(400);
         }
 
         foreach ($submenu as $sid) {
@@ -66,6 +66,35 @@ class Privilege extends Controller
             ]);
         }
 
-        return $this->response->setJSON(['message'=>'Privilege berhasil disimpan']);
+        return $this->response->setJSON(['message' => 'Privilege berhasil disimpan']);
+    }
+
+    public function list()
+    {
+        $privileges = [
+            [
+                'id' => 1,
+                'role' => 'Admin',
+                'submenu' => ['Tambah Users', 'Lihat Users'],
+                'actions' => ['create', 'read', 'update', 'delete']
+            ],
+            [
+                'id' => 2,
+                'role' => 'Kepala Bagian',
+                'submenu' => ['Lihat Dokumen'],
+                'actions' => ['read']
+            ],
+            [
+                'id' => 3,
+                'role' => 'Superior',
+                'submenu' => ['Tambah Dokumen', 'Lihat Dokumen'],
+                'actions' => ['create', 'read']
+            ],
+        ];
+
+        return view('Privilege/lihat-privilege', [
+            'title'      => 'Lihat Privilege',
+            'privileges' => $privileges
+        ]);
     }
 }
