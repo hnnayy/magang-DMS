@@ -1,5 +1,4 @@
 <?= $this->extend('layout/main_layout') ?>
-
 <?= $this->section('content') ?>
 
 <!-- Bootstrap CDN untuk bagian upload -->
@@ -15,6 +14,8 @@
         </div>
     
         <form id="addDocumentForm" action="<?= base_url('kelola-dokumen/tambah') ?>" method="post" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
@@ -38,7 +39,7 @@
                     <select id="jenis-dokumen" name="jenis" class="form-input" onchange="handleJenisChange()" required>
                         <option value="">-- Pilih Jenis --</option>
                         <?php foreach ($kategori_dokumen as $kategori): ?>
-                        <option value="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
+                        <option value="<?= $kategori['id'] ?>" data-kode="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
                             <?= $kategori['nama'] ?>
                         </option>
                         <?php endforeach; ?>
@@ -47,7 +48,7 @@
 
                 <div class="form-group" id="kode-dokumen-group">
                     <label class="form-label" for="kode-dokumen">Kode-Nama Dokumen</label>
-                    <select id="kode-dokumen" name="kode-dokumen" class="form-input">
+                    <select id="kode-dokumen" name="kode_dokumen_id" class="form-input">
                         <option value="">-- Pilih Dokumen --</option>
                     </select>
                 </div>
@@ -56,6 +57,11 @@
                     <label class="form-label" for="kode-dokumen-custom">Kode & Nama Dokumen</label>
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="date-published">Tanggal Terbit</label>
+                <input type="date" id="date-published" name="date_published" class="form-input" required>
             </div>
 
             <div class="form-group">
@@ -112,11 +118,13 @@
     </div>
 </div>
 
+<!-- Script Jenis & Kode Dokumen -->
 <script>
 function handleJenisChange() {
     const jenisSelect = document.getElementById('jenis-dokumen');
     const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
     const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
+    const kodeJenis = selectedOption.getAttribute('data-kode');
 
     const kodeGroup = document.getElementById('kode-dokumen-group');
     const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
@@ -128,7 +136,7 @@ function handleJenisChange() {
         kodeCustomGroup.style.display = 'none';
         kodeSelect.required = true;
         kodeCustomInput.required = false;
-        loadKodeDokumen(jenisSelect.value);
+        loadKodeDokumen(kodeJenis);
     } else {
         kodeGroup.style.display = 'none';
         kodeCustomGroup.style.display = 'block';
@@ -154,7 +162,7 @@ function loadKodeDokumen(jenis) {
     .then(data => {
         data.forEach(item => {
             const option = document.createElement('option');
-            option.value = item.kode + ' - ' + item.nama;
+            option.value = item.id;
             option.textContent = item.kode + ' - ' + item.nama;
             kodeSelect.appendChild(option);
         });
