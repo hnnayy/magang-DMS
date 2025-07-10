@@ -16,12 +16,14 @@ protected $allowedFields = [
     'revision',
     'description',
     'filepath',
-    'filename',       // nama asli file
+    'filename',       
     'status',
     'createddate',
     'createdby',
     'updated_at',
+    'date_published', 
 ];
+
 
 
 
