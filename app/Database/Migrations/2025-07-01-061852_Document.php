@@ -22,6 +22,11 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
+            'kode_dokumen_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'null'       => true,
+            ],
             'number' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 40,
@@ -73,7 +78,12 @@ class Document extends Migration
             'type'       => 'VARCHAR',
             'constraint' => 255,
             'null'       => true,
-        ],
+            ],
+            'filename' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
         ]);
 
         $this->forge->addKey('id', true); 
