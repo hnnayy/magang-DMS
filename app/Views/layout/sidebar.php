@@ -47,11 +47,13 @@
                 <ul class="submenu">
                     <li><a href="<?= base_url('dokumen/add') ?>" class="<?= (uri_string() == 'dokumen/add') ? 'active' : '' ?>"><i class="fi fi-rr-add-document"></i>Tambah Dokumen</a></li>
                     <li><a href="<?= base_url('dokumen/pengajuan') ?>" class="<?= (uri_string() == 'dokumen/pengajuan') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Daftar Pengajuan</a></li>
-                    <li><a href="<?= base_url('dokumen/daftar') ?>" class="<?= (uri_string() == 'dokumen/daftar') ? 'active' : '' ?>"><i class="fi fi-rr-list"></i>Daftar Dokumen</a></li>
-                    <li><a href="<?= base_url('dokumen/persetujuan') ?>" class="<?= (uri_string() == 'dokumen/persetujuan') ? 'active' : '' ?>"><i class="fi fi-rr-check-circle"></i>Persetujuan Dokumen</a></li>
+                    <li><a href="<?= base_url(relativePath: 'dokumen/persetujuan') ?>" class="<?= (uri_string() == 'dokumen/persetujuan') ? 'active' : '' ?>"><i class="fi fi-rr-check-circle"></i>Persetujuan Dokumen</a></li>
                     <li><a href="<?= base_url('dokumen/config-jenis-dokumen') ?>" class="<?= (uri_string() == 'dokumen/config-jenis-dokumen') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Jenis & Kode Dokumen</a></li>
                 </ul>
             </li>
+
+            <li><a href="<?= base_url('dokumen/daftar') ?>" class="<?= (uri_string() == 'dokumen/daftar') ? 'active' : '' ?>"><i class="fi fi-rr-list"></i>Daftar Dokumen</a></li>
+
 
             <!-- Menu -->
             <li class="has-submenu <?= (strpos(uri_string(), 'Menu') !== false) ? 'open' : '' ?>">
@@ -63,7 +65,7 @@
                 </div>
                 <ul class="submenu">
                     <li><a href="<?= base_url('menu/create') ?>" class="<?= (uri_string() == 'menu/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Menu</a></li>
-                    <li><a href="<?= base_url('Menu/lihat-menu') ?>" class="<?= (uri_string() == 'Menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
+                    <li><a href="<?= base_url('menu/lihat-menu') ?>" class="<?= (uri_string() == 'menu/lihat-menu') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Menu</a></li>
                 </ul>
             </li>
 
@@ -91,7 +93,7 @@
                 </div>
                 <ul class="submenu">
                     <li><a href="<?= base_url('role/create') ?>" class="<?= (uri_string() == 'Role/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Role</a></li>
-                    <li><a href="<?= base_url('Role/list') ?>" class="<?= (uri_string() == 'Role/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Role</a></li>
+                    <li><a href="<?= base_url('role/lihat-role') ?>" class="<?= (uri_string() == 'role/lihat-role') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Role</a></li>
                 </ul>
             </li>
 
@@ -105,7 +107,7 @@
                 </div>
                 <ul class="submenu">
                     <li><a href="<?= base_url('privilege/create') ?>" class="<?= (uri_string() == 'Privilege/create') ? 'active' : '' ?>"><i class="fi fi-rr-add"></i>Tambah Privilege</a></li>
-                    <li><a href="<?= base_url('Privilege/list') ?>" class="<?= (uri_string() == 'Privilege/list') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Privilege</a></li>
+                    <li><a href="<?= base_url('privilege/lihat-privilege') ?>" class="<?= (uri_string() == 'privilege/lihat-privilege') ? 'active' : '' ?>"><i class="fi fi-rr-list-check"></i>Lihat Privilege</a></li>
                 </ul>
             </li>
         </ul>
