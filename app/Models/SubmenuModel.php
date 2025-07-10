@@ -9,6 +9,7 @@ class SubmenuModel extends Model
     protected $primaryKey = 'id';
     protected $returnType = 'array';
     protected $allowedFields = ['parent', 'name', 'status'];
+    protected $useTimestamps = false;
     
     // Method untuk join dengan menu
     public function getWithMenu()

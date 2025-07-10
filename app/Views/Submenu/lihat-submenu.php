@@ -16,35 +16,35 @@
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <!-- Dummy Data -->
-                <tr>
-                    <td class="text-center">1</td>
-                    <td>Create User</td>
-                    <td>Tambah Users</td>
-                    <td class="text-center">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <form action="<?= site_url('sub-menu/delete/1') ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-link p-0 text-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                                onclick="openEditModal(1, 'Create User', 'Tambah User')">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                <?php if (!empty($submenus)) : ?>
+                    <?php $no = 1; foreach ($submenus as $submenu) : ?>
+                        <tr>
+                            <td class="text-center"><?= $no++ ?></td>
+                            <td><?= esc($submenu['parent_name']) ?></td>
+                            <td><?= esc($submenu['name']) ?></td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <form action="<?= site_url('submenu/delete/' . $submenu['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-link p-0 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                                        onclick="openEditModal(<?= $submenu['id'] ?>, <?= esc($submenu['parent']) ?>, '<?= esc($submenu['name']) ?>')">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Tidak ada data submenu.</td>
+                    </tr>
+                <?php endif ?>
             </tbody>
         </table>
-    </div>
-
-    <!-- No Results -->
-    <div id="noResults" class="text-center py-4" style="display: none;">
-        <i class="bi bi-search" style="font-size: 3rem; color: #6c757d;"></i>
-        <h5 class="mt-3 text-muted">No results found</h5>
-        <p class="text-muted">Try adjusting your search criteria</p>
     </div>
 </div>
 
@@ -61,12 +61,17 @@
         <div class="modal-body">
             <input type="hidden" name="id" id="editUnitId">
             <div class="mb-3">
-                <label class="form-label">Fakultas/Direktorat</label>
-                <input type="text" name="parent_name" id="editParentName" class="form-control" required>
+                <label class="form-label">Menu</label>
+                <select name="parent" id="editParentName" class="form-select" required>
+                    <option value="">-- Pilih Menu --</option>
+                    <?php foreach ($menus as $menu) : ?>
+                        <option value="<?= $menu['id'] ?>"><?= esc($menu['name']) ?></option>
+                    <?php endforeach ?>
+                </select>
             </div>
             <div class="mb-3">
                 <label class="form-label">Sub Menu</label>
-                <input type="text" name="unit_name" id="editUnitName" class="form-control" required>
+                <input type="text" name="submenu" id="editUnitName" class="form-control" required>
             </div>
         </div>
         <div class="modal-footer">
@@ -84,32 +89,42 @@
 
 <script>
     function confirmDelete(event, form) {
-    event.preventDefault();
-    Swal.fire({
-        title: 'Yakin ingin menghapus?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, hapus!',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            form.submit();
+        event.preventDefault();
+        Swal.fire({
+            title: 'Yakin ingin menghapus?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+            form.submit(); // Submit normal kalau user konfirmasi
+            }
+        });
+        return false;
         }
-    });
-    return false;
-}
+
+    function openEditModal(id, parentId, submenuName) {
+        const form = document.getElementById('editUnitForm');
+        if (!form) return;
+        form.action = `/submenu/update/${id}`;
+        document.getElementById('editUnitId').value = id;
+        document.getElementById('editParentName').value = parentId;
+        document.getElementById('editUnitName').value = submenuName;
+    }
 
     $(document).ready(function () {
-        $('#submenuTable').DataTable(); // tanpa tombol export
-    });
+        const table = $('#submenuTable');
+        const thCount = table.find('thead th').length;
+        const tdCount = table.find('tbody tr:visible:first td').length;
 
-    function openEditModal(id, parentName, unitName) {
-        const form = document.getElementById('editUnitForm');
-        form.action = `#`; // dummy action
-        document.getElementById('editUnitId').value = id;
-        document.getElementById('editParentName').value = parentName;
-        document.getElementById('editUnitName').value = unitName;
-    }
+        // Inisialisasi DataTables jika kolom match
+        if (thCount === tdCount || table.find('tbody tr').length === 0) {
+            table.DataTable();
+        } else {
+            console.warn('⚠️ DataTables tidak dijalankan karena jumlah kolom tidak sesuai.');
+        }
+    });
 </script>
 
 <?= $this->endSection() ?>
