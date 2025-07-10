@@ -206,7 +206,52 @@
             </div>
         </div>
     </div>
-
+    <!-- Modal Approve Dokumen -->
+    <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <form onsubmit="handleApproveSubmit(event)" class="p-3">
+                    <input type="hidden" name="document_id" id="approveDocumentId">
+                    <!-- Header -->
+                    <div class="modal-header border-bottom-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="approveModalLabel">Persetujuan Dokumen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <!-- Body -->
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="approved_by" class="form-label">Nama Pihak yang Menyetujui</label>
+                            <input type="text" class="form-control" name="approved_by" id="approved_by" placeholder="Masukkan nama lengkap" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="approval_date" class="form-label">Tanggal Persetujuan</label>
+                            <input type="date" class="form-control" name="approval_date" id="approval_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">Catatan Tambahan</label>
+                            <textarea class="form-control" name="remarks" id="remarks" rows="3" placeholder="Masukkan catatan tambahan jika ada..."></textarea>
+                        </div>
+                    </div>
+                    <!-- Footer -->
+                    <div class="modal-footer border-top-0 pt-0">
+                        <div class="row w-100">
+                            <div class="col-6 pe-1">
+                                <button type="button" class="btn w-100 text-white" style="background-color: #b41616;" data-bs-dismiss="modal">
+                                    Not Approve
+                                </button>
+                            </div>
+                            <div class="col-6 ps-1">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-check-lg me-2"></i>Approve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
    <!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
