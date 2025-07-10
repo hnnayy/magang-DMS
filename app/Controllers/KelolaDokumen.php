@@ -117,13 +117,15 @@ class KelolaDokumen extends BaseController
     public function pengajuan()
     {
         $documents = $this->documentModel
-            ->select('document.*, dt.name AS jenis_dokumen, unit.name AS unit_name, unit_parent.name AS parent_name')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-            ->where('document.status', 0)
-            ->groupBy('document.id')
-            ->findAll();
+    ->select('document.*, dt.name AS jenis_dokumen, dc.kode AS kode_dokumen, dc.nama AS nama_kode_dokumen, unit.name AS unit_name, unit_parent.name AS parent_name')
+    ->join('document_type dt', 'dt.id = document.type', 'left')
+    ->join('kode_dokumen dc', 'dc.id = document.kode_dokumen_id', 'left')
+    ->join('unit', 'unit.id = document.unit_id', 'left')
+    ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+    ->where('document.status', 0)
+    ->groupBy('document.id')
+    ->findAll();
+
 
         $data['kategori_dokumen'] = $this->kategoriDokumen;
         $data['documents'] = $documents;
@@ -332,11 +334,63 @@ class KelolaDokumen extends BaseController
         return redirect()->to('/kelola-dokumen/pengajuan')->with('success', 'Dokumen berhasil diupdate.');
     }
 
-    public function delete($id)
-    {
-        log_message('info', 'DELETE: Document ID ' . $id);
-        return redirect()->to('/dokumen/pengajuan')->with('success', 'Dokumen berhasil dihapus.');
+// Perbaikan method delete di KelolaDokumen controller
+
+public function delete($id)
+{
+    // Validasi input
+    if (!$id || !is_numeric($id)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'ID dokumen tidak valid.'
+        ]);
     }
+
+    // Cek apakah dokumen ada
+    $document = $this->documentModel->find($id);
+    if (!$document) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Dokumen tidak ditemukan.'
+        ]);
+    }
+
+    // Cek apakah request adalah AJAX
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Request tidak valid.'
+        ]);
+    }
+
+    try {
+        // Update status dokumen menjadi 9 (deleted)
+        $result = $this->documentModel->update($id, [
+            'status' => 9,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        if ($result) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Dokumen berhasil dihapus.'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Gagal menghapus dokumen.'
+            ]);
+        }
+    } catch (Exception $e) {
+        log_message('error', 'Error deleting document: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat menghapus dokumen.'
+        ]);
+    }
+}
+
+
 
     public function tambah()
     {
@@ -358,8 +412,9 @@ class KelolaDokumen extends BaseController
 
         $this->documentModel->insert([
             'type'           => $jenisId,
+            'kode_dokumen_id'=> $this->request->getPost('kode_dokumen_id'), // <- tambahkan
             'number'         => $this->request->getPost('no-dokumen'),
-            'date_published' => date('Y-m-d'),
+            'date_published' => $this->request->getPost('date_published'),
             'revision'       => $this->request->getPost('revisi') ?? 'Rev. 0',
             'title'          => $this->request->getPost('nama-dokumen'),
             'description'    => $this->request->getPost('keterangan'),
@@ -368,8 +423,10 @@ class KelolaDokumen extends BaseController
             'createddate'    => date('Y-m-d H:i:s'),
             'createdby'      => 1,
             'filepath'       => $newName,
+            'filename'       => $file->getClientName(), // <- tambahkan
         ]);
 
-        return redirect()->to(base_url('/kelola-dokumen/daftar-pengajuan'))->with('success', 'Dokumen berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Dokumen berhasil ditambahkan.');
+
     }
 }
