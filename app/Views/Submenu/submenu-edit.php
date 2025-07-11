@@ -9,7 +9,7 @@
 
     <div class="mb-3">
         <label for="menu" class="form-label">Menu</label>
-        <select name="menu" id="menu" class="form-select" required>
+        <select name="parent" id="menu" class="form-select" required>
             <option value="">-- Pilih Menu --</option>
             <?php foreach ($menus as $menu): ?>
                 <option value="<?= $menu['id'] ?>" <?= $menu['id'] == $submenu['parent'] ? 'selected' : '' ?>>
