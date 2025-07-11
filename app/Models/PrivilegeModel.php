@@ -8,7 +8,8 @@ class PrivilegeModel extends Model
     protected $table = 'privilege';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
-    protected $allowedFields = ['role_id', 'submenu_id', 'create', 'update', 'delete', 'approve'];
+    protected $allowedFields = ['role_id', 'submenu_id', 'can_create', 'can_update', 'can_delete', 'can_approve'];
+
     
     // Method untuk join dengan role dan submenu
     public function getWithRelations()

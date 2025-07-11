@@ -27,28 +27,28 @@ class Privilege extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            'create'     => [
+            'can_create'     => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'null'       => false,
                 'default'    => 0,
                 'comment'    => '0=No, 1=Yes',
             ],
-            'update'     => [
+            'can_update'     => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'null'       => false,
                 'default'    => 0,
                 'comment'    => '0=No, 1=Yes',
             ],
-            'delete'     => [
+            'can_delete'     => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'null'       => false,
                 'default'    => 0,
                 'comment'    => '0=No, 1=Yes',
             ],
-            'approve'    => [
+            'can_approve'    => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'null'       => false,
