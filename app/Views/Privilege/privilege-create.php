@@ -1,7 +1,6 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
-<!-- Select2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 <link rel="stylesheet" href="<?= base_url('assets/css/privilege.css') ?>" />
 
@@ -16,7 +15,6 @@
                 <select id="role" name="role" class="form-control" required>
                     <option value="" hidden>Pilih Role...</option>
                     <?php
-                    // Filter unik berdasarkan nama role (case insensitive)
                     $uniqueRoles = [];
                     $seenRoleNames = [];
 
@@ -55,7 +53,7 @@
                     <label><input type="checkbox" name="privileges[]" value="delete"> Delete</label>
                     <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
                 </div>
-                <div class="invalid-feedback">Please select at least one privilege.</div>
+                <div class="invalid-feedback" id="privileges-error" style="display: none;">Please select at least one privilege.</div>
             </div>
 
             <!-- Tombol -->
@@ -69,8 +67,6 @@
 <!-- jQuery & Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<!-- ✅ Tambahkan ini sebelum form JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -85,27 +81,28 @@ $(function () {
     });
 
     $('#privilegeForm').on('submit', function (e) {
+        e.preventDefault(); 
+        
         const form = this;
         const privileges = $(form).find('input[name="privileges[]"]:checked').length;
+        const privilegesError = $('#privileges-error');
+        let isValid = true;
+
+        privilegesError.hide();
+        $(form).removeClass('was-validated');
 
         if (privileges === 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            const privilegesGroup = $(form).find('.privileges-options').parent();
-            let feedback = privilegesGroup.find('.invalid-feedback');
-            feedback.show();
-        } else {
-            $(form).find('.privileges-options').parent().find('.invalid-feedback').hide();
-        }
-
-        if (!form.checkValidity()) {
-            e.preventDefault();
-            e.stopPropagation();
+            privilegesError.show();
+            isValid = false;
         }
 
         form.classList.add('was-validated');
 
-        if (form.checkValidity() && privileges > 0) {
+        if (!form.checkValidity()) {
+            isValid = false;
+        }
+
+        if (isValid) {
             $.post('<?= base_url('privilege/store') ?>', $(this).serialize())
                 .done(res => {
                     Swal.fire({
@@ -119,12 +116,22 @@ $(function () {
                 })
                 .fail(xhr => {
                     const msg = xhr.responseJSON?.error ?? 'Gagal menyimpan privilege';
-                    Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                    Swal.fire({ 
+                        icon: 'error', 
+                        title: 'Error', 
+                        text: msg 
+                    });
                 });
+        }
+    });
+
+    $('input[name="privileges[]"]').on('change', function() {
+        const privileges = $('input[name="privileges[]"]:checked').length;
+        if (privileges > 0) {
+            $('#privileges-error').hide();
         }
     });
 });
 </script>
-
 
 <?= $this->endSection() ?>
