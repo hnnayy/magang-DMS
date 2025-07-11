@@ -116,6 +116,9 @@ function SwalConfirmDelete(elem) {
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -133,19 +136,123 @@ $(function () {
         },
         buttons: [
             {
-                text: 'Excel',
-                className: "btn btn-success",
-                action: function () {
-                    window.location = '<?= site_url('data-master/export/excel') ?>';
-                }
+                extend: 'excel',
+                className: 'btn btn-outline-success btn-sm',
+                title: 'Data_Unit',
+                exportOptions: { columns: [0, 1, 2] }
             },
             {
-                text: 'PDF',
-                className: "btn btn-danger",
-                action: function () {
-                    window.location = '<?= site_url('data-master/export/pdf') ?>';
+                extend: 'pdfHtml5',
+                className: 'btn btn-outline-danger btn-sm',
+                title: 'Data Unit',
+                exportOptions: { columns: [0, 1, 2] },
+                customize: function (doc) {
+                    const now = new Date();
+                    const waktuCetak = now.toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    }) + ' ' + now.toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Set document margins
+                    doc.pageMargins = [50, 50, 50, 50]; // left, top, right, bottom
+
+                    // Remove default title if exists
+                    if (doc.content[0] && typeof doc.content[0].text === 'string' && doc.content[0].text.includes('Data')) {
+                        doc.content.splice(0, 1);
+                    }
+
+                    // Add custom title
+                    doc.content.unshift({
+                        text: 'Data Unit',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 18,
+                        margin: [0, 0, 0, 20]
+                    });
+
+                    // Customize table styles
+                    doc.styles.tableHeader = {
+                        fillColor: '#eaeaea',
+                        color: '#000000',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 12
+                    };
+
+                    doc.styles.tableBodyEven = { 
+                        fillColor: '#ffffff',
+                        fontSize: 10
+                    };
+                    
+                    doc.styles.tableBodyOdd = { 
+                        fillColor: '#ffffff',
+                        fontSize: 10
+                    };
+
+                    // Table layout and spacing
+                    if (doc.content[1] && doc.content[1].table) {
+                        doc.content[1].layout = {
+                            hLineWidth: () => 0.5,
+                            vLineWidth: () => 0.5,
+                            hLineColor: () => '#000000',
+                            vLineColor: () => '#000000',
+                            paddingLeft: () => 8,
+                            paddingRight: () => 8,
+                            paddingTop: () => 3,
+                            paddingBottom: () => 3 
+                        };
+
+                        // Set column widths
+                        doc.content[1].table.widths = ['4%', '48%', '48%'];
+                        
+                        // Add margin to table
+                        doc.content[1].margin = [0, 0, 0, 5];
+                    }
+
+                    // Footer configuration
+                    doc.footer = function (currentPage, pageCount) {
+                        return {
+                            columns: [
+                                { 
+                                    text: `Dicetak: ${waktuCetak}`, 
+                                    alignment: 'left', 
+                                    fontSize: 10,
+                                    margin: [40, 0, 0, 0]
+                                },
+                                { 
+                                    text: '© 2025 Telkom University – Document Management System', 
+                                    alignment: 'center',
+                                    fontSize: 10
+                                },
+                                { 
+                                    text: `${currentPage}/${pageCount}`, 
+                                    alignment: 'right',
+                                    fontSize: 10,
+                                    margin: [0, 0, 40, 0]
+                                }
+                            ],
+                            margin: [0, 20, 0, 0]
+                        };
+                    };
+
+                    // Add footer note
+                    doc.content.push({
+                        text: '* Daftar Unit dalam Sistem Manajemen Dokumen',
+                        alignment: 'left',
+                        italics: true,
+                        fontSize: 10,
+                        margin: [0, 15, 0, 0],
+                        color: '#000000'
+                    });
+
+                    // Set default font size for document
+                    doc.defaultStyle.fontSize = 11;
                 }
-            }
+            },
         ]
     });
 });

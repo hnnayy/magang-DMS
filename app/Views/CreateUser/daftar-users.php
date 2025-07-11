@@ -113,57 +113,100 @@ $(document).ready(function () {
       { className: 'text-center', targets: 6 }
     ],
     buttons: [
-      { 
-        extend: 'excelHtml5', 
-        text: 'Excel', 
-        className: 'btn',
-        title: 'Data Users',             
-        filename: 'data_users',
+      {
+        extend: 'excel',
+        className: 'btn btn-outline-success btn-sm',
+        title: 'Data_Users',
         exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
       },
       {
         extend: 'pdfHtml5',
-        className: 'btn-pdf-dt',
-        title: 'Data Users', 
+        text: 'PDF',
+        className: 'btn',
+        title: 'Data Users',
+        filename: 'data_users',
         exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+        orientation: 'portrait', 
+        pageSize: 'A4',
         customize: function (doc) {
-            const now = new Date();
-            const waktuCetak = now.toLocaleString('en-GB');
+          const now = new Date();
+          const waktuCetak = now.toLocaleString('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
 
-            doc.content.splice(0, 0, {
-                text: 'Data Users',
-                alignment: 'center',
-                bold: true,
-                fontSize: 16,
-                margin: [0, 0, 0, 10]
-            });
+          // Hapus judul default jika ada
+          if (doc.content[0].text === 'Data Users') {
+            doc.content.splice(0, 1);
+          }
 
-            doc.styles.tableHeader = {
-                fillColor: '#ececec',
-                color: '#000000',
-                alignment: 'center',
-                bold: true,
-                fontSize: 10
+          // Tambahkan judul
+          doc.content.unshift({
+            text: 'Data Users',
+            alignment: 'center',
+            bold: true,
+            fontSize: 16,
+            margin: [0, 0, 0, 10]
+          });
+
+          // Header tabel abu-abu terang
+          doc.styles.tableHeader = {
+            fillColor: '#eaeaea',
+            color: '#000',
+            alignment: 'center',
+            bold: true,
+            fontSize: 9
+          };
+
+          // Warna isi tabel putih tanpa selang-seling
+          doc.styles.tableBodyEven = { fillColor: '#ffffff' };
+          doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+
+          // Ukuran & padding
+          doc.defaultStyle.fontSize = 8;
+          doc.styles.tableBody = { alignment: 'left', fontSize: 8 };
+
+          // Footer halaman
+          doc.footer = function (currentPage, pageCount) {
+            return {
+              columns: [
+                { text: waktuCetak, alignment: 'left', margin: [30, 0] },
+                { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
+                { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30, 0] }
+              ],
+              fontSize: 9
             };
+          };
 
-            doc.footer = function (currentPage, pageCount) {
-                return {
-                    columns: [
-                        { text: `${waktuCetak}`, alignment: 'left', margin: [30, 0] },
-                        { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
-                        { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30] }
-                    ],
-                    fontSize: 9
-                };
-            };
+          // Set margin yang seimbang untuk halaman portrait
+          doc.pageMargins = [40, 40, 40, 40]; // [left, top, right, bottom] - lebih kecil untuk ruang lebih
 
-            doc.content.push({
-                text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
-                alignment: 'left',
-                italics: true,
-                fontSize: 9,
-                margin: [0, 10, 0, 0]
-            });
+          // Atur lebar kolom tabel agar muat dalam portrait A4
+          if (doc.content[1] && doc.content[1].table) {
+            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%']; // Total 100%, lebih compact
+            doc.content[1].margin = [0, 0, 0, 0];
+          }
+
+          // Tabel: garis dan padding
+          doc.content[doc.content.length - 1].layout = {
+            hLineWidth: function () { return 0.5; },
+            vLineWidth: function () { return 0.5; },
+            hLineColor: function () { return '#000000'; },
+            vLineColor: function () { return '#000000'; },
+            paddingLeft: function () { return 3; },
+            paddingRight: function () { return 3; },
+            paddingTop: function () { return 2; },
+            paddingBottom: function () { return 2; }
+          };
+
+          // Catatan akhir
+          doc.content.push({
+            text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
+            alignment: 'left',
+            italics: true,
+            fontSize: 8,
+            margin: [0, 12, 0, 0]
+          });
         }
       }
     ]
