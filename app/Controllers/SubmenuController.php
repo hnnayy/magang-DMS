@@ -33,7 +33,8 @@ class SubmenuController extends BaseController
                 'errors' => [
                     'regex_match' => 'Submenu harus terdiri dari minimal dua kata.'
                 ]
-            ]
+            ],
+            'status'  => 'required|in_list[1,2]' // Ensure status is 1 or 2
         ];
 
         if (! $this->validate($rules)) {
@@ -41,13 +42,23 @@ class SubmenuController extends BaseController
             return redirect()->back()->withInput()->with('validation', $errors);
         }
 
-        $this->submenuModel->save([
+        $data = [
             'parent' => $this->request->getPost('parent'),
             'name'   => $this->request->getPost('submenu'),
             'status' => $this->request->getPost('status')
+        ];
+
+        // Debug: Log the submitted status
+        log_message('debug', 'Storing submenu with status: ' . $data['status']);
+
+        $this->submenuModel->save($data);
+
+        return redirect()->back()->with('swal', [
+            'icon'  => 'success',
+            'title' => 'Berhasil!',
+            'text'  => 'Submenu berhasil ditambahkan.'
         ]);
 
-        return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu berhasil ditambahkan.');
     }
 
     public function list()
@@ -55,7 +66,7 @@ class SubmenuController extends BaseController
         $data['submenus'] = $this->submenuModel
             ->select('submenu.*, menu.name AS parent_name')
             ->join('menu', 'menu.id = submenu.parent')
-            ->whereIn('submenu.status', [1, 2])   // tampilkan hanya aktif & nonaktif
+            ->where('submenu.status !=', 0) // Exclude soft-deleted items
             ->findAll();
 
         $data['menus'] = $this->menuModel->whereIn('status', [1, 2])->findAll();
@@ -81,23 +92,28 @@ class SubmenuController extends BaseController
         $rules = [
             'parent'  => 'required|integer',
             'submenu' => 'required|min_length[3]|max_length[40]',
+            'status'  => 'required|in_list[1,2]', // Only allow 1 (Active) or 2 (Inactive)
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        // Ambil data lama submenu
         $existing = $this->submenuModel->find($id);
         if (! $existing) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
         }
 
-        $this->submenuModel->update($id, [
+        $data = [
             'parent' => $this->request->getPost('parent'),
             'name'   => $this->request->getPost('submenu'),
-            'status' => $existing['status'] // ← status tetap seperti sebelumnya
-        ]);
+            'status' => $this->request->getPost('status')
+        ];
+
+        // Debug: Log the submitted status
+        log_message('debug', 'Updating submenu ID: ' . $id . ' with status: ' . $data['status']);
+
+        $this->submenuModel->update($id, $data);
 
         return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu berhasil diperbarui.');
     }
@@ -109,7 +125,7 @@ class SubmenuController extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
         }
 
-        // soft delete → set status = 0
+        // Soft delete by setting status to 0
         $this->submenuModel->update($id, ['status' => 0]);
 
         return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu berhasil dihapus.');
