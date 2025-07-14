@@ -12,7 +12,10 @@
                     <th class="text-center">No</th>
                     <th>Role</th>
                     <th>Submenu</th>
-                    <th>Privilege</th>
+                    <th class="text-center">Create</th>
+                    <th class="text-center">Update</th>
+                    <th class="text-center">Delete</th>
+                    <th class="text-center">Approve</th>
                     <th class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -22,26 +25,25 @@
                         <td class="text-center"><?= $i + 1 ?></td>
                         <td><?= esc($p['role']) ?></td>
                         <td><?= esc(is_array($p['submenu']) ? implode(', ', $p['submenu']) : $p['submenu']) ?></td>
-                        <td>
-                            <?php foreach ($p['actions'] as $act): ?>
-                                <?php
-                                    $badge = match($act) {
-                                        'create' => 'bg-success',
-                                        'update' => 'bg-warning text-dark',
-                                        'delete' => 'bg-danger',
-                                        'approve' => 'bg-info text-white',
-                                        default  => 'bg-secondary'
-                                    };
-                                ?>
-                                <span class="badge <?= $badge ?>"><?= ucfirst($act) ?></span>
-                            <?php endforeach ?>
-                        </td>
+
+                        <?php
+                            $allActions = ['create', 'update', 'delete', 'approve'];
+                            $userActions = array_map('strtolower', $p['actions']);
+                        ?>
+                        <?php foreach ($allActions as $act): ?>
+                            <td class="text-center">
+                                <span class="badge <?= in_array($act, $userActions) ? 'bg-success' : 'bg-danger' ?>">
+                                    <?= in_array($act, $userActions) ? 'Yes' : 'No' ?>
+                                </span>
+                            </td>
+                        <?php endforeach ?>
+
                         <td class="text-center">
                             <button class="btn btn-sm btn-link text-primary p-0"
                                     data-bs-toggle="modal"
                                     data-bs-target="#editModal"
                                     onclick='openEditModal(
-                                        <?= json_encode($p['id']) ?>, <!-- Pass the id -->
+                                        <?= json_encode($p['id']) ?>,
                                         <?= json_encode($p['role_id']) ?>,
                                         <?= json_encode($p['role']) ?>,
                                         <?= json_encode($p['submenu_ids']) ?>,
@@ -74,7 +76,7 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <p id="editRoleText" class="form-control-plaintext fw-semibold mb-0"></p>
-                        <input type="hidden" id="editId" name="id"> <!-- Add hidden id field -->
+                        <input type="hidden" id="editId" name="id">
                         <input type="hidden" id="editRole" name="role">
                         <input type="hidden" id="oldSubmenuId" name="old_submenu_id">
                     </div>
@@ -90,11 +92,14 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Privilege</label>
-                        <div class="d-flex flex-wrap gap-3 ps-2">
+                        <div class="d-flex flex-wrap gap-3 ps-2 privileges-options">
                             <label><input type="checkbox" name="privileges[]" value="create"> Create</label>
                             <label><input type="checkbox" name="privileges[]" value="update"> Update</label>
                             <label><input type="checkbox" name="privileges[]" value="delete"> Delete</label>
                             <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
+                        </div>
+                        <div class="invalid-feedback" style="display: none;">
+                            Minimal satu privilege harus dipilih.
                         </div>
                     </div>
                 </div>
@@ -132,7 +137,7 @@
     });
 
     function openEditModal(id, roleId, roleName, submenuList, privileges) {
-        $('#editId').val(id); // Populate the id
+        $('#editId').val(id);
         $('#editRoleText').text(roleName ?? '-');
         $('#editRole').val(roleId);
         const oldSubmenuId = submenuList[0];
@@ -168,7 +173,6 @@
 
         if (form.checkValidity() && privileges > 0) {
             const formData = $(this).serialize();
-            console.log('Form Data:', formData); // Log to console
             $.ajax({
                 url: '<?= base_url('privilege/update') ?>',
                 method: 'POST',
@@ -185,7 +189,6 @@
                     });
                 },
                 error: function(xhr, status, error) {
-                    console.log('AJAX Error:', xhr.responseText); // Log full response
                     const msg = xhr.responseJSON?.error ?? 'Gagal memperbarui privilege';
                     Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
                 }
@@ -206,7 +209,7 @@
                 $.ajax({
                     url: '<?= base_url('privilege/delete') ?>',
                     method: 'POST',
-                    data: { id: id }, // Send id instead of role and submenu_ids
+                    data: { id: id },
                     success: function (res) {
                         Swal.fire('Berhasil', res.message, 'success')
                             .then(() => location.reload());
