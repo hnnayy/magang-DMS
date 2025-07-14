@@ -148,3 +148,32 @@ $routes->post('kelola-dokumen/persetujuan/delete', 'KelolaDokumen\ControllerPers
 $routes->get('daftar-dokumen', 'DaftarDokumen\ControllerDaftarDokumen::index');
 $routes->post('daftar-dokumen/delete/(:num)', 'DaftarDokumen\ControllerDaftarDokumen::delete/$1');
 $routes->post('daftar-dokumen/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
+
+
+//CIPA PRIVILAGE
+$route['privilege/update'] = 'privilege/update';
+$route['privilege/delete'] = 'privilege/delete';
+$routes->post('privilege/update', 'Privilege::update');
+$routes->post('privilege/delete', 'Privilege::delete');
+
+$routes->get('privilege/lihat-privilege', 'privilege::list');
+
+
+//14-07-2025 10.18 HANIN
+
+$routes->get('auth/create', 'Auth\AuthController::create');
+$routes->post('auth/store', 'Auth\AuthController::store');
+
+$routes->get('auth/getUnits/(:num)', 'Auth\AuthController::getUnits/$1');
+
+
+$routes->get('auth/login', 'Auth\AuthController::login');
+$routes->post('auth/login', 'Auth\AuthController::doLogin');
+$routes->get('auth/logout', 'Auth\AuthController::logout');
+
+//DUMMY
+$routes->get('generatetoken', 'Dummy\TokenDummy::generateAllTokens');
+$routes->get('parse-token', 'Dummy\TokenDummy::parseToken');
+
+$routes->get('wc-dummy', 'Dummy\DummyWCController::index');
+$routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');

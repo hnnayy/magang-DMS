@@ -13,6 +13,7 @@
           <th>Employee ID</th>
           <th>Direktorat</th>
           <th>Unit</th>
+          <th>Username</th>
           <th>Fullname</th>
           <th>Role</th>
           <th class="text-center noExport">Aksi</th>
@@ -25,6 +26,7 @@
           <td><?= esc($user['id']) ?></td>
           <td><?= esc($user['parent_name']) ?></td>
           <td><?= esc($user['unit_name']) ?></td>
+          <td><?= esc($user['username']) ?></td>
           <td><?= esc($user['fullname']) ?></td>
           <td><?= esc($user['role_name'] ?? 'N/A') ?></td>
           <td class="text-center">
@@ -38,8 +40,9 @@
               data-employee="<?= esc($user['id']) ?>"
               data-directorate="<?= esc($user['parent_id']) ?>"
               data-unit="<?= esc($user['unit_id']) ?>"
+              data-username="<?= esc($user['username']) ?>"
               data-fullname="<?= esc($user['fullname']) ?>"
-              data-role="<?= esc($user['role_name'] ?? '') ?>">
+              data-role="<?= esc($user['role_name']) ?>">
               <i class="bi bi-pencil-square"></i>
             </a>
           </td>
@@ -50,7 +53,6 @@
   </div>
 </div>
 
-<!-- Modal Edit -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
@@ -66,11 +68,25 @@
           </div>
           <div class="mb-3">
             <label for="editDirectorate">Fakultas/Direktorat</label>
-            <input type="text" class="form-control" id="editDirectorate" readonly>
+            <select class="form-select" id="editDirectorate" name="fakultas" required>
+              <option value="">Pilih Fakultas/Direktorat</option>
+              <?php foreach ($unitParents as $parent): ?>
+                <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
+         <div class="mb-3">
+          <label for="editUnit">Unit</label>
+          <select class="form-select" id="editUnit" name="unit" required>
+            <option value="">Pilih Unit</option>
+            <?php foreach ($units as $unit): ?>
+              <option value="<?= $unit['id'] ?>" data-parent="<?= $unit['parent_id'] ?>"><?= esc($unit['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
           <div class="mb-3">
-            <label for="editUnit">Unit</label>
-            <input type="text" class="form-control" id="editUnit" readonly>
+            <label for="editUsername">Username</label>
+            <input type="text" class="form-control" id="editUsername">
           </div>
           <div class="mb-3">
             <label for="editFullname">Fullname</label>
@@ -78,9 +94,13 @@
           </div>
           <div class="mb-3">
             <label for="editRole">Role</label>
-            <input type="text" class="form-control" id="editRole">
+            <select class="form-select" id="editRole" name="role" required>
+              <option value="">Pilih Role</option>
+              <?php foreach ($roles as $role): ?>
+                <option value="<?= esc($role['name']) ?>"><?= esc($role['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
-        </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
         </div>
@@ -117,7 +137,7 @@ $(document).ready(function () {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
       },
       {
         extend: 'pdfHtml5',
@@ -125,7 +145,7 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
         orientation: 'portrait', 
         pageSize: 'A4',
         customize: function (doc) {
@@ -158,15 +178,10 @@ $(document).ready(function () {
             fontSize: 9
           };
 
-          // Warna isi tabel putih tanpa selang-seling
           doc.styles.tableBodyEven = { fillColor: '#ffffff' };
           doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-
-          // Ukuran & padding
           doc.defaultStyle.fontSize = 8;
           doc.styles.tableBody = { alignment: 'left', fontSize: 8 };
-
-          // Footer halaman
           doc.footer = function (currentPage, pageCount) {
             return {
               columns: [
@@ -178,16 +193,13 @@ $(document).ready(function () {
             };
           };
 
-          // Set margin yang seimbang untuk halaman portrait
-          doc.pageMargins = [40, 40, 40, 40]; // [left, top, right, bottom] - lebih kecil untuk ruang lebih
+          doc.pageMargins = [40, 40, 40, 40];
 
-          // Atur lebar kolom tabel agar muat dalam portrait A4
           if (doc.content[1] && doc.content[1].table) {
-            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%']; // Total 100%, lebih compact
+            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%']; 
             doc.content[1].margin = [0, 0, 0, 0];
           }
 
-          // Tabel: garis dan padding
           doc.content[doc.content.length - 1].layout = {
             hLineWidth: function () { return 0.5; },
             vLineWidth: function () { return 0.5; },
@@ -198,8 +210,6 @@ $(document).ready(function () {
             paddingTop: function () { return 2; },
             paddingBottom: function () { return 2; }
           };
-
-          // Catatan akhir
           doc.content.push({
             text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
             alignment: 'left',
@@ -213,11 +223,29 @@ $(document).ready(function () {
   });
 
   $(document).on('click', '.edit-user', function () {
-    $('#editEmployeeId').val($(this).data('employee'));
-    $('#editDirectorate').val($(this).data('directorate'));
-    $('#editUnit').val($(this).data('unit'));
-    $('#editFullname').val($(this).data('fullname'));
-    $('#editRole').val($(this).data('role'));
+  const userId = $(this).data('id');
+  const employeeId = $(this).data('employee');
+  const fullname = $(this).data('fullname');
+  const parentId = $(this).data('directorate');
+  const unitId = $(this).data('unit');
+  const roleName = $(this).data('role');
+
+  $('#editEmployeeId').val(employeeId);
+  $('#editUsername').val($(this).data('username'));
+  $('#editFullname').val(fullname);
+  $('#editDirectorate').val(parentId).trigger('change');
+
+  $('#editUnit option').each(function () {
+      const optionParent = $(this).data('parent');
+      if (optionParent == parentId || $(this).val() === '') {
+        $(this).show();
+      } else {
+        $(this).hide();
+      }
+    });
+
+    $('#editUnit').val(unitId);
+    $('#editRole').val(roleName);
   });
 
   $('#editUserForm').submit(function (e) {
@@ -226,14 +254,14 @@ $(document).ready(function () {
       url: '<?= base_url('CreateUser/update') ?>',
       method: 'POST',
       data: {
-        id: $('#editEmployeeId').val(),
-        fullname: $('#editFullname').val(),
-        role: $('#editRole').val(),
-        employee: $('#editEmployeeId').val(),
-        fakultas: $('#editDirectorate').val(),
-        unit: $('#editUnit').val(),
-        status: 1
-      },
+      id: $('#editEmployeeId').val(),
+      username: $('#editUsername').val(),     
+      fullname: $('#editFullname').val(),
+      role: $('#editRole').val(),
+      fakultas: $('#editDirectorate').val(),
+      unit: $('#editUnit').val(),
+      status: 1
+    },
       success: function (res) {
         Swal.fire('Berhasil!', res.message, 'success').then(() => {
           location.reload();
@@ -242,6 +270,21 @@ $(document).ready(function () {
       error: function (xhr) {
         const err = xhr.responseJSON?.error || 'Terjadi kesalahan saat update.';
         Swal.fire('Gagal', err, 'error');
+      }
+    });
+  });
+
+
+  $('#editDirectorate').on('change', function () {
+  const selectedParentId = $(this).val();
+
+  $('#editUnit').val('');
+  $('#editUnit option').each(function () {
+      const optionParent = $(this).data('parent');
+      if (optionParent == selectedParentId || $(this).val() === '') {
+        $(this).show();
+      } else {
+        $(this).hide();
       }
     });
   });
