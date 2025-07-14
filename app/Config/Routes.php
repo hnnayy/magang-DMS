@@ -148,3 +148,12 @@ $routes->post('kelola-dokumen/persetujuan/delete', 'KelolaDokumen\ControllerPers
 $routes->get('daftar-dokumen', 'DaftarDokumen\ControllerDaftarDokumen::index');
 $routes->post('daftar-dokumen/delete/(:num)', 'DaftarDokumen\ControllerDaftarDokumen::delete/$1');
 $routes->post('daftar-dokumen/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
+
+
+//CIPA PRIVILAGE
+$route['privilege/update'] = 'privilege/update';
+$route['privilege/delete'] = 'privilege/delete';
+$routes->post('privilege/update', 'Privilege::update');
+$routes->post('privilege/delete', 'Privilege::delete');
+
+$routes->get('privilege/lihat-privilege', 'privilege::list');
