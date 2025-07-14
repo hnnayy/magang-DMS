@@ -3,6 +3,7 @@
 namespace App\Controllers\Dummy;
 
 use App\Models\UserModel;
+use App\Models\UserRoleModel;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use CodeIgniter\Controller;
@@ -10,34 +11,36 @@ use CodeIgniter\Controller;
 class TokenDummy extends Controller
 {
     protected $userModel;
+    protected $userRoleModel;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
+        $this->userRoleModel = new UserRoleModel();
     }
 
     // http://localhost:8080/generatetoken
     public function generateAllTokens()
     {
         $users = $this->userModel
-            ->distinct()
-            ->select('username, fullname')
-            ->where('status', 1)
+            ->select('user.id, user.username, user.fullname, user_role.role_id')
+            ->join('user_role', 'user_role.user_id = user.id')
+            ->where('user.status', 1)
+            ->where('user_role.status', 1)
             ->findAll();
 
         $secret = getenv('jwt.secret') ?: 'defaultsecret';
-
         $results = [];
 
         foreach ($users as $user) {
             $payload = [
                 'sub'      => $user['username'],
                 'fullname' => $user['fullname'],
+                'role_id'  => $user['role_id'],
                 'iat'      => time(),
                 'exp'      => time() + 300,
-                'jti'      => uniqid() // optional: token ID biar unik
+                'jti'      => uniqid()
             ];
-
 
             $token = JWT::encode($payload, $secret, 'HS256');
 
@@ -58,40 +61,57 @@ class TokenDummy extends Controller
 
     // http://localhost:8080/parse-token?token=xxx
     public function parseToken()
-    {
-        $token = $this->request->getGet('token');
-        if (!$token) {
-            return $this->response->setStatusCode(400)
-                ->setJSON(['error' => 'Token tidak diberikan']);
-        }
-
-        $secret = getenv('jwt.secret') ?: 'defaultsecret';
-
-        try {
-            $decoded = JWT::decode($token, new Key($secret, 'HS256'));
-
-            session()->set([
-                'username'     => $decoded->sub,
-                'fullname'     => $decoded->fullname ?? '',
-                'is_logged_in' => true,
-            ]);
-
-            return $this->response->setJSON([
-                'status'  => 'success',
-                'message' => 'Token valid',
-                'data'    => [
-                    'username'    => $decoded->sub,
-                    'fullname'    => $decoded->fullname ?? '',
-                    'issued_at'   => date('Y-m-d H:i:s', $decoded->iat),
-                    'expires_at'  => date('Y-m-d H:i:s', $decoded->exp),
-                ]
-            ]);
-        } catch (\Exception $e) {
-            return $this->response->setStatusCode(401)->setJSON([
-                'status'  => 'error',
-                'message' => 'Token tidak valid',
-                'error'   => $e->getMessage()
-            ]);
-        }
+{
+    $token = $this->request->getGet('token'); // ⛳ Ambil token dari URL
+    if (!$token) {
+        return $this->response->setStatusCode(400)
+            ->setJSON(['error' => 'Token tidak diberikan']);
     }
+
+    $secret = getenv('jwt.secret') ?: 'defaultsecret';
+
+    try {
+        $decoded = JWT::decode($token, new Key($secret, 'HS256'));
+
+        // Cari user dari database berdasarkan username di token
+        $user = $this->userModel->where('username', $decoded->sub)->first();
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'User tidak ditemukan'
+            ]);
+        }
+
+        // Ambil role dari tabel user_role
+        $userRole = $this->userRoleModel
+            ->where('user_id', $user['id'])
+            ->where('status', 1)
+            ->first();
+
+        if (!$userRole) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status' => 'error',
+                'message' => 'User tidak memiliki role aktif.'
+            ]);
+        }
+
+        // Simpan informasi ke session
+        session()->set([
+            'user_id'     => $user['id'],
+            'username'    => $user['username'],
+            'fullname'    => $user['fullname'],
+            'role_id'     => $userRole['role_id'],
+            'is_logged_in'=> true
+        ]);
+
+        return redirect()->to('/dashboard');
+    } catch (\Exception $e) {
+        return $this->response->setStatusCode(401)->setJSON([
+            'status' => 'error',
+            'message' => 'Token tidak valid',
+            'error'   => $e->getMessage()
+        ]);
+    }
+}
+
 }
