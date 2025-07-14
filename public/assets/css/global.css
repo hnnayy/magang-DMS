@@ -653,7 +653,7 @@ body {
 }
 
 /* ====== PAGINATION ====== */
-.pagination .page-link {
+/* .pagination .page-link {
     color: #b41616;
 }
 
@@ -666,7 +666,7 @@ body {
     background-color: #f8f9fa;
     border-color: #b41616;
     color: #9b1414;
-}
+} */
 
 /* ====== USER MANAGEMENT ====== */
 .btn-purple {
@@ -1012,7 +1012,7 @@ body {
 }
 
     
-/* Pagination aktif */
+/* Pagination aktif
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
     background-color: #b41414 !important;
     color: white !important;
@@ -1020,6 +1020,6 @@ body {
 }
 
 /* Jarak dropdown entries */
-.dataTables_wrapper .dataTables_length {
+/* .dataTables_wrapper .dataTables_length {
     margin-bottom: 12px;
-}
+} */ 

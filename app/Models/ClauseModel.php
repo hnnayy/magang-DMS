@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class ClauseModel extends Model
+{
+    protected $table = 'clauses';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['standar_id', 'nomor_klausul', 'nama_klausul'];
+    protected $useTimestamps = true;
+
+    public function getWithStandard()
+    {
+        return $this->select('clauses.*, standards.nama_standar')
+                    ->join('standards', 'standards.id = clauses.standar_id')
+                    ->findAll();
+    }
+}

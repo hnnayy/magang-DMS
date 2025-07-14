@@ -47,12 +47,12 @@
                 <ul class="submenu">
                     <li><a href="<?= base_url('dokumen/add') ?>" class="<?= (uri_string() == 'dokumen/add') ? 'active' : '' ?>"><i class="fi fi-rr-add-document"></i>Tambah Dokumen</a></li>
                     <li><a href="<?= base_url('dokumen/pengajuan') ?>" class="<?= (uri_string() == 'dokumen/pengajuan') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Daftar Pengajuan</a></li>
-                    <li><a href="<?= base_url(relativePath: 'dokumen/persetujuan') ?>" class="<?= (uri_string() == 'dokumen/persetujuan') ? 'active' : '' ?>"><i class="fi fi-rr-check-circle"></i>Persetujuan Dokumen</a></li>
+                    <li><a href="<?= base_url(relativePath: 'kelola-dokumen/persetujuan') ?>" class="<?= (uri_string() == 'kelola-dokumen/persetujuan') ? 'active' : '' ?>"><i class="fi fi-rr-check-circle"></i>Persetujuan Dokumen</a></li>
                     <li><a href="<?= base_url('dokumen/config-jenis-dokumen') ?>" class="<?= (uri_string() == 'dokumen/config-jenis-dokumen') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Jenis & Kode Dokumen</a></li>
                 </ul>
             </li>
 
-            <li><a href="<?= base_url('dokumen/daftar') ?>" class="<?= (uri_string() == 'dokumen/daftar') ? 'active' : '' ?>"><i class="fi fi-rr-list"></i>Daftar Dokumen</a></li>
+            <li><a href="<?= base_url('daftar-dokumen') ?>" class="<?= (uri_string() == 'daftar-dokumen') ? 'active' : '' ?>"><i class="fi fi-rr-list"></i>Daftar Dokumen</a></li>
 
 
             <!-- Menu -->

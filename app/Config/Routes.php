@@ -121,3 +121,30 @@ $routes->post('submenu/delete/(:num)', 'SubmenuController::delete/$1');
 $routes->post('kelola-dokumen/edit', 'KelolaDokumen::edit');
 
 $routes->get('daftar-pengajuan', 'KelolaDokumen::daftarPengajuan');
+
+
+//hanin 11-07-2025
+$routes->get('daftar-pengajuan', 'KelolaDokumen::pengajuan');
+$routes->post('kelola-dokumen/approvepengajuan', 'KelolaDokumen::approvePengajuan');
+$routes->post('kelola-dokumen/deletepengajuan', 'KelolaDokumen::deletePengajuan');
+$routes->post('kelola-dokumen/updatepengajuan', 'KelolaDokumen::updatePengajuan');
+
+$routes->get('/kelola-dokumen/config-jenis-dokumen', 'KelolaDokumen\ControllerConfigKategori::configJenisDokumen');
+$routes->post('/kelola-dokumen/add-kategori', 'KelolaDokumen\ControllerConfigKategori::addKategori');
+$routes->post('/kelola-dokumen/edit-kategori', 'KelolaDokumen\ControllerConfigKategori::editKategori');
+$routes->post('/kelola-dokumen/delete-kategori', 'KelolaDokumen\ControllerConfigKategori::deleteKategori');
+$routes->post('/kelola-dokumen/add-kode', 'KelolaDokumen\ControllerConfigKategori::addKode');
+$routes->post('/kelola-dokumen/edit-kode', 'KelolaDokumen\ControllerConfigKategori::editKode');
+$routes->post('/kelola-dokumen/delete-kode', 'KelolaDokumen\ControllerConfigKategori::delete_kode');
+
+$routes->get('/dokumen/cetak-signed', 'KelolaDokumen::generateSignedPDF');
+
+
+$routes->get('kelola-dokumen/persetujuan', 'KelolaDokumen\ControllerPersetujuan::index');
+$routes->post('kelola-dokumen/persetujuan/update', 'KelolaDokumen\ControllerPersetujuan::update');
+$routes->post('kelola-dokumen/persetujuan/delete', 'KelolaDokumen\ControllerPersetujuan::delete');
+
+//daftar dokumen
+$routes->get('daftar-dokumen', 'DaftarDokumen\ControllerDaftarDokumen::index');
+$routes->post('daftar-dokumen/delete/(:num)', 'DaftarDokumen\ControllerDaftarDokumen::delete/$1');
+$routes->post('daftar-dokumen/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
