@@ -19,7 +19,6 @@ class CreateUser extends Controller
     protected $submenuModel;
     protected $privilegeModel;
 
-    
     public function __construct()
     {
         $this->unitParentModel = new UnitParentModel();
@@ -34,35 +33,26 @@ class CreateUser extends Controller
     public function create()
     {
         $unitParents = $this->unitParentModel->findAll();
-
-        // Ambil role unik berdasarkan nama (misalnya admin, kepala unit, dll)
         $roles = $this->roleModel
-                    ->select('MIN(id) as id, name') // ambil satu id acak (terkecil)
+                    ->select('MIN(id) as id, name') 
                     ->groupBy('name')
                     ->findAll();
-
         $data = [
             'unitParents' => $unitParents,
             'roles'       => $roles,
             'title'       => 'Create User'
         ];
-
         return view('CreateUser/users-create', $data);
     }
 
-
-    /* ─────────────────────────  SIMPAN USER BARU  ───────────────────────── */
     public function store()
     {
-        // -------- Ambil data POST --------
-        $parentId = $this->request->getPost('fakultas');   // ID fakultas/direktorat
-        $unitId   = $this->request->getPost('unit');       // ID unit/bagian
+        $parentId = $this->request->getPost('fakultas');  
+        $unitId   = $this->request->getPost('unit');      
         $username = $this->request->getPost('username');
         $fullname = $this->request->getPost('fullname');
-        $roleName = $this->request->getPost('role');       // nama role (e.g. admin)
-        $status = (int) $this->request->getPost('status');
-
-        // -------- Validasi field kosong --------
+        $roleName = $this->request->getPost('role');       
+        $status   = (int) $this->request->getPost('status');
         if (
             empty($parentId) || empty($unitId) || empty($username) ||
             empty($fullname) || empty($roleName)
@@ -71,23 +61,23 @@ class CreateUser extends Controller
                             ->with('error', 'Semua field wajib diisi.')
                             ->with('showPopupError', true);
         }
-
-        // -------- Validasi karakter khusus --------
         if (preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $username) ||
             preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $fullname)) {
             return redirect()->back()->withInput()
                             ->with('error', 'Username atau Full Name tidak boleh mengandung karakter khusus.')
                             ->with('showPopupError', true);
         }
-
-        // -------- Cek keberadaan Fakultas & Unit --------
+        if ($this->userModel->where('username', $username)->first()) {
+            return redirect()->back()->withInput()
+                            ->with('error', 'Username sudah digunakan.')
+                            ->with('showPopupError', true);
+        }
         $parent = $this->unitParentModel->find($parentId);
         if (! $parent) {
             return redirect()->back()->withInput()
                             ->with('error', 'Fakultas/Direktorat tidak valid.')
                             ->with('showPopupError', true);
         }
-
         $unit = $this->unitModel
                     ->where('id', $unitId)
                     ->where('parent_id', $parentId)
@@ -97,16 +87,12 @@ class CreateUser extends Controller
                             ->with('error', 'Unit tidak cocok dengan Fakultas yang dipilih.')
                             ->with('showPopupError', true);
         }
-
-        // -------- Cek role --------
         $role = $this->roleModel->where('name', $roleName)->first();
         if (! $role) {
             return redirect()->back()->withInput()
                             ->with('error', 'Role tidak valid.')
                             ->with('showPopupError', true);
         }
-
-        // -------- Siapkan & simpan user --------
         $this->userModel->insert([
             'unit_id'   => $unitId,
             'username'  => $username,
@@ -115,8 +101,6 @@ class CreateUser extends Controller
             'createdby' => session()->get('user_id') ?? 1
         ]);
         $userId = $this->userModel->getInsertID();
-
-        // -------- Simpan user_role --------
         $this->userRoleModel->insert([
             'user_id'   => $userId,
             'role_id'   => $role['id'],
@@ -128,7 +112,6 @@ class CreateUser extends Controller
                         ->with('success', 'User berhasil ditambahkan!')
                         ->with('showPopup', true);
     }
-
 
     public function list()
     {
@@ -147,14 +130,12 @@ class CreateUser extends Controller
             ->join('unit_parent', 'unit_parent.id = unit.parent_id')
             ->join('user_role', 'user_role.user_id = user.id', 'left')
             ->join('role', 'role.id = user_role.role_id', 'left')
-            ->where('user.status', 1) // Tambahkan baris ini
+            ->where('user.status', 1) 
             ->findAll();
 
-        // Ambil semua data unit_parent (fakultas/direktorat), unit, dan role
         $unitParents = $this->unitParentModel->findAll();
         $units = $this->unitModel->findAll();
         $roles = $this->roleModel->findAll();
-
         return view('CreateUser/daftar-users', [
             'users' => $users,
             'unitParents' => $unitParents,
@@ -163,80 +144,67 @@ class CreateUser extends Controller
         ]);
     }
 
-
     public function index()
     {
         return redirect()->to('CreateUser/list');
     }
 
-    // Method untuk Delete User
     public function delete($id)
     {
         if (! $this->userModel->find($id)) {
             return $this->response->setStatusCode(404)
                                 ->setJSON(['error' => 'User tidak ditemukan']);
         }
-
-        // status = 0  ➜ dianggap soft‑deleted
         if ($this->userModel->softDeleteById($id)) {
             return $this->response->setJSON(['message' => 'User berhasil dihapus']);
         }
-
         return $this->response->setStatusCode(500)
                             ->setJSON(['error' => 'Gagal menghapus user']);
     }
 
-
-
-
-    // Method untuk Update User
-    /* ─────────────────────────  UPDATE USER  ───────────────────────── */
     public function update()
     {
-        // 1. Ambil data POST
         $id        = $this->request->getPost('id');
-        $username  = $this->request->getPost('employee');
-        $parentId  = $this->request->getPost('fakultas'); // ID Fakultas
-        $unitId    = $this->request->getPost('unit');     // ID Unit
+        $username  = $this->request->getPost('username');
+        $parentId  = $this->request->getPost('fakultas'); 
+        $unitId    = $this->request->getPost('unit');     
         $fullname  = $this->request->getPost('fullname');
-        $roleName  = $this->request->getPost('role');     // nama role
+        $roleName  = $this->request->getPost('role');    
         $status = (int) $this->request->getPost('status');
-
-        // 2. Validasi field kosong
         if (empty($parentId) || empty($unitId) || empty($username) ||
             empty($fullname) || empty($roleName)) {
             return $this->response->setStatusCode(400)
                                 ->setJSON(['error' => 'Semua field wajib diisi.']);
         }
-
-        // 3. Validasi Fakultas & Unit
         $parent = $this->unitParentModel->find($parentId);
         if (! $parent) {
             return $this->response->setJSON(['error' => 'Fakultas tidak valid.']);
         }
-
         $unit = $this->unitModel->where('id', $unitId)
                                 ->where('parent_id', $parentId)
                                 ->first();
         if (! $unit) {
             return $this->response->setJSON(['error' => 'Unit tidak cocok dengan fakultas.']);
         }
-
-        // 4. Validasi Role
         $role = $this->roleModel->where('name', $roleName)->first();
         if (! $role) {
             return $this->response->setJSON(['error' => 'Role tidak valid.']);
         }
+        $existingUser = $this->userModel
+            ->where('username', $username)
+            ->where('id !=', $id)
+            ->first();
 
-        // 5. Update tabel user
+        if ($existingUser) {
+            return $this->response->setStatusCode(400)
+                                ->setJSON(['error' => 'Username sudah digunakan oleh user lain.']);
+        }
         $this->userModel->update($id, [
             'username' => $username,
             'fullname' => $fullname,
             'unit_id'  => $unitId,
             'status'   => $status, 
         ]);
-
-        // 6. Update / insert user_role
         $exists = $this->userRoleModel->where('user_id', $id)->first();
         if ($exists) {
             $this->userRoleModel->where('user_id', $id)
@@ -254,63 +222,12 @@ class CreateUser extends Controller
         return $this->response->setJSON(['message' => 'User berhasil diperbarui']);
     }
 
-
-
-        // Method untuk Approve User
-        public function approve($id)
-        {
-            try {
-                // Update status user menjadi approved (1)
-                $this->userModel->update($id, ['status' => 1]);
-                
-                // Update status user_role juga
-                $this->userRoleModel->where('user_id', $id)->set(['status' => 1])->update();
-                
-                return redirect()->to('CreateUser/list')->with('success', 'User berhasil disetujui!');
-            } catch (\Exception $e) {
-                log_message('error', 'Approve Error: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Gagal menyetujui user.');
-            }
-        }
-
-    // Method untuk Not Approve User
-    public function notapprove()
-    {
-        $id = $this->request->getPost('id');
-        $remark = $this->request->getPost('remark');
-
-        try {
-            // Update status user menjadi tidak disetujui (0) dan simpan remark
-            $userData = [
-                'status' => 0,
-                'remark' => $remark
-            ];
-            
-            $this->userModel->update($id, $userData);
-            
-            // Update status user_role juga
-            $this->userRoleModel->where('user_id', $id)->set(['status' => 0])->update();
-            
-            return redirect()->to('CreateUser/list')->with('success', 'User berhasil ditolak!');
-        } catch (\Exception $e) {
-            log_message('error', 'Not Approve Error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menolak user.');
-        }
-    }
-
-    // Method untuk get unit berdasarkan parent (untuk AJAX)
     public function getUnits($parentId)
     {
         $units = $this->unitModel->where('parent_id', $parentId)->findAll();
         return $this->response->setJSON($units);
     }
 
-//    public function privilege()
-//     {
-//         return view('CreateUser/privilege');
-// }
-
-//Create role
     public function createRole()
     {
         $data = ['title' => 'Tambah Role Baru'];
@@ -327,8 +244,6 @@ class CreateUser extends Controller
         if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
             return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
         }
-
-        // Simpan ke database
         $this->roleModel->insert([
             'name'         => $nama,
             'access_level' => $level,
@@ -361,19 +276,14 @@ class CreateUser extends Controller
     public function storePrivilege()
     {
         $roleId   = $this->request->getPost('role');
-        $submenu  = $this->request->getPost('submenu');   // array id
-        $actions  = $this->request->getPost('privileges'); // create/update/delete/read
-
-        // validasi role & submenu (pastikan ada di DB)
+        $submenu  = $this->request->getPost('submenu');   
+        $actions  = $this->request->getPost('privileges'); 
         if (! $this->roleModel->find($roleId))
             return $this->response->setJSON(['error'=>'Role tidak ditemukan'])->setStatusCode(404);
-
         if (empty($submenu))
             return $this->response->setJSON(['error'=>'Pilih minimal satu submenu'])->setStatusCode(400);
-
-        // masukkan satu‑per‑satu submenu
         foreach ($submenu as $sid) {
-            if (! $this->submenuModel->find($sid)) continue; // lewati yg tak valid
+            if (! $this->submenuModel->find($sid)) continue; 
 
             $this->privilegeModel->insert([
                 'role_id'    => $roleId,
@@ -381,10 +291,9 @@ class CreateUser extends Controller
                 'create'     => in_array('create',  $actions) ? 1 : 0,
                 'update'     => in_array('update',  $actions) ? 1 : 0,
                 'delete'     => in_array('delete',  $actions) ? 1 : 0,
-                'approve'    => in_array('read',    $actions) ? 1 : 0, // atau `read`
+                'approve'    => in_array('read',    $actions) ? 1 : 0, 
             ]);
         }
-
         return $this->response->setJSON(['message'=>'Privilege berhasil disimpan']);
     }
 
