@@ -112,7 +112,7 @@ class CreateUser extends Controller
                         ->with('success', 'User berhasil ditambahkan!')
                         ->with('showPopup', true);
     }
-
+    
     public function list()
     {
         $users = $this->userModel
