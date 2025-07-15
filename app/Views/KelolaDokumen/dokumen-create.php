@@ -19,14 +19,19 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
-                    <input type="text" id="fakultas-direktorat" name="fakultas" class="form-input" placeholder="Tulis Fakultas disini..." required>
+                    <input type="text" id="fakultas-direktorat" class="form-input" value="<?= $unit['parent_name'] ?? '' ?>" readonly>
+                    <input type="hidden" name="fakultas" value="<?= $unit['parent_name'] ?? '' ?>">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="bagian">Bagian/Unit/Program Studi</label>
-                    <input type="text" id="bagian" name="unit_id" class="form-input" placeholder="Tulis Bagian disini..." required>
+                    <input type="text" id="bagian" class="form-input" value="<?= $unit['name'] ?? '-' ?>" readonly>
+                    <input type="hidden" name="unit_id" value="<?= $unit['id'] ?? '' ?>" required>
                 </div>
-            </div>
+
+
+</div>
+
 
             <div class="form-group">
                 <label class="form-label" for="nama-dokumen">Nama Dokumen</label>

@@ -5,7 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-// $routes->get('/', 'Home::index');
+$routes->get('/', 'Home::index');
 
 // CreateUser
 $routes->get('create-user', 'CreateUser::index');
@@ -167,9 +167,18 @@ $routes->get('parse-token', 'Dummy\TokenDummy::parseToken');
 $routes->get('wc-dummy', 'Dummy\DummyWCController::index');
 $routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');
 
-$routes->get('dashboard', 'Home::index', ['filter' => 'auth']);
+// $routes->get('dashboard', 'Home::index', ['filter' => 'auth']);
 
 
 //naya 1407
 $routes->post('privilege/update', 'Privilege::update');
+
+//sutra 1507
+// Fakultas
+$routes->get('fakultas', 'FakultasController::index');                  // Menampilkan daftar fakultas
+$routes->get('fakultas/create', 'FakultasController::create');         // Menampilkan form tambah fakultas
+$routes->post('fakultas/store', 'FakultasController::store');          // Menyimpan fakultas baru ke database
+$routes->post('fakultas/update/(:num)', 'FakultasController::update/$1'); // Memperbarui data fakultas
+$routes->post('fakultas/delete/(:num)', 'FakultasController::softDelete/$1'); // Soft delete (ubah status atau flag deleted)
+
 
