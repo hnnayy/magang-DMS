@@ -80,7 +80,7 @@
                     <label class="form-check-label" for="editStatusActive">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="0">
+                    <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2">
                     <label class="form-check-label" for="editStatusInactive">Inactive</label>
                 </div>
             </div>
@@ -127,10 +127,37 @@
         document.getElementById('editMenuName').value = name;
         document.getElementById('editMenuIcon').value = icon;
         document.getElementById('editStatusActive').checked = status == 1;
-        document.getElementById('editStatusInactive').checked = status == 0;
+        document.getElementById('editStatusInactive').checked = status == 2;
     }
 </script>
 
+<!-- Validasi nama menu tidak boleh duplikat saat edit -->
+<script>
+    const editForm = document.getElementById('editMenuForm');
+    editForm.addEventListener('submit', function (e) {
+        const inputName = document.getElementById('editMenuName').value.trim().toLowerCase();
+        const currentId = document.getElementById('editMenuId').value;
+
+        let isDuplicate = false;
+        <?php foreach ($menus as $menu): ?>
+            if ('<?= strtolower($menu['name']) ?>' === inputName && '<?= $menu['id'] ?>' !== currentId) {
+                isDuplicate = true;
+            }
+        <?php endforeach; ?>
+
+        if (isDuplicate) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Nama menu sudah digunakan. Silakan pilih nama lain.',
+                confirmButtonColor: '#6C63FF'
+            });
+        }
+    });
+</script>
+
+<!-- Notifikasi flashdata -->
 <script>
     <?php if (session()->getFlashdata('success')): ?>
         Swal.fire({
@@ -152,6 +179,5 @@
         });
     <?php endif; ?>
 </script>
-
 
 <?= $this->endSection() ?>

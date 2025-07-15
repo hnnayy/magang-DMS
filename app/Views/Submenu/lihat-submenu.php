@@ -80,12 +80,17 @@
                 <input type="text" name="submenu" id="editUnitName" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Status</label>
-                <select name="status" id="editStatus" class="form-select" required>
-                    <option value="1">Active</option>
-                    <option value="2">Inactive</option>
-                </select>
-            </div>
+    <label class="form-label d-block">Status</label>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
+        <label class="form-check-label" for="editStatusActive">Active</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2">
+        <label class="form-check-label" for="editStatusInactive">Inactive</label>
+    </div>
+</div>
+
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary w-100">Simpan Perubahan</button>
@@ -119,14 +124,21 @@
     }
 
     function openEditModal(id, parentId, submenuName, status) {
-        const form = document.getElementById('editUnitForm');
-        if (!form) return;
-        form.action = `/submenu/update/${id}`;
-        document.getElementById('editUnitId').value = id;
-        document.getElementById('editParentName').value = parentId;
-        document.getElementById('editUnitName').value = submenuName;
-        document.getElementById('editStatus').value = status;
+    const form = document.getElementById('editUnitForm');
+    if (!form) return;
+    form.action = `/submenu/update/${id}`;
+    document.getElementById('editUnitId').value = id;
+    document.getElementById('editParentName').value = parentId;
+    document.getElementById('editUnitName').value = submenuName;
+
+    // Ubah ke radio button
+    if (status == 1) {
+        document.getElementById('editStatusActive').checked = true;
+    } else {
+        document.getElementById('editStatusInactive').checked = true;
     }
+}
+
 
     $(document).ready(function () {
         const table = $('#submenuTable');
