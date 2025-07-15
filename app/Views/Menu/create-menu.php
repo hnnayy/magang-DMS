@@ -58,11 +58,12 @@
             <?= csrf_field() ?>
 
             <!-- Nama Menu -->
-            <div class="form-group">
-                <label class="form-label" for="menuName">Nama Menu</label>
-                <input type="text" id="menuName" name="menu_name" class="form-control" placeholder="Tulis Nama Menu disini..." pattern="^[a-zA-Z0-9\s]{1,40}$" title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimum 40 karakter" maxlength="40" required>
-                <div class="invalid-feedback">Nama menu wajib diisi.</div>
-            </div>
+<div class="form-group">
+    <label class="form-label" for="menuName">Nama Menu</label>
+    <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" class="form-control" placeholder="Tulis Nama Menu disini..." pattern="^[a-zA-Z0-9\s]{1,40}$" title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimum 40 karakter" maxlength="40" required>
+    <div class="invalid-feedback">Nama menu wajib diisi.</div>
+</div>
+
 
             <!-- Icon -->
             <div class="form-group">
@@ -119,6 +120,7 @@
         });
     <?php endif; ?>
 </script>
+
 
 <script>
 (() => {

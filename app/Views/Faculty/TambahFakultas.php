@@ -1,4 +1,4 @@
-<?= $this->extend('layout/main_layout') ?>  
+<?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
 <div class="container">
@@ -12,20 +12,33 @@
 
             <!-- Nama Fakultas -->
             <div class="form-group">
-                <label class="form-label" for="nama">Nama Fakultas/Directorate</label>
-                <input type="text" id="nama" name="nama" class="form-input" placeholder="Tulis Nama Fakultas disini..." required>
+                <label class="form-label" for="name">Nama Fakultas/Directorate</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="Tulis Nama Fakultas disini..." required>
             </div>
 
-            <!-- Level -->
+            <!-- Type (Level) -->
             <div class="form-group">
                 <label class="form-label d-block">Level</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="level" id="level1" value="1">
-                    <label class="form-check-label" for="level1">Directorate</label>
+                    <input class="form-check-input" type="radio" name="type" id="type1" value="1">
+                    <label class="form-check-label" for="type1">Directorate</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="level" id="level2" value="2" checked>
-                    <label class="form-check-label" for="level2">Faculty</label>
+                    <input class="form-check-input" type="radio" name="type" id="type2" value="2" checked>
+                    <label class="form-check-label" for="type2">Faculty</label>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="status1" value="1">
+                    <label class="form-check-label" for="status1">Active</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="status2" value="2" checked>
+                    <label class="form-check-label" for="status2">Inactive</label>
                 </div>
             </div>
 
@@ -68,15 +81,15 @@
         });
     }
 
-    // Event saat user mengetik di field nama
-    document.getElementById('nama').addEventListener('input', function () {
+    // Event saat user mengetik di field name
+    document.getElementById('name').addEventListener('input', function () {
         const lower = this.value.toLowerCase();
         this.value = capitalizeWords(lower);
     });
 
     // Pastikan input terformat benar saat form disubmit
     document.getElementById('createFakultasForm').addEventListener('submit', function () {
-        const input = document.getElementById('nama');
+        const input = document.getElementById('name');
         input.value = capitalizeWords(input.value.toLowerCase());
     });
 </script>
