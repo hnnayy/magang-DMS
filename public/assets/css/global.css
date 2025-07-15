@@ -1012,12 +1012,29 @@ body {
 }
 
 
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background-color: #b41414 !important;
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:focus,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background-color: #b41616 !important;
     color: white !important;
-    border-radius: 6px;
 }
+
     
  .dataTables_wrapper .dataTables_length {
     margin-bottom: 18px;
 } 
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next {
+    background-color: #ffffff !important;
+    color: rgb(0, 0, 0) !important;
+    font-weight: 600 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next:hover {
+    background-color: #8b1111 !important;
+    color: white !important;
+}
+
+

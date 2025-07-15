@@ -1,0 +1,46 @@
+    .choices__inner,
+    .choices__list--multiple .choices__item {
+        font-size: 12px;
+    }
+
+    .choices__list--dropdown .choices__item {
+        font-size: 12px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .choices__list--dropdown {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-select[multiple] {
+        min-height: 38px;
+    }
+
+    .choices[data-type*=select-multiple] {
+        min-width: 220px;
+    }
+
+    .choices__inner::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        border-style: solid;
+        border-width: 6px 4px 0 4px;
+        border-color: #999 transparent transparent transparent;
+        transform: translateY(-50%);
+    }
+
+    .aksi-column,
+    td.aksi-column {
+        min-width: 90px;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .filter-input {
+        font-size: 14px;
+    }
+
