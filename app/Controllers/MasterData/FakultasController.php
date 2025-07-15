@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\Controllers\MasterData;
 
 use App\Models\UnitParentModel;
 use CodeIgniter\Controller;

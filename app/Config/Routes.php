@@ -28,17 +28,27 @@ $routes->get('create-user/privilege',        'CreateUser::privilege');
 $routes->post('create-user/privilege/store', 'CreateUser::storePrivilege');
 
 // DataMaster
-$routes->get('data-master', 'DataMaster::index');
-$routes->get('data-master/list', 'DataMaster::list');
-$routes->get('data-master/create', 'DataMaster::create');
-$routes->post('data-master/store', 'DataMaster::store');
-$routes->get('data-master/unit/(:num)/edit', 'DataMaster::edit/$1');
-$routes->post('data-master/unit/(:num)/update', 'DataMaster::update/$1');
-$routes->post('data-master/unit/(:num)/delete', 'DataMaster::delete/$1');
-$routes->get('data-master/export/csv', 'DataMaster::exportCsv');
-$routes->get('data-master/export/excel', 'DataMaster::exportExcel');
-$routes->get('data-master/export/pdf', 'DataMaster::exportPdf');
-$routes->get('data-master/export/print', 'DataMaster::exportPrint');
+$routes->get('data-master', 'MasterData\UnitController::index');
+$routes->get('data-master/unit/list', 'MasterData\UnitController::list');
+$routes->get('data-master/unit/create', 'MasterData\UnitController::create');
+$routes->post('data-master/unit/store', 'MasterData\UnitController::store');
+$routes->get('data-master/unit/(:num)/edit', 'MasterData\UnitController::edit/$1');
+$routes->post('data-master/unit/(:num)/update', 'MasterData\UnitController::update/$1');
+$routes->post('data-master/unit/(:num)/delete', 'MasterData\UnitController::delete/$1');
+$routes->get('data-master/export/csv', 'MasterData\UnitController::exportCsv');
+$routes->get('data-master/export/excel', 'MasterData\UnitController::exportExcel');
+$routes->get('data-master/export/pdf', 'MasterData\UnitController::exportPdf');
+$routes->get('data-master/export/print', 'MasterData\UnitController::exportPrint');
+
+//sutra 1507
+// Fakultas
+$routes->get('data-master/fakultas/list', 'MasterData\FakultasController::index');                  // Menampilkan daftar fakultas
+$routes->get('data-master/fakultas/create', 'MasterData\FakultasController::create');         // Menampilkan form tambah fakultas
+$routes->post('data-master/fakultas/store', 'MasterData\FakultasController::store');          // Menyimpan fakultas baru ke database
+$routes->post('data-master/fakultas/update/(:num)', 'MasterData\FakultasController::update/$1'); // Memperbarui data fakultas
+$routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasController::softDelete/$1'); // Soft delete (ubah status atau flag deleted)
+
+
 
 // KelolaDokumen
 $routes->get('dokumen/add', 'KelolaDokumen::add');
@@ -172,13 +182,5 @@ $routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');
 
 //naya 1407
 $routes->post('privilege/update', 'Privilege::update');
-
-//sutra 1507
-// Fakultas
-$routes->get('fakultas', 'FakultasController::index');                  // Menampilkan daftar fakultas
-$routes->get('fakultas/create', 'FakultasController::create');         // Menampilkan form tambah fakultas
-$routes->post('fakultas/store', 'FakultasController::store');          // Menyimpan fakultas baru ke database
-$routes->post('fakultas/update/(:num)', 'FakultasController::update/$1'); // Memperbarui data fakultas
-$routes->post('fakultas/delete/(:num)', 'FakultasController::softDelete/$1'); // Soft delete (ubah status atau flag deleted)
 
 

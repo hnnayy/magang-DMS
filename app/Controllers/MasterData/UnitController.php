@@ -1,5 +1,5 @@
 <?php
-namespace App\Controllers;
+namespace App\Controllers\MasterData;
 
 use App\Controllers\BaseController;
 use App\Models\UnitParentModel;
@@ -10,7 +10,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use Dompdf\Dompdf;
 
-class DataMaster extends BaseController
+class UnitController extends BaseController
 {
     protected $parentModel;
     protected $unitModel;
