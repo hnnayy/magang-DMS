@@ -173,3 +173,4 @@
 <link href="<?= base_url('assets/css/datatables-custom.css') ?>" rel="stylesheet">
 
 <?= $this->endSection() ?>
+
