@@ -60,9 +60,9 @@ class TokenDummy extends Controller
     }
 
     // http://localhost:8080/parse-token?token=xxx
-    public function parseToken()
+   public function parseToken()
 {
-    $token = $this->request->getGet('token'); // ⛳ Ambil token dari URL
+    $token = $this->request->getGet('token');
     if (!$token) {
         return $this->response->setStatusCode(400)
             ->setJSON(['error' => 'Token tidak diberikan']);
@@ -71,10 +71,18 @@ class TokenDummy extends Controller
     $secret = getenv('jwt.secret') ?: 'defaultsecret';
 
     try {
-        $decoded = JWT::decode($token, new Key($secret, 'HS256'));
+        $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($secret, 'HS256'));
 
-        // Cari user dari database berdasarkan username di token
-        $user = $this->userModel->where('username', $decoded->sub)->first();
+        // Ambil user beserta unit dan parent name
+        $user = $this->userModel
+            ->select('user.*, unit.name as unit_name, unit.parent_id, unit_parent.name as parent_name')
+            ->join('unit', 'unit.id = user.unit_id', 'left')
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+            ->where('user.username', $decoded->sub)
+            ->first();
+
+        
+
         if (!$user) {
             return $this->response->setStatusCode(404)->setJSON([
                 'status' => 'error',
@@ -82,7 +90,6 @@ class TokenDummy extends Controller
             ]);
         }
 
-        // Ambil role dari tabel user_role
         $userRole = $this->userRoleModel
             ->where('user_id', $user['id'])
             ->where('status', 1)
@@ -95,16 +102,20 @@ class TokenDummy extends Controller
             ]);
         }
 
-        // Simpan informasi ke session
+        // Simpan semua ke session
         session()->set([
-            'user_id'     => $user['id'],
-            'username'    => $user['username'],
-            'fullname'    => $user['fullname'],
-            'role_id'     => $userRole['role_id'],
-            'is_logged_in'=> true
+            'user_id'        => $user['id'],
+            'username'       => $user['username'],
+            'fullname'       => $user['fullname'],
+            'role_id'        => $userRole['role_id'],
+            'unit_id'        => $user['unit_id'],
+            'unit_name'      => $user['unit_name'] ?? '-',
+            'unit_parent_id' => $user['parent_id'] ?? null,
+            'parent_name'    => $user['parent_name'] ?? '-', 
+            'is_logged_in'   => true
         ]);
 
-        return redirect()->to('/dashboard');
+        return redirect()->to('/');
     } catch (\Exception $e) {
         return $this->response->setStatusCode(401)->setJSON([
             'status' => 'error',
@@ -115,3 +126,5 @@ class TokenDummy extends Controller
 }
 
 }
+
+

@@ -12,8 +12,8 @@
 
   <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow-sm p-4" style="max-width: 500px; width: 100%; border-radius: 1rem;">
-      <h4 class="mb-3 text-center">🔐 Dummy WC Login</h4>
-      <p class="text-center text-muted mb-4">Pilih user untuk login ke DMS menggunakan token JWT</p>
+      <h4 class="mb-3 text-center">Dummy WC Login</h4>
+      <p class="text-center text-muted mb-4">Daftar Username yang ada di database DMS</p>
 
       <?php if (session()->getFlashdata('error')): ?>
         <div class="alert alert-danger">
@@ -25,12 +25,11 @@
         <?= csrf_field() ?>
 
         <div class="mb-3">
-          <label for="username" class="form-label">Pilih User</label>
           <select class="form-select" name="username" id="username" required>
-            <option value="">-- Pilih --</option>
+            <option value="">Pilih Username</option>
             <?php foreach ($users as $user): ?>
               <option value="<?= esc($user['username']) ?>">
-                <?= esc($user['fullname']) ?> (<?= esc($user['username']) ?>)
+               <?= esc($user['username']) ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -38,7 +37,7 @@
 
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">
-            🔑 Masuk ke DMS
+            Login DMS
           </button>
         </div>
       </form>

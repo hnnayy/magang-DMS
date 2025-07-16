@@ -32,15 +32,15 @@
             <!-- Username -->
             <div class="form-group">
                 <label class="form-label" for="username">Username</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="Tulis username di sini..." pattern="^[a-z]+$" title="Username hanya boleh huruf kecil (a-z)" required autocomplete="off">
-                <div class="invalid-feedback">Username hanya boleh huruf kecil.</div>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Tulis username di sini..." pattern="^[a-z0-9]+$" title="Username hanya boleh huruf kecil (a-z)" required autocomplete="off">
+                <div class="invalid-feedback">Username hanya boleh huruf kecil, angka dan tanpa spasi.</div>
             </div>
 
             <!-- Full Name -->
             <div class="form-group">
                 <label class="form-label" for="fullname">Full Name</label>
                 <input type="text" id="fullname" name="fullname" class="form-control" placeholder="Tulis nama lengkap di sini..." pattern="^[A-Za-zÀ-ÿ]+(?:\s+[A-Za-zÀ-ÿ]+)+$" title="Harus terdiri dari minimal dua kata (hanya huruf dan spasi)" required>
-                <div class="invalid-feedback">Full Name harus terdiri dari minimal dua kata.</div>
+                <div class="invalid-feedback">Full Name harus terdiri dari minimal dua kata dan tidak boleh mengandung angka.</div>
             </div>
 
             <!-- Role -->
@@ -102,11 +102,10 @@
                 console.error('Gagal mengambil unit:', err);
             });
     }
-
     <?php if (session()->getFlashdata('success')): ?>
         Swal.fire({
             icon: 'success',
-            title: 'Success!',
+            title: 'Berhasil!',
             text: '<?= session()->getFlashdata('success') ?>',
             confirmButtonText: 'OK'
         });
@@ -115,7 +114,7 @@
     <?php if (session()->getFlashdata('error')): ?>
         Swal.fire({
             icon: 'error',
-            title: 'Error!',
+            title: 'Gagal!',
             text: '<?= session()->getFlashdata('error') ?>',
             confirmButtonText: 'OK'
         });
@@ -126,20 +125,11 @@
 (() => {
     'use strict';
     const form = document.getElementById('createUserForm');
-
     form.addEventListener('submit', e => {
-        // Paksa username lowercase sebelum validasi
-        const u = form.querySelector('#username');
-        if (u) u.value = u.value.toLowerCase();
-
-        // Validasi status
         const statusInputs = form.querySelectorAll('input[name="status"]');
         let isStatusValid = false;
-
         statusInputs.forEach(input => {
             if (input.checked) isStatusValid = true;
-
-            // Reset event untuk hapus kelas (tidak pakai inline style lagi)
             input.addEventListener('invalid', function() {
                 this.classList.remove('is-valid', 'is-invalid');
             });
@@ -147,7 +137,6 @@
                 this.classList.remove('is-valid', 'is-invalid');
             });
         });
-
         if (!form.checkValidity() || !isStatusValid) {
             e.preventDefault();
             e.stopPropagation();
@@ -163,17 +152,12 @@
                 feedback.style.display = 'block';
             }
         }
-
-        // Reset kelas saja (tidak pakai inline style)
         statusInputs.forEach(input => {
             input.classList.remove('is-valid', 'is-invalid');
         });
-
-        // Tambahkan class was-validated
         form.classList.add('was-validated');
     }, false);
 })();
-
 </script>
 
 <?= $this->endSection() ?>

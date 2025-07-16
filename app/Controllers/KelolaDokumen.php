@@ -6,6 +6,10 @@ use App\Controllers\BaseController;
 use App\Models\DocumentCodeModel;
 use App\Models\DocumentTypeModel;
 use App\Models\DocumentModel;
+use App\Models\UnitModel;
+use App\Models\UnitParentModel;
+
+
 
 require_once ROOTPATH . 'vendor/autoload.php';
 
@@ -57,24 +61,41 @@ class KelolaDokumen extends BaseController
     }
 
     public function add(): string
-    {
-        $data['kategori_dokumen'] = $this->kategoriDokumen;
+{
+    $unitId = session()->get('unit_id');
+    $unitModel = new UnitModel();
 
-        $kodeDokumen = $this->kodeDokumenModel
-            ->select('kode_dokumen.*, document_type.name as jenis_nama')
-            ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
-            ->where('kode_dokumen.status', 1)
-            ->orderBy('document_type.name', 'ASC')
-            ->orderBy('kode_dokumen.kode', 'ASC')
-            ->findAll();
+    $unitData = $unitModel
+        ->select('unit.*, unit_parent.name as parent_name')
+        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+        ->where('unit.id', $unitId)
+        ->first();
 
-        $data['kode_dokumen'] = [];
-        foreach ($kodeDokumen as $item) {
-            $data['kode_dokumen'][$item['jenis_nama']][] = $item;
-        }
+    // Ambil kategori dokumen aktif (sudah disiapkan di __construct)
+    $data['kategori_dokumen'] = $this->kategoriDokumen;
 
-        return view('KelolaDokumen/dokumen-create', $data);
+    // Ambil semua kode dokumen & kelompokkan per jenis
+    $kodeDokumen = $this->kodeDokumenModel
+        ->select('kode_dokumen.*, document_type.name as jenis_nama')
+        ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
+        ->where('kode_dokumen.status', 1)
+        ->orderBy('document_type.name', 'ASC')
+        ->orderBy('kode_dokumen.kode', 'ASC')
+        ->findAll();
+
+    $grouped = [];
+    foreach ($kodeDokumen as $item) {
+        $grouped[$item['jenis_nama']][] = $item;
     }
+    $data['kode_dokumen'] = $grouped;
+
+    // Sertakan informasi unit untuk autofill view
+    $data['unit'] = $unitData;
+
+    return view('KelolaDokumen/dokumen-create', $data);
+}
+
+
 
     public function getKodeDokumen()
     {

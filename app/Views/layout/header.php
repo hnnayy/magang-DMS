@@ -61,7 +61,7 @@
                 <i class="fi fi-rr-caret-down dropdown-arrow"></i>
                 <div class="profile-menu">
                     <a href="<?= base_url('profile') ?>"><i class="fi fi-rr-user"></i> Profil Saya</a>
-                    <a href="<?= base_url('logout') ?>"><i class="fi fi-rr-sign-out-alt"></i> Log Out</a>
+                    <a href="<?= base_url('wc-dummy') ?>"><i class="fi fi-rr-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
         </div>

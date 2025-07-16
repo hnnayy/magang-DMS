@@ -31,8 +31,10 @@
                     <i class="fi fi-rr-angle-small-down arrow"></i>
                 </div>
                 <ul class="submenu">
-                    <li><a href="<?= base_url('data-master/create') ?>" class="<?= (uri_string() == 'data-master/create') ? 'active' : '' ?>"><i class="fi fi-rr-add-document"></i>Tambah Unit</a></li>
-                    <li><a href="<?= base_url('data-master/list') ?>" class="<?= (uri_string() == 'data-master/list') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Lihat Unit</a></li>
+                    <li><a href="<?= base_url('data-master/fakultas/create') ?>" class="<?= (uri_string() == 'data-master/fakultas/create') ? 'active' : '' ?>"><i class="fi fi-rr-add-document"></i>Tambah Fakultas</a></li>
+                    <li><a href="<?= base_url('data-master/fakultas/list') ?>" class="<?= (uri_string() == 'data-master/fakultas/list') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Lihat Fakultas</a></li>
+                    <li><a href="<?= base_url('data-master/unit/create') ?>" class="<?= (uri_string() == 'data-master/unit/create') ? 'active' : '' ?>"><i class="fi fi-rr-add-document"></i>Tambah Unit</a></li>
+                    <li><a href="<?= base_url('data-master/unit/list') ?>" class="<?= (uri_string() == 'data-master/unit/list') ? 'active' : '' ?>"><i class="fi fi-rr-clipboard-list"></i>Lihat Unit</a></li>
                 </ul>
             </li>
 
