@@ -45,4 +45,38 @@
     }
 
 
-    
+/* Ubah warna teks pagination agar sama seperti halaman daftar users */
+.dataTables_paginate .pagination .page-link {
+  color: #fff !important; /* Putih seperti di halaman daftar users */
+  background-color: transparent;
+  border: none;
+}
+
+.dataTables_paginate .pagination .page-item.active .page-link {
+  background-color: #0d6efd; /* Bootstrap primary */
+  color: #fff !important;
+  border-radius: 0.375rem;
+}
+
+.dataTables_paginate .pagination .page-link:hover {
+  background-color: #0b5ed7;
+  color: #fff;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background-color: #b41616 !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #8b1111 !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next {
+    background-color: white !important;
+    color: black !important;
+    font-weight: bold;
+}
