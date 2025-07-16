@@ -135,7 +135,7 @@ class App extends BaseConfig
      * @see https://www.php.net/manual/en/timezones.php untuk daftar zona waktu
      *      yang didukung oleh PHP.
      */
-    public string $appTimezone = 'UTC';
+    public string $appTimezone = 'Asia/Jakarta';
 
     /**
      * --------------------------------------------------------------------------

@@ -90,10 +90,7 @@ class Document extends Migration
                 'constraint' => 255,
                 'null'       => true,
             ],
-            'updated_at' => [
-                'type' => 'DATETIME',
-                'null' => true,
-            ],
+            
 
         ]);
 

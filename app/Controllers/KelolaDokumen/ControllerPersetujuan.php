@@ -19,23 +19,26 @@ class ControllerPersetujuan extends BaseController
 
     public function index()
     {
-        $documents = $this->documentModel
-            ->select('
-                document.*,
-                document_approval.remark,
-                document_approval.id AS approval_id,
-                document_approval.approvedate,
-                document_type.name AS jenis_dokumen,
-                unit.name AS unit_name,
-                unit_parent.name AS parent_name
-            ')
-            ->join('document_approval', 'document.id = document_approval.document_id')
-            ->join('document_type', 'document_type.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left') // memastikan parent_name tersedia
-            ->where('document_approval.status', 1)
-            ->where('document.createddate !=', 0)
-            ->findAll();
+$documents = $this->documentModel
+    ->select('
+        document.*,
+        document_approval.remark,
+        document_approval.id AS approval_id,
+        document_approval.approvedate,
+        document_type.name AS jenis_dokumen,
+        CONCAT(kode_dokumen.kode, " - ", kode_dokumen.nama) AS kode_nama_dokumen,
+        unit.name AS unit_name,
+        unit_parent.name AS parent_name
+    ')
+    ->join('document_approval', 'document.id = document_approval.document_id')
+    ->join('document_type', 'document_type.id = document.type', 'left')
+    ->join('kode_dokumen', 'kode_dokumen.id = document.kode_dokumen_id', 'left')
+    ->join('unit', 'unit.id = document.unit_id', 'left')
+    ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+    ->where('document_approval.status', 1)
+    ->where('document.createddate !=', 0)
+    ->findAll();
+
 
         return view('KelolaDokumen/dokumen_persetujuan', [
             'documents' => $documents,
@@ -55,7 +58,6 @@ class ControllerPersetujuan extends BaseController
         $this->documentModel->update($id, [
             'title'      => $this->request->getPost('title'),
             'revision'   => $this->request->getPost('revision'),
-            'updated_at' => date('Y-m-d H:i:s')
         ]);
 
         // Update remark dari approval

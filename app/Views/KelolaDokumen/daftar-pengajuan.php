@@ -105,13 +105,13 @@
                                     <span class="badge <?= $badgeClass ?>"><?= esc($jenis_dokumen) ?></span>
                                 </td>
                                 <td>
-                                    <?php if (!empty($doc['kode_dokumen_id'])): ?>
-                                        <div>
-                                            <strong><?= esc($doc['kode_dokumen_id']) ?> - <?= esc($doc['kode_dokumen_id']) ?></strong>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="text-muted">-</span>
-                                    <?php endif; ?>
+                                    <?php if (!empty($doc['kode_dokumen_kode']) && !empty($doc['kode_dokumen_nama'])): ?>
+    <div>
+        <strong><?= esc($doc['kode_dokumen_kode']) ?> - <?= esc($doc['kode_dokumen_nama']) ?></strong>
+    </div>
+<?php else: ?>
+    <span class="text-muted">-</span>
+<?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if (!empty($doc['filepath'])): ?>

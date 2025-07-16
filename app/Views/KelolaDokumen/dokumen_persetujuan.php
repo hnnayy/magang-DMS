@@ -37,7 +37,7 @@
                                 <td><?= esc($doc['title']) ?></td>
                                 <td><?= esc($doc['revision']) ?></td>
                                 <td><?= esc($doc['jenis_dokumen']) ?></td>
-                                <td><?= esc($doc['kode_nama_dokumen'] ?? $doc['kode_dokumen_id']) ?></td>
+                                <td><?= esc($doc['kode_nama_dokumen'] ?? '-') ?></td>
                                 <td>
                                     <?php if ($doc['filepath']): ?>
                                         <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank"><?= esc($doc['filename']) ?></a>
