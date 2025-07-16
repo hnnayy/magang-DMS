@@ -5,31 +5,32 @@
     <div class="form-section">
         <h1 class="form-title">Tambah Unit</h1>
         <hr>
-        <!-- Flash message (opsional) -->
-        <?php if (session('success')) : ?>
-            <div class="alert alert-success"><?= session('success') ?></div>
-        <?php endif; ?>
-        <?php if (session('errors')) : ?>
-            <div class="alert alert-danger">
-                <?= implode('<br>', session('errors')) ?>
-            </div>
+        
+        <!-- Flash message untuk sukses atau error -->
+        <?php if (session('swal')) : ?>
+            <script>
+                Swal.fire({
+                    icon: '<?= session('swal')['icon'] ?>',
+                    title: '<?= session('swal')['title'] ?>',
+                    text: '<?= session('swal')['text'] ?>'
+                });
+            </script>
         <?php endif; ?>
 
         <!-- FORM -->
-        <form id="addDocumentForm"
-              action="<?= site_url('data-master/store') ?>"
-              method="post">
+        <form id="addDocumentForm" action="<?= site_url('data-master/unit/store') ?>" method="post">
             <?= csrf_field() ?>
 
             <div class="form-group">
                 <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
-                <input type="text"
-                       id="fakultas-direktorat"
-                       name="parent_name"
-                       class="form-input"
-                       placeholder="Tulis Fakultas disini..."
-                       value="<?= set_value('parent_name') ?>"
-                       required>
+                <select id="fakultas-direktorat" name="parent_id" class="form-input" required>
+                    <option value="">-- Pilih Fakultas/Direktorat --</option>
+                    <?php foreach ($fakultas as $f) : ?>
+                        <option value="<?= $f['id'] ?>" <?= set_select('parent_id', $f['id']) ?>>
+                            <?= esc($f['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <div class="form-group">

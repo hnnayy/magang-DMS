@@ -16,7 +16,12 @@ class FakultasController extends Controller
 
     public function create()
     {
-        $data = ['title' => 'Tambah Fakultas'];
+        helper('form'); // <-- Tambahkan ini agar bisa pakai set_value & set_radio
+
+        $data = [
+            'title' => 'Tambah Fakultas',
+        ];
+
         return view('Faculty/TambahFakultas', $data);
     }
 
@@ -26,11 +31,20 @@ class FakultasController extends Controller
         $type   = $this->request->getPost('type');
         $status = $this->request->getPost('status');
 
+        // Validasi sederhana
         if (empty($name) || empty($type) || empty($status)) {
             session()->setFlashdata('error', 'Semua field harus diisi.');
-            return redirect()->to('/fakultas/create')->withInput();
+            return redirect()->to('/data-master/fakultas/create')->withInput();
         }
 
+        // Cek apakah nama fakultas sudah ada
+        $existingFakultas = $this->unitParentModel->where('name', $name)->first();
+        if ($existingFakultas) {
+            session()->setFlashdata('error', 'Nama fakultas sudah terdaftar.');
+            return redirect()->to('/data-master/fakultas/create')->withInput();
+        }
+
+        // Insert ke DB jika tidak ada duplikat
         $this->unitParentModel->insert([
             'name'   => $name,
             'type'   => $type,
@@ -38,7 +52,7 @@ class FakultasController extends Controller
         ]);
 
         session()->setFlashdata('success', 'Fakultas baru berhasil ditambahkan.');
-        return redirect()->to('/fakultas/create');
+        return redirect()->to('/data-master/fakultas/create');
     }
 
     public function index()
@@ -51,7 +65,6 @@ class FakultasController extends Controller
         ]);
     }
 
-    // Versi AJAX soft delete
     public function softDelete($id)
     {
         if ($this->request->isAJAX()) {
@@ -59,13 +72,11 @@ class FakultasController extends Controller
             return $this->response->setJSON(['success' => true, 'message' => 'Fakultas berhasil dihapus (soft delete).']);
         }
 
-        // Fallback biasa
         $this->unitParentModel->update($id, ['status' => 0]);
         session()->setFlashdata('success', 'Fakultas berhasil dihapus (soft delete).');
-        return redirect()->to('/fakultas');
+        return redirect()->to('/data-master/fakultas/list');
     }
 
-    // Versi AJAX update
     public function update($id)
     {
         if ($this->request->isAJAX()) {
@@ -86,14 +97,13 @@ class FakultasController extends Controller
             return $this->response->setJSON(['success' => true, 'message' => 'Fakultas berhasil diperbarui.']);
         }
 
-        // Fallback biasa (redirect) kalau bukan AJAX
         $name   = $this->request->getPost('name');
         $type   = $this->request->getPost('type');
         $status = $this->request->getPost('status');
 
         if (empty($name) || empty($type) || empty($status)) {
             session()->setFlashdata('error', 'Semua field harus diisi.');
-            return redirect()->to('/fakultas')->withInput();
+            return redirect()->to('/data-master/fakultas/list')->withInput();
         }
 
         $this->unitParentModel->update($id, [
@@ -103,6 +113,6 @@ class FakultasController extends Controller
         ]);
 
         session()->setFlashdata('success', 'Fakultas berhasil diperbarui.');
-        return redirect()->to('/fakultas');
+        return redirect()->to('/data-master/fakultas/list');
     }
 }

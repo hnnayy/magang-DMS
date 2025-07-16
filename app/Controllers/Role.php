@@ -12,6 +12,7 @@ class Role extends Controller
     public function __construct()
     {
         $this->roleModel = new RoleModel();
+        helper('form'); // ⬅️ Tambahkan ini supaya set_radio, set_value, old bisa digunakan di view
     }
 
     // Menampilkan form tambah role
@@ -37,29 +38,24 @@ class Role extends Controller
             'name'         => $nama,
             'access_level' => $level,
             'description'  => $desc,
-            'status'       => ($status === 'active') ? 1 : 2, // 1 untuk active, 2 untuk inactive
+            'status'       => ($status === 'active') ? 1 : 2, // 1: active, 2: inactive
         ]);
 
         session()->setFlashdata('success', 'Role baru berhasil ditambahkan.');
         return redirect()->to('/role/create');
     }
 
-    // Menampilkan semua role yang belum dihapus
+    // Menampilkan daftar role
     public function list()
     {
-        // Hanya tampilkan role yang status != 0 (tidak terhapus)
         $roles = $this->roleModel->where('status !=', 0)->findAll();
         return view('Role/lihat-role', ['roles' => $roles]);
     }
 
-    // "Menghapus" role (soft delete)
+    // Soft delete
     public function delete($id)
     {
-        // Set status jadi 0
-        $this->roleModel->update($id, [
-            'status' => 0
-        ]);
-
+        $this->roleModel->update($id, ['status' => 0]);
         session()->setFlashdata('success', 'Role berhasil dihapus (soft delete).');
         return redirect()->to('/role/list');
     }
@@ -70,7 +66,7 @@ class Role extends Controller
         $namaRole = $this->request->getPost('role_name');
         $level    = $this->request->getPost('role_level');
         $desc     = $this->request->getPost('role_description');
-        $status   = $this->request->getPost('role_status'); // ✅ tambahkan ini
+        $status   = $this->request->getPost('role_status');
 
         if (empty($namaRole) || empty($level) || empty($desc) || empty($status)) {
             session()->setFlashdata('error', 'Semua field harus diisi.');
@@ -81,7 +77,7 @@ class Role extends Controller
             'name'         => $namaRole,
             'access_level' => $level,
             'description'  => $desc,
-            'status'       => $status, // ✅ update juga status
+            'status'       => ($status === 'active') ? 1 : 2,
         ]);
 
         session()->setFlashdata('success', 'Role berhasil diupdate.');

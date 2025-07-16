@@ -35,10 +35,7 @@ $routes->post('data-master/unit/store', 'MasterData\UnitController::store');
 $routes->get('data-master/unit/(:num)/edit', 'MasterData\UnitController::edit/$1');
 $routes->post('data-master/unit/(:num)/update', 'MasterData\UnitController::update/$1');
 $routes->post('data-master/unit/(:num)/delete', 'MasterData\UnitController::delete/$1');
-$routes->get('data-master/export/csv', 'MasterData\UnitController::exportCsv');
-$routes->get('data-master/export/excel', 'MasterData\UnitController::exportExcel');
-$routes->get('data-master/export/pdf', 'MasterData\UnitController::exportPdf');
-$routes->get('data-master/export/print', 'MasterData\UnitController::exportPrint');
+
 
 //sutra 1507
 // Fakultas

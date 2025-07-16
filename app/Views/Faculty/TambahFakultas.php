@@ -7,24 +7,29 @@
             <h2><?= $title ?? 'Tambah Fakultas' ?></h2>
         </div>
 
-        <form id="createFakultasForm" method="post" action="<?= base_url('fakultas/store') ?>">
+        <form id="createFakultasForm" method="post" action="<?= base_url('data-master/fakultas/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Nama Fakultas -->
             <div class="form-group">
                 <label class="form-label" for="name">Nama Fakultas/Directorate</label>
-                <input type="text" id="name" name="name" class="form-input" placeholder="Tulis Nama Fakultas disini..." required>
+                <input type="text" id="name" name="name" class="form-input"
+                       placeholder="Tulis Nama Fakultas disini..."
+                       value="<?= set_value('name') ?>"
+                       required>
             </div>
 
             <!-- Type (Level) -->
             <div class="form-group">
                 <label class="form-label d-block">Level</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="type1" value="1">
+                    <input class="form-check-input" type="radio" name="type" id="type1" value="1"
+                        <?= set_radio('type', '1', true) ?>>
                     <label class="form-check-label" for="type1">Directorate</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="type2" value="2" checked>
+                    <input class="form-check-input" type="radio" name="type" id="type2" value="2"
+                        <?= set_radio('type', '2') ?>>
                     <label class="form-check-label" for="type2">Faculty</label>
                 </div>
             </div>
@@ -33,11 +38,13 @@
             <div class="form-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="status1" value="1">
+                    <input class="form-check-input" type="radio" name="status" id="status1" value="1"
+                        <?= set_radio('status', '1', true) ?>>
                     <label class="form-check-label" for="status1">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="status2" value="2" checked>
+                    <input class="form-check-input" type="radio" name="status" id="status2" value="2"
+                        <?= set_radio('status', '2') ?>>
                     <label class="form-check-label" for="status2">Inactive</label>
                 </div>
             </div>
@@ -81,16 +88,8 @@
         });
     }
 
-    // Event saat user mengetik di field name
     document.getElementById('name').addEventListener('input', function () {
-        const lower = this.value.toLowerCase();
-        this.value = capitalizeWords(lower);
-    });
-
-    // Pastikan input terformat benar saat form disubmit
-    document.getElementById('createFakultasForm').addEventListener('submit', function () {
-        const input = document.getElementById('name');
-        input.value = capitalizeWords(input.value.toLowerCase());
+        this.value = capitalizeWords(this.value.toLowerCase());
     });
 </script>
 
