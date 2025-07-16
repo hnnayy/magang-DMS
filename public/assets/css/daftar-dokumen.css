@@ -63,6 +63,7 @@
   color: #fff;
 }
 
+/* Paksa style pagination berlaku */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
     background-color: #b41616 !important;
@@ -79,4 +80,20 @@
     background-color: white !important;
     color: black !important;
     font-weight: bold;
+}
+
+/* Normal state */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next {
+    background-color: #ffffff !important;  /* putih */
+    color: #000000 !important;             /* hitam */
+    font-weight: 600 !important;
+    border-radius: 6px;
+}
+
+/* Hover state */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next:hover {
+    background-color: #b41616 !important;  /* merah */
+    color: #ffffff !important;             /* putih */
 }
