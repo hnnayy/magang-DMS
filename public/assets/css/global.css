@@ -1038,4 +1038,25 @@ body {
 }
 
 
+select:invalid {
+    color: #a0aec0;
+}
+select option {
+  color: #000; 
+}
 
+/*date*/
+input[type="date"]:not(:valid)::-webkit-datetime-edit {
+  color: #a0aec0;
+}
+
+input[type="date"]:valid::-webkit-datetime-edit {
+  color: #212529; 
+}
+
+input[type="date"]:not(:valid) {
+  color: #a0aec0;
+}
+input[type="date"]:valid {
+  color: #212529;
+}

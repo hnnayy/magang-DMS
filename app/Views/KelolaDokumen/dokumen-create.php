@@ -7,6 +7,7 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
@@ -33,11 +34,10 @@
 
 </div>
 
-
             <!-- Nama Dokumen -->
 <div class="form-group">
     <label class="form-label" for="nama-dokumen">Nama Dokumen</label>
-    <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-control" 
+    <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-input" 
            required pattern="^[a-zA-Z0-9 ]+$" placeholder="Nama Dokumen">
     <div class="invalid-feedback">
         Nama Dokumen hanya boleh berisi huruf, angka, dan spasi.
@@ -50,7 +50,7 @@
                 <div class="form-group">
                     <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
                     <select id="jenis-dokumen" name="jenis" class="form-input" onchange="handleJenisChange()" required>
-                        <option value="">-- Pilih Jenis --</option>
+                        <option value="" disabled selected hidden>-- Pilih Jenis --</option>
                         <?php foreach ($kategori_dokumen as $kategori): ?>
                         <option value="<?= $kategori['id'] ?>" data-kode="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
                             <?= $kategori['nama'] ?>
@@ -81,7 +81,7 @@
 <!-- Nomor Dokumen -->
 <div class="form-group">
     <label class="form-label" for="no-dokumen">Nomor Dokumen</label>
-    <input type="text" id="no-dokumen" name="no-dokumen" class="form-control"
+    <input type="text" id="no-dokumen" name="no-dokumen" class="form-input"
            required pattern="^[^\s]+$"
            oninput="this.value=this.value.replace(/\s/g,'')"
            placeholder="Tulis Nomor Dokumen di sini...">
@@ -97,7 +97,7 @@
 <!-- Revisi -->
 <div class="form-group">
     <label class="form-label" for="revisi">Revisi</label>
-    <input type="text" id="revisi" name="revisi" class="form-control"
+    <input type="text" id="revisi" name="revisi" class="form-input"
            required pattern="^[0-9]+$"
            placeholder="Misal: 0">
     <div class="invalid-feedback">
