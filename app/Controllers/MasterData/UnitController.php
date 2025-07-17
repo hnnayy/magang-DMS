@@ -19,12 +19,20 @@ class UnitController extends BaseController
         helper(['form']);
     }
 
+    /* ───────── INDEX ───────── */
+    public function index()
+    {
+        // Redirect ke daftar unit jika diakses melalui data-master
+        return redirect()->to('data-master/unit/list');
+    }
+
     /* ───────── CREATE ───────── */
     public function create()
     {
+        // Mengambil semua unit berdasarkan status aktif dan type yang bisa berupa Fakultas (2) dan Directorate (1)
         $fakultas = $this->parentModel
-            ->where('type', 2)   // 2 = Fakultas
             ->where('status', 1) // Aktif
+            ->whereIn('type', [1, 2]) // Mengambil yang tipe Directorate (1) dan Fakultas (2)
             ->findAll();
 
         return view('DataMaster/unit-create', [
@@ -37,7 +45,7 @@ class UnitController extends BaseController
     {
         $rules = [
             'parent_id' => [
-                'label' => 'Fakultas',
+                'label' => 'Fakultas/Directorate',
                 'rules' => 'required|is_natural_no_zero',
                 'errors' => [
                     'required' => '{field} wajib dipilih.',
@@ -68,7 +76,6 @@ class UnitController extends BaseController
         $existingUnit = $this->unitModel->where('name', $unitName)->first();
 
         if ($existingUnit) {
-            // Jika unit sudah ada, kirimkan pesan error ke view
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Gagal!',
@@ -76,11 +83,11 @@ class UnitController extends BaseController
             ]);
         }
 
-        // Jika nama unit belum ada, lanjutkan untuk menambahkan unit baru
+        // Menyimpan unit baru
         $this->unitModel->insert([
             'parent_id' => $this->request->getPost('parent_id'),
             'name'      => $this->request->getPost('unit_name'),
-            'status'    => 1,
+            'status'    => 1, // Status aktif
         ]);
 
         return redirect()->back()->withInput()->with('swal', [
@@ -95,7 +102,7 @@ class UnitController extends BaseController
     {
         // Ambil semua unit dan gabungkan dengan nama fakultas (parent)
         $units = $this->unitModel
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id') // Menggabungkan dengan tabel unit_parent (bukan unit_parents)
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id') // Menggabungkan dengan tabel unit_parent
             ->select('unit.*, unit_parent.name as parent_name') // Mengambil nama fakultas sebagai parent_name
             ->findAll();
 
@@ -104,32 +111,36 @@ class UnitController extends BaseController
 
         return view('DataMaster/daftar-unit', $data);
     }
-
-    /* ───────── EDIT ───────── */
     public function edit($id)
-    {
-        $unit = $this->unitModel->find($id);
-        if (! $unit) {
-            throw PageNotFoundException::forPageNotFound();
-        }
-
-        $fakultas = $this->parentModel
-            ->where('type', 2)
-            ->where('status', 1)
-            ->findAll();
-
-        $data['unit']    = $unit;
-        $data['fakultas'] = $fakultas;
-
-        return view('DataMaster/unit-edit', $data);
+{
+    $unit = $this->unitModel->find($id);
+    if (! $unit) {
+        throw PageNotFoundException::forPageNotFound();
     }
+
+    // Ambil data fakultas yang aktif
+    $fakultas = $this->parentModel
+        ->where('status', 1)  // Aktif
+        ->whereIn('type', [1, 2]) // Mengambil yang tipe Directorate (1) dan Fakultas (2)
+        ->findAll();
+
+    // Kirim data unit dan fakultas ke view untuk di-edit
+    $data['unit']    = $unit;
+    $data['fakultas'] = $fakultas;  // Pastikan data fakultas ada
+
+    return view('DataMaster/unit-edit', $data);
+}
+
+
+
+
 
     /* ───────── UPDATE ───────── */
     public function update($id)
     {
         $rules = [
             'parent_id' => [
-                'label' => 'Fakultas',
+                'label' => 'Fakultas/Directorate',
                 'rules' => 'required|is_natural_no_zero',
                 'errors' => [
                     'required' => '{field} wajib dipilih.',
@@ -154,12 +165,13 @@ class UnitController extends BaseController
             ]);
         }
 
+        // Update unit
         $this->unitModel->update($id, [
             'parent_id' => $this->request->getPost('parent_id'),
             'name'      => $this->request->getPost('unit_name'),
         ]);
 
-        return redirect()->to('data-master')->with('swal', [
+        return redirect()->to('data-master/unit/list')->with('swal', [
             'icon'  => 'success',
             'title' => 'Berhasil!',
             'text'  => 'Unit berhasil diperbarui.',
@@ -171,7 +183,8 @@ class UnitController extends BaseController
     {
         $this->unitModel->delete($id);
 
-        return redirect()->to('data-master')->with('swal', [
+        // Redirect ke daftar unit setelah penghapusan
+        return redirect()->to('data-master/unit/list')->with('swal', [
             'icon'  => 'success',
             'title' => 'Terhapus!',
             'text'  => 'Unit berhasil dihapus.',

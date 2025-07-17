@@ -1,37 +1,27 @@
 <?php
 
 namespace App\Models;
+
 use CodeIgniter\Model;
 
 class UnitParentModel extends Model
 {
-    // Nama tabel yang digunakan
     protected $table = 'unit_parent';
-    
-    // Primary key
     protected $primaryKey = 'id';
-    
-    // Tipe data yang dikembalikan (bisa array atau objek)
     protected $returnType = 'array';
-    
-    // Kolom yang bisa di-insert atau update
-    protected $allowedFields = ['type', 'name', 'status'];
-    
-    // Menggunakan timestamps untuk created_at dan updated_at
+    protected $allowedFields = ['type', 'name', 'status', 'created_at', 'updated_at'];
     protected $useTimestamps = true;
-    
-    // Kolom untuk timestamps
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-    
-    /** ---------- Validasi otomatis ---------- */
+
+    // Validasi
     protected $validationRules = [
-        'type'   => 'required|in_list[1,2]',        // 1 = Directorate, 2 = Faculty
-        'name'   => 'required|alpha_space|max_length[40]',  // Nama hanya boleh huruf dan spasi
-        'status' => 'required|in_list[1,2]',        // 1 = Active, 2 = Inactive
+        'type'   => 'required|in_list[1,2]',
+        'name'   => 'required|alpha_space|max_length[40]',
+        'status' => 'required|in_list[1,2]',
     ];
 
-    // Pesan validasi kustom (opsional)
+    // Pesan validasi
     protected $validationMessages = [
         'type' => [
             'required' => 'Type harus dipilih.',
@@ -48,12 +38,24 @@ class UnitParentModel extends Model
         ]
     ];
 
-    /** ---------- Method untuk join dengan unit (fitur lama) ---------- */
-    public function getWithUnits()
+    // Fungsi untuk soft delete (update status menjadi 0)
+    public function softDelete($id)
     {
-        return $this->select('unit_parent.*, GROUP_CONCAT(unit.name) as units')
-                    ->join('unit', 'unit.parent_id = unit_parent.id', 'left')
-                    ->groupBy('unit_parent.id')
-                    ->findAll();
+        return $this->update($id, [
+            'status' => 0,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    // Fungsi untuk mengambil data yang tidak dihapus (status != 0)
+    public function getActiveData()
+    {
+        return $this->where('status !=', 0)->findAll();
+    }
+
+    // Fungsi untuk mengambil data berdasarkan status
+    public function getDataByStatus($status)
+    {
+        return $this->where('status', $status)->findAll();
     }
 }
