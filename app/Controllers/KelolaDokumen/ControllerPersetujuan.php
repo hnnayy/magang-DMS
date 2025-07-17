@@ -69,17 +69,25 @@ $documents = $this->documentModel
         return redirect()->back()->with('success', 'Dokumen berhasil diperbarui.');
     }
 
-    public function delete()
-    {
-        $id = $this->request->getPost('document_id');
+public function delete()
+{
+    $id = $this->request->getPost('document_id');
 
-        if (!$id || !$this->documentModel->find($id)) {
-            return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
-        }
-
-        // Soft delete: mark createddate = 0
-        $this->documentModel->update($id, ['createddate' => 0]);
-
-        return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
+    if (!$id || !$this->documentModel->find($id)) {
+        return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
     }
+
+    // Soft delete: update createddate di document
+    $this->documentModel->update($id, ['createddate' => 0]);
+
+    // Update status document_approval jadi 0
+    $this->approvalModel
+        ->where('document_id', $id)
+        ->set('status', 0)
+        ->update();
+
+    return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
+}
+
+
 }
