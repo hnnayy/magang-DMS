@@ -54,9 +54,11 @@
                                         <form method="post" action="<?= base_url('kelola-dokumen/persetujuan/delete') ?>">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
-                                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus dokumen ini?')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $doc['id'] ?>">
+    <i class="bi bi-trash"></i>
+</button>
+
+                                            
                                         </form>
                                     </div>
                                 </td>
@@ -172,5 +174,69 @@
 <!-- Custom DataTables CSS -->
 <link href="<?= base_url('assets/css/datatables-custom.css') ?>" rel="stylesheet">
 
+<?php if (session()->getFlashdata('success')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: '<?= session()->getFlashdata('success') ?>',
+        confirmButtonColor: '#3085d6'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')) : ?>
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: '<?= session()->getFlashdata('error') ?>',
+        confirmButtonColor: '#d33'
+    });
+</script>
+<?php endif; ?>
+
+<script>
+$(document).on('click', '.btn-delete', function () {
+    const documentId = $(this).data('id');
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/kelola-dokumen/persetujuan/delete',
+                type: 'POST',
+                data: {
+                    document_id: documentId
+                },
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: response.message,
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        location.reload(); // reload table
+                    });
+                },
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: xhr.responseJSON?.error ?? 'Terjadi kesalahan.',
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            });
+        }
+    });
+});
+
+</script>
 <?= $this->endSection() ?>
 
