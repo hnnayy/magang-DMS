@@ -6,11 +6,29 @@
         <h4 class="mb-4">Daftar Pengajuan Dokumen</h4>
 
         <!-- Flash message -->
-        <?php if (session()->getFlashdata('success')): ?>
-            <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
-        <?php elseif (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
-        <?php endif; ?>
+<?php if (session()->getFlashdata('success')): ?>
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Berhasil',
+    text: '<?= session()->getFlashdata('success') ?>',
+    confirmButtonColor: '#3085d6'
+});
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+<script>
+Swal.fire({
+    icon: 'error',
+    title: 'Gagal',
+    text: '<?= session()->getFlashdata('error') ?>',
+    confirmButtonColor: '#d33'
+});
+</script>
+<?php endif; ?>
+
+
 
         <!-- Filter card -->
         <div class="card mb-4">
@@ -154,12 +172,13 @@
                                             <i class="bi bi-check-circle"></i>
                                         </button>
 
-                                        <form action="<?= base_url('kelola-dokumen/deletepengajuan') ?>" method="post" onsubmit="return confirm('Yakin ingin menghapus dokumen ini?')">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <button 
+    class="btn btn-sm btn-outline-danger delete-document" 
+    data-id="<?= $doc['id'] ?>" 
+    title="Hapus">
+    <i class="bi bi-trash"></i>
+</button>
+
                                         </form>
                                     </div>
                                 </td>
@@ -306,6 +325,9 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 $(document).ready(function() {
@@ -376,6 +398,48 @@ function resetFilters() {
     table.search('').columns().search('').draw();
 }
 </script>
+
+<script>
+$(document).on('click', '.delete-document', function (e) {
+    e.preventDefault();
+    const id = $(this).data('id');
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus dokumen ini?',
+        text: 'Dokumen akan dihapus secara permanen.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '<?= base_url('kelola-dokumen/deletepengajuan') ?>',
+                method: 'POST',
+                data: {
+                    document_id: id,
+                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                },
+                success: function (res) {
+                    Swal.fire('Berhasil!', 'Dokumen berhasil dihapus.', 'success').then(() => {
+                        location.reload();
+                    });
+                },
+                error: function (xhr) {
+                    let err = 'Gagal menghapus dokumen.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        err = xhr.responseJSON.error;
+                    }
+                    Swal.fire('Gagal', err, 'error');
+                }
+            });
+        }
+    });
+});
+</script>
+
 
 <?= $this->endSection() ?>
 

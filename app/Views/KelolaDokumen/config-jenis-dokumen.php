@@ -10,18 +10,35 @@
 
     <!-- Flash Messages -->
     <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <?= session()->getFlashdata('success') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '<?= session()->getFlashdata('success') ?>',
+                confirmButtonText: 'OK',
+                showConfirmButton: true
+            });
+        });
+    </script>
     <?php endif; ?>
 
+
+
     <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <?= session()->getFlashdata('error') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '<?= session()->getFlashdata('error') ?>',
+                confirmButtonText: 'OK',
+                showConfirmButton: true
+            });
+        });
+    </script>
     <?php endif; ?>
+
 
     
 
@@ -145,7 +162,8 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Nama Jenis</label>
-                            <input type="text" class="form-control" name="nama" style="text-transform: uppercase;" required>
+<input type="text" class="form-control" name="nama" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Kode</label>
@@ -185,11 +203,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Nama Jenis</label>
-                            <input type="text" class="form-control" name="nama" id="editKategoriNama" style="text-transform: uppercase;" required>
+                            <input type="text" class="form-control" id="editKategoriNama" name="nama" ... >
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" required>
+                           <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
@@ -265,23 +283,15 @@
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Jenis Dokumen</label>
-                            <select class="form-select" name="jenis" id="editKodeJenis" required>
-                                <option value="">Pilih Jenis Dokumen</option>
-                                <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option 
-                                        value="<?= esc($kategori['kode']) ?>" 
-                                        data-nama="<?= esc($kategori['nama']) ?>">
-                                        <?= esc($kategori['nama']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                       <div class="col-md-4">
+    <label class="form-label">Jenis Dokumen</label>
+    <input type="text" class="form-control" id="editKodeJenisNama" readonly>
+    <input type="hidden" name="jenis" id="editKodeJenisValue">
+</div>
 
-                        </div>
                         <div class="col-md-4">
                             <label class="form-label">Kode</label>
-                            <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Masukkan kode..." required>
+                                <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Masukkan kode..." oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Nama Dokumen</label>
@@ -300,90 +310,106 @@
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
     });
-});
 
-// Functions for Kategori
-function editKategori(id, nama, kode, usePredefined) {
-    document.getElementById('editKategoriId').value = id;
-    document.getElementById('editKategoriNama').value = nama;
-    document.getElementById('editKategoriKode').value = kode;
-    document.getElementById('editUsePredefined').checked = usePredefined;
-    
-    var modal = new bootstrap.Modal(document.getElementById('editKategoriModal'));
-    modal.show();
-}
-
-function deleteKategori(id, nama) {
-    if (confirm('Yakin ingin menghapus jenis dokumen "' + nama + '"?')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<?= base_url('admin/dokumen/delete-kategori') ?>';
+    function editKategori(id, nama, kode, usePredefined) {
+        document.getElementById('editKategoriId').value = id;
+        document.getElementById('editKategoriNama').value = nama.toUpperCase();
+        document.getElementById('editKategoriKode').value = kode;
+        document.getElementById('editUsePredefined').checked = usePredefined;
         
-        var csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '<?= csrf_token() ?>';
-        csrfInput.value = '<?= csrf_hash() ?>';
-        form.appendChild(csrfInput);
-        
-        var idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'id';
-        idInput.value = id;
-        form.appendChild(idInput);
-        
-        document.body.appendChild(form);
-        form.submit();
+        var modal = new bootstrap.Modal(document.getElementById('editKategoriModal'));
+        modal.show();
     }
-}
 
-// Functions for Kode
-function editKode(id, kode, nama, jenis) {
-    document.getElementById('editKodeId').value = id;
-    document.getElementById('editKodeKode').value = kode;
-    document.getElementById('editKodeNama').value = nama;
-    document.getElementById('editKodeJenis').value = jenis;
-    
-    var modal = new bootstrap.Modal(document.getElementById('editKodeModal'));
-    modal.show();
-}
+    function deleteKategori(id, nama) {
+        Swal.fire({
+            title: 'Yakin ingin menghapus?',
+            text: 'Jenis dokumen "' + nama + '" akan dihapus.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= base_url('admin/dokumen/delete-kategori') ?>';
 
-function deleteKode(id, kode) {
-    if (confirm('Yakin ingin menghapus kode dokumen "' + kode + '"?')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '<?= base_url('admin/dokumen/delete-kode') ?>';
-        
-        var csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = '<?= csrf_token() ?>';
-        csrfInput.value = '<?= csrf_hash() ?>';
-        form.appendChild(csrfInput);
-        
-        var idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'id';
-        idInput.value = id;
-        form.appendChild(idInput);
-        
-        document.body.appendChild(form);
-        form.submit();
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '<?= csrf_token() ?>';
+                csrfInput.value = '<?= csrf_hash() ?>';
+                form.appendChild(csrfInput);
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     }
-}
+
+    function editKode(id, kode, nama, jenisNama, jenisId) {
+        document.getElementById('editKodeId').value = id;
+        document.getElementById('editKodeKode').value = kode;
+        document.getElementById('editKodeNama').value = nama;
+        document.getElementById('editKodeJenisNama').value = jenisNama.toUpperCase(); 
+        document.getElementById('editKodeJenisValue').value = jenisId;  
+
+        var modal = new bootstrap.Modal(document.getElementById('editKodeModal'));
+        modal.show();
+    }
+
+
+    function deleteKode(id, kode) {
+        Swal.fire({
+            title: 'Yakin ingin menghapus?',
+            text: 'Kode dokumen "' + kode + '" akan dihapus.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= base_url('admin/dokumen/delete-kode') ?>';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '<?= csrf_token() ?>';
+                csrfInput.value = '<?= csrf_hash() ?>';
+                form.appendChild(csrfInput);
+
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                form.appendChild(idInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
 </script>
-
-</script>
-
-
 
 <?= $this->endSection() ?>

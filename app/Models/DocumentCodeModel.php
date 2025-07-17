@@ -20,4 +20,6 @@ class DocumentCodeModel extends Model
     ];
     
     protected $useTimestamps = true;
+
+    
 }
