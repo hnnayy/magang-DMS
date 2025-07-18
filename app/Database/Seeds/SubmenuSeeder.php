@@ -16,12 +16,13 @@ class SubmenuSeeder extends Seeder
             // Menu ID 3: Master Data
             ['id' => 301, 'parent' => 3, 'name' => 'Tambah Unit', 'status' => 1],
             ['id' => 302, 'parent' => 3, 'name' => 'Lihat Unit', 'status' => 1],
+            ['id' => 303, 'parent' => 3, 'name' => 'Jenis & Kode Dokumen', 'status' => 1],
+
 
             // Menu ID 4: Document Management
             ['id' => 401, 'parent' => 4, 'name' => 'Tambah Dokumen', 'status' => 1],
             ['id' => 402, 'parent' => 4, 'name' => 'Daftar Pengajuan', 'status' => 1],
             ['id' => 403, 'parent' => 4, 'name' => 'Persetujuan Dokumen', 'status' => 1],
-            ['id' => 404, 'parent' => 4, 'name' => 'Jenis & Kode Dokumen', 'status' => 1],
 
             // Menu ID 5: Daftar Dokumen
             ['id' => 501, 'parent' => 5, 'name' => 'Daftar Dokumen', 'status' => 1],

@@ -33,8 +33,8 @@ $routes->post('create-user/privilege/store', 'CreateUser::storePrivilege');
 
 // DataMaster
 $routes->get('data-master', 'MasterData\UnitController::index');
-$routes->get('lihat-unit', 'DataMaster::list');
-$routes->get('tambah-unit', 'DataMaster::create');
+$routes->get('lihat-unit', 'MasterData\UnitController::list');
+$routes->get('tambah-unit', 'MasterData\UnitController::create');
 $routes->post('data-master/unit/store', 'MasterData\UnitController::store');
 $routes->get('data-master/unit/(:num)/edit', 'MasterData\UnitController::edit/$1');
 $routes->post('data-master/unit/(:num)/update', 'MasterData\UnitController::update/$1');
@@ -119,7 +119,7 @@ $routes->post('Menu/delete/(:num)', 'Menu::delete/$1');
 // submenu
 $routes->get('tambah-submenu', 'SubmenuController::create');
 $routes->post('submenu/store', 'SubmenuController::store'); //  untuk submit form create
-$routes->get('submenu/lihat-submenu', 'SubmenuController::list'); //  list submenu
+$routes->get('lihat-submenu', 'SubmenuController::list'); //  list submenu
 
 $routes->get('submenu/edit/(:num)', 'SubmenuController::edit/$1'); //  form edit
 $routes->post('submenu/update/(:num)', 'SubmenuController::update/$1'); //  simpan edit
@@ -184,7 +184,12 @@ $routes->get('privilege/lihat-privilege', 'privilege::list');
 $routes->post('privilege/update', 'Privilege::update');
 
 
+
 $routes->get('/wc-dummy', 'Dummy\TokenDummy::index');
 $routes->post('/wc-dummy/login', 'Dummy\TokenDummy::login');
 $routes->get('/parse-token', 'Dummy\TokenDummy::parseToken');
 $routes->get('/generateAllTokens', 'Dummy\TokenDummy::generateAllTokens'); // opsional
+
+if (ENVIRONMENT === 'development') {
+    $routes->get('/', fn() => redirect()->to('/wc-dummy'));
+}
