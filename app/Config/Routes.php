@@ -193,3 +193,14 @@ $routes->get('/generateAllTokens', 'Dummy\TokenDummy::generateAllTokens'); // op
 if (ENVIRONMENT === 'development') {
     $routes->get('/', fn() => redirect()->to('/wc-dummy'));
 }
+
+
+$routes->get('monev-dashboard', function () {
+    $token = session('jwt_token'); // ngambil token dari session
+
+    if (!$token) {
+        return redirect()->to('/')->with('error', 'Token tidak tersedia.');
+    }
+
+    return redirect()->to('https://clear.celoe.org/?token=' . $token);
+});

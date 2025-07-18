@@ -37,6 +37,32 @@ abstract class BaseController extends Controller
      */
     protected $helpers = [];
 
+    protected function hasAccess($submenu_id, $action)
+    {
+        $role_id = session()->get('role_id');
+        if (!$role_id) return false;
+
+        $db = \Config\Database::connect();
+        $query = $db->table('privilege')
+            ->where('role_id', $role_id)
+            ->where('submenu_id', $submenu_id)
+            ->get()
+            ->getRow();
+
+        if (!$query) return false;
+
+        return (bool) $query->$action; // action = create, update, delete, approve
+    }
+
+    protected function requireAccess($submenu_id, $action)
+    {
+        if (!$this->hasAccess($submenu_id, $action)) {
+            // Bisa redirect, atau throw exception, sesuai kebutuhan
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Akses ditolak untuk aksi: $action");
+        }
+    }
+
+    
     /**
      * Be sure to declare properties for any property fetch you initialized.
      * The creation of dynamic property is deprecated in PHP 8.2.

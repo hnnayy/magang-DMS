@@ -1,5 +1,5 @@
 <?php
-// Buat di helper misalnya: app/Helpers/privilege_helper.php
+
 if (!function_exists('hasPrivilege')) {
     function hasPrivilege($submenu_id, $action)
     {
@@ -15,6 +15,16 @@ if (!function_exists('hasPrivilege')) {
 
         if (!$query) return false;
 
-        return (bool) $query->$action; // $action = create / update / delete / approve
+        $result = (bool) $query->$action;
+
+        // Logging debug privilege access
+        log_message('debug', 'Check privilege: ' . json_encode([
+            'role_id'    => $role_id,
+            'submenu_id' => $submenu_id,
+            'action'     => $action,
+            'result'     => $result,
+        ]));
+
+        return $result;
     }
 }
