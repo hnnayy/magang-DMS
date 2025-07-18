@@ -81,7 +81,7 @@ class Privilege extends Controller
             }
         }
 
-        return redirect()->to(base_url('privilege/create'))->with('success', 'Privilege berhasil disimpan');
+        return redirect()->to(base_url('tambah-prvilage'))->with('success', 'Privilege berhasil disimpan');
     }
 
     public function list()
