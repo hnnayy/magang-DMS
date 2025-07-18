@@ -653,20 +653,134 @@ body {
 }
 
 /* ====== PAGINATION ====== */
- .pagination .page-link {
+/* ====== PAGINATION IMPROVEMENTS ====== */
+.pagination .page-link {
     color: #b41616;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 0 2px;
+    text-decoration: none;
+    transition: all 0.3s ease;
 }
 
 .pagination .page-item.active .page-link {
     background-color: #b41616;
-    border-color: #b41616;
+    color: white;
 }
 
 .pagination .page-link:hover {
     background-color: #f8f9fa;
-    border-color: #b41616;
     color: #9b1414;
-} 
+}
+
+/* Disabled state untuk Previous dan Next */
+.pagination .page-item.disabled .page-link {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #bec1c4 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.pagination .page-item.disabled .page-link:hover {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #bec1c4 !important;
+}
+
+/* Styling khusus untuk tombol Previous dan Next */
+.pagination .page-item.previous .page-link,
+.pagination .page-item.next .page-link {
+    background-color: #ffffff;
+    color: #000000;
+    font-weight: 600;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.previous .page-link:hover,
+.pagination .page-item.next .page-link:hover {
+    background-color: #8b1111;
+    color: white;
+}
+
+/* Disabled state untuk Previous dan Next - override hover */
+.pagination .page-item.previous.disabled .page-link,
+.pagination .page-item.next.disabled .page-link {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.pagination .page-item.previous.disabled .page-link:hover,
+.pagination .page-item.next.disabled .page-link:hover {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+}
+
+/* DataTables pagination styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 0 2px;
+    background-color: #ffffff;
+    color: #000000;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #b41414 !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:focus,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background-color: #b41616 !important;
+    color: white !important;
+}
+
+/* Disabled state untuk DataTables pagination */
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:focus {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next:hover {
+    background-color: #8b1111 !important;
+    color: white !important;
+}
+
+/* Disabled state untuk Previous dan Next di DataTables */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next.disabled:hover {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
 
 /* ====== USER MANAGEMENT ====== */
 .btn-purple {
@@ -1059,4 +1173,18 @@ input[type="date"]:not(:valid) {
 }
 input[type="date"]:valid {
   color: #212529;
+}
+
+/* punya ninis */
+.notif-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background-color: red;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-weight: bold;
+    z-index: 10;
 }
