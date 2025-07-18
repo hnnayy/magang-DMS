@@ -5,8 +5,12 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
+// $routes->get('/', 'Home::index');
+$routes->get('/dashboard', 'Home::index');
 
+
+$routes->get('lihat-user', 'CreateUser::list');
+$routes->get('tambah-user', 'CreateUser::create');
 // CreateUser
 $routes->get('create-user', 'CreateUser::index');
 $routes->get('create-user/list', 'CreateUser::list');
@@ -29,8 +33,8 @@ $routes->post('create-user/privilege/store', 'CreateUser::storePrivilege');
 
 // DataMaster
 $routes->get('data-master', 'MasterData\UnitController::index');
-$routes->get('data-master/unit/list', 'MasterData\UnitController::list');
-$routes->get('data-master/unit/create', 'MasterData\UnitController::create');
+$routes->get('lihat-unit', 'DataMaster::list');
+$routes->get('tambah-unit', 'DataMaster::create');
 $routes->post('data-master/unit/store', 'MasterData\UnitController::store');
 $routes->get('data-master/unit/(:num)/edit', 'MasterData\UnitController::edit/$1');
 $routes->post('data-master/unit/(:num)/update', 'MasterData\UnitController::update/$1');
@@ -39,8 +43,8 @@ $routes->post('data-master/unit/(:num)/delete', 'MasterData\UnitController::dele
 
 //sutra 1507
 // Fakultas
-$routes->get('data-master/fakultas/list', 'MasterData\FakultasController::index');                  // Menampilkan daftar fakultas
-$routes->get('data-master/fakultas/create', 'MasterData\FakultasController::create');         // Menampilkan form tambah fakultas
+$routes->get('lihat-fakultas', 'MasterData\FakultasController::index');                  // Menampilkan daftar fakultas
+$routes->get('tambah-fakultas', 'MasterData\FakultasController::create');         // Menampilkan form tambah fakultas
 $routes->post('data-master/fakultas/store', 'MasterData\FakultasController::store');          // Menyimpan fakultas baru ke database
 $routes->post('data-master/fakultas/update/(:num)', 'MasterData\FakultasController::update/$1'); // Memperbarui data fakultas
 $routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasController::softDelete/$1'); // Soft delete (ubah status atau flag deleted)
@@ -48,21 +52,20 @@ $routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasControll
 
 
 // KelolaDokumen
-$routes->get('dokumen/add', 'KelolaDokumen::add');
-$routes->get('dokumen/pengajuan', 'KelolaDokumen::pengajuan');
+$routes->get('tambah-dokumen', 'KelolaDokumen::add');
+$routes->get('daftar-pengajuan', 'KelolaDokumen::pengajuan');
 $routes->get('dokumen/config-jenis-dokumen', 'KelolaDokumen::configJenisDokumen');
 
 
 $routes->get('kelola-dokumen/configJenisDokumen', 'KelolaDokumen::configJenisDokumen');
+$routes->get('jenis-kode-dokumen', 'KelolaDokumen::configJenisDokumen');
+
 $routes->get('dokumen/config-kategori', 'KelolaDokumen::configJenisDokumen');
 $routes->post('/kelola-dokumen/get-kode-by-jenis', 'KelolaDokumen::getKodeByJenis');
 $routes->post('admin/dokumen/delete-kode', 'KelolaDokumen::delete_kode');
 
 // DaftarDokumen
 $routes->get('dokumen/daftar', 'DaftarDokumen::index');
-
-// PersetujuanDokumen
-$routes->get('dokumen/persetujuan', 'PersetujuanDokumen::index');
 
 // CRUD routes for categories (gunakan prefiks admin untuk konsistensi dengan form)
 $routes->post('admin/dokumen/add-kategori', 'KelolaDokumen::addKategori');
@@ -86,26 +89,26 @@ $routes->post('kelola-dokumen/tambah', 'KelolaDokumen::tambah');
 
 
 // Role
-$routes->get('role/create', 'Role::create');              // Menampilkan form tambah role
+$routes->get('tambah-role', 'Role::create');              // Menampilkan form tambah role
 $routes->post('role/store', 'Role::store');              // Menyimpan role baru ke database
-$routes->get('role/list', 'Role::list');                // Menampilkan daftar role (tidak dihapus)
+$routes->get('lihat-role', 'Role::list');                // Menampilkan daftar role (tidak dihapus)
 $routes->post('role/delete/(:num)', 'Role::delete/$1'); // "Menghapus" role (soft delete), param $1 = id
 $routes->post('role/update/(:num)', 'Role::update/$1'); // Mengupdate role, param $1 = id
 
 
 //privilege
-$routes->get('privilege/create', 'Privilege::create');          // Form tambah privilege
+$routes->get('tambah-privilege', 'Privilege::create');          // Form tambah privilege
 $routes->post('privilege/store', 'Privilege::store');    // Proses simpan
-$routes->get('privilege/list', 'Privilege::list');       // Lihat daftar privilege
+$routes->get('lihat-privilege', 'Privilege::list');       // Lihat daftar privilege
 
 
 //Menu
 //Cipa menu
 $routes->get('Menu', 'Menu::index');
-$routes->get('Menu/create', 'Menu::create');
+$routes->get('tambah-menu', 'Menu::create');
 $routes->post('Menu/store', 'Menu::store');
 $routes->get('Menu/list', 'Menu::list');
-$routes->get('Menu/lihat-menu', 'Menu::list');
+$routes->get('lihat-menu', 'Menu::list');
 $routes->get('Menu', 'Menu::index');
 $routes->get('Menu/create', 'Menu::create');
 $routes->post('Menu/store', 'Menu::store');
@@ -114,7 +117,7 @@ $routes->post('Menu/delete/(:num)', 'Menu::delete/$1');
 
 
 // submenu
-$routes->get('submenu/create', 'SubmenuController::create');
+$routes->get('tambah-submenu', 'SubmenuController::create');
 $routes->post('submenu/store', 'SubmenuController::store'); //  untuk submit form create
 $routes->get('submenu/lihat-submenu', 'SubmenuController::list'); //  list submenu
 
@@ -147,7 +150,7 @@ $routes->post('/kelola-dokumen/delete-kode', 'KelolaDokumen\ControllerConfigKate
 $routes->get('/dokumen/cetak-signed', 'KelolaDokumen::generateSignedPDF');
 
 
-$routes->get('kelola-dokumen/persetujuan', 'KelolaDokumen\ControllerPersetujuan::index');
+$routes->get('persetujuan-dokumen', 'KelolaDokumen\ControllerPersetujuan::index');
 $routes->post('kelola-dokumen/persetujuan/update', 'KelolaDokumen\ControllerPersetujuan::update');
 $routes->post('kelola-dokumen/persetujuan/delete', 'KelolaDokumen\ControllerPersetujuan::delete');
 
@@ -168,11 +171,11 @@ $routes->get('privilege/lihat-privilege', 'privilege::list');
 
 //14-07-2025 10.18 HANIN
 //DUMMY
-$routes->get('generatetoken', 'Dummy\TokenDummy::generateAllTokens');
-$routes->get('parse-token', 'Dummy\TokenDummy::parseToken');
+// $routes->get('generatetoken', 'Dummy\TokenDummy::generateAllTokens');
+// $routes->get('parse-token', 'Dummy\TokenDummy::parseToken');
 
-$routes->get('wc-dummy', 'Dummy\DummyWCController::index');
-$routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');
+// $routes->get('wc-dummy', 'Dummy\DummyWCController::index');
+// $routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');
 
 // $routes->get('dashboard', 'Home::index', ['filter' => 'auth']);
 
@@ -181,3 +184,7 @@ $routes->post('wc-dummy/login', 'Dummy\DummyWCController::redirectToDMS');
 $routes->post('privilege/update', 'Privilege::update');
 
 
+$routes->get('/wc-dummy', 'Dummy\TokenDummy::index');
+$routes->post('/wc-dummy/login', 'Dummy\TokenDummy::login');
+$routes->get('/parse-token', 'Dummy\TokenDummy::parseToken');
+$routes->get('/generateAllTokens', 'Dummy\TokenDummy::generateAllTokens'); // opsional

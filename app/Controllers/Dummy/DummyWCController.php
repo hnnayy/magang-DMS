@@ -43,14 +43,14 @@ class DummyWCController extends Controller
             'fullname' => $user['fullname'],
             'role_id'  => $userRole['role_id'],
             'iat'      => time(),
-            'exp'      => time() + 600
+            'exp'      => time() + 300
         ];
 
         $secret = getenv('jwt.secret') ?: 'defaultsecret';
         $token = JWT::encode($payload, $secret, 'HS256');
 
-        // return redirect()->to(uri: 'http://localhost:8080/generatetoken?token=' . $token); // buat liat tokennya
-        return redirect()->to('http://localhost:8080/parse-token?token=' . $token);
+        return redirect()->to(uri: 'http://localhost:8080/generatetoken?token=' . $token); // buat liat tokennya
+        // return redirect()->to('http://localhost:8080/parse-token?token=' . $token);
 
     }
 }
