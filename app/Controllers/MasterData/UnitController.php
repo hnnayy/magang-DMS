@@ -11,165 +11,183 @@ class UnitController extends BaseController
 {
     protected $parentModel;
     protected $unitModel;
+    protected $validationRules;
 
     public function __construct()
     {
         $this->parentModel = new UnitParentModel();
         $this->unitModel   = new UnitModel();
-        helper(['form']);
+        helper(['form', 'url']);
+
+        $this->validationRules = [
+            'parent_id' => 'required|is_natural_no_zero',
+            'unit_name' => 'required|alpha_space|max_length[40]|min_length[3]',
+            'status'    => 'required|in_list[1,2]',
+        ];
     }
 
-    /* ───────── INDEX ───────── */
     public function index()
     {
-        // Redirect ke daftar unit jika diakses melalui data-master
         return redirect()->to('data-master/unit/list');
     }
 
-    /* ───────── CREATE ───────── */
     public function create()
     {
-        // Mengambil semua unit berdasarkan status aktif dan type yang bisa berupa Fakultas (2) dan Directorate (1)
         $fakultas = $this->parentModel
-            ->where('status', 1) // Aktif
-            ->whereIn('type', [1, 2]) // Mengambil yang tipe Directorate (1) dan Fakultas (2)
+            ->where('status !=', 0)
+            ->whereIn('type', [1, 2])
+            ->orderBy('name', 'ASC')
             ->findAll();
 
-        return view('DataMaster/unit-create', [
+        $data = [
             'fakultas' => $fakultas,
-        ]);
-    }
-
-    /* ───────── STORE ───────── */
-    public function store()
-    {
-        $rules = [
-            'parent_id' => [
-                'label' => 'Fakultas/Directorate',
-                'rules' => 'required|is_natural_no_zero',
-                'errors' => [
-                    'required' => '{field} wajib dipilih.',
-                ],
-            ],
-            'unit_name' => [
-                'label' => 'Unit',
-                'rules' => 'required|alpha_space|max_length[40]',
-                'errors' => [
-                    'required'    => '{field} wajib diisi.',
-                    'alpha_space' => '{field} hanya boleh huruf dan spasi.',
-                    'max_length'  => '{field} maksimal 40 karakter.',
-                ],
-            ],
+            'title'    => 'Tambah Unit Baru'
         ];
 
-        // Validasi input
-        if (! $this->validate($rules)) {
+        return view('DataMaster/unit-create', $data);
+    }
+
+    public function store()
+    {
+        if (!$this->validate($this->validationRules)) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Oops...',
+                'title' => 'Validasi Gagal!',
                 'text'  => implode("\n", $this->validator->getErrors()),
             ]);
         }
 
-        // Pengecekan apakah unit dengan nama yang sama sudah ada
-        $unitName = $this->request->getPost('unit_name');
-        $existingUnit = $this->unitModel->where('name', $unitName)->first();
+        $unitName = trim($this->request->getPost('unit_name'));
+        $parentId = $this->request->getPost('parent_id');
+        $status   = $this->request->getPost('status');
+
+        $parentExists = $this->parentModel
+            ->where('id', $parentId)
+            ->where('status !=', 0)
+            ->first();
+
+        if (!$parentExists) {
+            return redirect()->back()->withInput()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Gagal!',
+                'text'  => 'Fakultas/Directorate yang dipilih tidak valid.',
+            ]);
+        }
+
+        $existingUnit = $this->unitModel
+            ->where('LOWER(name)', strtolower($unitName))
+            ->where('parent_id', $parentId)
+            ->where('status', $status)
+            ->first();
 
         if ($existingUnit) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Gagal!',
-                'text'  => 'Nama unit sudah terdaftar.',
+                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
             ]);
         }
 
-        // Menyimpan unit baru
-        $this->unitModel->insert([
-            'parent_id' => $this->request->getPost('parent_id'),
-            'name'      => $this->request->getPost('unit_name'),
-            'status'    => 1, // Status aktif
-        ]);
+        $insertData = [
+            'parent_id'  => $parentId,
+            'name'       => $unitName,
+            'status'     => $status,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
-        return redirect()->back()->withInput()->with('swal', [
+        $this->unitModel->insert($insertData);
+
+        return redirect()->to('data-master/unit/create')->with('swal', [
             'icon'  => 'success',
             'title' => 'Berhasil!',
             'text'  => 'Unit berhasil ditambahkan.',
         ]);
     }
 
-    /* ───────── LIST ───────── */
     public function list()
     {
-        // Ambil semua unit dan gabungkan dengan nama fakultas (parent)
         $units = $this->unitModel
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id') // Menggabungkan dengan tabel unit_parent
-            ->select('unit.*, unit_parent.name as parent_name') // Mengambil nama fakultas sebagai parent_name
+            ->select('unit.*, unit_parent.name as parent_name, unit_parent.type as parent_type')
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+            ->where('unit.status !=', 0)
+            ->orderBy('unit_parent.name', 'ASC')
+            ->orderBy('unit.name', 'ASC')
             ->findAll();
 
-        // Kirim data ke view
-        $data['units'] = $units;
+        $fakultas = $this->parentModel
+            ->where('status !=', 0)
+            ->whereIn('type', [1, 2])
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $data = [
+            'units'    => $units,
+            'fakultas' => $fakultas,
+            'title'    => 'Daftar Unit'
+        ];
 
         return view('DataMaster/daftar-unit', $data);
     }
-    public function edit($id)
-{
-    $unit = $this->unitModel->find($id);
-    if (! $unit) {
-        throw PageNotFoundException::forPageNotFound();
-    }
 
-    // Ambil data fakultas yang aktif
-    $fakultas = $this->parentModel
-        ->where('status', 1)  // Aktif
-        ->whereIn('type', [1, 2]) // Mengambil yang tipe Directorate (1) dan Fakultas (2)
-        ->findAll();
-
-    // Kirim data unit dan fakultas ke view untuk di-edit
-    $data['unit']    = $unit;
-    $data['fakultas'] = $fakultas;  // Pastikan data fakultas ada
-
-    return view('DataMaster/unit-edit', $data);
-}
-
-
-
-
-
-    /* ───────── UPDATE ───────── */
-    public function update($id)
+    public function update($id = null)
     {
-        $rules = [
-            'parent_id' => [
-                'label' => 'Fakultas/Directorate',
-                'rules' => 'required|is_natural_no_zero',
-                'errors' => [
-                    'required' => '{field} wajib dipilih.',
-                ],
-            ],
-            'unit_name' => [
-                'label' => 'Unit',
-                'rules' => 'required|alpha_space|max_length[40]',
-                'errors' => [
-                    'required'    => '{field} wajib diisi.',
-                    'alpha_space' => '{field} hanya boleh huruf dan spasi.',
-                    'max_length'  => '{field} maksimal 40 karakter.',
-                ],
-            ],
-        ];
+        if (!is_numeric($id) || $id <= 0) {
+            return redirect()->to('data-master/unit/list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'ID unit tidak valid.',
+            ]);
+        }
 
-        if (! $this->validate($rules)) {
+        $unit = $this->unitModel
+            ->where('id', $id)
+            ->where('status !=', 0)
+            ->first();
+
+        if (!$unit) {
+            return redirect()->to('data-master/unit/list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Unit tidak ditemukan.',
+            ]);
+        }
+
+        if (!$this->validate($this->validationRules)) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Oops...',
+                'title' => 'Validasi Gagal!',
                 'text'  => implode("\n", $this->validator->getErrors()),
             ]);
         }
 
-        // Update unit
-        $this->unitModel->update($id, [
-            'parent_id' => $this->request->getPost('parent_id'),
-            'name'      => $this->request->getPost('unit_name'),
-        ]);
+        $unitName = trim($this->request->getPost('unit_name'));
+        $parentId = $this->request->getPost('parent_id');
+        $status   = $this->request->getPost('status');
+
+        $existingUnit = $this->unitModel
+            ->where('LOWER(name)', strtolower($unitName))
+            ->where('parent_id', $parentId)
+            ->where('status', $status)
+            ->where('id !=', $id)
+            ->first();
+
+        if ($existingUnit) {
+            return redirect()->back()->withInput()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Gagal!',
+                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
+            ]);
+        }
+
+        $updateData = [
+            'parent_id'  => $parentId,
+            'name'       => $unitName,
+            'status'     => $status,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->unitModel->update($id, $updateData);
 
         return redirect()->to('data-master/unit/list')->with('swal', [
             'icon'  => 'success',
@@ -178,12 +196,31 @@ class UnitController extends BaseController
         ]);
     }
 
-    /* ───────── DELETE ───────── */
-    public function delete($id)
+    public function delete($id = null)
     {
-        $this->unitModel->delete($id);
+        if (!is_numeric($id) || $id <= 0) {
+            return redirect()->to('data-master/unit/list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'ID unit tidak valid.',
+            ]);
+        }
 
-        // Redirect ke daftar unit setelah penghapusan
+        $unit = $this->unitModel->find($id);
+
+        if (!$unit) {
+            return redirect()->to('data-master/unit/list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Unit tidak ditemukan.',
+            ]);
+        }
+
+        $this->unitModel->update($id, [
+            'status'     => 0,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
         return redirect()->to('data-master/unit/list')->with('swal', [
             'icon'  => 'success',
             'title' => 'Terhapus!',

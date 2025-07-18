@@ -73,21 +73,32 @@
                 <label class="form-label">Nama Fakultas</label>
                 <input type="text" name="name" id="editFakultasName" class="form-control" required>
             </div>
+
             <div class="mb-3">
-                <label class="form-label">Level</label>
-                <select name="type" id="editFakultasType" class="form-select" required>
-                    <option value="1">Directorate</option>
-                    <option value="2">Faculty</option>
-                </select>
+                <label class="form-label d-block">Level</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="type" id="editType1" value="1">
+                    <label class="form-check-label" for="editType1">Directorate</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="type" id="editType2" value="2">
+                    <label class="form-check-label" for="editType2">Faculty</label>
+                </div>
             </div>
+
             <div class="mb-3">
-                <label class="form-label">Status</label>
-                <select name="status" id="editFakultasStatus" class="form-select" required>
-                    <option value="1">Active</option>
-                    <option value="2">Inactive</option>
-                </select>
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="editStatus1" value="1">
+                    <label class="form-check-label" for="editStatus1">Aktif</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="editStatus2" value="2">
+                    <label class="form-check-label" for="editStatus2">Nonaktif</label>
+                </div>
             </div>
         </div>
+
         <div class="modal-footer">
             <button class="btn btn-primary w-100">Simpan Perubahan</button>
         </div>
@@ -95,6 +106,7 @@
     </div>
   </div>
 </div>
+
 
 <?= $this->endSection() ?>
 

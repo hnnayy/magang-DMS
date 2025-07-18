@@ -64,7 +64,7 @@
     <?php if (session()->getFlashdata('success')): ?>
         Swal.fire({
             icon: 'success',
-            title: 'Success!',
+            title: 'Berhasil!',
             text: '<?= session()->getFlashdata('success') ?>',
             confirmButtonText: 'OK'
         });
@@ -73,7 +73,7 @@
     <?php if (session()->getFlashdata('error')): ?>
         Swal.fire({
             icon: 'error',
-            title: 'Error!',
+            title: 'Gagal!',
             text: '<?= session()->getFlashdata('error') ?>',
             confirmButtonText: 'OK'
         });

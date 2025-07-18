@@ -5,8 +5,7 @@
     <div class="form-section">
         <h1 class="form-title">Tambah Unit</h1>
         <hr>
-        
-        <!-- Flash message untuk sukses atau error -->
+
         <?php if (session('swal')) : ?>
             <script>
                 Swal.fire({
@@ -17,7 +16,6 @@
             </script>
         <?php endif; ?>
 
-        <!-- FORM -->
         <form id="addDocumentForm" action="<?= site_url('data-master/unit/store') ?>" method="post">
             <?= csrf_field() ?>
 
@@ -42,6 +40,18 @@
                        placeholder="Tulis Unit disini..."
                        value="<?= set_value('unit_name') ?>"
                        required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="statusActive" value="1" checked>
+                    <label class="form-check-label" for="statusActive">Active</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="statusInactive" value="2">
+                    <label class="form-check-label" for="statusInactive">Inactive</label>
+                </div>
             </div>
 
             <button type="submit" class="submit-btn">Submit</button>

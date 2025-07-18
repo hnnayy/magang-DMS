@@ -12,117 +12,85 @@ class FakultasController extends Controller
     public function __construct()
     {
         $this->unitParentModel = new UnitParentModel();
-        helper(['form', 'url']);
+        helper('form');
     }
 
-    // Fungsi untuk menampilkan form tambah fakultas
     public function create()
     {
-        return view('Faculty/TambahFakultas', [
-            'title' => 'Tambah Fakultas'
-        ]);
+        $data = ['title' => 'Tambah Fakultas Baru'];
+        return view('Faculty/TambahFakultas', $data);
     }
 
-    // Fungsi untuk menyimpan fakultas baru
     public function store()
     {
-        $data = $this->request->getPost();
+        $nama   = $this->request->getPost('name');
+        $type   = $this->request->getPost('type');
+        $status = $this->request->getPost('status');
 
-        // Validasi input
-        if (!$this->unitParentModel->validate($data)) {
-            return redirect()->to('/data-master/fakultas/create')->withInput()->with('errors', $this->unitParentModel->errors());
+        if (empty($nama) || empty($type) || empty($status)) {
+            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
         }
 
-        // Cek jika nama fakultas sudah ada
-        if ($this->unitParentModel->where('name', $data['name'])->first()) {
-            session()->setFlashdata('error', 'Nama fakultas sudah terdaftar.');
-            return redirect()->to('/data-master/fakultas/create')->withInput();
+        if ($this->unitParentModel->where('name', $nama)->first()) {
+            return redirect()->back()->withInput()->with('error', 'Nama fakultas sudah terdaftar.');
         }
 
-        // Simpan fakultas baru
-        if ($this->unitParentModel->save($data)) {
-            session()->setFlashdata('success', 'Fakultas baru berhasil ditambahkan.');
-        } else {
-            session()->setFlashdata('error', 'Fakultas gagal ditambahkan.');
-        }
+        $this->unitParentModel->insert([
+            'name'        => $nama,
+            'type'        => $type,
+            'description' => null,
+            'status'      => (int)$status,
+        ]);
 
-        return redirect()->to('/data-master/fakultas/list');
+        session()->setFlashdata('success', 'Fakultas baru berhasil ditambahkan.');
+        return redirect()->to('/data-master/fakultas/create');
     }
 
-    // Fungsi untuk menampilkan daftar fakultas (status != 0)
     public function index()
     {
-        // Ambil data dengan status 1 (Active) dan 2 (Inactive), tapi tidak 0 (Deleted)
         $fakultas = $this->unitParentModel->where('status !=', 0)->findAll();
-
-        return view('Faculty/DaftarFakultas', [
-            'title'      => 'Daftar Fakultas',
-            'unitParent' => $fakultas,
-        ]);
+        return view('Faculty/DaftarFakultas', ['unitParent' => $fakultas]);
     }
 
-    // Fungsi untuk menghapus fakultas (soft delete, update status ke 0)
     public function delete($id)
     {
-        try {
-            // Cari data fakultas berdasarkan ID
-            $fakultas = $this->unitParentModel->find($id);
-            
-            if (!$fakultas) {
-                session()->setFlashdata('error', 'Data fakultas tidak ditemukan.');
-                return redirect()->to('/data-master/fakultas/list');
-            }
-
-            // Update status menjadi 0 (soft delete)
-            $updateData = [
-                'status' => 0,
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-
-            if ($this->unitParentModel->update($id, $updateData)) {
-                session()->setFlashdata('success', 'Fakultas berhasil dihapus.');
-            } else {
-                session()->setFlashdata('error', 'Fakultas gagal dihapus.');
-            }
-
-        } catch (\Exception $e) {
-            session()->setFlashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-
+        $this->unitParentModel->update($id, ['status' => 0]);
+        session()->setFlashdata('success', 'berhasil dihapus.');
         return redirect()->to('/data-master/fakultas/list');
     }
 
-    // Fungsi untuk memperbarui data fakultas
     public function update($id)
     {
-        try {
-            $data = $this->request->getPost();
+        $nama   = $this->request->getPost('name');
+        $type   = $this->request->getPost('type');
+        $status = $this->request->getPost('status');
 
-            // Validasi input
-            if (!$this->unitParentModel->validate($data)) {
-                session()->setFlashdata('error', 'Data tidak valid.');
-                return redirect()->to('/data-master/fakultas/list');
-            }
+        if (empty($nama) || empty($type) || empty($status)) {
+            session()->setFlashdata('error', 'Semua field harus diisi.');
+            return redirect()->to('/data-master/fakultas/list');
+        }
 
-            // Cari fakultas berdasarkan ID
-            $fakultas = $this->unitParentModel->find($id);
-            if (!$fakultas) {
-                session()->setFlashdata('error', 'Data fakultas tidak ditemukan.');
-                return redirect()->to('/data-master/fakultas/list');
-            }
+        $fakultas = $this->unitParentModel->find($id);
+        if (!$fakultas) {
+            session()->setFlashdata('error', 'Fakultas tidak ditemukan.');
+            return redirect()->to('/data-master/fakultas/list');
+        }
 
-            // Tambahkan timestamp untuk updated_at
-            $data['updated_at'] = date('Y-m-d H:i:s');
+        $updateData = [
+            'name'   => $nama,
+            'type'   => $type,
+            'status' => (int)$status
+        ];
 
-            // Update data fakultas
-            if ($this->unitParentModel->update($id, $data)) {
-                session()->setFlashdata('success', 'Fakultas berhasil diperbarui.');
-            } else {
-                session()->setFlashdata('error', 'Fakultas gagal diperbarui.');
-            }
+        log_message('debug', 'Update data: ' . json_encode($updateData));
+        log_message('debug', 'Update ID: ' . $id);
 
-        } catch (\Exception $e) {
-            session()->setFlashdata('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        $result = $this->unitParentModel->update($id, $updateData);
+
+        if ($result) {
+            session()->setFlashdata('success', 'Fakultas berhasil diupdate.');
+        } else {
+            session()->setFlashdata('error', 'Gagal mengupdate fakultas.');
         }
 
         return redirect()->to('/data-master/fakultas/list');
