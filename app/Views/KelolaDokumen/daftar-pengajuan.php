@@ -217,15 +217,15 @@ Swal.fire({
           <div class="row g-3">
             <div class="col-md-6">
               <label for="editFakultas" class="form-label">Fakultas</label>
-              <select class="form-select" id="editFakultas" name="fakultas">
-                <option value="">-</option>
-              </select>
+              <input type="text" class="form-control" id="editFakultas" name="fakultas" readonly>
+                
+              
             </div>
             <div class="col-md-6">
               <label for="editBagian" class="form-label">Bagian</label>
-              <select class="form-select" id="editBagian" name="bagian">
-                <option value="">-</option>
-              </select>
+              <input type="text" class="form-control" id="editBagian" name="bagian" readonly>
+             
+  
             </div>
             <div class="col-md-6">
               <label for="editNama" class="form-label">Nama Dokumen</label>
@@ -239,14 +239,32 @@ Swal.fire({
               <label for="editRevisi" class="form-label">Revisi</label>
               <input type="text" class="form-control" name="revisi" id="editRevisi">
             </div>
-            <div class="col-md-6">
-              <label for="editJenis" class="form-label">Jenis Dokumen</label>
-              <input type="text" class="form-control" id="editJenis" name="jenis">
-            </div>
-            <div class="col-md-6">
-              <label for="editNamaKode" class="form-label">Kode - Nama Dokumen</label>
-              <input type="text" class="form-control" id="editNamaKode" name="kode_dokumen">
-            </div>
+<div class="col-md-6">
+    <label for="editJenis" class="form-label">Jenis Dokumen</label>
+    <select name="type" class="form-select" id="editJenis" required>
+        <option value="">-- Pilih Jenis Dokumen --</option>
+        <?php foreach ($kategori_dokumen as $kategori): ?>
+            <option value="<?= esc($kategori['id']) ?>" 
+                <?= (isset($document['type']) && $document['type'] == $kategori['id']) ? 'selected' : '' ?>>
+                <?= esc($kategori['nama']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+
+<div class="col-md-6">
+    <label for="editNamaKode" class="form-label">Kode - Nama Dokumen</label>
+    <select name="kode_dokumen" id="editNamaKode" class="form-select" required>
+        <option value="">-- Pilih Kode Dokumen --</option>
+        <?php foreach ($kode_nama_dokumen as $kode): ?>
+            <option value="<?= esc($kode['id']) ?>" 
+                <?= (isset($document['kode_dokumen_id']) && $document['kode_dokumen_id'] == $kode['id']) ? 'selected' : '' ?>>
+                <?= esc($kode['kode']) ?> - <?= esc($kode['nama']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+
             <div class="col-12">
               <label for="editKeterangan" class="form-label">Keterangan</label>
               <textarea class="form-control" name="keterangan" id="editKeterangan" rows="2"></textarea>
@@ -293,7 +311,7 @@ Swal.fire({
             <input type="date" class="form-control" name="approval_date" id="approval_date" required>
           </div>
           <div class="mb-3">
-            <label for="remarks" class="form-label">Catatan Tambahan</label>
+            <label for="remarks" class="form-label">Remark</label>
             <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
           </div>
         </div>
@@ -302,7 +320,7 @@ Swal.fire({
   <div class="row w-100">
     <div class="col-6 pe-1">
       <button type="submit" name="action" value="disapprove" class="btn w-100 text-white" style="background-color: #b41616;">
-        <i class="bi bi-x-lg me-2"></i>Not Approve
+        <i class="bi bi-x-lg me-2"></i>Disapprove
       </button>
     </div>
     <div class="col-6 ps-1">
@@ -366,21 +384,19 @@ $(document).ready(function() {
         table.column(6).search(val ? val : '', true, false).draw();
     });
 
-   $('.edit-btn').on('click', function () {
+$('.edit-btn').on('click', function () {
     $('#editDocumentId').val($(this).data('id'));
-    $('#editFakultas').val('-');
-    $('#editBagian').val('-');
+    $('#editFakultas').val($(this).closest('tr').find('td').eq(1).text().trim());
+    $('#editBagian').val($(this).closest('tr').find('td').eq(2).text().trim());
     $('#editNama').val($(this).data('nama'));
     $('#editNomor').val($(this).data('nomor'));
     $('#editRevisi').val($(this).data('revisi'));
-    $('#editJenis').val($(this).data('jenis'));
+    $('#editJenis').val($(this).data('jenis')); // Pastikan data-jenis adalah ID jenis dokumen
     $('#editKeterangan').val($(this).data('keterangan'));
-    $('#editNamaKode').val($(this).data('nama-kode'));
-    
+    $('#editNamaKode').val($(this).data('nama-kode')); // Pastikan data-nama-kode adalah ID kode dokumen
     const file = $(this).data('filepath');
     $('#currentFileName').text(file ? 'File saat ini: ' + file : 'File saat ini: -');
 });
-
 
 
     $('.approve-button').on('click', function () {

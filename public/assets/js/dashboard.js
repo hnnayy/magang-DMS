@@ -281,3 +281,79 @@ document.querySelectorAll('.edit-btn').forEach(btn => {
             document.getElementById('filterJenis').value = '';
         }
 
+//pusher
+
+document.addEventListener('DOMContentLoaded', function () {
+    const userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+    const notifList = document.getElementById('notif-list');
+    const notifCount = document.getElementById('notif-count');
+
+    // Fungsi ambil notifikasi dari backend
+    function loadNotifications() {
+        fetch('/notifications/get')
+            .then(response => response.json())
+            .then(data => {
+                notifList.innerHTML = '<li class="dropdown-header">Notifikasi</li>';
+                let unread = 0;
+
+                data.forEach(notif => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <a href="${notif.link ?? '#'}" class="dropdown-item notif-item ${notif.is_read == 0 ? 'fw-bold' : ''}" data-id="${notif.id}">
+                            ${notif.message}
+                            <br><small class="text-muted">${notif.created_at}</small>
+                        </a>`;
+                    notifList.appendChild(li);
+
+                    if (notif.is_read == 0) unread++;
+                });
+
+                notifCount.textContent = unread;
+                notifCount.style.display = unread > 0 ? 'inline-block' : 'none';
+            });
+    }
+
+    // Tandai sebagai dibaca saat klik
+    notifList.addEventListener('click', function (e) {
+        if (e.target.classList.contains('notif-item')) {
+            const notifId = e.target.dataset.id;
+            fetch(`/notifications/read/${notifId}`, { method: 'POST' })
+                .then(() => loadNotifications());
+        }
+    });
+
+    // Jalankan saat page load
+    loadNotifications();
+
+    // Setup Pusher untuk real-time
+    const pusher = new Pusher(PUSHER_KEY, {
+        cluster: PUSHER_CLUSTER
+    });
+
+    const channel = pusher.subscribe(`user-${userId}`);
+    channel.bind('new-notification', function (data) {
+        loadNotifications(); // refresh list
+    });
+});
+
+
+//mark as read notif
+
+document.addEventListener('DOMContentLoaded', function () {
+    const notifDropdown = document.getElementById('notificationDropdown');
+
+    if (notifDropdown) {
+        notifDropdown.addEventListener('show.bs.dropdown', function () {
+            fetch(BASE_URL + 'notification/markAsRead', {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.querySelectorAll('.notif-badge').forEach(el => el.remove());
+                }
+            })
+            .catch(err => console.error('Gagal fetch notifikasi:', err));
+        });
+    }
+});
