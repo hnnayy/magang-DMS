@@ -30,22 +30,16 @@
                     <input type="text" id="bagian" class="form-input" value="<?= $unit['name'] ?? '-' ?>" readonly>
                     <input type="hidden" name="unit_id" value="<?= $unit['id'] ?? '' ?>" required>
                 </div>
-
-
-</div>
-
-            <!-- Nama Dokumen -->
-<div class="form-group">
-    <label class="form-label" for="nama-dokumen">Nama Dokumen</label>
-    <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-input" 
-           required pattern="^[a-zA-Z0-9 ]+$" placeholder="Nama Dokumen">
-    <div class="invalid-feedback">
-        Nama Dokumen hanya boleh berisi huruf, angka, dan spasi.
-    </div>
-</div>
-
-
-
+                </div>
+                <!-- Nama Dokumen -->
+                <div class="form-group">
+                    <label class="form-label" for="nama-dokumen">Nama Dokumen</label>
+                    <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-input" 
+                        required pattern="^[a-zA-Z0-9 ]+$" placeholder="Nama Dokumen">
+                    <div class="invalid-feedback">
+                        Nama Dokumen hanya boleh berisi huruf, angka, dan spasi.
+                    </div>
+                </div>
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
@@ -71,42 +65,31 @@
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
                 </div>
             </div>
-
             <div class="form-group">
                 <label class="form-label" for="date-published">Tanggal Terbit</label>
                 <input type="date" id="date-published" name="date_published" class="form-input" required>
             </div>
-
-
-<!-- Nomor Dokumen -->
-<div class="form-group">
-    <label class="form-label" for="no-dokumen">Nomor Dokumen</label>
-    <input type="text" id="no-dokumen" name="no-dokumen" class="form-input"
-           required pattern="^[^\s]+$"
-           oninput="this.value=this.value.replace(/\s/g,'')"
-           placeholder="Tulis Nomor Dokumen di sini...">
-    <div class="invalid-feedback">
-        Nomor Dokumen wajib diisi, tidak boleh mengandung spasi, dan boleh huruf, angka, atau simbol.
-    </div>
-</div>
-
-
-
-
-
-<!-- Revisi -->
-<div class="form-group">
-    <label class="form-label" for="revisi">Revisi</label>
-    <input type="text" id="revisi" name="revisi" class="form-input"
-           required pattern="^[0-9]+$"
-           placeholder="Misal: 0">
-    <div class="invalid-feedback">
-        Revisi wajib diisi dan hanya boleh angka (misal: 0, 1, 2).
-    </div>
-</div>
-
-
-
+            <!-- Nomor Dokumen -->
+            <div class="form-group">
+                <label class="form-label" for="no-dokumen">Nomor Dokumen</label>
+                <input type="text" id="no-dokumen" name="no-dokumen" class="form-input"
+                    required pattern="^[^\s]+$"
+                    oninput="this.value=this.value.replace(/\s/g,'')"
+                    placeholder="Tulis Nomor Dokumen di sini...">
+                <div class="invalid-feedback">
+                    Nomor Dokumen wajib diisi, tidak boleh mengandung spasi, dan boleh huruf, angka, atau simbol.
+                </div>
+            </div>
+            <!-- Revisi -->
+            <div class="form-group">
+                <label class="form-label" for="revisi">Revisi</label>
+                <input type="text" id="revisi" name="revisi" class="form-input"
+                    required pattern="^[0-9]+$"
+                    placeholder="Misal: 00">
+                <div class="invalid-feedback">
+                    Revisi wajib diisi dan hanya boleh angka.
+                </div>
+            </div>
             <div class="form-group">
                 <label class="form-label" for="keterangan">Keterangan</label>
                 <textarea id="keterangan" name="keterangan" class="form-input" rows="1" placeholder="Tulis Keterangan disini..." required></textarea>
