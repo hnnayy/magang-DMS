@@ -34,6 +34,11 @@
     <meta name="csrf-token" content="<?= csrf_token() ?>">
     <meta name="csrf-hash" content="<?= csrf_hash() ?>">
 
+    <script>
+        const BASE_URL = "<?= base_url() ?>";
+    </script>
+    <script src="<?= base_url('asset/js/dashboard.js') ?>"></script>
+
 </head>
 
 <body>
@@ -52,7 +57,20 @@
         </div>
 
         <div class="user-info">
-            <i class="fi fi-rr-bell"></i>
+            <div class="dropdown me-3" id="notificationDropdown">
+                <a class="nav-link notif-icon-wrapper" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fi fi-rr-bell"></i>
+                    <?php if (!empty($notifikasi)) : ?>
+                        <span class="notif-badge"><?= count($notifikasi) ?></span>
+                    <?php endif; ?>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="notif-list" style="max-height: 300px; overflow-y: auto;">
+                    <li class="dropdown-header">Notifikasi</li>
+                    <?= view('layout/partials/notifikasi', ['notifikasi' => $notifikasi ?? []]) ?>
+                </ul>
+
+            </div>
+
             <i class="fi fi-rr-search"></i>
 
             <div class="profile-dropdown" onclick="toggleProfileMenu()">
