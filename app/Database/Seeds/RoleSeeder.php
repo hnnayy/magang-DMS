@@ -12,7 +12,7 @@ class RoleSeeder extends Seeder
             [
                 'id'            => 99,
                 'name'          => 'admin_super',
-                'access_level'  => 0,
+                'access_level'  => 1,
                 'description'   => null,
                 'status'        => 1
             ],
