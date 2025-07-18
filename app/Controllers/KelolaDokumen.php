@@ -23,6 +23,8 @@ class KelolaDokumen extends BaseController
         $this->kodeDokumenModel = new DocumentCodeModel();
         $this->documentModel = new DocumentModel();
         $this->documentApprovalModel = new DocumentApprovalModel();
+        $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
+
        
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
         $this->kategoriDokumen = array_map(function ($item) {
@@ -118,29 +120,39 @@ class KelolaDokumen extends BaseController
 
         return $this->response->setJSON(['kode' => $kode['kode'] ?? '']);
     }
-    public function pengajuan()
-    {
-        $documents = $this->documentModel
-            ->select('document.*, 
-                    dt.name AS jenis_dokumen, 
-                    unit.name AS unit_name, 
-                    unit_parent.name AS parent_name,
-                    kd.kode AS kode_dokumen_kode,
-                    kd.nama AS kode_dokumen_nama')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            
-            ->where('document.status', 0)
-            ->groupBy('document.id')
-            ->findAll();
+public function pengajuan()
+{
+    $documents = $this->documentModel
+        ->select('document.*, 
+                dt.name AS jenis_dokumen, 
+                unit.name AS unit_name, 
+                unit_parent.name AS parent_name,
+                kd.kode AS kode_dokumen_kode,
+                kd.nama AS kode_dokumen_nama')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('unit', 'unit.id = document.unit_id', 'left')
+        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->where('document.status', 0)
+        ->groupBy('document.id')
+        ->findAll();
 
-        $data['kategori_dokumen'] = $this->kategoriDokumen;
-        $data['documents'] = $documents;
+    $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
+    $kategori_dokumen = $this->kategoriDokumen;
+    $kode_nama_dokumen = $this->kodeDokumenModel->where('status', 1)->findAll(); // Tambahkan ini
 
-        return view('KelolaDokumen/daftar-pengajuan', $data);
-    }
+    $data = [
+        'documents' => $documents,
+        'jenis_dokumen' => $jenis_dokumen,
+        'kategori_dokumen' => $kategori_dokumen,
+        'kode_nama_dokumen' => $kode_nama_dokumen // Tambahkan ke data
+    ];
+
+    return view('KelolaDokumen/daftar-pengajuan', $data);
+}
+
+
+
     public function configJenisDokumen()
     {
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
@@ -338,33 +350,21 @@ public function delete_kode()
     return redirect()->back()->with('success', 'Kode dokumen berhasil dihapus.');
 }
 
+public function edit($id)
+{
+    $document = $this->documentModel->find($id);
+    $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
+    $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
 
-    
-    public function edit()
-    {
-        $type = $this->request->getPost('jenis');
+    return view('dokumen/edit', [
+        'document' => $document,
+        'jenis_dokumen' => $jenis_dokumen,
+        'kode_nama_dokumen' => $kode_nama_dokumen,
+    ]);
+}
 
-        $data = [
-            'type' => $type,
-            'unit_id' => $this->request->getPost('fakultas'),
-            'title' => $this->request->getPost('nama'),
-            'number' => $this->request->getPost('nomor'),
-            'revision' => $this->request->getPost('revisi'),
-            'description' => $this->request->getPost('keterangan'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
 
-        $file = $this->request->getFile('file');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $data['filepath'] = $file->getRandomName();
-            $file->move(WRITEPATH . 'uploads', $data['filepath']);
-        }
 
-        $documentModel = new \App\Models\DocumentModel();
-        $documentModel->update($this->request->getPost('document_id'), $data);
-
-        return redirect()->to('/kelola-dokumen/pengajuan')->with('success', 'Dokumen berhasil diupdate.');
-    }
 
     public function delete($id)
     {
@@ -408,6 +408,31 @@ public function tambah()
         'filepath'        => $newName,
         'filename'        => $file->getClientName(),
     ]);
+
+    // Ambil ID dokumen terakhir yang baru di-insert
+    $documentId = $this->documentModel->insertID();
+    $currentUserId = session()->get('user_id');
+
+    // Ambil semua user di unit dan unit parent yang sama, kecuali yang upload
+    $userModel = new \App\Models\UserModel();
+    $targetUsers = $userModel->where('status', 1)
+        ->where('id !=', $currentUserId)
+        ->groupStart()
+            ->where('unit_id', $unitId)
+            ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
+        ->groupEnd()
+        ->findAll();
+
+    $notifModel = new \App\Models\NotificationModel();
+    foreach ($targetUsers as $user) {
+        $notifModel->insert([
+            'user_id' => $user['id'],
+            'title'   => 'Dokumen Baru diunggah',
+            'message' => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
+            'link'    => '/dokumen/detail/' . $documentId,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
+    }
 
     return redirect()->back()->with('success', 'Dokumen berhasil ditambahkan.');
 }
@@ -486,6 +511,7 @@ public function tambah()
             return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
         }
         $this->documentModel->update($id, [
+            'status' => 3,
             'createdby' => 0,
         ]);
 
@@ -494,39 +520,82 @@ public function tambah()
 
 
     public function updatepengajuan()
-    {
-        $documentModel = new DocumentModel();
-        $documentId = $this->request->getPost('document_id');
-        if (!$documentId) {
-            return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
-        }
-        $jenisId = $this->request->getPost('jenis');
-        $file = $this->request->getFile('file_dokumen');
-        $newName = null;
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $newName = $file->getRandomName();
-            $file->move(ROOTPATH . 'public/uploads', $newName);
-        }
+{
+    $documentModel = new DocumentModel();
+    $documentId = $this->request->getPost('document_id');
 
-        $data = [
-            'type'            => $jenisId,
-            'kode_dokumen_id' => $this->request->getPost('kode_dokumen'),
-            'number'          => $this->request->getPost('nomor'),
-            'revision'        => $this->request->getPost('revisi') ?? 'Rev. 0',
-            'title'           => $this->request->getPost('nama'),
-            'description'     => $this->request->getPost('keterangan'),
-            'status'          => 0,
-        ];
-
-        if ($newName) {
-            $data['filepath'] = $newName;
-            $data['filename'] = $file->getClientName();
-        }
-        $documentModel->update($documentId, $data);
-
-        return redirect()->back()->with('success', 'Dokumen berhasil diperbarui.');
+    // Validasi ID dokumen
+    if (!$documentId) {
+        return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
     }
-    public function persetujuan()
+
+    // Validasi dokumen ada di database
+    $document = $documentModel->find($documentId);
+    if (!$document) {
+        return redirect()->back()->with('error', 'Dokumen tidak ditemukan di database.');
+    }
+
+    // Ambil data dari form
+    $jenisId = $this->request->getPost('type');
+    $kodeDokumenId = $this->request->getPost('kode_dokumen');
+    $nomor = $this->request->getPost('nomor');
+    $revisi = $this->request->getPost('revisi') ?? 'Rev. 0';
+    $nama = $this->request->getPost('nama');
+    $keterangan = $this->request->getPost('keterangan');
+    $file = $this->request->getFile('file_dokumen');
+
+    // Validasi input wajib
+    if (empty($jenisId) || empty($kodeDokumenId) || empty($nomor) || empty($nama)) {
+        return redirect()->back()->with('error', 'Semua field wajib harus diisi.');
+    }
+
+    // Validasi jenis dokumen
+    $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+    if (!$documentType) {
+        return redirect()->back()->with('error', 'Jenis dokumen tidak valid.');
+    }
+
+    // Validasi kode dokumen
+    $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
+    if (!$kodeDokumen) {
+        return redirect()->back()->with('error', 'Kode dokumen tidak valid.');
+    }
+
+    // Siapkan data untuk update
+    $data = [
+        'type'            => $jenisId,
+        'kode_dokumen_id' => $kodeDokumenId,
+        'number'          => $nomor,
+        'revision'        => $revisi,
+        'title'           => $nama,
+        'description'     => $keterangan,
+        'status'          => 0,
+    ];
+
+    // Penanganan file upload
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+        $newName = $file->getRandomName();
+        $file->move(ROOTPATH . 'public/uploads', $newName);
+        $data['filepath'] = $newName;
+        $data['filename'] = $file->getClientName();
+    }
+
+    // Lakukan pembaruan di database
+    try {
+        $updated = $documentModel->update($documentId, $data);
+        if ($updated) {
+            return redirect()->back()->with('success', 'Dokumen berhasil diperbarui.');
+        } else {
+            return redirect()->back()->with('error', 'Gagal memperbarui dokumen. Tidak ada perubahan yang dilakukan.');
+        }
+    } catch (\Exception $e) {
+        log_message('error', 'Error updating document: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal memperbarui dokumen: ' . $e->getMessage());
+    }
+}
+
+
+public function persetujuan()
     {
         $documents = $this->documentModel
             ->select('document.*, 

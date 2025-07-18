@@ -151,6 +151,7 @@ class CreateUser extends Controller
 
     public function delete($id)
     {
+        
         if (! $this->userModel->find($id)) {
             return $this->response->setStatusCode(404)
                                 ->setJSON(['error' => 'User tidak ditemukan']);
