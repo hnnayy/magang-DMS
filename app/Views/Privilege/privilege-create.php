@@ -96,9 +96,8 @@ $(function () {
             isValid = false;
         }
 
-        form.classList.add('was-validated');
-
         if (!form.checkValidity()) {
+            form.classList.add("was-validated");
             isValid = false;
         }
 
@@ -111,7 +110,8 @@ $(function () {
                         text: res.message,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        window.location.href = '<?= base_url('privilege/create') ?>';
+                        document.getElementById("privilegeForm").reset();
+                        $('#submenu').val(null).trigger('change');
                     });
                 })
                 .fail(xhr => {
