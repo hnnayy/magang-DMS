@@ -1,19 +1,18 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
-<div class="container-fluid px-4 py-4">
+<div class="container-fluid persetujuan-container">
     <h4 class="mb-4">Persetujuan Dokumen</h4>
 
-    <div class="card">
+    <div class="card persetujuan-card">
         <div class="card-body">
-            <!-- Container untuk tombol export dan search -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="dt-buttons-container gap-2"></div>
-                <div class="dt-search-container"></div>
+                <div class="export-buttons-container"></div>
+                <div class="search-container"></div>
             </div>
 
-            <div class="table-responsive">
-                <table id="persetujuanTable" class="table table-bordered table-striped">
+            <div class="table-scroll-container">
+                <table id="persetujuanTable" class="table table-bordered table-striped persetujuan-table">
                     <thead>
                         <tr>
                             <th>No</th>
@@ -31,18 +30,26 @@
                     <tbody>
                         <?php foreach ($documents as $i => $doc): ?>
                         <tr>
-                            <td><?= $i + 1 ?></td>
+                            <td class="text-center"><?= $i + 1 ?></td>
                             <td><?= esc($doc['parent_name'] ?? '-') ?></td>
                             <td><?= esc($doc['unit_name'] ?? '-') ?></td>
-                            <td><?= esc($doc['title']) ?></td>
-                            <td><?= esc($doc['revision']) ?></td>
+                            <td>
+                                <span class="text-truncate-custom" title="<?= esc($doc['title']) ?>">
+                                    <?= esc($doc['title']) ?>
+                                </span>
+                            </td>
+                            <td class="text-center"><?= esc($doc['revision']) ?></td>
                             <td><?= esc($doc['jenis_dokumen']) ?></td>
-                            <td><?= esc($doc['kode_nama_dokumen'] ?? '-') ?></td>
+                            <td>
+                                <span class="text-truncate-custom" title="<?= esc($doc['kode_nama_dokumen'] ?? '-') ?>">
+                                    <?= esc($doc['kode_nama_dokumen'] ?? '-') ?>
+                                </span>
+                            </td>
                             <td>
                                 <?php if (!empty($doc['filepath'])): ?>
-                                    <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank" class="text-decoration-none">
-                                        <i class="bi bi-file-earmark-text text-primary"></i> 
-                                        <span class="text-truncate d-inline-block" style="max-width: 100px;">
+                                    <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank" class="file-link">
+                                        <i class="bi bi-file-earmark-text"></i> 
+                                        <span class="file-text-truncate" title="<?= esc($doc['filename'] ?? $doc['filepath']) ?>">
                                             <?= esc($doc['filename'] ?? $doc['filepath']) ?>
                                         </span>
                                     </a>
@@ -52,16 +59,20 @@
                                     </span>
                                 <?php endif; ?>
                             </td>
-                            <td><?= esc($doc['remark']) ?></td>
+                            <td>
+                                <span class="text-truncate-custom" title="<?= esc($doc['remark']) ?>">
+                                    <?= esc($doc['remark']) ?>
+                                </span>
+                            </td>
                             <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>">
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
                                     <form method="post" action="<?= base_url('kelola-dokumen/persetujuan/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-delete" data-id="<?= $doc['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-action btn-delete" data-id="<?= $doc['id'] ?>" title="Hapus">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -81,22 +92,22 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <div class="mb-2">
+                                            <div class="mb-3">
                                                 <label class="form-label">Judul</label>
-                                                <input type="text" name="title" class="form-control" value="<?= esc($doc['title']) ?>">
+                                                <input type="text" name="title" class="form-control" value="<?= esc($doc['title']) ?>" required>
                                             </div>
-                                            <div class="mb-2">
+                                            <div class="mb-3">
                                                 <label class="form-label">Revisi</label>
-                                                <input type="text" name="revision" class="form-control" value="<?= esc($doc['revision']) ?>">
+                                                <input type="text" name="revision" class="form-control" value="<?= esc($doc['revision']) ?>" required>
                                             </div>
-                                            <div class="mb-2">
+                                            <div class="mb-3">
                                                 <label class="form-label">Remark</label>
-                                                <textarea name="remark" class="form-control"><?= esc($doc['remark']) ?></textarea>
+                                                <textarea name="remark" class="form-control" rows="3"><?= esc($doc['remark']) ?></textarea>
                                             </div>
                                         </div>
-                                        <div class="modal-footer d-flex justify-content-between gap-2">
-                                            <button type="button" class="btn btn-danger flex-grow-1" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary flex-grow-1">Simpan</button>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                                         </div>
                                     </form>
                                 </div>
@@ -106,6 +117,11 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="pagination-container">
+                <div class="dataTables_length"></div>
+                <div class="dataTables_paginate"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -113,6 +129,7 @@
 <!-- Styles -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link href="<?= base_url('assets/css/datatables-custom.css') ?>" rel="stylesheet">
+<link href="<?= base_url('assets/css/persetujuan.css') ?>" rel="stylesheet">
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -129,86 +146,115 @@
 <script>
 $(document).ready(function () {
     const table = $('#persetujuanTable').DataTable({
-        dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l>p>',
+        dom: 't', 
         pageLength: 10,
         order: [],
         columnDefs: [
             { orderable: false, targets: 9 },
-            { className: 'text-center', targets: 9 }
+            { className: 'text-center', targets: [0, 4, 9] }
         ],
         buttons: [
             {
                 extend: 'excel',
                 className: 'btn btn-outline-success btn-sm',
-                title: 'Data_Persetujuan_Dokumen',
-                exportOptions: { columns: [0,1,2,3,4,5,6,7,8] }
+                title: 'Data_Users',
+                exportOptions: { 
+                columns: [0, 1, 2, 3, 4, 5, 6] 
+                }
             },
             {
                 extend: 'pdfHtml5',
                 text: 'PDF',
-                className: 'btn btn-outline-secondary btn-sm',
-                title: 'Data Persetujuan Dokumen',
-                filename: 'data_persetujuan_dokumen',
-                orientation: 'landscape',
+                className: 'btn',
+                title: 'Persetujuan Dokumen',
+                filename: 'data_users',
+                exportOptions: { 
+                columns: [0, 1, 2, 3, 4, 5, 6] 
+                },
+                orientation: 'potrait', 
                 pageSize: 'A4',
-                exportOptions: { columns: [0,1,2,3,4,5,6,7,8] },
                 customize: function (doc) {
-                    const now = new Date();
-                    const waktuCetak = now.toLocaleString('id-ID', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                    });
-                    if (doc.content[0]?.text === 'Data Persetujuan Dokumen') {
-                        doc.content.splice(0, 1);
-                    }
-                    doc.content.unshift({
-                        text: 'Data Persetujuan Dokumen',
-                        alignment: 'center',
-                        bold: true,
-                        fontSize: 16,
-                        margin: [0, 0, 0, 15]
-                    });
-                    doc.styles.tableHeader = {
-                        fillColor: '#eaeaea',
-                        color: '#000',
-                        alignment: 'center',
-                        bold: true,
-                        fontSize: 9
+                const now = new Date();
+                const waktuCetak = now.toLocaleString('id-ID', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                if (doc.content[0] && doc.content[0].text === 'Persetujuan Dokumen') {
+                    doc.content.splice(0, 1);
+                }
+
+                doc.content.unshift({
+                    text: 'Persetujuan Dokumen',
+                    alignment: 'center',
+                    bold: true,
+                    fontSize: 16,
+                    margin: [0, 0, 0, 15]
+                });
+
+                doc.styles.tableHeader = {
+                    fillColor: '#eaeaea',
+                    color: '#000',
+                    alignment: 'center',
+                    bold: true,
+                    fontSize: 10
+                };
+
+                doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
+                doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+                doc.defaultStyle.fontSize = 9;
+                doc.styles.tableBody = { 
+                    alignment: 'center', 
+                    fontSize: 9 
+                };
+                // Footer
+                doc.footer = function (currentPage, pageCount) {
+                    return {
+                    columns: [
+                        { 
+                        text: 'Dicetak: ' + waktuCetak, 
+                        alignment: 'left', 
+                        margin: [40, 0] 
+                        },
+                        { 
+                        text: '© 2025 Telkom University – Document Management System', 
+                        alignment: 'center' 
+                        },
+                        { 
+                        text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, 
+                        alignment: 'right', 
+                        margin: [0, 0, 40, 0] 
+                        }
+                    ],
+                    fontSize: 8,
+                    margin: [0, 10, 0, 0]
                     };
-                    doc.defaultStyle.fontSize = 8;
-                    doc.styles.tableBody = { alignment: 'center', fontSize: 8 };
-                    doc.footer = function (currentPage, pageCount) {
-                        return {
-                            columns: [
-                                { text: 'Dicetak: ' + waktuCetak, alignment: 'left', margin: [40, 0] },
-                                { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
-                                { text: 'Halaman ' + currentPage + ' dari ' + pageCount, alignment: 'right', margin: [0, 0, 40, 0] }
-                            ],
-                            fontSize: 8,
-                            margin: [0, 10, 0, 0]
-                        };
+                };
+
+                doc.pageMargins = [40, 60, 40, 60];
+
+                if (doc.content[1] && doc.content[1].table) {
+                    doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
+                    doc.content[1].margin = [0, 0, 0, 0];
+                    doc.content[1].layout = {
+                    hLineWidth: function () { return 0.5; },
+                    vLineWidth: function () { return 0.5; },
+                    hLineColor: function () { return '#000000'; },
+                    vLineColor: function () { return '#000000'; },
+                    paddingLeft: function () { return 5; },
+                    paddingRight: function () { return 5; },
+                    paddingTop: function () { return 3; },
+                    paddingBottom: function () { return 3; }
                     };
-                    doc.pageMargins = [40, 60, 40, 60];
-                    if (doc.content[1]?.table) {
-                        doc.content[1].table.widths = ['5%', '12%', '12%', '18%', '8%', '12%', '15%', '10%', '8%'];
-                        doc.content[1].layout = {
-                            hLineWidth: () => 0.5,
-                            vLineWidth: () => 0.5,
-                            hLineColor: () => '#000000',
-                            vLineColor: () => '#000000',
-                            paddingLeft: () => 4,
-                            paddingRight: () => 4,
-                            paddingTop: () => 3,
-                            paddingBottom: () => 3
-                        };
-                    }
-                    doc.content.push({
-                        text: '* Dokumen ini berisi daftar dokumen yang memerlukan persetujuan dalam sistem.',
-                        alignment: 'left',
-                        italics: true,
-                        fontSize: 8,
-                        margin: [0, 15, 0, 0]
-                    });
+                }
+
+                doc.content.push({
+                    text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
+                    alignment: 'left',
+                    italics: true,
+                    fontSize: 8,
+                    margin: [0, 15, 0, 0]
+                });
                 }
             }
         ],
@@ -216,19 +262,23 @@ $(document).ready(function () {
         language: {
             lengthMenu: "Tampilkan _MENU_ entri",
             paginate: {
-                previous: "Sebelumnya",
-                next: "Berikutnya"
-            }
+                previous: "Previous",
+                next: "Next"
+            },
+            info: "",
+            infoEmpty: "",
+            infoFiltered: ""
         }
     });
 
-    // Custom tombol export dan search
-    table.buttons().container().appendTo('.dt-buttons-container');
+    // Setup export buttons
+    table.buttons().container().appendTo('.export-buttons-container');
 
-    $('.dt-search-container').html(`
-        <div class="d-flex align-items-center">
-            <label class="me-2 mb-0">Search:</label>
-            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;">
+    // Setup custom search
+    $('.search-container').html(`
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0">Search:</label>
+            <input type="search" class="form-control form-control-sm" id="customSearch" placeholder="Cari dokumen...">
         </div>
     `);
 
@@ -236,24 +286,96 @@ $(document).ready(function () {
         table.search(this.value).draw();
     });
 
-    // Konfirmasi delete
+    $('.dataTables_length').html(`
+        <div class="d-flex align-items-center gap-2">
+            <label class="mb-0">Show:</label>
+            <select class="form-select form-select-sm" id="customLength" style="width: auto;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <span class="mb-0">entries</span>
+        </div>
+    `);
+
+    $('#customLength').on('change', function() {
+        table.page.len(parseInt(this.value)).draw();
+    });
+
+    // Setup custom pagination
+    function updatePagination() {
+        const info = table.page.info();
+        let paginationHtml = '<nav><ul class="pagination justify-content-center mb-0">';
+        
+        // Previous button
+        if (info.page > 0) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${info.page - 1}">Previous</a></li>`;
+        } else {
+            paginationHtml += '<li class="page-item disabled"><span class="page-link">Previous</span></li>';
+        }
+        
+        // Page numbers
+        const startPage = Math.max(0, info.page - 2);
+        const endPage = Math.min(info.pages - 1, info.page + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === info.page) {
+                paginationHtml += `<li class="page-item active"><span class="page-link">${i + 1}</span></li>`;
+            } else {
+                paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`;
+            }
+        }
+        
+        // Next button
+        if (info.page < info.pages - 1) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${info.page + 1}">Next</a></li>`;
+        } else {
+            paginationHtml += '<li class="page-item disabled"><span class="page-link">Next</span></li>';
+        }
+        
+        paginationHtml += '</ul></nav>';
+        
+        $('.dataTables_paginate').html(paginationHtml);
+    }
+
+    table.on('draw', function() {
+        updatePagination();
+    });
+
+    // Handle klik pagination
+    $(document).on('click', '.dataTables_paginate .page-link[data-page]', function(e) {
+        e.preventDefault();
+        const page = parseInt($(this).data('page'));
+        table.page(page).draw(false);
+    });
+
+    updatePagination();
+
+    // Konfirmasi delete dengan SweetAlert2
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const form = $(this).closest('form');
         Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: 'Dokumen akan dihapus secara permanen.',
+            title: 'Konfirmasi Hapus',
+            text: 'Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus',
+            confirmButtonText: 'Ya, Hapus',
             cancelButtonText: 'Batal',
             confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d'
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
             }
         });
+    });
+
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>
@@ -262,9 +384,11 @@ $(document).ready(function () {
 <script>
     Swal.fire({
         icon: 'success',
-        title: 'Berhasil',
+        title: 'Berhasil!',
         text: '<?= esc(session()->getFlashdata('success')) ?>',
-        confirmButtonColor: '#3085d6'
+        confirmButtonColor: '#198754',
+        timer: 3000,
+        timerProgressBar: true
     });
 </script>
 <?php endif; ?>
@@ -273,9 +397,9 @@ $(document).ready(function () {
 <script>
     Swal.fire({
         icon: 'error',
-        title: 'Gagal',
+        title: 'Gagal!',
         text: '<?= esc(session()->getFlashdata('error')) ?>',
-        confirmButtonColor: '#d33'
+        confirmButtonColor: '#dc3545'
     });
 </script>
 <?php endif; ?>
