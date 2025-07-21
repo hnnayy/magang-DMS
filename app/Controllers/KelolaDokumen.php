@@ -428,29 +428,30 @@ public function tambah()
     return redirect()->to('/tambah-dokumen')->with('success', 'Dokumen berhasil ditambahkan.');
 }
 
-//     // Kirim notifikasi ke user satu unit dan parent unit
-//     $currentUserId = session()->get('user_id');
-//     $userModel = new \App\Models\UserModel();
-//     $targetUsers = $userModel->where('status', 1)
-//         ->where('id !=', $currentUserId)
-//         ->groupStart()
-//             ->where('unit_id', $unitId)
-//             ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
-//         ->groupEnd()
-//         ->findAll();
+    // // Kirim notifikasi ke user satu unit dan parent unit
+    // $currentUserId = session()->get('user_id');
+    // $userModel = new \App\Models\UserModel();
+    // $targetUsers = $userModel->where('status', 1)
+    //     ->where('id !=', $currentUserId)
+    //     ->groupStart()
+    //         ->where('unit_id', $unitId)
+    //         ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
+    //     ->groupEnd()
+    //     ->findAll();
 
-//     $notifModel = new \App\Models\NotificationModel();
-//     foreach ($targetUsers as $user) {
-//         $notifModel->insert([
-//             'user_id'    => $user['id'],
-//             'title'      => 'Dokumen Baru diunggah',
-//             'message'    => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
-//             'link'       => '/dokumen/detail/' . $documentId,
-//             'created_at' => date('Y-m-d H:i:s'),
-//         ]);
-//     }
+    // $notifModel = new \App\Models\NotificationModel();
+    // foreach ($targetUsers as $user) {
+    //     $notifModel->insert([
+    //         'user_id'    => $user['id'],
+    //         'title'      => 'Dokumen Baru diunggah',
+    //         'message'    => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
+    //         'link'       => '/dokumen/detail/' . $documentId,
+    //         'created_at' => date('Y-m-d H:i:s'),
+    //     ]);
+    // }
+    // }
 
-// }
+
 
 //DAFTAR-PENGAJUAN
     public function daftarPengajuan()

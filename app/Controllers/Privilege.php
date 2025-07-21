@@ -81,7 +81,10 @@ class Privilege extends Controller
             }
         }
 
-        return redirect()->to(base_url('tambah-prvilage'))->with('success', 'Privilege berhasil disimpan');
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Privilege berhasil disimpan.'
+        ]);
     }
 
     public function list()
