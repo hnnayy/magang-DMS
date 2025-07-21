@@ -39,15 +39,22 @@ $routes->post('data-master/unit/store', 'MasterData\UnitController::store');
 $routes->get('data-master/unit/(:num)/edit', 'MasterData\UnitController::edit/$1');
 $routes->post('data-master/unit/(:num)/update', 'MasterData\UnitController::update/$1');
 $routes->post('data-master/unit/(:num)/delete', 'MasterData\UnitController::delete/$1');
+$routes->get('data-master/unit/list', 'MasterData\UnitController::list');
+
 
 
 //sutra 1507
 // Fakultas
-$routes->get('lihat-fakultas', 'MasterData\FakultasController::index');                  // Menampilkan daftar fakultas
-$routes->get('tambah-fakultas', 'MasterData\FakultasController::create');         // Menampilkan form tambah fakultas
-$routes->post('data-master/fakultas/store', 'MasterData\FakultasController::store');          // Menyimpan fakultas baru ke database
-$routes->post('data-master/fakultas/update/(:num)', 'MasterData\FakultasController::update/$1'); // Memperbarui data fakultas
-$routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasController::softDelete/$1'); // Soft delete (ubah status atau flag deleted)
+// Routes untuk FakultasController (MasterData)
+// Fakultas - MasterData
+$routes->get('data-master/fakultas/create', 'MasterData\FakultasController::create');
+$routes->get('tambah-fakultas', 'MasterData\FakultasController::create'); // alias
+$routes->post('data-master/fakultas/store', 'MasterData\FakultasController::store');
+$routes->get('data-master/fakultas/list', 'MasterData\FakultasController::index');
+$routes->get('lihat-fakultas', 'MasterData\FakultasController::index'); // alias
+$routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasController::delete/$1');
+$routes->post('data-master/fakultas/update/(:num)', 'MasterData\FakultasController::update/$1');
+// Soft delete (ubah status atau flag deleted)
 
 
 
