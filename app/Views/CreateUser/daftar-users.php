@@ -129,15 +129,17 @@ $(document).ready(function () {
     pageLength: 5,
     order: [],
     columnDefs: [
-      { orderable: false, targets: 6 },
-      { className: 'text-center', targets: 6 }
+      { orderable: false, targets: 7 }, // Kolom Aksi tidak bisa di-sort
+      { className: 'text-center', targets: 7 }
     ],
     buttons: [
       {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+        exportOptions: { 
+          columns: [0, 1, 2, 3, 4, 5, 6] // Exclude kolom Aksi (index 7)
+        }
       },
       {
         extend: 'pdfHtml5',
@@ -145,8 +147,10 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
-        orientation: 'portrait', 
+        exportOptions: { 
+          columns: [0, 1, 2, 3, 4, 5, 6] // Exclude kolom Aksi (index 7)
+        },
+        orientation: 'landscape', // Ubah ke landscape untuk tabel yang lebar
         pageSize: 'A4',
         customize: function (doc) {
           const now = new Date();
@@ -156,86 +160,112 @@ $(document).ready(function () {
           });
 
           // Hapus judul default jika ada
-          if (doc.content[0].text === 'Data Users') {
+          if (doc.content[0] && doc.content[0].text === 'Data Users') {
             doc.content.splice(0, 1);
           }
 
-          // Tambahkan judul
+          // Tambahkan header/judul
           doc.content.unshift({
             text: 'Data Users',
             alignment: 'center',
             bold: true,
             fontSize: 16,
-            margin: [0, 0, 0, 10]
+            margin: [0, 0, 0, 15]
           });
 
-          // Header tabel abu-abu terang
+          // Style untuk header tabel
           doc.styles.tableHeader = {
             fillColor: '#eaeaea',
             color: '#000',
             alignment: 'center',
             bold: true,
-            fontSize: 9
+            fontSize: 10
           };
 
-          doc.styles.tableBodyEven = { fillColor: '#ffffff' };
+          // Style untuk body tabel
+          doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
           doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-          doc.defaultStyle.fontSize = 8;
-          doc.styles.tableBody = { alignment: 'left', fontSize: 8 };
+          doc.defaultStyle.fontSize = 9;
+          doc.styles.tableBody = { 
+            alignment: 'center', 
+            fontSize: 9 
+          };
+
+          // Footer
           doc.footer = function (currentPage, pageCount) {
             return {
               columns: [
-                { text: waktuCetak, alignment: 'left', margin: [30, 0] },
-                { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
-                { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30, 0] }
+                { 
+                  text: 'Dicetak: ' + waktuCetak, 
+                  alignment: 'left', 
+                  margin: [40, 0] 
+                },
+                { 
+                  text: '© 2025 Telkom University – Document Management System', 
+                  alignment: 'center' 
+                },
+                { 
+                  text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, 
+                  alignment: 'right', 
+                  margin: [0, 0, 40, 0] 
+                }
               ],
-              fontSize: 9
+              fontSize: 8,
+              margin: [0, 10, 0, 0]
             };
           };
 
-          doc.pageMargins = [40, 40, 40, 40];
+          // Margin halaman
+          doc.pageMargins = [40, 60, 40, 60];
 
+          // Konfigurasi tabel
           if (doc.content[1] && doc.content[1].table) {
-            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%']; 
+            // Atur lebar kolom untuk landscape
+            doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
             doc.content[1].margin = [0, 0, 0, 0];
+            
+            // Layout border tabel
+            doc.content[1].layout = {
+              hLineWidth: function () { return 0.5; },
+              vLineWidth: function () { return 0.5; },
+              hLineColor: function () { return '#000000'; },
+              vLineColor: function () { return '#000000'; },
+              paddingLeft: function () { return 5; },
+              paddingRight: function () { return 5; },
+              paddingTop: function () { return 3; },
+              paddingBottom: function () { return 3; }
+            };
           }
 
-          doc.content[doc.content.length - 1].layout = {
-            hLineWidth: function () { return 0.5; },
-            vLineWidth: function () { return 0.5; },
-            hLineColor: function () { return '#000000'; },
-            vLineColor: function () { return '#000000'; },
-            paddingLeft: function () { return 3; },
-            paddingRight: function () { return 3; },
-            paddingTop: function () { return 2; },
-            paddingBottom: function () { return 2; }
-          };
+          // Tambahkan catatan di akhir
           doc.content.push({
             text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
             alignment: 'left',
             italics: true,
             fontSize: 8,
-            margin: [0, 12, 0, 0]
+            margin: [0, 15, 0, 0]
           });
         }
       }
     ]
   });
 
+  // Event handler untuk edit user
   $(document).on('click', '.edit-user', function () {
-  const userId = $(this).data('id');
-  const employeeId = $(this).data('employee');
-  const fullname = $(this).data('fullname');
-  const parentId = $(this).data('directorate');
-  const unitId = $(this).data('unit');
-  const roleName = $(this).data('role');
+    const userId = $(this).data('id');
+    const employeeId = $(this).data('employee');
+    const fullname = $(this).data('fullname');
+    const parentId = $(this).data('directorate');
+    const unitId = $(this).data('unit');
+    const roleName = $(this).data('role');
 
-  $('#editEmployeeId').val(employeeId);
-  $('#editUsername').val($(this).data('username'));
-  $('#editFullname').val(fullname);
-  $('#editDirectorate').val(parentId).trigger('change');
+    $('#editEmployeeId').val(employeeId);
+    $('#editUsername').val($(this).data('username'));
+    $('#editFullname').val(fullname);
+    $('#editDirectorate').val(parentId).trigger('change');
 
-  $('#editUnit option').each(function () {
+    // Filter unit berdasarkan directorate
+    $('#editUnit option').each(function () {
       const optionParent = $(this).data('parent');
       if (optionParent == parentId || $(this).val() === '') {
         $(this).show();
@@ -248,21 +278,30 @@ $(document).ready(function () {
     $('#editRole').val(roleName);
   });
 
+  // Submit form edit user
   $('#editUserForm').submit(function (e) {
     e.preventDefault();
+    
+    // Validasi form
+    if (!$('#editDirectorate').val() || !$('#editUnit').val() || !$('#editRole').val()) {
+      Swal.fire('Peringatan', 'Semua field harus diisi!', 'warning');
+      return;
+    }
+
     $.ajax({
       url: '<?= base_url('CreateUser/update') ?>',
       method: 'POST',
       data: {
-      id: $('#editEmployeeId').val(),
-      username: $('#editUsername').val(),     
-      fullname: $('#editFullname').val(),
-      role: $('#editRole').val(),
-      fakultas: $('#editDirectorate').val(),
-      unit: $('#editUnit').val(),
-      status: 1
-    },
+        id: $('#editEmployeeId').val(),
+        username: $('#editUsername').val(),     
+        fullname: $('#editFullname').val(),
+        role: $('#editRole').val(),
+        fakultas: $('#editDirectorate').val(),
+        unit: $('#editUnit').val(),
+        status: 1
+      },
       success: function (res) {
+        $('#editUserModal').modal('hide');
         Swal.fire('Berhasil!', res.message, 'success').then(() => {
           location.reload();
         });
@@ -274,12 +313,12 @@ $(document).ready(function () {
     });
   });
 
-
+  // Event handler untuk perubahan directorate
   $('#editDirectorate').on('change', function () {
-  const selectedParentId = $(this).val();
+    const selectedParentId = $(this).val();
 
-  $('#editUnit').val('');
-  $('#editUnit option').each(function () {
+    $('#editUnit').val('');
+    $('#editUnit option').each(function () {
       const optionParent = $(this).data('parent');
       if (optionParent == selectedParentId || $(this).val() === '') {
         $(this).show();
@@ -289,6 +328,7 @@ $(document).ready(function () {
     });
   });
 
+  // Event handler untuk delete user
   $(document).on('click', '.delete-user', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
@@ -299,7 +339,9 @@ $(document).ready(function () {
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Ya, hapus',
-      cancelButtonText: 'Batal'
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d'
     }).then((result) => {
       if (result.isConfirmed) {
         $.ajax({

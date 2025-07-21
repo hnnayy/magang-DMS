@@ -18,8 +18,7 @@
         <strong class="form-label mb-0 me-2">Filter Data</strong>
 
         <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterStandar">
-                <option value="">Semua Standar</option>
+            <select class="form-select filter-input" id="filterStandar" multiple>
                 <?php foreach ($standards as $s): ?>
                     <option value="<?= $s['id'] ?>"><?= $s['nama_standar'] ?></option>
                 <?php endforeach; ?>
@@ -27,8 +26,7 @@
         </div>
 
         <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterKlausul">
-                <option value="">Semua Klausul</option>
+            <select class="form-select filter-input" id="filterKlausul" multiple>
                 <?php foreach ($clauses as $c): ?>
                     <option value="<?= $c['id'] ?>">
                         <?= $c['nomor_klausul'] ?> - <?= $c['nama_klausul'] ?> (<?= $c['nama_standar'] ?>)
@@ -40,6 +38,13 @@
         <div style="min-width:180px;">
             <select class="form-select filter-input" id="filterPemilik">
                 <option value="">Semua Pemilik Doc</option>
+                <?php 
+                // Get unique document owners from the document data
+                $unique_owners = array_unique(array_filter(array_column($document, 'createdby')));
+                foreach ($unique_owners as $owner): 
+                ?>
+                    <option value="<?= esc($owner) ?>"><?= esc($owner) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
 
@@ -54,7 +59,7 @@
 
         <div class="d-flex gap-2">
             <button class="btn btn-primary btn-sm-2" id="btnFilter">Filter</button>
-            <button class="btn btn-success btn-sm-2" id="excel-button-container">Filter</button>
+            <button class="btn btn-success btn-sm-2" id="excel-button-container">Export Excel</button>
         </div>
     </div>
 
@@ -72,15 +77,15 @@
             <!-- TABEL dengan wrapper untuk sticky pagination -->
             <div class="table-wrapper position-relative">
                 <div class="table-responsive">
-                <div class="datatable-info-container mt-2"></div>
+                    <div class="datatable-info-container mt-2"></div>
                     <table id="dokumenTable" class="table table-bordered table-striped">
                         <thead class="table-light">
                             <tr>
                                 <th>Standar</th>
                                 <th>Klausul</th>
                                 <th>Jenis Dokumen</th>
-                                <th>No Dokumen</th>
-                                <th>Nomor</th>
+                                <th>Kode & Nama Dokumen</th>
+                                <th>Nomor Dokumen</th>
                                 <th>Nama Dokumen</th>
                                 <th>Pemilik Dokumen</th>
                                 <th>File Dokumen</th>
@@ -88,13 +93,14 @@
                                 <th>Tanggal Efektif</th>
                                 <th>Disetujui Oleh</th>
                                 <th>Tanggal Disetujui</th>
-                                <th>Last Update</th>
                                 <th class="aksi-column">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($document as $row): ?>
-                                <tr>
+                                <tr data-standar="<?= implode(',', array_column(array_filter($standards, function($s) use ($row) { return in_array($s['id'], explode(',', $row['standar_ids'] ?? '')); }), 'id')) ?>" 
+                                    data-klausul="<?= implode(',', array_column(array_filter($clauses, function($c) use ($row) { return in_array($c['id'], explode(',', $row['klausul_ids'] ?? '')); }), 'id')) ?>"
+                                    data-pemilik="<?= esc($row['createdby'] ?? '') ?>">
                                     <td>
                                         <select class="form-select multiple-standar" name="standar[]" multiple>
                                             <?php foreach ($standards as $s): ?>
@@ -110,20 +116,32 @@
                                         </select>
                                     </td>
                                     <td><?= esc($row['jenis_dokumen'] ?? '-') ?></td>
-                                    <td><?= esc($row['kode_jenis_dokumen'] ?? '-') ?></td>
+                                    <td><?php if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])): ?>
+                                        <div>
+                                            <?= esc($row['kode_dokumen_kode']) ?> - <?= esc($row['kode_dokumen_nama']) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?></td>
                                     <td><?= esc($row['number'] ?? '-') ?></td>
                                     <td><?= esc($row['title'] ?? '-') ?></td>
-                                    <td><?= esc('-') ?></td>
+                                    <td><?= esc($row['createdby'] ?? '-') ?></td>
                                     <td>
                                         <?php if (!empty($row['filepath'])): ?>
-                                            <a href="<?= base_url('uploads/' . $row['filepath']) ?>" target="_blank">Download</a>
-                                        <?php else: ?> - <?php endif; ?>
+                                            <a href="<?= base_url('uploads/' . $row['filepath']) ?>" target="_blank" class="text-decoration-none">
+                                                <i class="bi bi-file-earmark-text text-primary"></i> 
+                                                <span class="text-truncate d-inline-block" style="max-width: 100px;">
+                                                    <?= esc($row['filename'] ?? $row['filepath']) ?>
+                                                </span>
+                                            </a>
+                                        <?php else: ?>
+                                            -
+                                        <?php endif; ?>
                                     </td>
                                     <td><?= esc($row['revision'] ?? '-') ?></td>
                                     <td><?= esc($row['date_published'] ?? '-') ?></td>
-                                    <td><?= esc($row['approveby'] ?? '-') ?></td>
+                                    <td><?= esc($row['approved_by_name'] ?? '-') ?></td>
                                     <td><?= esc($row['approvedate'] ?? '-') ?></td>
-                                    <td><?= esc($row['updated_at'] ?? '-') ?></td>
                                     <td class="aksi-column">
                                         <a href="#" class="text-warning me-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>" title="Edit">
                                             <i class="bi bi-pencil-square"></i>
@@ -173,8 +191,8 @@
                                                             <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <label class="form-label small">Pemilik</label>
-                                                            <input type="text" class="form-control form-control-sm" name="pemilik" value="<?= esc($row['pemilik'] ?? '-') ?>">
+                                                            <label class="form-label small">Pemilik Dokumen</label>
+                                                            <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($row['createdby'] ?? '') ?>">
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Ganti File</label>
@@ -193,15 +211,11 @@
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Disetujui Oleh</label>
-                                                            <input type="text" class="form-control form-control-sm" name="approveby" value="<?= esc($row['approveby'] ?? '-') ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="approveby" value="<?= esc($row['approved_by_name'] ?? '') ?>">
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Tanggal Disetujui</label>
-                                                            <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc($row['approvedate'] ?? '') ?>">
-                                                        </div>
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Last Update</label>
-                                                            <input type="datetime-local" class="form-control form-control-sm" name="updated_at" value="<?= esc($row['updated_at'] ?? '') ?>">
+                                                            <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -239,11 +253,24 @@
 <!-- Custom JS -->
 <script>
 $(document).ready(function() {
-    // Initialize Choices.js
+    // Initialize Choices.js for table selects
     const standarSelects = document.querySelectorAll('.multiple-standar');
     const klausulSelects = document.querySelectorAll('.multiple-klausul');
     standarSelects.forEach(select => new Choices(select, { removeItemButton: true }));
     klausulSelects.forEach(select => new Choices(select, { removeItemButton: true }));
+
+    // Initialize Choices.js for filter selects
+    const filterStandar = new Choices('#filterStandar', {
+        removeItemButton: true,
+        placeholder: true,
+        placeholderValue: 'Pilih Standar...'
+    });
+    
+    const filterKlausul = new Choices('#filterKlausul', {
+        removeItemButton: true,
+        placeholder: true,
+        placeholderValue: 'Pilih Klausul...'
+    });
 
     // Initialize DataTables
     const table = $('#dokumenTable').DataTable({
@@ -258,26 +285,24 @@ $(document).ready(function() {
             }
         },
         columnDefs: [
-            { orderable: false, targets: [0, 1, -1] } // Disable sorting for select columns and action column
+            { orderable: false, targets: [0, 1, -1] }
         ],
         buttons: [
             {
                 extend: 'excel',
                 title: 'Daftar_Dokumen',
                 exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] // Sesuaikan dengan kolom yang ingin di-export
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
                 }
             }
         ],
         drawCallback: function() {
-            // Pindahkan pagination ke container khusus setelah draw
             const paginationHtml = $('.dataTables_paginate').html();
             if (paginationHtml) {
                 $('.pagination-container').html('<div class="dataTables_paginate">' + paginationHtml + '</div>');
                 $('.dataTables_paginate').not('.pagination-container .dataTables_paginate').hide();
             }
 
-            // Pastikan bottom controls tidak ikut scroll
             $('.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').css({
                 'position': 'sticky',
                 'left': '0',
@@ -341,11 +366,30 @@ $(document).ready(function() {
         }
     });
 
-    // Filter functionality
+    // Updated Multi-Select Filter Logic with Pemilik Dokumen
     $('#btnFilter').on('click', function() {
-        // Add your filter logic here
-        console.log('Filter clicked');
-        // You can extend this to implement custom filtering
+        const selectedStandar = filterStandar.getValue(true);
+        const selectedKlausul = filterKlausul.getValue(true);
+        const selectedPemilik = $('#filterPemilik').val();
+        const selectedJenis = $('#filterJenis').val();
+
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const row = table.row(dataIndex).node();
+            const rowStandar = $(row).data('standar') ? $(row).data('standar').toString().split(',') : [];
+            const rowKlausul = $(row).data('klausul') ? $(row).data('klausul').toString().split(',') : [];
+            const rowPemilik = $(row).data('pemilik') || '';
+            
+            // Check filters
+            const standarMatch = !selectedStandar.length || selectedStandar.some(s => rowStandar.includes(s));
+            const klausulMatch = !selectedKlausul.length || selectedKlausul.some(k => rowKlausul.includes(k));
+            const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
+            const jenisMatch = !selectedJenis || data[2].includes($('#filterJenis option:selected').text());
+            
+            return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
+        });
+        
+        table.draw();
+        $.fn.dataTable.ext.search.pop();
     });
 });
 </script>

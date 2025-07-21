@@ -24,6 +24,8 @@ class KelolaDokumen extends BaseController
         $this->documentModel = new DocumentModel();
         $this->documentApprovalModel = new DocumentApprovalModel();
         $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
+        $this->documentRevisionModel = new \App\Models\DocumentRevisionModel();
+
 
        
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
@@ -387,11 +389,13 @@ public function tambah()
 
     $newName = $file->getRandomName();
     $file->move(ROOTPATH . 'public/uploads', $newName);
+
     $unitId = $this->request->getPost('unit_id') ?? 99;
     $unitModel = new \App\Models\UnitModel();
     $unitData = $unitModel->select('parent_id')->where('id', $unitId)->first();
     $unitParentId = $unitData['parent_id'] ?? null;
 
+    // Simpan dokumen
     $this->documentModel->insert([
         'type'            => $jenisId,
         'kode_dokumen_id' => $this->request->getPost('kode_dokumen_id'),
@@ -401,41 +405,52 @@ public function tambah()
         'title'           => $this->request->getPost('nama-dokumen'),
         'description'     => $this->request->getPost('keterangan'),
         'unit_id'         => $unitId,
-        'unit_parent_id'  => $unitParentId ?? 0, 
         'status'          => 0,
         'createddate'     => date('Y-m-d H:i:s'),
-        'createdby'       => 1,
-        'filepath'        => $newName,
-        'filename'        => $file->getClientName(),
+        'createdby'       => session('user_id'),
     ]);
 
-    // Ambil ID dokumen terakhir yang baru di-insert
-    $documentId = $this->documentModel->insertID();
-    $currentUserId = session()->get('user_id');
+    // Pastikan documentId diambil setelah insert
+    $documentId = $this->documentModel->getInsertID();
 
-    // Ambil semua user di unit dan unit parent yang sama, kecuali yang upload
-    $userModel = new \App\Models\UserModel();
-    $targetUsers = $userModel->where('status', 1)
-        ->where('id !=', $currentUserId)
-        ->groupStart()
-            ->where('unit_id', $unitId)
-            ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
-        ->groupEnd()
-        ->findAll();
+    // Simpan revisi dokumen
+    $this->documentRevisionModel->insert([
+        'document_id' => $documentId,
+        'revision'    => $this->request->getPost('revisi') ?? 'Rev. 0',
+        'filename'    => $file->getClientName(),
+        'filepath'    => $newName,
+        'filesize'    => $file->getSize(),
+        'remark'      => $this->request->getPost('keterangan'),
+        'createddate' => date('Y-m-d H:i:s'),
+        'createdby'   => session('user_id'),
+    ]);
 
-    $notifModel = new \App\Models\NotificationModel();
-    foreach ($targetUsers as $user) {
-        $notifModel->insert([
-            'user_id' => $user['id'],
-            'title'   => 'Dokumen Baru diunggah',
-            'message' => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
-            'link'    => '/dokumen/detail/' . $documentId,
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
-    }
-
-    return redirect()->back()->with('success', 'Dokumen berhasil ditambahkan.');
+    return redirect()->to('/tambah-dokumen')->with('success', 'Dokumen berhasil ditambahkan.');
 }
+
+//     // Kirim notifikasi ke user satu unit dan parent unit
+//     $currentUserId = session()->get('user_id');
+//     $userModel = new \App\Models\UserModel();
+//     $targetUsers = $userModel->where('status', 1)
+//         ->where('id !=', $currentUserId)
+//         ->groupStart()
+//             ->where('unit_id', $unitId)
+//             ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
+//         ->groupEnd()
+//         ->findAll();
+
+//     $notifModel = new \App\Models\NotificationModel();
+//     foreach ($targetUsers as $user) {
+//         $notifModel->insert([
+//             'user_id'    => $user['id'],
+//             'title'      => 'Dokumen Baru diunggah',
+//             'message'    => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
+//             'link'       => '/dokumen/detail/' . $documentId,
+//             'created_at' => date('Y-m-d H:i:s'),
+//         ]);
+//     }
+
+// }
 
 //DAFTAR-PENGAJUAN
     public function daftarPengajuan()
@@ -473,7 +488,7 @@ public function tambah()
         $remarks       = $this->request->getPost('remarks');
         $action        = $this->request->getPost('action'); 
 
-        $status = $action === 'approve' ? 1 : 2;
+        $status = $action === 'approve' ? 2 : 1;
 
         $data = [
             'document_id' => $document_id,
@@ -595,29 +610,30 @@ public function tambah()
 }
 
 
-public function persetujuan()
-    {
-        $documents = $this->documentModel
-            ->select('document.*, 
-                    dt.name AS jenis_dokumen,
-                    unit.name AS unit_name,
-                    unit_parent.name AS parent_name,
-                    kd.kode AS kode_dokumen_kode,
-                    kd.nama AS kode_dokumen_nama,
-                    da.remark,
-                    da.approveby,
-                    da.approvedate')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            ->join('document_approval da', 'da.document_id = document.id', 'left')
-            ->where('document.status', 1)
-            ->orderBy('document.updated_at', 'DESC')
-            ->findAll();
+// public function persetujuan()
+//     {
+//         $documents = $this->documentModel
+//             ->select('document.*, 
+//                     dt.name AS jenis_dokumen,
+//                     unit.name AS unit_name,
+//                     unit_parent.name AS parent_name,
+//                     kd.kode AS kode_dokumen_kode,
+//                     kd.nama AS kode_dokumen_nama,
+//                     da.remark,
+//                     da.approveby,
+//                     da.approvedate')
+//             ->join('document_type dt', 'dt.id = document.type', 'left')
+//             ->join('unit', 'unit.id = document.unit_id', 'left')
+//             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+//             ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+//             ->join('document_approval da', 'da.document_id = document.id', 'left')
+//             ->where('document.status', 1)
+//             ->orderBy('document.updated_at', 'DESC')
+//             ->findAll();
 
-        dd($documents); 
-    }
+//         dd($documents); 
+//     }
+// }
+
+
 }
-
-

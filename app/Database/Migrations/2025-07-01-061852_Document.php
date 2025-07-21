@@ -57,12 +57,7 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            'unit_parent_id' => [ 
-                'type'       => 'INT',
-                'constraint' => 10,
-                'unsigned'   => true,
-                'null'       => false,
-            ],
+
             'status' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
@@ -79,16 +74,6 @@ class Document extends Migration
                 'constraint' => 10,
                 'unsigned'   => true,
                 'null'       => false,
-            ],
-            'filepath' => [
-            'type'       => 'VARCHAR',
-            'constraint' => 255,
-            'null'       => true,
-            ],
-            'filename' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-                'null'       => true,
             ],
             
 
