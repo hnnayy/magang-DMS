@@ -15,6 +15,8 @@
                 });
             </script>
         <?php endif; ?>
+        
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <form id="addDocumentForm" action="<?= site_url('data-master/unit/store') ?>" method="post">
             <?= csrf_field() ?>

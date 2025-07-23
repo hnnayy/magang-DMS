@@ -8,6 +8,10 @@ class MenuSeeder extends Seeder
 {
     public function run()
     {
+        // Kosongkan tabel 'menu' terlebih dahulu
+        $this->db->table('menu')->truncate();
+
+        // Data menu yang akan dimasukkan
         $data = [
             [
                 'id'     => 1,
@@ -77,7 +81,7 @@ class MenuSeeder extends Seeder
             ],
         ];
 
-        // Insert batch
+        // Masukkan data ke tabel 'menu'
         $this->db->table('menu')->insertBatch($data);
     }
 }

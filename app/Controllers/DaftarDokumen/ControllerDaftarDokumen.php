@@ -46,7 +46,9 @@ class ControllerDaftarDokumen extends BaseController
                 user_approver.fullname AS approved_by_name,
                 document_revision.createdby AS revision_creator_id,
                 user_creator.fullname AS pemilik,
-                user_document_owner.fullname AS createdby_name
+                user_document_owner.fullname AS createdby_name,
+                document.status,
+                document.createdby
             ')
             ->join('document_type dt', 'dt.id = document.type', 'left')
             ->join('unit', 'unit.id = document.unit_id', 'left')
@@ -57,10 +59,17 @@ class ControllerDaftarDokumen extends BaseController
             ->join('document_revision', 'document_revision.document_id = document.id', 'left')
             ->join('user user_creator', 'user_creator.id = document_revision.createdby', 'left')
             ->join('user user_document_owner', 'user_document_owner.id = document.createdby', 'left')
-            ->where('document.createdby !=', 0)
-            ->where('document_approval.status', 1)
+            ->where('document.status', 1)
+            // ->where('document.createdby !=', 0)
+            // ->groupStart()
+            //     ->where('document_approval.status', 1)
+            //     ->orWhere('document_approval.status IS NULL')
+            // ->groupEnd()
             ->groupBy('document.id')
             ->findAll();
+
+            $document = array_values($document);
+
 
         // Ubah ID jadi nama pemilik jika tersedia
         foreach ($document as &$doc) {
@@ -81,14 +90,19 @@ class ControllerDaftarDokumen extends BaseController
     }
     public function update()
     {
+
         $validation = \Config\Services::validation();
         
         $validation->setRules([
             'id' => 'required|numeric',
             'type' => 'required',
             'title' => 'required|min_length[3]',
-            'file' => 'permit_empty|uploaded[file]|max_size[file,10240]|ext_in[file,pdf,doc,docx,xls,xlsx]'
+            'file' => 'permit_empty|max_size[file,10240]|ext_in[file,pdf,doc,docx,xls,xlsx]'
         ]);
+
+        log_message('debug', 'POST DATA: ' . json_encode($this->request->getPost()));
+        log_message('debug', 'VALIDATION ERRORS: ' . json_encode($validation->getErrors()));
+
 
         if (!$validation->withRequest($this->request)->run()) {
             return redirect()->back()->withInput()->with('errors', $validation->getErrors());
@@ -104,7 +118,6 @@ class ControllerDaftarDokumen extends BaseController
             'title'              => $this->request->getPost('title'),
             'revision'           => $this->request->getPost('revision'),
             'date_published'     => $this->request->getPost('date_published'),
-            'updated_at'         => date('Y-m-d H:i:s'),
         ];
 
         // Handle file upload
@@ -122,6 +135,22 @@ class ControllerDaftarDokumen extends BaseController
             // Upload file baru
             $newName = $file->getRandomName();
             $file->move(ROOTPATH . 'public/uploads/', $newName);
+            $revisionData = [
+                'document_id' => $id,
+                'revision' => $this->request->getPost('revision'),
+                'filename' => $file ? $file->getClientName() : null,
+                'filepath' => $file ? $newName : null,
+                'filesize' => $file ? $file->getSize() : null,
+                'remark' => $this->request->getPost('remark') ?? '',
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session()->get('user_id') // atau yang sesuai
+            ];
+
+            $revisionModel = new \App\Models\DocumentRevisionModel(); // pastikan model ada
+            $revisionModel->insert($revisionData);
+
+            
+            
             $data['filepath'] = $newName;
             $data['filename'] = $file->getClientName();
         }
@@ -145,6 +174,10 @@ class ControllerDaftarDokumen extends BaseController
         // Update document
         try {
             $this->documentModel->update($id, $data);
+
+            log_message('debug', '[UPDATE] Document ID: ' . $id);
+            log_message('debug', '[UPDATE] Data: ' . json_encode($data));
+            log_message('debug', '[UPDATE] Updated Row: ' . json_encode($this->documentModel->find($id)));
 
             // Update approval jika ada perubahan
             $approveBy = $this->request->getPost('approveby');
@@ -186,20 +219,26 @@ class ControllerDaftarDokumen extends BaseController
         }
 
         try {
-            // Soft delete dengan mengubah createdby menjadi 0
+            log_message('debug', 'ID yang diterima: ' . $id);
+
             $updated = $this->documentModel->update($id, [
-                'createdby'  => 0,
-                'updated_at' => date('Y-m-d H:i:s'),
+                'status' => 0,
+                'createdby' => 0,
+                // 'updated_at' => date('Y-m-d H:i:s'),
             ]);
+
+            log_message('debug', 'UPDATE result: ' . var_export($updated, true));
+            log_message('debug', 'Last error: ' . json_encode($this->documentModel->errors()));
 
             if ($updated) {
                 return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
             } else {
                 return redirect()->back()->with('error', 'Dokumen tidak ditemukan atau tidak dapat dihapus.');
             }
-            
+
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
 }

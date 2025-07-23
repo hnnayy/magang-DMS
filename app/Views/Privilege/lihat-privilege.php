@@ -188,7 +188,7 @@
                         text: res.message,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        window.location.reload();
+                        $('#editModal').modal('hide');
                     });
                 },
                 error: function(xhr, status, error) {

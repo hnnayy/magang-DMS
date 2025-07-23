@@ -18,7 +18,6 @@
             </thead>
             <tbody>
                 <?php $i = 1; foreach ($unitParent as $fakultas): ?>
-                    <!-- Cek jika status fakultas aktif (status != 0) -->
                     <?php if ($fakultas['status'] != 0): ?>
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
@@ -28,14 +27,16 @@
                                 <?= $fakultas['status'] == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
                             </td>
                             <td class="text-center">
-                                <div class="d-flex align-items-center justify-content-center gap-2">
-                                    <!-- Form Hapus -->
+                                <div class="d-flex justify-content-center gap-2">
+                                    <!-- Tombol Hapus -->
                                     <form action="<?= site_url('data-master/fakultas/delete/' . $fakultas['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-link p-0 text-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    
+                                    <!-- Tombol Edit -->
                                     <button 
                                         class="btn btn-link p-0 text-primary" 
                                         data-bs-toggle="modal" 
@@ -90,11 +91,11 @@
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="status" id="editStatus1" value="1">
-                    <label class="form-check-label" for="editStatus1">Aktif</label>
+                    <label class="form-check-label" for="editStatus1">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="status" id="editStatus2" value="2">
-                    <label class="form-check-label" for="editStatus2">Nonaktif</label>
+                    <label class="form-check-label" for="editStatus2">Inactive</label>
                 </div>
             </div>
         </div>
@@ -107,16 +108,19 @@
   </div>
 </div>
 
-
 <?= $this->endSection() ?>
 
+
 <?= $this->section('script') ?>
+<!-- JS Libraries -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<!-- Script -->
 <script>
+    // Konfirmasi sebelum hapus
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
@@ -132,19 +136,29 @@
         });
     }
 
+    // Inisialisasi DataTable
     $(document).ready(function () {
         $('#fakultasTable').DataTable();
     });
 
+    // Buka modal edit dan isi data
     function openEditModal(id, name, type, status) {
         const form = document.getElementById('editFakultasForm');
         form.action = `<?= site_url('data-master/fakultas/update/') ?>${id}`;
+
         document.getElementById('editFakultasName').value = name;
-        document.getElementById('editFakultasType').value = type;
-        document.getElementById('editFakultasStatus').value = status;
+
+        // Centang radio "type" (1 = Directorate, 2 = Faculty)
+        const typeRadio = document.querySelector(`input[name="type"][value="${type}"]`);
+        if (typeRadio) typeRadio.checked = true;
+
+        // Centang radio "status" (1 = Active, 2 = Inactive)
+        const statusRadio = document.querySelector(`input[name="status"][value="${status}"]`);
+        if (statusRadio) statusRadio.checked = true;
     }
 </script>
 
+<!-- Notifikasi jika berhasil -->
 <?php if (session()->getFlashdata('success')) : ?>
 <script>
     Swal.fire({
@@ -156,4 +170,5 @@
     });
 </script>
 <?php endif; ?>
+
 <?= $this->endSection() ?>

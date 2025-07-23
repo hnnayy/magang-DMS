@@ -98,7 +98,7 @@ class UnitController extends BaseController
 
         $this->unitModel->insert($insertData);
 
-        return redirect()->to('data-master/unit/create')->with('swal', [
+        return redirect()->to('tambah-unit')->with('swal', [
             'icon'  => 'success',
             'title' => 'Berhasil!',
             'text'  => 'Unit berhasil ditambahkan.',

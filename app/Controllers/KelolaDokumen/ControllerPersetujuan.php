@@ -36,7 +36,7 @@ $documents = $this->documentModel
     ->join('unit', 'unit.id = document.unit_id', 'left')
     ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
     ->where('document_approval.status', 1)
-    ->where('document.createddate !=', 0)
+    ->where('document.status !=', 0)
     ->findAll();
 
 
