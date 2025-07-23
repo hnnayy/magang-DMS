@@ -22,6 +22,7 @@ class DocumentModel extends Model
         'updated_at',
         'date_published',
         'updated_at',
+       'original_document_id',
     ];
 
     public function getWithRelations()

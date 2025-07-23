@@ -29,50 +29,46 @@
         <?php endif; ?>
 
         <!-- Filter card -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="searchInput" class="form-label">Cari Dokumen</label>
-                        <input type="text" class="form-control" placeholder="Cari dokumen..." id="searchInput">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="filterFakultas" class="form-label">Filter Fakultas</label>
-                        <select class="form-select" id="filterFakultas">
-                            <option value="">Semua Fakultas</option>
-                            <?php 
-                            $fakultas_list = [];
-                            foreach ($documents as $doc) {
-                                $fid = $doc['unit_parent_id'] ?? null;
-                                $fname = $doc['parent_name'] ?? '-';
-                                if ($fid && !in_array($fname, $fakultas_list) && $fname !== '-') {
-                                    $fakultas_list[$fid] = $fname;
-                                }
-                            }
-                            ksort($fakultas_list);
-                            foreach ($fakultas_list as $id => $fakultas): ?>
-                                <option value="<?= esc($id) ?>"><?= esc($fakultas) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="filterJenis" class="form-label">Filter Jenis</label>
-                        <select class="form-select" id="filterJenis">
-                            <option value="">Semua Jenis</option>
-                            <?php foreach ($kategori_dokumen as $kategori): ?>
-                                <option value="<?= esc($kategori['id']) ?>"><?= esc($kategori['nama']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                        </button>
-                    </div>
-                </div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="searchInput" class="form-label">Cari Dokumen</label>
+                <input type="text" class="form-control" placeholder="Cari dokumen..." id="searchInput">
+            </div>
+<!-- Dropdown Filter Fakultas -->
+<div class="col-md-3">
+    <label for="filterFakultas" class="form-label">Filter Fakultas</label>
+    <select class="form-select" id="filterFakultas">
+        <option value="">Semua Fakultas</option>
+        <?php foreach ($fakultas_list as $fakultas): ?>
+            <option value="<?= esc($fakultas['id']) ?>"><?= esc($fakultas['name']) ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
+
+<!-- Kolom Fakultas di Tabel -->
+<td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
+    <?= esc($doc['parent_name'] ?? '-') ?>
+</td>
+            <div class="col-md-3">
+                <label for="filterJenis" class="form-label">Filter Jenis</label>
+                <select class="form-select" id="filterJenis">
+                    <option value="">Semua Jenis</option>
+                    <?php foreach ($kategori_dokumen as $kategori): ?>
+                        <option value="<?= esc($kategori['id']) ?>"><?= esc($kategori['nama']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Table -->
         <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -130,12 +126,21 @@
                                 </td>
                                 <td>
                                     <?php if (!empty($doc['filepath'])): ?>
-                                        <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank" class="text-decoration-none">
-                                            <i class="bi bi-file-earmark-text text-primary"></i> 
-                                            <span class="text-truncate d-inline-block" style="max-width: 100px;">
-                                                <?= esc($doc['filename'] ?? $doc['filepath']) ?>
-                                            </span>
-                                        </a>
+                                        <div class="d-flex gap-2">
+                                            <!-- Ikon untuk membuka di tab baru -->
+                                            <a href="<?= base_url('kelola-dokumen/file/' . $doc['id'] . '?action=view') ?>" 
+                                               target="_blank" 
+                                               class="text-decoration-none" 
+                                               title="Buka file di tab baru">
+                                                <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                                            </a>
+                                            <!-- Ikon untuk download -->
+                                            <a href="<?= base_url('kelola-dokumen/file/' . $doc['id'] . '?action=download') ?>" 
+                                               class="text-decoration-none" 
+                                               title="Download file">
+                                                <i class="bi bi-download text-success fs-5"></i>
+                                            </a>
+                                        </div>
                                     <?php else: ?>
                                         <span class="text-muted">
                                             <i class="bi bi-file-earmark-x"></i> Tidak ada file
@@ -166,6 +171,14 @@
                                             title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
+
+<button class="btn btn-sm btn-outline-info view-history-btn"
+    data-bs-toggle="modal"
+    data-bs-target="#historyModal"
+    data-id="<?= $doc['id'] ?? '' ?>"
+    title="Lihat History">
+    <i class="bi bi-eye"></i>
+</button>
 
                                         <button class="btn btn-sm btn-outline-success approve-btn"
                                             data-id="<?= $doc['id'] ?? '' ?>"
@@ -198,7 +211,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Modal Edit -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -292,6 +304,60 @@
     </div>
 </div>
 
+<!-- Modal History -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header border-bottom-0 pb-2">
+                <h5 class="modal-title fw-bold" id="historyModalLabel">History Pengeditan Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Document Info -->
+                <div class="mb-4">
+                    <h6 class="fw-bold">Informasi Dokumen</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nama Dokumen</label>
+                            <p id="historyNamaDokumen" class="mb-0">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Jenis Dokumen</label>
+                            <p id="historyJenisDokumen" class="mb-0">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle" id="historyTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center" style="width: 5%;">No</th>
+                                <th style="width: 20%;">Nama Dokumen</th>
+                                <th style="width: 15%;">No Dokumen</th>
+                                <th style="width: 15%;">File</th>
+                                <th class="text-center" style="width: 15%;">Revisi</th>
+                                <th style="width: 20%;">Tanggal</th>
+                                <th style="width: 10%;">Status</th>
+                                <th class="text-center" style="width: 10%;">Aksi</th> <!-- Added Aksi column -->
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- Data akan diisi melalui AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- Modal Approve -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -307,22 +373,22 @@
                 
                 <div class="modal-body">
                     <div class="mb-3">
-    <label for="approved_by_display" class="form-label">
-        Nama Pihak yang Menyetujui <span class="text-danger">*</span>
-    </label>
-    <input 
-        type="text" 
-        class="form-control" 
-        id="approved_by_display" 
-        value="<?= esc(session()->get('fullname')) ?>" 
-        readonly
-    >
-    <input 
-        type="hidden" 
-        name="approved_by" 
-        value="<?= esc(session()->get('user_id')) ?>"
-    >
-</div>
+                        <label for="approved_by_display" class="form-label">
+                            Nama Pihak yang Menyetujui <span class="text-danger">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="approved_by_display" 
+                            value="<?= esc(session()->get('fullname')) ?>" 
+                            readonly
+                        >
+                        <input 
+                            type="hidden" 
+                            name="approved_by" 
+                            value="<?= esc(session()->get('user_id')) ?>"
+                        >
+                    </div>
 
                     <div class="mb-3">
                         <label for="approval_date" class="form-label">Tanggal Persetujuan <span class="text-danger">*</span></label>
@@ -337,7 +403,8 @@
                 <div class="modal-footer border-top-0 pt-0">
                     <div class="row w-100 g-2">
                         <div class="col-6">
-                            <button type="submit" name="action" value="disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
+                            <button type="submit" name="action" value="
+                            disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
                         </div>
                         <div class="col-6">
                             <button type="submit" name="action" value="approve" class="btn btn-success w-100">Approve</button>
@@ -490,14 +557,11 @@ $(document).ready(function() {
     });
 
     // Filter by fakultas
-    $('#filterFakultas').on('change', function() {
-        const val = this.value;
-        if (val) {
-            table.column(1).search(val, false, false, false).draw();
-        } else {
-            table.column(1).search('').draw();
-        }
-    });
+$('#filterFakultas').on('change', function() {
+    const val = this.value;
+    console.log('Selected Fakultas ID:', val); // Log nilai yang dipilih
+    table.column(1).search(val, false, false, false).draw();
+});
 
     // Filter by jenis
     $('#filterJenis').on('change', function() {
@@ -584,7 +648,6 @@ $(document).ready(function() {
         $('#approval_date').val(today);
     });
 
-    // Delete document handler
     // Delete document handler
     $(document).on('click', '.delete-document', function(e) {
         e.preventDefault();
@@ -854,7 +917,91 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('id-ID', options);
 }
 
-// Close script tag
+
+// Event handler untuk view history button
+$(document).on('click', '.view-history-btn', function() {
+    const id = $(this).data('id');
+    console.log('History button clicked for ID:', id);
+    
+    $('#historyNamaDokumen').text('-');
+    $('#historyJenisDokumen').text('-');
+    $('#historyTableBody').html('<tr><td colspan="8" class="text-center">Memuat data...</td></tr>'); // Updated colspan to 8
+
+    $.ajax({
+        url: '<?= base_url("kelola-dokumen/get-history") ?>/' + id,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log('Respons history:', response);
+            if (response.success && response.data) {
+                $('#historyNamaDokumen').text(response.data.document.title || '-');
+                $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
+                let html = '';
+                if (response.data.history && response.data.history.length > 0) {
+                    response.data.history.forEach((item, index) => {
+                        console.log('Item:', item);
+                        const fileLink = item.filepath ? `
+                            <div class="d-flex gap-2">
+                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=view" target="_blank" class="text-decoration-none" title="Buka file di tab baru">
+                                    <i class="bi bi-file-earmark-text text-primary fs-5"></i>
+                                </a>
+                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=download" class="text-decoration-none" title="Download file">
+                                    <i class="bi bi-download text-success fs-5"></i>
+                                </a>
+                            </div>
+                        ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
+                        const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Menunggu</span>' :
+                                      item.status == 1 ? '<span class="badge bg-danger">Approved</span>' :
+                                      item.status == 2 ? '<span class="badge bg-success">Disapproved</span>' :
+                                      item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
+                        const actionButtons = item.filepath ? `
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=view" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=download" class="btn btn-sm btn-outline-success" title="Download">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                        ` : '<span class="text-muted">-</span>';
+                        html += `
+                            <tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td>${item.document_title || '-'}</td>
+                                <td>${item.document_number || '-'}</td>
+                                <td>${fileLink}</td>
+                                <td class="text-center">${item.revision || 'Rev. 0'}</td>
+                                <td>${formatDate(item.updated_at)}</td>
+                                <td>${statusBadge}</td>
+                                <td class="text-center">${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    console.log('No history data');
+                    html = '<tr><td colspan="8" class="text-center text-muted">Belum ada history pengeditan</td></tr>'; // Updated colspan to 8
+                }
+                $('#historyTableBody').html(html);
+            } else {
+                console.log('Failed response:', response.message || 'No data');
+                $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Gagal memuat data history</td></tr>'); // Updated colspan to 8
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log('Error AJAX:', error, xhr.responseText);
+            $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Terjadi kesalahan saat memuat data</td></tr>'); // Updated colspan to 8
+        }
+    });
+});
+
+
+
+// Reset history modal on hide
+$('#historyModal').on('hidden.bs.modal', function() {
+    $('#historyNamaDokumen').text('-');
+    $('#historyJenisDokumen').text('-');
+    $('#historyTableBody').html('');
+});
 </script>
 
 <?= $this->endSection() ?>

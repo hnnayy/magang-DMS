@@ -16,6 +16,11 @@ class Document extends Migration
                 'auto_increment' => true,
                 'null'           => false,
             ],
+            'original_document_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'null'       => false,
+            ],
             'type' => [
                 'type'       => 'INT',
                 'constraint' => 10,
@@ -57,7 +62,6 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-
             'status' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
@@ -75,11 +79,9 @@ class Document extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            
-
         ]);
 
-        $this->forge->addKey('id', true); 
+        $this->forge->addKey('id', true);
         $this->forge->createTable('document');
     }
 

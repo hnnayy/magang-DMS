@@ -9,6 +9,7 @@ use App\Models\DocumentModel;
 use App\Models\UnitModel;
 use App\Models\UnitParentModel;
 use App\Models\DocumentApprovalModel;
+use CodeIgniter\Files\File; 
 use FPDF;
 require_once ROOTPATH . 'vendor/autoload.php';
 
@@ -16,6 +17,18 @@ class KelolaDokumen extends BaseController
 {
     protected $kategoriDokumen = [];
     protected $kodeDokumen = [];
+    protected $documentModel;
+    protected $documentRevisionModel;
+    protected $db;
+    protected $helpers = ['url', 'form'];
+    protected $session;
+
+
+    public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
+    {
+        parent::initController($request, $response, $logger);
+        $this->session = \Config\Services::session();
+    }
 
     public function __construct()
     {
@@ -25,8 +38,7 @@ class KelolaDokumen extends BaseController
         $this->documentApprovalModel = new DocumentApprovalModel();
         $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
         $this->documentRevisionModel = new \App\Models\DocumentRevisionModel();
-
-
+        $this->db = \Config\Database::connect();
        
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
         $this->kategoriDokumen = array_map(function ($item) {
@@ -57,6 +69,8 @@ class KelolaDokumen extends BaseController
         }
         $this->kodeDokumen = $grouped;
     }
+
+
     public function add(): string
     {
         $unitId = session()->get('unit_id');
@@ -122,37 +136,53 @@ class KelolaDokumen extends BaseController
 
         return $this->response->setJSON(['kode' => $kode['kode'] ?? '']);
     }
+
 public function pengajuan()
 {
+    $documentModel = new \App\Models\DocumentModel();
+    $unitParentModel = new \App\Models\UnitParentModel();
+
     $documents = $this->documentModel
         ->select('document.*, 
-                dt.name AS jenis_dokumen, 
-                unit.name AS unit_name, 
-                unit_parent.name AS parent_name,
-                kd.kode AS kode_dokumen_kode,
-                kd.nama AS kode_dokumen_nama')
+                  dt.name AS jenis_dokumen, 
+                  unit.name AS unit_name, 
+                  unit_parent.name AS parent_name,
+                  unit.parent_id AS unit_parent_id,
+                  kd.kode AS kode_dokumen_kode,
+                  kd.nama AS kode_dokumen_nama,
+                  dr.filename AS filename,
+                  dr.filepath AS filepath')
         ->join('document_type dt', 'dt.id = document.type', 'left')
         ->join('unit', 'unit.id = document.unit_id', 'left')
         ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
         ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-        ->where('document.status', 0)
+        ->join('document_revision dr', 'dr.document_id = document.id', 'left')
+        ->where('document.createdby !=', 0)
+        ->where('document.status', 0) // Hanya status 0 (menunggu)
         ->groupBy('document.id')
         ->findAll();
 
     $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
     $kategori_dokumen = $this->kategoriDokumen;
-    $kode_nama_dokumen = $this->kodeDokumenModel->where('status', 1)->findAll(); // Tambahkan ini
+    $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
+    $fakultas_list = $unitParentModel
+        ->where('status', 1)
+        ->orderBy('name', 'ASC')
+        ->findAll();
 
     $data = [
         'documents' => $documents,
         'jenis_dokumen' => $jenis_dokumen,
         'kategori_dokumen' => $kategori_dokumen,
-        'kode_nama_dokumen' => $kode_nama_dokumen // Tambahkan ke data
+        'kode_nama_dokumen' => $kode_nama_dokumen,
+        'fakultas_list' => $fakultas_list,
+        'title' => 'Daftar Pengajuan Dokumen'
     ];
+
+    log_message('debug', 'Documents retrieved: ' . json_encode($documents));
 
     return view('KelolaDokumen/daftar-pengajuan', $data);
 }
-
 
 
     public function configJenisDokumen()
@@ -373,11 +403,9 @@ public function edit($id)
         log_message('info', 'DELETE: Document ID ' . $id);
         return redirect()->to('/dokumen/pengajuan')->with('success', 'Dokumen berhasil dihapus.');
     }
-
 public function tambah()
 {
     $file = $this->request->getFile('file');
-
     if (!$file->isValid() || $file->hasMoved()) {
         return redirect()->back()->with('error', 'Upload file gagal.');
     }
@@ -387,123 +415,87 @@ public function tambah()
         return redirect()->back()->with('error', 'Jenis dokumen belum dipilih.');
     }
 
+    $uploadPath = ROOTPATH . '../storage/uploads';
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0755, true);
+    }
+
     $newName = $file->getRandomName();
-    $file->move(ROOTPATH . 'public/uploads', $newName);
+    $file->move($uploadPath, $newName);
 
     $unitId = $this->request->getPost('unit_id') ?? 99;
     $unitModel = new \App\Models\UnitModel();
     $unitData = $unitModel->select('parent_id')->where('id', $unitId)->first();
     $unitParentId = $unitData['parent_id'] ?? null;
 
-    // Simpan dokumen
+    $this->documentModel->db->transStart();
+
+    $result = $this->documentModel->db->query('SHOW TABLE STATUS LIKE "document"')->getRow();
+    $nextId = $result->Auto_increment;
+
     $this->documentModel->insert([
-        'type'            => $jenisId,
+        'type' => $jenisId,
         'kode_dokumen_id' => $this->request->getPost('kode_dokumen_id'),
-        'number'          => $this->request->getPost('no-dokumen'),
-        'date_published'  => $this->request->getPost('date_published'),
-        'revision'        => $this->request->getPost('revisi') ?? 'Rev. 0',
-        'title'           => $this->request->getPost('nama-dokumen'),
-        'description'     => $this->request->getPost('keterangan'),
-        'unit_id'         => $unitId,
-        'status'          => 0,
-        'createddate'     => date('Y-m-d H:i:s'),
-        'createdby'       => session('user_id'),
+        'number' => $this->request->getPost('no-dokumen'),
+        'date_published' => $this->request->getPost('date_published'),
+        'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
+        'title' => $this->request->getPost('nama-dokumen'),
+        'description' => $this->request->getPost('keterangan'),
+        'unit_id' => $unitId,
+        'status' => 0,
+        'createddate' => date('Y-m-d H:i:s'),
+        'createdby' => session('user_id'),
+        'original_document_id' => $nextId, // Set original_document_id to the new ID
     ]);
 
-    // Pastikan documentId diambil setelah insert
     $documentId = $this->documentModel->getInsertID();
 
-    // Simpan revisi dokumen
     $this->documentRevisionModel->insert([
         'document_id' => $documentId,
-        'revision'    => $this->request->getPost('revisi') ?? 'Rev. 0',
-        'filename'    => $file->getClientName(),
-        'filepath'    => $newName,
-        'filesize'    => $file->getSize(),
-        'remark'      => $this->request->getPost('keterangan'),
+        'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
+        'filename' => $file->getClientName(),
+        'filepath' => 'storage/uploads/' . $newName,
+        'filesize' => $file->getSize(),
+        'remark' => $this->request->getPost('keterangan'),
         'createddate' => date('Y-m-d H:i:s'),
-        'createdby'   => session('user_id'),
+        'createdby' => session('user_id'),
     ]);
+
+    $this->documentModel->db->transComplete();
+
+    if ($this->documentModel->db->transStatus() === false) {
+        return redirect()->back()->with('error', 'Gagal menyimpan dokumen.');
+    }
 
     return redirect()->to('/tambah-dokumen')->with('success', 'Dokumen berhasil ditambahkan.');
 }
 
-    // // Kirim notifikasi ke user satu unit dan parent unit
-    // $currentUserId = session()->get('user_id');
-    // $userModel = new \App\Models\UserModel();
-    // $targetUsers = $userModel->where('status', 1)
-    //     ->where('id !=', $currentUserId)
-    //     ->groupStart()
-    //         ->where('unit_id', $unitId)
-    //         ->orWhere('unit_id IN (SELECT id FROM unit WHERE parent_id = ' . $unitParentId . ')')
-    //     ->groupEnd()
-    //     ->findAll();
-
-    // $notifModel = new \App\Models\NotificationModel();
-    // foreach ($targetUsers as $user) {
-    //     $notifModel->insert([
-    //         'user_id'    => $user['id'],
-    //         'title'      => 'Dokumen Baru diunggah',
-    //         'message'    => 'Ada dokumen baru berjudul "' . $this->request->getPost('nama-dokumen') . '" dari unit yang sama.',
-    //         'link'       => '/dokumen/detail/' . $documentId,
-    //         'created_at' => date('Y-m-d H:i:s'),
-    //     ]);
-    // }
-    // }
 
 
 
-//DAFTAR-PENGAJUAN
-    public function daftarPengajuan()
-    {
-        $documentModel = new \App\Models\DocumentModel();
+public function approvepengajuan()
+{
+    date_default_timezone_set('Asia/Jakarta');
+    $document_id   = $this->request->getPost('document_id');
+    $approved_by   = $this->request->getPost('approved_by');
+    $remarks       = $this->request->getPost('remarks');
+    $action        = $this->request->getPost('action'); 
 
-        $documents = $documentModel
-        ->select('document.*, 
-                dt.name AS jenis_dokumen,
-                parent_unit.name AS parent_name, 
-                unit.name AS unit_name,
-                unit.unit_parent_id, 
-                kode_dokumen.kode AS kode_dokumen_kode, 
-                kode_dokumen.nama AS kode_dokumen_nama')
-        ->join('unit', 'document.unit_id = unit.id', 'left')
-        ->join('unit AS parent_unit', 'unit.unit_parent_id = parent_unit.id', 'left')
-        ->join('kode_dokumen', 'kode_dokumen.id = document.kode_dokumen_id', 'left')
-        ->join('document_type dt', 'dt.id = document.type', 'left') 
-        ->where('document.createdby !=', 0)
-        ->findAll();
+    $status = $action === 'approve' ? 2 : 1;
 
+    $data = [
+        'document_id' => $document_id,
+        'remark'      => $remarks,
+        'status'      => $status,
+        'approvedate' => date('Y-m-d H:i:s'),
+        'approveby'   => $approved_by,
+    ];
 
-        return view('KelolaDokumen/daftar-pengajuan', [
-            'documents' => $documents,
-            'kategori_dokumen' => $this->kategoriDokumen,
-            'title'     => 'Daftar Pengajuan Dokumen'
-        ]);
-    }
+    $this->documentApprovalModel->insert($data);
+    $this->documentModel->update($document_id, ['status' => $status]);
 
-    public function approvepengajuan()
-    {
-        date_default_timezone_set('Asia/Jakarta');
-        $document_id   = $this->request->getPost('document_id');
-        $approved_by   = $this->request->getPost('approved_by');
-        $remarks       = $this->request->getPost('remarks');
-        $action        = $this->request->getPost('action'); 
-
-        $status = $action === 'approve' ? 2 : 1;
-
-        $data = [
-            'document_id' => $document_id,
-            'remark'      => $remarks,
-            'status'      => $status,
-            'approvedate' => date('Y-m-d H:i:s'),
-            'approveby'   => $approved_by,
-        ];
-
-        $this->documentApprovalModel->insert($data);
-        $this->documentModel->update($document_id, ['status' => $status]);
-
-        return redirect()->back()->with('success', 'Dokumen berhasil diproses.');
-    }
+    return redirect()->back()->with('success', 'Dokumen berhasil diproses.');
+}
 
     public function generateSignedPDF()
     {
@@ -535,23 +527,15 @@ public function tambah()
     }
 
 
-    public function updatepengajuan()
+public function updatepengajuan()
 {
     $documentModel = new DocumentModel();
     $documentId = $this->request->getPost('document_id');
 
-    // Validasi ID dokumen
     if (!$documentId) {
         return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
     }
 
-    // Validasi dokumen ada di database
-    $document = $documentModel->find($documentId);
-    if (!$document) {
-        return redirect()->back()->with('error', 'Dokumen tidak ditemukan di database.');
-    }
-
-    // Ambil data dari form
     $jenisId = $this->request->getPost('type');
     $kodeDokumenId = $this->request->getPost('kode_dokumen');
     $nomor = $this->request->getPost('nomor');
@@ -560,81 +544,232 @@ public function tambah()
     $keterangan = $this->request->getPost('keterangan');
     $file = $this->request->getFile('file_dokumen');
 
-    // Validasi input wajib
     if (empty($jenisId) || empty($kodeDokumenId) || empty($nomor) || empty($nama)) {
         return redirect()->back()->with('error', 'Semua field wajib harus diisi.');
     }
 
-    // Validasi jenis dokumen
     $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
     if (!$documentType) {
         return redirect()->back()->with('error', 'Jenis dokumen tidak valid.');
     }
 
-    // Validasi kode dokumen
     $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
     if (!$kodeDokumen) {
         return redirect()->back()->with('error', 'Kode dokumen tidak valid.');
     }
 
-    // Siapkan data untuk update
+    $originalDocument = $documentModel->find($documentId);
+    if (!$originalDocument) {
+        return redirect()->back()->with('error', 'Dokumen tidak ditemukan di database.');
+    }
+    $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
+    $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
+
     $data = [
-        'type'            => $jenisId,
+        'type' => $jenisId,
         'kode_dokumen_id' => $kodeDokumenId,
-        'number'          => $nomor,
-        'revision'        => $revisi,
-        'title'           => $nama,
-        'description'     => $keterangan,
-        'status'          => 0,
+        'number' => $nomor,
+        'revision' => $revisi,
+        'title' => $nama,
+        'description' => $keterangan,
+        'unit_id' => $unitId,
+        'status' => 0,
+        'createddate' => date('Y-m-d H:i:s'),
+        'createdby' => session('user_id'),
+        'original_document_id' => $originalDocumentId, // Use the original_document_id from the original document
     ];
 
-    // Penanganan file upload
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-        $newName = $file->getRandomName();
-        $file->move(ROOTPATH . 'public/uploads', $newName);
-        $data['filepath'] = $newName;
-        $data['filename'] = $file->getClientName();
-    }
-
-    // Lakukan pembaruan di database
     try {
-        $updated = $documentModel->update($documentId, $data);
-        if ($updated) {
-            return redirect()->back()->with('success', 'Dokumen berhasil diperbarui.');
+        $documentModel->insert($data);
+        $newDocumentId = $documentModel->getInsertID();
+
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $uploadPath = ROOTPATH . '../storage/uploads';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            $newName = $file->getRandomName();
+            $file->move($uploadPath, $newName);
+
+            $this->documentRevisionModel->insert([
+                'document_id' => $newDocumentId,
+                'revision' => $revisi,
+                'filename' => $file->getClientName(),
+                'filepath' => 'storage/uploads/' . $newName,
+                'filesize' => $file->getSize(),
+                'remark' => $keterangan,
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session('user_id'),
+            ]);
         } else {
-            return redirect()->back()->with('error', 'Gagal memperbarui dokumen. Tidak ada perubahan yang dilakukan.');
+            $oldRevision = $this->documentRevisionModel
+                ->where('document_id', $documentId)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if ($oldRevision) {
+                $this->documentRevisionModel->insert([
+                    'document_id' => $newDocumentId,
+                    'revision' => $revisi,
+                    'filename' => $oldRevision['filename'],
+                    'filepath' => $oldRevision['filepath'],
+                    'filesize' => $oldRevision['filesize'],
+                    'remark' => $keterangan,
+                    'createddate' => date('Y-m-d H:i:s'),
+                    'createdby' => session('user_id'),
+                ]);
+            }
         }
+
+        $documentModel->update($documentId, [
+            'status' => 3,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/kelola-dokumen/pengajuan')->with('success', 'Dokumen baru berhasil ditambahkan.');
     } catch (\Exception $e) {
-        log_message('error', 'Error updating document: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Gagal memperbarui dokumen: ' . $e->getMessage());
+        log_message('error', 'Error creating new document: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal menambahkan dokumen baru: ' . $e->getMessage());
     }
 }
 
 
-// public function persetujuan()
-//     {
-//         $documents = $this->documentModel
-//             ->select('document.*, 
-//                     dt.name AS jenis_dokumen,
-//                     unit.name AS unit_name,
-//                     unit_parent.name AS parent_name,
-//                     kd.kode AS kode_dokumen_kode,
-//                     kd.nama AS kode_dokumen_nama,
-//                     da.remark,
-//                     da.approveby,
-//                     da.approvedate')
-//             ->join('document_type dt', 'dt.id = document.type', 'left')
-//             ->join('unit', 'unit.id = document.unit_id', 'left')
-//             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-//             ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-//             ->join('document_approval da', 'da.document_id = document.id', 'left')
-//             ->where('document.status', 1)
-//             ->orderBy('document.updated_at', 'DESC')
-//             ->findAll();
 
-//         dd($documents); 
-//     }
-// }
+public function get_history($document_id)
+{
+    log_message('debug', 'get_history called with document_id: ' . $document_id);
+    if (!$this->session->get('user_id')) {
+        log_message('debug', 'Unauthorized access to get_history');
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ], 401);
+    }
 
+    $document = $this->documentModel
+        ->select('document.*, dt.name AS jenis_dokumen, kd.kode AS kode_dokumen_kode, kd.nama AS kode_dokumen_nama')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->where('document.id', $document_id)
+        ->where('document.createdby !=', 0)
+        ->first();
+
+    if (!$document) {
+        log_message('debug', 'Document not found for id: ' . $document_id);
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Dokumen tidak ditemukan'
+        ], 404);
+    }
+
+    $originalDocumentId = $document['original_document_id'] ?? $document_id;
+    log_message('debug', 'Original Document ID: ' . $originalDocumentId);
+
+    $historyDocuments = $this->documentModel
+        ->select('document.*, dt.name AS jenis_dokumen, kd.kode AS kode_dokumen_kode, kd.nama AS kode_dokumen_nama')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->where('document.original_document_id', $originalDocumentId)
+        ->where('document.createdby !=', 0)
+        ->orderBy('document.createddate', 'DESC')
+        ->findAll();
+
+    log_message('debug', 'History documents count: ' . count($historyDocuments));
+
+    $history = [];
+    foreach ($historyDocuments as $doc) {
+        $revisions = $this->documentRevisionModel
+            ->select('id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
+            ->where('document_id', $doc['id'])
+            ->orderBy('createddate', 'DESC')
+            ->findAll();
+        foreach ($revisions as $revision) {
+            $history[] = [
+                'id' => $revision['id'],
+                'document_id' => $revision['document_id'],
+                'revision' => $revision['revision'] ?? 'Rev. 0',
+                'filename' => $revision['filename'],
+                'filepath' => $revision['filepath'],
+                'filesize' => $revision['filesize'],
+                'remark' => $revision['remark'],
+                'updated_at' => $revision['createddate'],
+                'updated_by' => $revision['createdby'],
+                'document_title' => $doc['title'],
+                'document_number' => $doc['number'],
+                'status' => $doc['status'],
+            ];
+        }
+    }
+
+    log_message('debug', 'Formatted history count: ' . count($history));
+    return $this->response->setJSON([
+        'success' => true,
+        'data' => [
+            'document' => [
+                'id' => $document['id'],
+                'title' => $document['title'],
+                'jenis_dokumen' => $document['jenis_dokumen'],
+                'kode_dokumen_kode' => $document['kode_dokumen_kode'],
+                'kode_dokumen_nama' => $document['kode_dokumen_nama'],
+            ],
+            'history' => $history,
+        ],
+    ]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public function serveFile($documentId)
+{
+    $userId = session('user_id');
+    if (!$userId) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda harus login untuk mengakses file.');
+    }
+
+    $revision = $this->documentRevisionModel
+        ->where('document_id', $documentId)
+        ->orderBy('id', 'DESC')
+        ->first();
+
+    if (!$revision || empty($revision['filepath'])) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan.');
+    }
+
+    $document = $this->documentModel->find($documentId);
+    $allowedRoles = ['admin', 'superadmin'];
+    $userRole = session('role');
+    if (!in_array($userRole, $allowedRoles) && $document['createdby'] != $userId) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki akses ke file ini.');
+    }
+
+    $filePath = ROOTPATH . '../' . $revision['filepath'];
+    if (!file_exists($filePath)) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan di server.');
+    }
+
+    $file = new File($filePath);
+    $mimeType = $file->getMimeType() ?: 'application/octet-stream';
+
+    $action = $this->request->getGet('action') ?? 'view';
+    $disposition = ($action === 'download') ? 'attachment' : 'inline';
+
+    return $this->response
+        ->setHeader('Content-Type', $mimeType)
+        ->setHeader('Content-Disposition', $disposition . '; filename="' . $revision['filename'] . '"')
+        ->setBody(file_get_contents($filePath));
+}
 
 }
