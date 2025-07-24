@@ -68,11 +68,7 @@ public function store()
 
     $this->submenuModel->save($data);
 
-    return redirect()->back()->with('swal', [
-        'icon'  => 'success',
-        'title' => 'Berhasil!',
-        'text'  => 'Submenu berhasil ditambahkan.'
-    ]);
+    return redirect()->to('tambah-submenu')->with('added_message', 'Successfully Added');
 }
 
 
@@ -153,11 +149,7 @@ public function store()
 
     $this->submenuModel->update($id, $data);
 
-    return redirect()->to('/submenu/lihat-submenu')->with('swal', [
-        'icon'  => 'success',
-        'title' => 'Berhasil!',
-        'text'  => 'Submenu berhasil diperbarui.'
-    ]);
+    return redirect()->to('/submenu/lihat-submenu')->with('updated_message', 'Successfully Updated');
 }
 
 
@@ -170,7 +162,7 @@ public function store()
 
         // Soft delete by setting status to 0
         $this->submenuModel->update($id, ['status' => 0]);
-
-        return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu berhasil dihapus.');
+        session()->setFlashdata('deleted_message', 'Successfully Deleted');
+        return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu successed delete.');
     }
 }

@@ -11,7 +11,7 @@
     <div class="mb-3">
         <label for="menu" class="form-label">Menu</label>
         <select name="parent" id="menu" class="form-select" required>
-            <option value="">-- Pilih Menu --</option>
+            <option value="">-- Choose Menu --</option>
             <?php foreach ($menus as $menu): ?>
                 <option value="<?= $menu['id'] ?>" <?= $menu['id'] == $submenu['parent'] ? 'selected' : '' ?>>
                     <?= esc($menu['name']) ?>
@@ -32,17 +32,17 @@
         <label class="form-label d-block">Status</label>
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="status" id="statusAktif" value="1" <?= $submenu['status'] == 1 ? 'checked' : '' ?>>
-            <label class="form-check-label" for="statusAktif">Aktif</label>
+            <label class="form-check-label" for="statusAktif">Active</label>
         </div>
         <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="status" id="statusNonAktif" value="2" <?= $submenu['status'] == 2 ? 'checked' : '' ?>>
-            <label class="form-check-label" for="statusNonAktif">Tidak Aktif</label>
+            <label class="form-check-label" for="statusNonAktif">Inactive</label>
         </div>
     </div>
 
     <!-- Tombol -->
     <button type="submit" class="btn btn-primary">Update</button>
-    <a href="<?= base_url('submenu/lihat-submenu') ?>" class="btn btn-secondary">Kembali</a>
+    <a href="<?= base_url('submenu/lihat-submenu') ?>" class="btn btn-secondary">Back</a>
 </form>
 
 <?= $this->endSection() ?>

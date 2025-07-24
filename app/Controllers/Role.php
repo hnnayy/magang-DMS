@@ -31,7 +31,7 @@ class Role extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
+            return redirect()->back()->withInput()->with('error', 'All fields are required.');
         }
 
         $this->roleModel->insert([

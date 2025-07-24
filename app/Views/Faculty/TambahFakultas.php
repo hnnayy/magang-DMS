@@ -60,25 +60,7 @@
 
 <!-- SweetAlert (Notifikasi) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
-</script>
 
 <script>
     // Fungsi untuk kapitalisasi setiap kata

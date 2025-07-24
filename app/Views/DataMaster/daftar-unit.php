@@ -135,11 +135,11 @@
     function SwalConfirmDelete(elem) {
         event.preventDefault();
         Swal.fire({
-            title: 'Hapus unit ini?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 elem.closest('form').submit();

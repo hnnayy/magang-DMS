@@ -7,11 +7,6 @@
             <h2><?= $title ?? 'Add Submenu' ?></h2>
         </div>
 
-        <?php if (session()->getFlashdata('success')) : ?>
-            <div class="alert alert-success">
-                <?= session()->getFlashdata('success') ?>
-            </div>
-        <?php endif; ?>
 
         <form id="createSubmenuForm" method="post" action="<?= base_url('submenu/store') ?>">
             <?= csrf_field() ?>
@@ -93,21 +88,7 @@ document.getElementById('createSubmenuForm').addEventListener('submit', function
 });
 </script>
 
-<!-- Tambah SweetAlert jika ada flashdata -->
-<?php if ($swal = session()->getFlashdata('swal')) : ?>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    Swal.fire({
-        icon: '<?= esc($swal['icon']) ?>',
-        title: '<?= esc($swal['title']) ?>',
-        text: '<?= esc($swal['text']) ?>',
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#6868ff',
-        allowOutsideClick: false,
-        allowEscapeKey: false
-    });
-</script>
-<?php endif; ?>
+
 
 
 

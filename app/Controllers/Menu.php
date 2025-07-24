@@ -84,8 +84,7 @@ class Menu extends BaseController
         ];
 
         if ($this->menuModel->insert($data)) {
-            return redirect()->back()->with('success', 'menu added successfully
-.');
+            return redirect()->back()->with('added_message', 'Successfully Added');
         }
 
         return redirect()->back()->with('error', 'Failed to add menu.');
@@ -95,6 +94,7 @@ class Menu extends BaseController
     public function delete($id)
     {
         $this->menuModel->update($id, ['status' => 0]);
+        session()->setFlashdata('deleted_message', 'Successfully Deleted');
         return redirect()->to(base_url('Menu'))->with('success', 'Failed to add menu');
     }
 
@@ -147,6 +147,6 @@ class Menu extends BaseController
 
         $this->menuModel->update($id, $updateData);
 
-        return redirect()->to(base_url('Menu'))->with('success', 'Menu berhasil diperbarui.');
+        return redirect()->to(base_url('Menu'))->with('updated_message', 'Successfully Updated');
     }
 }

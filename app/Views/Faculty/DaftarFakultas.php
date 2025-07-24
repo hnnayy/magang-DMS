@@ -124,11 +124,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Are you sure you want to delete?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete!',
-            cancelButtonText: 'Cancalled'
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -158,17 +158,6 @@
     }
 </script>
 
-<!-- Notifikasi jika berhasil -->
-<?php if (session()->getFlashdata('success')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'success!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        showConfirmButton: false,
-        timer: 2000
-    });
-</script>
-<?php endif; ?>
+
 
 <?= $this->endSection() ?>

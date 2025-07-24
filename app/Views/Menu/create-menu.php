@@ -1,49 +1,6 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
-<style>
-    .form-check-label {
-        color: black !important;
-    }
-    .form-check-input:checked + .form-check-label,
-    .form-check-input:focus + .form-check-label,
-    .form-check-input:hover + .form-check-label {
-        color: black !important;
-    }
-
-    .form-check-input {
-        background-color: transparent !important;
-        border-color: #adb5bd !important;
-    }
-    .form-check-input:checked {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-    .form-check-input:focus {
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-
-    .form-check-input.is-valid,
-    .form-check-input.is-invalid,
-    .was-validated .form-check-input:valid,
-    .was-validated .form-check-input:invalid {
-        background-color: transparent !important;
-        border-color: #adb5bd !important;
-    }
-    .form-check-input:checked.is-valid,
-    .form-check-input:checked.is-invalid,
-    .was-validated .form-check-input:checked:valid,
-    .was-validated .form-check-input:checked:invalid {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-    .form-check-input:focus.is-valid,
-    .form-check-input:focus.is-invalid,
-    .was-validated .form-check-input:focus:valid,
-    .was-validated .form-check-input:focus:invalid {
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-</style>
 
 <div class="container">
     <div class="form-section">
@@ -96,27 +53,7 @@
 
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
-</script>
 
 <script>
 (() => {

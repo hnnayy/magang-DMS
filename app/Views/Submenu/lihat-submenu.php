@@ -112,11 +112,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Yakin ingin menghapus?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -150,7 +150,7 @@
         if (thCount === tdCount || table.find('tbody tr').length === 0) {
             table.DataTable();
         } else {
-            console.warn('⚠️ DataTables tidak dijalankan karena jumlah kolom tidak sesuai.');
+            console.warn('⚠️ DataTables failed to initialize because the number of columns does not match.');
         }
     });
 </script>

@@ -42,8 +42,7 @@ class FakultasController extends Controller
             'status'      => (int)$status,
         ]);
 
-        session()->setFlashdata('success', 'New faculty successfully added.');
-        return redirect()->to('/data-master/fakultas/create');
+        return redirect()->to('/data-master/fakultas/create')->with('added_message', 'Successfully Added');;
     }
 
     public function index()
@@ -55,7 +54,7 @@ class FakultasController extends Controller
     public function delete($id)
     {
         $this->unitParentModel->update($id, ['status' => 0]);
-        session()->setFlashdata('success', 'deleted successfully.');
+        session()->setFlashdata('deleted_message', 'Successfully Deleted');
         return redirect()->to('/data-master/fakultas/list');
     }
 
@@ -66,13 +65,13 @@ class FakultasController extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($nama) || empty($type) || empty($status)) {
-            session()->setFlashdata('error', 'Semua field harus diisi.');
+            session()->setFlashdata('error', 'All fields are required..');
             return redirect()->to('/data-master/fakultas/list');
         }
 
         $fakultas = $this->unitParentModel->find($id);
         if (!$fakultas) {
-            session()->setFlashdata('error', 'Fakultas tidak ditemukan.');
+            session()->setFlashdata('error', 'Fakulty not found');
             return redirect()->to('/data-master/fakultas/list');
         }
 
@@ -88,11 +87,11 @@ class FakultasController extends Controller
         $result = $this->unitParentModel->update($id, $updateData);
 
         if ($result) {
-            session()->setFlashdata('success', 'Faculty updated successfully.');
+            session()->setFlashdata('success', 'Successfully Updated.');
         } else {
-            session()->setFlashdata('error', 'Failed to update faculty.');
+            session()->setFlashdata('error', 'Successfully Updated.');
         }
 
-        return redirect()->to('/data-master/fakultas/list');
+        return redirect()->to('/data-master/fakultas/list')->with('updated_message', 'Successfully Updated');;
     }
 }

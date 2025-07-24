@@ -52,7 +52,7 @@ class UnitController extends BaseController
         if (!$this->validate($this->validationRules)) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Validasi Gagal!',
+                'title' => 'Validation failed!',
                 'text'  => implode("\n", $this->validator->getErrors()),
             ]);
         }
@@ -69,8 +69,8 @@ class UnitController extends BaseController
         if (!$parentExists) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Gagal!',
-                'text'  => 'Fakultas/Directorate yang dipilih tidak valid.',
+                'title' => 'Failed!',
+                'text'  => 'The selected Faculty/Directorate is not valid.',
             ]);
         }
 
@@ -83,8 +83,8 @@ class UnitController extends BaseController
         if ($existingUnit) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Gagal!',
-                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
+                'title' => 'Failed!',
+                'text'  => 'Unit name with the same status is already registered.',
             ]);
         }
 
@@ -98,11 +98,8 @@ class UnitController extends BaseController
 
         $this->unitModel->insert($insertData);
 
-        return redirect()->to('tambah-unit')->with('swal', [
-            'icon'  => 'success',
-            'title' => 'Berhasil!',
-            'text'  => 'Unit berhasil ditambahkan.',
-        ]);
+        return redirect()->to('tambah-unit')->with('added_message', 'Successfully Added');
+
     }
 
     public function list()
@@ -136,7 +133,7 @@ class UnitController extends BaseController
             return redirect()->to('data-master/unit/list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'ID unit tidak valid.',
+                'text'  => 'Invalid Unit ID.',
             ]);
         }
 
@@ -149,14 +146,14 @@ class UnitController extends BaseController
             return redirect()->to('data-master/unit/list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Unit tidak ditemukan.',
+                'text'  => 'Unit not found.',
             ]);
         }
 
         if (!$this->validate($this->validationRules)) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Validasi Gagal!',
+                'title' => 'Validation failed!',
                 'text'  => implode("\n", $this->validator->getErrors()),
             ]);
         }
@@ -175,8 +172,8 @@ class UnitController extends BaseController
         if ($existingUnit) {
             return redirect()->back()->withInput()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Gagal!',
-                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
+                'title' => 'Failed!',
+                'text'  => 'Unit name with the same status is already registered.',
             ]);
         }
 
@@ -189,11 +186,7 @@ class UnitController extends BaseController
 
         $this->unitModel->update($id, $updateData);
 
-        return redirect()->to('data-master/unit/list')->with('swal', [
-            'icon'  => 'success',
-            'title' => 'Berhasil!',
-            'text'  => 'Unit berhasil diperbarui.',
-        ]);
+        return redirect()->to('data-master/unit/list')->with('updated_message', 'Successfully Updated');
     }
 
     public function delete($id = null)
@@ -202,7 +195,7 @@ class UnitController extends BaseController
             return redirect()->to('data-master/unit/list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'ID unit tidak valid.',
+                'text'  => 'Unit ID not valid.',
             ]);
         }
 
@@ -212,7 +205,7 @@ class UnitController extends BaseController
             return redirect()->to('data-master/unit/list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Unit tidak ditemukan.',
+                'text'  => 'Unit not found.',
             ]);
         }
 
@@ -221,10 +214,7 @@ class UnitController extends BaseController
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
-        return redirect()->to('data-master/unit/list')->with('swal', [
-            'icon'  => 'success',
-            'title' => 'Terhapus!',
-            'text'  => 'Unit berhasil dihapus.',
-        ]);
+        return redirect()->to('data-master/unit/list')->with('deleted_message', 'Successfully Deleted');
+
     }
 }

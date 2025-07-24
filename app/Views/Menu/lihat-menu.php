@@ -109,11 +109,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Yakin ingin menghapus?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -159,28 +159,7 @@
     });
 </script>
 
-<!-- Notifikasi flashdata -->
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
-</script>
 
 <?= $this->endSection() ?>
 
