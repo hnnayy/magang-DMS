@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Daftar Unit</h4>
+    <h4>Unit List</h4>
     <hr>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -10,10 +10,10 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center">No</th>
-                    <th>Fakultas/Direktorat</th>
-                    <th>Bagian/Unit/Prodi</th>
+                    <th>Faculty/Directorate</th>
+                    <th>Unit</th>
                     <th class="text-center">Status</th>
-                    <th class="text-center">Aksi</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,7 +66,7 @@
                 <input type="hidden" name="id" id="editUnitId">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Fakultas/Direktorat</label>
+                        <label class="form-label">Faculty/Directorate</label>
                         <select name="parent_id" id="editParentId" class="form-control" required>
                             <?php foreach ($fakultas as $f) : ?>
                                 <option value="<?= $f['id'] ?>"><?= esc($f['name']) ?></option>
@@ -90,7 +90,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary w-100">Simpan Perubahan</button>
+                    <button class="btn btn-primary w-100">Save Changes</button>
                 </div>
             </form>
         </div>

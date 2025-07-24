@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Lihat Sub Menu</h4>
+    <h4>Submenu List</h4>
     <hr>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -11,9 +11,9 @@
                 <tr>
                     <th class="text-center" style="width: 5%;">No</th>
                     <th style="width: 25%;">Menu</th>
-                    <th style="width: 30%;">Sub Menu</th>
+                    <th style="width: 30%;">Submenu</th>
                     <th class="text-center" style="width: 15%;">Status</th>
-                    <th class="text-center" style="width: 20%;">Aksi</th>
+                    <th class="text-center" style="width: 20%;">Action</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -46,7 +46,7 @@
                     <?php endforeach ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="5" class="text-center text-muted">Tidak ada data submenu.</td>
+                        <td colspan="5" class="text-center text-muted">No submenu data available.</td>
                     </tr>
                 <?php endif ?>
             </tbody>
@@ -59,7 +59,7 @@
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content shadow border-0">
       <div class="modal-header">
-        <h5 class="modal-title">Edit Sub Menu</h5>
+        <h5 class="modal-title">Edit Submenu</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="post" id="editUnitForm">
@@ -69,14 +69,14 @@
             <div class="mb-3">
                 <label class="form-label">Menu</label>
                 <select name="parent" id="editParentName" class="form-select" required>
-                    <option value="">-- Pilih Menu --</option>
+                    <option value="">-- Choose Menu --</option>
                     <?php foreach ($menus as $menu) : ?>
                         <option value="<?= $menu['id'] ?>"><?= esc($menu['name']) ?></option>
                     <?php endforeach ?>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label">Sub Menu</label>
+                <label class="form-label">Submenu</label>
                 <input type="text" name="submenu" id="editUnitName" class="form-control" required>
             </div>
             <div class="mb-3">
@@ -93,7 +93,7 @@
 
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Simpan Perubahan</button>
+            <button class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>

@@ -3,7 +3,7 @@
 
 <div class="container">
     <div class="form-section">
-        <h1 class="form-title">Tambah Unit</h1>
+        <h1 class="form-title">Create Unit</h1>
         <hr>
 
         <?php if (session('swal')) : ?>
@@ -22,9 +22,9 @@
             <?= csrf_field() ?>
 
             <div class="form-group">
-                <label class="form-label" for="fakultas-direktorat">Fakultas/Direktorat</label>
+                <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
                 <select id="fakultas-direktorat" name="parent_id" class="form-input" required>
-                    <option value="">-- Pilih Fakultas/Direktorat --</option>
+                    <option value="">-- Choose Faculty/Directorate --</option>
                     <?php foreach ($fakultas as $f) : ?>
                         <option value="<?= $f['id'] ?>" <?= set_select('parent_id', $f['id']) ?>>
                             <?= esc($f['name']) ?>
@@ -39,7 +39,7 @@
                        id="unit"
                        name="unit_name"
                        class="form-input"
-                       placeholder="Tulis Unit disini..."
+                       placeholder="Enter Unit here..."
                        value="<?= set_value('unit_name') ?>"
                        required>
             </div>

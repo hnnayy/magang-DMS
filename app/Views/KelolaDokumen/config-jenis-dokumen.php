@@ -6,7 +6,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <div class="px-4 py-3 w-100">
-    <h4>Konfigurasi Jenis & Kode Dokumen</h4>
+    <h4>Document Type & Code Configuration</h4>
 
     <!-- Flash Messages -->
     <?php if (session()->getFlashdata('success')): ?>
@@ -45,9 +45,9 @@
     <!-- Tabel Jenis Dokumen -->
     <div class="table-responsive shadow-sm rounded bg-white p-3 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Daftar Jenis Dokumen</h5>
+            <h5 class="mb-0">Document Type List</h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKategoriModal">
-                <i class="bi bi-plus-lg"></i> Tambah Jenis Dokumen
+                <i class="bi bi-plus-lg"></i> Add Document Type
             </button>
         </div>
 
@@ -55,10 +55,10 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center">No</th>
-                    <th>Nama Jenis</th>
-                    <th>Kode</th>
-                    <th class="text-center">Gunakan Kode Predefined</th>
-                    <th class="text-center">Aksi</th>
+                    <th>Type Name</th>
+                    <th>Code</th>
+                    <th class="text-center">Use Predefined Code</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -69,9 +69,9 @@
                     <td><?= esc($kategori['kode']) ?></td>
                     <td class="text-center">
                         <?php if($kategori['use_predefined_codes']): ?>
-                            <span class="badge bg-success">Ya</span>
+                            <span class="badge bg-success">Yes</span>
                         <?php else: ?>
-                            <span class="badge bg-secondary">Tidak</span>
+                            <span class="badge bg-secondary">No</span>
                         <?php endif; ?>
                     </td>
                     <td class="text-center">
@@ -83,7 +83,7 @@
                             </a>
                             <a href="#" class="text-danger" 
                                onclick="deleteKategori(<?= $kategori['id'] ?>, '<?= esc($kategori['nama']) ?>')"
-                               title="Hapus">
+                               title="Delete">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>
@@ -97,9 +97,9 @@
     <!-- Tabel Kode-Nama Dokumen -->
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Daftar Kode-Nama Dokumen Predefined</h5>
+            <h5 class="mb-0">Predefined Document Code-Name List</h5>
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKodeModal">
-                <i class="bi bi-plus-lg"></i> Tambah Kode Dokumen
+                <i class="bi bi-plus-lg"></i> Add Document Code
             </button>
         </div>
 
@@ -111,9 +111,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center">No</th>
-                                <th>Kode</th>
-                                <th>Nama Dokumen</th>
-                                <th class="text-center">Aksi</th>
+                                <th>Code</th>
+                                <th>Document Name</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -143,7 +143,7 @@
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <p class="text-muted text-center py-4">Belum ada kode dokumen yang tersedia.</p>
+            <p class="text-muted text-center py-4">No document codes available.</p>
         <?php endif; ?>
     </div>
 </div>
@@ -155,33 +155,33 @@
             <form action="<?= base_url('admin/dokumen/add-kategori') ?>" method="POST">
                 <?= csrf_field() ?>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addKategoriModalLabel">Tambah Jenis Dokumen</h5>
+                    <h5 class="modal-title" id="addKategoriModalLabel">Add Document Type</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Jenis</label>
+                            <label class="form-label">Type Name</label>
 <input type="text" class="form-control" name="nama" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
 
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Kode</label>
+                            <label class="form-label">Code</label>
                             <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="usePredefined">
                                 <label class="form-check-label" for="usePredefined">
-                                    Gunakan Kode Predefined
+                                   Use Predefined Code
                                 </label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -196,32 +196,32 @@
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="editKategoriId">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editKategoriModalLabel">Edit Jenis Dokumen</h5>
+                    <h5 class="modal-title" id="editKategoriModalLabel">Edit Document Type</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Jenis</label>
+                            <label class="form-label">Type Name</label>
                             <input type="text" class="form-control" id="editKategoriNama" name="nama" ... >
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Kode</label>
+                            <label class="form-label">Code</label>
                            <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="editUsePredefined">
                                 <label class="form-check-label" for="editUsePredefined">
-                                    Gunakan Kode Predefined
+                                    Use Predefined Code
                                 </label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -235,15 +235,15 @@
             <form action="<?= base_url('admin/dokumen/add-kode') ?>" method="POST">
                 <?= csrf_field() ?>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addKodeModalLabel">Tambah Kode Dokumen</h5>
+                    <h5 class="modal-title" id="addKodeModalLabel">Add Document Code</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Jenis Dokumen</label>
+                            <label class="form-label">Document Type</label>
                             <select class="form-select" name="jenis" required>
-                                <option value="">Pilih Jenis Dokumen</option>
+                                <option value="">Select Document Type</option>
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
                                     <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
                                 <?php endforeach; ?>
@@ -251,19 +251,19 @@
 
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Kode</label>
+                            <label class="form-label">Code</label>
                             <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
 
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Nama Dokumen</label>
+                            <label class="form-label">Document Name</label>
                             <input type="text" class="form-control" name="nama" required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -278,30 +278,30 @@
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="editKodeId">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editKodeModalLabel">Edit Kode Dokumen</h5>
+                    <h5 class="modal-title" id="editKodeModalLabel">Edit Document Code</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                        <div class="col-md-4">
-    <label class="form-label">Jenis Dokumen</label>
+    <label class="form-label">Document Type</label>
     <input type="text" class="form-control" id="editKodeJenisNama" readonly>
     <input type="hidden" name="jenis" id="editKodeJenisValue">
 </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Kode</label>
-                                <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Masukkan kode..." oninput="this.value = this.value.toUpperCase()" required>
+                            <label class="form-label">Code</label>
+                                <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Enter code..." oninput="this.value = this.value.toUpperCase()" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Nama Dokumen</label>
-                            <input type="text" class="form-control" name="nama" id="editKodeNama" placeholder="Masukkan nama dokumen..." required>
+                            <label class="form-label">Document Name</label>
+                            <input type="text" class="form-control" name="nama" id="editKodeNama" placeholder="Enter document name..." required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>

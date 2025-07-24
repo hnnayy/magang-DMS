@@ -4,7 +4,7 @@
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
-            <h2><?= $title ?? 'Tambah Sub Menu' ?></h2>
+            <h2><?= $title ?? 'Add Submenu' ?></h2>
         </div>
 
         <?php if (session()->getFlashdata('success')) : ?>
@@ -20,7 +20,7 @@
             <div class="form-group">
                 <label class="form-label" for="menu">Menu</label>
                 <select name="parent" class="form-select <?php echo isset($validation) && isset($validation['parent']) ? 'is-invalid' : ''; ?>" required>
-                    <option value="">-- Pilih Menu --</option>
+                    <option value="">-- Choose Menu --</option>
                     <?php foreach ($menus as $menu): ?>
                         <option value="<?= $menu['id'] ?>" <?= old('parent') == $menu['id'] ? 'selected' : '' ?>>
                             <?= esc($menu['name']) ?>
@@ -38,7 +38,7 @@
             <div class="form-group <?php echo isset($validation) && isset($validation['submenu']) ? 'has-error' : ''; ?>">
                 <label for="editUnitName" class="form-label">Sub Menu</label>
                 <input type="text" name="submenu" id="editUnitName" class="form-control <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
-                       placeholder="Tulis Sub Menu di sini..."
+                       placeholder="Enter Submenu here... "
                        value="<?php echo old('submenu'); ?>"
                        required>
                 <?php if (isset($validation) && isset($validation['submenu'])) : ?>
