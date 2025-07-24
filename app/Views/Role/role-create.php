@@ -4,7 +4,7 @@
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
-            <h2><?= $title ?? 'Tambah Role Baru' ?></h2>
+            <h2><?= $title ?? 'Add New Role' ?></h2>
         </div>
 
         <form id="createRoleForm" method="post" action="<?= base_url('role/store') ?>">
@@ -12,9 +12,9 @@
 
             <!-- Nama Role -->
             <div class="form-group">
-                <label class="form-label" for="nama">Nama Role</label>
+                <label class="form-label" for="nama">Role Name</label>
                 <input type="text" id="nama" name="nama" class="form-input"
-                       placeholder="Tulis Nama Role disini..."
+                       placeholder="Enter Role Name here..."
                        value="<?= old('nama') ?>"
                        required>
             </div>
@@ -36,9 +36,9 @@
 
             <!-- Deskripsi -->
             <div class="form-group">
-                <label class="form-label" for="desc">Deskripsi</label>
+                <label class="form-label" for="desc">Description</label>
                 <textarea id="desc" name="desc" class="form-input"
-                          placeholder="Deskripsikan role ini..."
+                          placeholder="Describe this role..."
                           rows="3"
                           required><?= old('desc') ?></textarea>
             </div>
@@ -69,25 +69,7 @@
 
 <!-- SweetAlert (Notifikasi) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        confirmButtonText: 'OK'
-    });
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Error!',
-        text: '<?= session()->getFlashdata('error') ?>',
-        confirmButtonText: 'OK'
-    });
-    <?php endif; ?>
-</script>
 
 <script>
     // Fungsi untuk kapitalisasi setiap kata

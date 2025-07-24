@@ -18,7 +18,7 @@ class Role extends Controller
     // Menampilkan form tambah role
     public function create()
     {
-        $data = ['title' => 'Tambah Role Baru'];
+        $data = ['title' => 'Add New Role'];
         return view('Role/role-create', $data);
     }
 
@@ -41,8 +41,7 @@ class Role extends Controller
             'status'       => ($status === 'active') ? 1 : 2, // 1: active, 2: inactive
         ]);
 
-        session()->setFlashdata('success', 'Role baru berhasil ditambahkan.');
-        return redirect()->to('tambah-role');
+        return redirect()->to('add-roles')->with('added_message', 'Successfully Added');
     }
 
     // Menampilkan daftar role
@@ -56,8 +55,8 @@ class Role extends Controller
     public function delete($id)
     {
         $this->roleModel->update($id, ['status' => 0]);
-        session()->setFlashdata('success', 'Role berhasil dihapus');
-        return redirect()->to('lihat-role');
+        session()->setFlashdata('deleted_message', 'Successfully Deleted');
+        return redirect()->to('role-list');
     }
 
     // Update role
@@ -70,7 +69,7 @@ class Role extends Controller
 
         if (empty($namaRole) || empty($level) || empty($desc) || empty($status)) {
             session()->setFlashdata('error', 'Semua field harus diisi.');
-            return redirect()->to('lihat-role')->withInput();
+            return redirect()->to('role-list')->withInput();
         }
 
         $this->roleModel->update($id, [
@@ -80,7 +79,6 @@ class Role extends Controller
             'status'       => ($status === 'active') ? 1 : 2,
         ]);
 
-        session()->setFlashdata('success', 'Role berhasil diupdate.');
-        return redirect()->to('lihat-role');
+        return redirect()->to('role-list')->with('updated_message', 'Successfully Updated');
     }
 }

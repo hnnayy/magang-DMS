@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Lihat Role</h4>
+    <h4>Role List</h4>
     <hr>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -10,11 +10,11 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center" style="width: 5%;">No</th>
-                    <th>Nama Role</th>
+                    <th>Role Name</th>
                     <th>Level</th>
-                    <th>Deskripsi</th>
+                    <th>Description</th>
                     <th>Status</th>
-                    <th class="text-center" style="width: 20%;">Aksi</th>
+                    <th class="text-center" style="width: 20%;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,7 +84,7 @@
         <div class="modal-body">
             <input type="hidden" name="id" id="editRoleId">
             <div class="mb-3">
-                <label class="form-label">Nama Role</label>
+                <label class="form-label">Role Name</label>
                 <input type="text" name="role_name" id="editRoleName" class="form-control" required>
             </div>
             <div class="mb-3">
@@ -96,19 +96,24 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label">Deskripsi</label>
+                <label class="form-label">Description</label>
                 <textarea name="role_description" id="editRoleDescription" class="form-control" required></textarea>
             </div>
             <div class="mb-3">
                 <label class="form-label">Status</label>
-                <select name="role_status" id="editRoleStatus" class="form-select" required>
-                    <option value="1">Active</option>
-                    <option value="2">Inactive</option>
+                <select name="role_status" id="editRoleStatus" class="form-select">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                 </select>
+
+
+
+
+
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Simpan Perubahan</button>
+            <button class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>
@@ -127,11 +132,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Yakin ingin menghapus?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -151,21 +156,19 @@
         document.getElementById('editRoleName').value = roleName;
         document.getElementById('editRoleLevel').value = roleLevel;
         document.getElementById('editRoleDescription').value = roleDescription;
-        document.getElementById('editRoleStatus').value = roleStatus;
+
+        // Convert status 1/2 to 'active'/'inactive'
+        let statusText = '';
+        if (roleStatus == 1) {
+            statusText = 'active';
+        } else if (roleStatus == 2) {
+            statusText = 'inactive';
+        }
+        document.getElementById('editRoleStatus').value = statusText;
     }
+
 </script>
 
-<?php if (session()->getFlashdata('success')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        showConfirmButton: false,
-        timer: 2000
-    });
-</script>
-<?php endif; ?>
 
 <?= $this->endSection() ?>
 

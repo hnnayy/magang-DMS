@@ -6,16 +6,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Impor SweetAlert -->
 </head>
 
-<?php if (session('swal')) : ?>
-<script>
-    Swal.fire({
-        icon:   '<?= esc(session('swal')['icon'])  ?>',
-        title:  '<?= esc(session('swal')['title']) ?>',
-        text:   '<?= esc(session('swal')['text'])  ?>',
-        confirmButtonColor: '#6868ff'
-    });
-</script>
-<?php endif; ?>
+
+<?= $this->include('partials/alerts') ?>
+
 
 <body>
     <?= $this->include('layout/sidebar') ?>
