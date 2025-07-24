@@ -48,7 +48,7 @@
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
-            <h2><?= $title ?? 'Tambah Menu' ?></h2>
+            <h2><?= $title ?? 'Add Menu' ?></h2>
         </div>
 
         <?php $validation = $validation ?? \Config\Services::validation(); ?>
@@ -57,16 +57,16 @@
 
             <!-- Nama Menu -->
             <div class="form-group">
-                <label class="form-label" for="menuName">Nama Menu</label>
-                <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" class="form-control" placeholder="Tulis Nama Menu disini..." pattern="^[a-zA-Z0-9\s]{1,40}$" title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimum 40 karakter" maxlength="40" required>
-                <div class="invalid-feedback">Nama menu wajib diisi.</div>
+                <label class="form-label" for="menuName">Menu Name</label>
+                <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" class="form-control" placeholder="Enter Menu here..." pattern="^[a-zA-Z0-9\s]{1,40}$" title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimum 40 karakter" maxlength="40" required>
+                <div class="invalid-feedback">Menu name is mandatory.</div>
             </div>
 
             <!-- Icon -->
             <div class="form-group">
-                <label class="form-label" for="icon">Icon (contoh: fa home, fa-home, menu-icon)</label>
-                <input type="text" id="icon" name="icon" value="<?= old('icon') ?>" class="form-control" placeholder="Tulis nama icon disini..." pattern="^[a-z0-9\s\-]{1,40}$" title="Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-), maksimum 40 karakter" maxlength="40" required>
-                <div class="invalid-feedback">Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-).</div>
+                <label class="form-label" for="icon">Icon (example: fa home, fa-home, menu-icon)</label>
+                <input type="text" id="icon" name="icon" value="<?= old('icon') ?>" class="form-control" placeholder="Enter Icon here..." pattern="^[a-z0-9\s\-]{1,40}$" title="Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-), maksimum 40 karakter" maxlength="40" required>
+                <div class="invalid-feedback">Icons may only contain lowercase letters, numbers, spaces, and minus signs (-).</div>
             </div>
 
             <!-- Status -->
@@ -75,14 +75,14 @@
                 <div style="display: flex; gap: 30px;">
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="status" id="statusActive" value="1" required <?= old('status') !== '0' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="statusActive">Aktif</label>
+                        <label class="form-check-label" for="statusActive">Active</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="status" id="statusInactive" value="0" required <?= old('status') === '0' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="statusInactive">Nonaktif</label>
+                        <label class="form-check-label" for="statusInactive">Inactive</label>
                     </div>
                 </div>
-                <div class="invalid-feedback">Silakan pilih status.</div>
+                <div class="invalid-feedback">Please select a status.</div>
             </div>
 
             <button type="submit" class="submit-btn">Submit</button>
@@ -100,7 +100,7 @@
     <?php if (session()->getFlashdata('success')): ?>
         Swal.fire({
             icon: 'success',
-            title: 'Berhasil!',
+            title: 'Success!',
             text: '<?= session()->getFlashdata('success') ?>',
             confirmButtonText: 'OK',
             confirmButtonColor: '#6C63FF'
@@ -110,7 +110,7 @@
     <?php if (session()->getFlashdata('error')): ?>
         Swal.fire({
             icon: 'error',
-            title: 'Gagal!',
+            title: 'Failed!',
             text: '<?= session()->getFlashdata('error') ?>',
             confirmButtonText: 'OK',
             confirmButtonColor: '#6C63FF'

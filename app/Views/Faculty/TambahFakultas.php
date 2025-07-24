@@ -4,7 +4,7 @@
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
-            <h2><?= $title ?? 'Tambah Fakultas' ?></h2>
+            <h2><?= $title ?? 'Create Fakulty' ?></h2>
         </div>
 
         <form id="createFakultasForm" method="post" action="<?= base_url('data-master/fakultas/store') ?>">
@@ -12,9 +12,9 @@
 
             <!-- Nama Fakultas -->
             <div class="form-group">
-                <label class="form-label" for="name">Nama Fakultas/Directorate</label>
+                <label class="form-label" for="name">Fakulty/Directorate Name</label>
                 <input type="text" id="name" name="name" class="form-input"
-                       placeholder="Tulis Nama Fakultas disini..."
+                       placeholder="Enter faculty here..."
                        value="<?= set_value('name') ?>"
                        required>
             </div>

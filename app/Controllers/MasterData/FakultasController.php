@@ -17,7 +17,7 @@ class FakultasController extends Controller
 
     public function create()
     {
-        $data = ['title' => 'Tambah Fakultas Baru'];
+        $data = ['title' => 'Create Faculty'];
         return view('Faculty/TambahFakultas', $data);
     }
 
@@ -28,11 +28,11 @@ class FakultasController extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($nama) || empty($type) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
+            return redirect()->back()->withInput()->with('error', 'All fields must be filled in.');
         }
 
         if ($this->unitParentModel->where('name', $nama)->first()) {
-            return redirect()->back()->withInput()->with('error', 'Nama fakultas sudah terdaftar.');
+            return redirect()->back()->withInput()->with('error', 'Faculty names are listed.');
         }
 
         $this->unitParentModel->insert([
@@ -42,7 +42,7 @@ class FakultasController extends Controller
             'status'      => (int)$status,
         ]);
 
-        session()->setFlashdata('success', 'Fakultas baru berhasil ditambahkan.');
+        session()->setFlashdata('success', 'New faculty successfully added.');
         return redirect()->to('/data-master/fakultas/create');
     }
 
@@ -55,7 +55,7 @@ class FakultasController extends Controller
     public function delete($id)
     {
         $this->unitParentModel->update($id, ['status' => 0]);
-        session()->setFlashdata('success', 'berhasil dihapus.');
+        session()->setFlashdata('success', 'deleted successfully.');
         return redirect()->to('/data-master/fakultas/list');
     }
 
@@ -88,9 +88,9 @@ class FakultasController extends Controller
         $result = $this->unitParentModel->update($id, $updateData);
 
         if ($result) {
-            session()->setFlashdata('success', 'Fakultas berhasil diupdate.');
+            session()->setFlashdata('success', 'Faculty updated successfully.');
         } else {
-            session()->setFlashdata('error', 'Gagal mengupdate fakultas.');
+            session()->setFlashdata('error', 'Failed to update faculty.');
         }
 
         return redirect()->to('/data-master/fakultas/list');

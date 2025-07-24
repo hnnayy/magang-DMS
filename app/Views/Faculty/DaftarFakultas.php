@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Daftar Fakultas</h4>
+    <h4>Faculty list</h4>
     <hr>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -10,10 +10,10 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center">No</th>
-                    <th>Nama Fakultas</th>
-                    <th>Type</th>
+                    <th>Name Faculty</th>
+                    <th>Level</th>
                     <th>Status</th>
-                    <th class="text-center">Aksi</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -64,14 +64,14 @@
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content shadow border-0">
       <div class="modal-header">
-        <h5 class="modal-title">Edit Fakultas</h5>
+        <h5 class="modal-title">Edit Faculty</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="post" id="editFakultasForm">
         <?= csrf_field() ?>
         <div class="modal-body">
             <div class="mb-3">
-                <label class="form-label">Nama Fakultas</label>
+                <label class="form-label">Faculty Name</label>
                 <input type="text" name="name" id="editFakultasName" class="form-control" required>
             </div>
 
@@ -101,7 +101,7 @@
         </div>
 
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Simpan Perubahan</button>
+            <button class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>
@@ -124,11 +124,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Yakin ingin menghapus?',
+            title: 'Are you sure you want to delete?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Yes, delete!',
+            cancelButtonText: 'Cancalled'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -163,7 +163,7 @@
 <script>
     Swal.fire({
         icon: 'success',
-        title: 'Berhasil!',
+        title: 'success!',
         text: '<?= session()->getFlashdata('success') ?>',
         showConfirmButton: false,
         timer: 2000

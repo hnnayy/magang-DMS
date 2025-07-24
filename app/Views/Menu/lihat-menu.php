@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-    <h4>Daftar Menu</h4>
+    <h4>Menu List</h4>
     <hr>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -10,10 +10,10 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center" style="width: 5%;">No</th>
-                    <th style="width: 30%;">Nama Menu</th>
+                    <th style="width: 30%;">Menu Name</th>
                     <th style="width: 30%;">Icon</th>
                     <th class="text-center" style="width: 10%;">Status</th>
-                    <th class="text-center" style="width: 25%;">Aksi</th>
+                    <th class="text-center" style="width: 25%;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,7 +66,7 @@
         <div class="modal-body">
             <input type="hidden" name="id" id="editMenuId">
             <div class="mb-3">
-                <label class="form-label">Nama Menu</label>
+                <label class="form-label">Menu Name </label>
                 <input type="text" name="menu_name" id="editMenuName" class="form-control" required>
             </div>
             <div class="mb-3">
@@ -86,7 +86,7 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Simpan Perubahan</button>
+            <button class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>

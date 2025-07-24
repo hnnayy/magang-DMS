@@ -18,7 +18,7 @@ class Menu extends BaseController
     public function create()
     {
         return view('Menu/create-menu', [
-            'title' => 'Tambah Menu'
+            'title' => 'Add Menu'
         ]);
     }
 
@@ -84,17 +84,18 @@ class Menu extends BaseController
         ];
 
         if ($this->menuModel->insert($data)) {
-            return redirect()->back()->with('success', 'Menu berhasil ditambahkan.');
+            return redirect()->back()->with('success', 'menu added successfully
+.');
         }
 
-        return redirect()->back()->with('error', 'Gagal menambahkan menu.');
+        return redirect()->back()->with('error', 'Failed to add menu.');
     }
 
     // Soft delete menu (ubah status jadi 0)
     public function delete($id)
     {
         $this->menuModel->update($id, ['status' => 0]);
-        return redirect()->to(base_url('Menu'))->with('success', 'Menu berhasil dihapus.');
+        return redirect()->to(base_url('Menu'))->with('success', 'Failed to add menu');
     }
 
     // Proses update menu
