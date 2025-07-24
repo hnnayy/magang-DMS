@@ -137,7 +137,13 @@ class KelolaDokumen extends BaseController
         return $this->response->setJSON(['kode' => $kode['kode'] ?? '']);
     }
 
-public function pengajuan()
+
+
+
+
+
+
+ public function pengajuan()
 {
     $documentModel = new \App\Models\DocumentModel();
     $unitParentModel = new \App\Models\UnitParentModel();
@@ -158,7 +164,7 @@ public function pengajuan()
         ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
         ->join('document_revision dr', 'dr.document_id = document.id', 'left')
         ->where('document.createdby !=', 0)
-        ->where('document.status', 0) // Hanya status 0 (menunggu)
+        ->whereIn('document.status', [0, 1, 2]) // Menampilkan status 0 (Waiting), 1 (Approved), 2 (Disapproved)
         ->groupBy('document.id')
         ->findAll();
 
@@ -445,7 +451,7 @@ public function tambah()
         'status' => 0,
         'createddate' => date('Y-m-d H:i:s'),
         'createdby' => session('user_id'),
-        'original_document_id' => $nextId, // Set original_document_id to the new ID
+        'original_document_id' => $nextId, 
     ]);
 
     $documentId = $this->documentModel->getInsertID();
@@ -481,7 +487,7 @@ public function approvepengajuan()
     $remarks       = $this->request->getPost('remarks');
     $action        = $this->request->getPost('action'); 
 
-    $status = $action === 'approve' ? 2 : 1;
+    $status = $action === 'approve' ? 1 : 2;
 
     $data = [
         'document_id' => $document_id,
@@ -510,21 +516,48 @@ public function approvepengajuan()
         return $this->response->download($path, null);
     }
 
-    public function deletePengajuan()
-    {
-        $id = $this->request->getPost('document_id');
 
-        $doc = $this->documentModel->find($id);
-        if (!$id || !$doc) {
-            return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
-        }
+
+    public function deletePengajuan()
+{
+    $id = $this->request->getPost('document_id');
+
+    // Validate document ID
+    if (!$id) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'ID dokumen tidak valid.'
+        ], 400);
+    }
+
+    // Check if document exists
+    $doc = $this->documentModel->find($id);
+    if (!$doc) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Dokumen tidak ditemukan.'
+        ], 404); 
+    }
+
+    // Perform soft delete
+    try {
         $this->documentModel->update($id, [
             'status' => 3,
-            'createdby' => 0,
+            'createdby' => 0
         ]);
 
-        return redirect()->back()->with('success', 'Dokumen berhasil dihapus (soft delete).');
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Dokumen berhasil dihapus.'
+        ], 200); 
+    } catch (\Exception $e) {
+        log_message('error', 'Error deleting document ID ' . $id . ': ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat menghapus dokumen: ' . $e->getMessage()
+        ], 500); 
     }
+}
 
 
 public function updatepengajuan()
@@ -576,7 +609,7 @@ public function updatepengajuan()
         'status' => 0,
         'createddate' => date('Y-m-d H:i:s'),
         'createdby' => session('user_id'),
-        'original_document_id' => $originalDocumentId, // Use the original_document_id from the original document
+        'original_document_id' => $originalDocumentId,
     ];
 
     try {
@@ -717,19 +750,6 @@ public function get_history($document_id)
         ],
     ]);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 public function serveFile($documentId)

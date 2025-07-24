@@ -29,46 +29,41 @@
         <?php endif; ?>
 
         <!-- Filter card -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <label for="searchInput" class="form-label">Cari Dokumen</label>
-                <input type="text" class="form-control" placeholder="Cari dokumen..." id="searchInput">
-            </div>
-<!-- Dropdown Filter Fakultas -->
-<div class="col-md-3">
-    <label for="filterFakultas" class="form-label">Filter Fakultas</label>
-    <select class="form-select" id="filterFakultas">
-        <option value="">Semua Fakultas</option>
-        <?php foreach ($fakultas_list as $fakultas): ?>
-            <option value="<?= esc($fakultas['id']) ?>"><?= esc($fakultas['name']) ?></option>
-        <?php endforeach; ?>
-    </select>
-</div>
-
-<!-- Kolom Fakultas di Tabel -->
-<td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
-    <?= esc($doc['parent_name'] ?? '-') ?>
-</td>
-            <div class="col-md-3">
-                <label for="filterJenis" class="form-label">Filter Jenis</label>
-                <select class="form-select" id="filterJenis">
-                    <option value="">Semua Jenis</option>
-                    <?php foreach ($kategori_dokumen as $kategori): ?>
-                        <option value="<?= esc($kategori['id']) ?>"><?= esc($kategori['nama']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">&nbsp;</label>
-                <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
-                    <i class="bi bi-arrow-counterclockwise"></i> Reset
-                </button>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="searchInput" class="form-label">Cari Dokumen</label>
+                        <input type="text" class="form-control" placeholder="Cari dokumen..." id="searchInput">
+                    </div>
+                    <!-- Dropdown Filter Fakultas -->
+                    <div class="col-md-3">
+                        <label for="filterFakultas" class="form-label">Filter Fakultas</label>
+                        <select class="form-select" id="filterFakultas">
+                            <option value="">Semua Fakultas</option>
+                            <?php foreach ($fakultas_list as $fakultas): ?>
+                                <option value="<?= esc($fakultas['id']) ?>"><?= esc($fakultas['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filterJenis" class="form-label">Filter Jenis</label>
+                        <select class="form-select" id="filterJenis">
+                            <option value="">Semua Jenis</option>
+                            <?php foreach ($kategori_dokumen as $kategori): ?>
+                                <option value="<?= esc($kategori['id']) ?>"><?= esc($kategori['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label"> </label>
+                        <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
         <!-- Table -->
         <div class="table-responsive shadow-sm rounded bg-white p-3">
@@ -127,14 +122,12 @@
                                 <td>
                                     <?php if (!empty($doc['filepath'])): ?>
                                         <div class="d-flex gap-2">
-                                            <!-- Ikon untuk membuka di tab baru -->
                                             <a href="<?= base_url('kelola-dokumen/file/' . $doc['id'] . '?action=view') ?>" 
                                                target="_blank" 
                                                class="text-decoration-none" 
                                                title="Buka file di tab baru">
                                                 <i class="bi bi-file-earmark-text text-primary fs-5"></i>
                                             </a>
-                                            <!-- Ikon untuk download -->
                                             <a href="<?= base_url('kelola-dokumen/file/' . $doc['id'] . '?action=download') ?>" 
                                                class="text-decoration-none" 
                                                title="Download file">
@@ -171,15 +164,13 @@
                                             title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
-
-<button class="btn btn-sm btn-outline-info view-history-btn"
-    data-bs-toggle="modal"
-    data-bs-target="#historyModal"
-    data-id="<?= $doc['id'] ?? '' ?>"
-    title="Lihat History">
-    <i class="bi bi-eye"></i>
-</button>
-
+                                        <button class="btn btn-sm btn-outline-info view-history-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#historyModal"
+                                            data-id="<?= $doc['id'] ?? '' ?>"
+                                            title="Lihat History">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-outline-success approve-btn"
                                             data-id="<?= $doc['id'] ?? '' ?>"
                                             data-bs-toggle="modal"
@@ -187,7 +178,6 @@
                                             title="Approve">
                                             <i class="bi bi-check-circle"></i>
                                         </button>
-
                                         <button class="btn btn-sm btn-outline-danger delete-document" 
                                             data-id="<?= $doc['id'] ?? '' ?>" 
                                             title="Hapus">
@@ -219,12 +209,10 @@
             <form action="<?= base_url('kelola-dokumen/updatepengajuan') ?>" method="post" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 <input type="hidden" name="document_id" id="editDocumentId">
-
                 <div class="modal-header border-bottom-0 pb-2">
                     <h5 class="modal-title fw-bold" id="editModalLabel">Edit Dokumen</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
-
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -260,7 +248,6 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="col-md-6" id="editKodeGroup" style="display: none;">
                             <label for="editNamaKode" class="form-label">Kode - Nama Dokumen</label>
                             <select name="kode_dokumen" id="editNamaKode" class="form-select">
@@ -268,12 +255,10 @@
                             </select>
                             <small class="text-muted">Pilih jenis dokumen terlebih dahulu</small>
                         </div>
-
                         <div class="col-md-6" id="editKodeCustomGroup" style="display: none;">
                             <label for="editKodeCustom" class="form-label">Kode & Nama Dokumen</label>
                             <input type="text" id="editKodeCustom" name="kode_dokumen_custom" class="form-control" placeholder="Masukkan kode dan nama dokumen...">
                         </div>
-
                         <div class="col-12">
                             <label for="editKeterangan" class="form-label">Keterangan</label>
                             <textarea class="form-control" name="keterangan" id="editKeterangan" rows="3" placeholder="Masukkan keterangan dokumen..."></textarea>
@@ -292,7 +277,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer border-top-0 pt-3">
                     <div class="d-flex gap-2 w-100">
                         <button type="button" class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Batal</button>
@@ -327,7 +311,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- History Table -->
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover align-middle" id="historyTable">
@@ -338,9 +321,9 @@
                                 <th style="width: 15%;">No Dokumen</th>
                                 <th style="width: 15%;">File</th>
                                 <th class="text-center" style="width: 15%;">Revisi</th>
-                                <th style="width: 20%;">Tanggal</th>
+                                <th style="width: 25%;">Tanggal</th>
                                 <th style="width: 10%;">Status</th>
-                                <th class="text-center" style="width: 10%;">Aksi</th> <!-- Added Aksi column -->
+                                <!-- Kolom Aksi dihapus -->
                             </tr>
                         </thead>
                         <tbody id="historyTableBody">
@@ -356,8 +339,6 @@
     </div>
 </div>
 
-
-
 <!-- Modal Approve -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -365,12 +346,10 @@
             <form action="<?= base_url('kelola-dokumen/approvepengajuan') ?>" method="post">
                 <?= csrf_field() ?>
                 <input type="hidden" name="document_id" id="approveDocumentId">
-                
                 <div class="modal-header border-bottom-0 pb-2">
                     <h5 class="modal-title fw-bold">Persetujuan Dokumen</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
-                
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="approved_by_display" class="form-label">
@@ -389,7 +368,6 @@
                             value="<?= esc(session()->get('user_id')) ?>"
                         >
                     </div>
-
                     <div class="mb-3">
                         <label for="approval_date" class="form-label">Tanggal Persetujuan <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" name="approval_date" id="approval_date" required>
@@ -399,12 +377,10 @@
                         <textarea class="form-control" name="remarks" id="remarks" rows="3" placeholder="Masukkan catatan persetujuan..."></textarea>
                     </div>
                 </div>
-                
                 <div class="modal-footer border-top-0 pt-0">
                     <div class="row w-100 g-2">
                         <div class="col-6">
-                            <button type="submit" name="action" value="
-                            disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
+                            <button type="submit" name="action" value="disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
                         </div>
                         <div class="col-6">
                             <button type="submit" name="action" value="approve" class="btn btn-success w-100">Approve</button>
@@ -539,13 +515,13 @@ $(document).ready(function() {
                 return meta.row + meta.settings._iDisplayStart + 1;
             }
         }, {
-            targets: [10], // Kolom aksi
+            targets: [10], 
             orderable: false,
             searchable: false
         }],
         responsive: true,
         autoWidth: false,
-        order: [[3, 'asc']] // Sort by nama dokumen
+        order: [[3, 'asc']] 
     });
 
     // Hide default search
@@ -556,22 +532,35 @@ $(document).ready(function() {
         table.search(this.value).draw();
     });
 
-    // Filter by fakultas
+// Filter by fakultas using custom filter
 $('#filterFakultas').on('change', function() {
     const val = this.value;
-    console.log('Selected Fakultas ID:', val); // Log nilai yang dipilih
-    table.column(1).search(val, false, false, false).draw();
+    console.log('Selected Fakultas ID:', val); 
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            const row = $('#documentsTable').DataTable().row(dataIndex);
+            const fakultasId = row.node().querySelector('td[data-fakultas]').getAttribute('data-fakultas') || '';
+            return val === '' || fakultasId === val;
+        }
+    );
+    $('#documentsTable').DataTable().draw();
+    $.fn.dataTable.ext.search.pop(); 
 });
 
-    // Filter by jenis
-    $('#filterJenis').on('change', function() {
-        const val = this.value;
-        if (val) {
-            table.column(6).search(val, false, false, false).draw();
-        } else {
-            table.column(6).search('').draw();
+// Filter by jenis using custom filter
+$('#filterJenis').on('change', function() {
+    const val = this.value;
+    console.log('Selected Jenis ID:', val); 
+    $.fn.dataTable.ext.search.push(
+        function(settings, data, dataIndex) {
+            const row = $('#documentsTable').DataTable().row(dataIndex);
+            const jenisId = row.node().querySelector('td[data-jenis]').getAttribute('data-jenis') || '';
+            return val === '' || jenisId === val;
         }
-    });
+    );
+    $('#documentsTable').DataTable().draw();
+    $.fn.dataTable.ext.search.pop(); 
+});
 
     // Set default approval date to today
     const today = new Date().toISOString().split('T')[0];
@@ -736,7 +725,7 @@ $('#filterFakultas').on('change', function() {
     $('input[type="file"]').on('change', function() {
         const file = this.files[0];
         if (file) {
-            const fileSize = file.size / 1024 / 1024; // Convert to MB
+            const fileSize = file.size / 1024 / 1024; 
             const allowedTypes = [
                 'application/pdf',
                 'application/msword',
@@ -747,7 +736,7 @@ $('#filterFakultas').on('change', function() {
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
             ];
 
-            if (fileSize > 10) { // 10MB limit
+            if (fileSize > 10) { 
                 Swal.fire({
                     icon: 'error',
                     title: 'File Terlalu Besar',
@@ -788,7 +777,7 @@ $('#filterFakultas').on('change', function() {
         
         searchTimeout = setTimeout(function() {
             table.search(searchTerm).draw();
-        }, 300); // 300ms delay
+        }, 300);
     });
 
     // Export functionality (if needed)
@@ -917,7 +906,6 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('id-ID', options);
 }
 
-
 // Event handler untuk view history button
 $(document).on('click', '.view-history-btn', function() {
     const id = $(this).data('id');
@@ -925,7 +913,7 @@ $(document).on('click', '.view-history-btn', function() {
     
     $('#historyNamaDokumen').text('-');
     $('#historyJenisDokumen').text('-');
-    $('#historyTableBody').html('<tr><td colspan="8" class="text-center">Memuat data...</td></tr>'); // Updated colspan to 8
+    $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Memuat data...</td></tr>'); // Colspan diperbarui ke 7
 
     $.ajax({
         url: '<?= base_url("kelola-dokumen/get-history") ?>/' + id,
@@ -950,20 +938,10 @@ $(document).on('click', '.view-history-btn', function() {
                                 </a>
                             </div>
                         ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
-                        const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Menunggu</span>' :
-                                      item.status == 1 ? '<span class="badge bg-danger">Approved</span>' :
-                                      item.status == 2 ? '<span class="badge bg-success">Disapproved</span>' :
-                                      item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
-                        const actionButtons = item.filepath ? `
-                            <div class="d-flex justify-content-center gap-1">
-                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=view" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="<?= base_url('kelola-dokumen/file/') ?>${item.document_id}?action=download" class="btn btn-sm btn-outline-success" title="Download">
-                                    <i class="bi bi-download"></i>
-                                </a>
-                            </div>
-                        ` : '<span class="text-muted">-</span>';
+                        const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
+                                           item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
+                                           item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
+                                           item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
                         html += `
                             <tr>
                                 <td class="text-center">${index + 1}</td>
@@ -973,28 +951,25 @@ $(document).on('click', '.view-history-btn', function() {
                                 <td class="text-center">${item.revision || 'Rev. 0'}</td>
                                 <td>${formatDate(item.updated_at)}</td>
                                 <td>${statusBadge}</td>
-                                <td class="text-center">${actionButtons}</td>
                             </tr>
                         `;
                     });
                 } else {
                     console.log('No history data');
-                    html = '<tr><td colspan="8" class="text-center text-muted">Belum ada history pengeditan</td></tr>'; // Updated colspan to 8
+                    html = '<tr><td colspan="7" class="text-center text-muted">Belum ada history pengeditan</td></tr>';
                 }
                 $('#historyTableBody').html(html);
             } else {
                 console.log('Failed response:', response.message || 'No data');
-                $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Gagal memuat data history</td></tr>'); // Updated colspan to 8
+                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Gagal memuat data history</td></tr>');
             }
         },
         error: function(xhr, status, error) {
             console.log('Error AJAX:', error, xhr.responseText);
-            $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Terjadi kesalahan saat memuat data</td></tr>'); // Updated colspan to 8
+            $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Terjadi kesalahan saat memuat data</td></tr>');
         }
     });
 });
-
-
 
 // Reset history modal on hide
 $('#historyModal').on('hidden.bs.modal', function() {
