@@ -186,7 +186,7 @@ class KelolaDokumen extends BaseController
     ];
 
     log_message('debug', 'Documents retrieved: ' . json_encode($documents));
-
+    log_message('debug', 'Documents loaded: ' . json_encode($documents));
     return view('KelolaDokumen/daftar-pengajuan', $data);
 }
 
@@ -478,30 +478,58 @@ public function tambah()
 
 
 
-
 public function approvepengajuan()
 {
     date_default_timezone_set('Asia/Jakarta');
-    $document_id   = $this->request->getPost('document_id');
-    $approved_by   = $this->request->getPost('approved_by');
-    $remarks       = $this->request->getPost('remarks');
-    $action        = $this->request->getPost('action'); 
+    $document_id = $this->request->getPost('document_id');
+    $approved_by = $this->request->getPost('approved_by');
+    $remarks = $this->request->getPost('remarks');
+    $action = trim($this->request->getPost('action') ?? '');
 
-    $status = $action === 'approve' ? 1 : 2;
+    log_message('debug', 'Received data - document_id: ' . $document_id . ', approved_by: ' . $approved_by . ', remarks: ' . $remarks . ', action: ' . $action);
+
+    // Validasi input wajib
+    if (!$document_id || !$approved_by) {
+        log_message('error', 'Missing required fields: document_id or approved_by');
+        return redirect()->back()->with('error', 'Data wajib tidak lengkap.');
+    }
+
+    // Periksa action dengan fallback
+    $validActions = ['approve', 'disapprove'];
+    if (!in_array(strtolower($action), $validActions)) {
+        log_message('error', 'Invalid action received: ' . $action);
+        return redirect()->back()->with('error', 'Aksi tidak valid. Action received: ' . $action);
+    }
+
+    $status = strtolower($action) === 'approve' ? 1 : 2;
 
     $data = [
         'document_id' => $document_id,
-        'remark'      => $remarks,
-        'status'      => $status,
+        'remark' => $remarks,
+        'status' => $status,
         'approvedate' => date('Y-m-d H:i:s'),
-        'approveby'   => $approved_by,
+        'approveby' => $approved_by,
     ];
 
-    $this->documentApprovalModel->insert($data);
-    $this->documentModel->update($document_id, ['status' => $status]);
+    try {
+        $this->db->transStart();
+        $this->documentApprovalModel->insert($data);
+        $this->documentModel->update($document_id, ['status' => $status]);
+        $this->db->transComplete();
 
-    return redirect()->back()->with('success', 'Dokumen berhasil diproses.');
+        if ($this->db->transStatus() === false) {
+            throw new \Exception('Transaksi gagal.');
+        }
+
+        log_message('info', 'Document ' . $document_id . ' processed with status: ' . $status);
+        return redirect()->back()->with('success', 'Dokumen berhasil diproses.');
+    } catch (\Exception $e) {
+        log_message('error', 'Error processing approval for document ' . $document_id . ': ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal memproses dokumen: ' . $e->getMessage());
+    }
 }
+
+
 
     public function generateSignedPDF()
     {
@@ -790,6 +818,23 @@ public function serveFile($documentId)
         ->setHeader('Content-Type', $mimeType)
         ->setHeader('Content-Disposition', $disposition . '; filename="' . $revision['filename'] . '"')
         ->setBody(file_get_contents($filePath));
+}
+
+public function getStatus($documentId)
+{
+    $document = $this->documentModel->find($documentId);
+    if ($document) {
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'status' => $document['status']
+            ]
+        ]);
+    }
+    return $this->response->setJSON([
+        'success' => false,
+        'message' => 'Dokumen tidak ditemukan'
+    ], 404);
 }
 
 }

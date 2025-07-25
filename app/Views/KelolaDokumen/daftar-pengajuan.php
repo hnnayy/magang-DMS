@@ -57,9 +57,9 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label"> </label>
-                        <button class="btn btn-outline-secondary w-100 d-block" onclick="resetFilters()">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                        </button>
+<button id="resetButton" class="btn btn-outline-secondary w-100 d-block">
+    <i class="bi bi-arrow-counterclockwise"></i> Reset
+</button>
                     </div>
                 </div>
             </div>
@@ -145,46 +145,48 @@
                                         <?= esc($doc['description'] ?? '-') ?>
                                     </div>
                                 </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
-                                        <button class="btn btn-sm btn-outline-primary edit-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editModal"
-                                            data-id="<?= $doc['id'] ?? '' ?>"
-                                            data-fakultas="<?= esc($doc['parent_name'] ?? '-') ?>"
-                                            data-unit="<?= esc($doc['unit_name'] ?? '-') ?>"
-                                            data-nama="<?= esc($doc['title'] ?? '') ?>"
-                                            data-nomor="<?= esc($doc['number'] ?? '') ?>"
-                                            data-revisi="<?= esc($doc['revision'] ?? 'Rev. 0') ?>"
-                                            data-jenis="<?= esc($doc['type'] ?? '') ?>"
-                                            data-keterangan="<?= esc($doc['description'] ?? '') ?>"
-                                            data-nama-kode="<?= esc($doc['kode_dokumen_id'] ?? '') ?>"
-                                            data-filepath="<?= esc($doc['filepath'] ?? '') ?>"
-                                            data-filename="<?= esc($doc['filename'] ?? '') ?>"
-                                            title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-info view-history-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#historyModal"
-                                            data-id="<?= $doc['id'] ?? '' ?>"
-                                            title="Lihat History">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success approve-btn"
-                                            data-id="<?= $doc['id'] ?? '' ?>"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#approveModal"
-                                            title="Approve">
-                                            <i class="bi bi-check-circle"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger delete-document" 
-                                            data-id="<?= $doc['id'] ?? '' ?>" 
-                                            title="Hapus">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                            <td class="text-center">
+    <div class="d-flex justify-content-center gap-1">
+        <button class="btn btn-sm btn-outline-primary edit-btn"
+            data-bs-toggle="modal"
+            data-bs-target="#editModal"
+            data-id="<?= $doc['id'] ?? '' ?>"
+            data-fakultas="<?= esc($doc['parent_name'] ?? '-') ?>"
+            data-unit="<?= esc($doc['unit_name'] ?? '-') ?>"
+            data-nama="<?= esc($doc['title'] ?? '') ?>"
+            data-nomor="<?= esc($doc['number'] ?? '') ?>"
+            data-revisi="<?= esc($doc['revision'] ?? 'Rev. 0') ?>"
+            data-jenis="<?= esc($doc['type'] ?? '') ?>"
+            data-keterangan="<?= esc($doc['description'] ?? '') ?>"
+            data-nama-kode="<?= esc($doc['kode_dokumen_id'] ?? '') ?>"
+            data-filepath="<?= esc($doc['filepath'] ?? '') ?>"
+            data-filename="<?= esc($doc['filename'] ?? '') ?>"
+            data-status="<?= esc($doc['status'] ?? 0) ?>" <!-- Tambahkan status di sini -->
+          
+            <i class="bi bi-pencil-square"></i>
+        </button>
+        <!-- Tombol lainnya tetap sama -->
+        <button class="btn btn-sm btn-outline-info view-history-btn"
+            data-bs-toggle="modal"
+            data-bs-target="#historyModal"
+            data-id="<?= $doc['id'] ?? '' ?>"
+            title="Lihat History">
+            <i class="bi bi-eye"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-success approve-btn"
+            data-id="<?= $doc['id'] ?? '' ?>"
+            data-bs-toggle="modal"
+            data-bs-target="#approveModal"
+            title="Approve">
+            <i class="bi bi-check-circle"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger delete-document" 
+            data-id="<?= $doc['id'] ?? '' ?>" 
+            title="Hapus">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</td>
                             </tr>
                             <?php endif; ?>
                         <?php endforeach; ?>
@@ -338,12 +340,11 @@
         </div>
     </div>
 </div>
-
-<!-- Modal Approve -->
+<!-- Modal Approve (di bagian yang sudah ada) -->
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-sm">
-            <form action="<?= base_url('kelola-dokumen/approvepengajuan') ?>" method="post">
+            <form action="<?= base_url('kelola-dokumen/approvepengajuan') ?>" method="post" id="approveForm">
                 <?= csrf_field() ?>
                 <input type="hidden" name="document_id" id="approveDocumentId">
                 <div class="modal-header border-bottom-0 pb-2">
@@ -390,7 +391,6 @@
             </form>
         </div>
     </div>
-</div>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -399,6 +399,7 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 // Function untuk handle perubahan jenis dokumen di edit modal
@@ -479,14 +480,8 @@ function loadEditKodeDokumen(jenis) {
     });
 }
 
-// Reset filters
-function resetFilters() {
-    $('#searchInput').val('');
-    $('#filterFakultas').val('');
-    $('#filterJenis').val('');
-    const table = $('#documentsTable').DataTable();
-    table.search('').columns().search('').draw();
-}
+
+
 
 $(document).ready(function() {
     // Initialize DataTable
@@ -562,64 +557,192 @@ $('#filterJenis').on('change', function() {
     $.fn.dataTable.ext.search.pop(); 
 });
 
+// Disable edit button for approved documents and add alert
+    $('.edit-btn').each(function() {
+        const id = $(this).data('id');
+        if (id) {
+            $.ajax({
+                url: '<?= base_url("kelola-dokumen/get-status") ?>/' + id, // Endpoint baru untuk cek status
+                type: 'GET',
+                dataType: 'json',
+                async: false, // Sinkron untuk memastikan status diperiksa sebelum render
+                success: function(response) {
+                    if (response.success && response.data.status === 1) {
+                        $(this).prop('disabled', true);
+                        $(this).attr('title', 'Dokumen sudah disetujui dan tidak dapat diedit');
+                        $(this).tooltip('dispose').tooltip(); // Perbarui tooltip
+                        $(this).on('click', function(e) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Tidak Bisa Diedit',
+                                text: 'Dokumen ini sudah disetujui dan tidak dapat diedit lagi.',
+                                confirmButtonColor: '#d33'
+                            });
+                        });
+                    }
+                }.bind(this), // Bind this untuk konteks tombol
+                error: function() {
+                    console.error('Gagal memeriksa status dokumen dengan ID:', id);
+                }
+            });
+        }
+    });
+// Disable edit button for approved documents and show alert
+$('.edit-btn').each(function() {
+    const status = parseInt($(this).data('status'));
+    const id = $(this).data('id');
+
+    if (status === 1) { // Status 1 berarti approved
+        $(this).prop('disabled', true);
+        $(this).attr('title', 'Dokumen sudah disetujui dan tidak dapat diedit');
+        $(this).tooltip('dispose').tooltip(); // Perbarui tooltip
+
+        // Tambahkan event click untuk menampilkan alert meskipun tombol dinonaktifkan
+        $(this).on('click', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Tidak Bisa Diedit',
+                text: 'Dokumen ini sudah disetujui dan tidak dapat diedit lagi.',
+                confirmButtonColor: '#d33'
+            });
+            return false; // Hentikan aksi lebih lanjut
+        });
+    } else {
+        // Jika bukan approved, aktifkan tombol dan hapus event alert
+        $(this).prop('disabled', false);
+        $(this).off('click'); // Hapus event click sebelumnya
+        $(this).attr('title', 'Edit'); // Kembalikan tooltip default
+        $(this).tooltip('dispose').tooltip();
+    }
+});
+function resetFilters() {
+    console.log('Reset button clicked at ' + new Date().toLocaleTimeString('id-ID'));
+    table.destroy();
+    $('#documentsTable').DataTable({
+        pageLength: 10,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Semua"]],
+        language: { /* sama seperti inisialisasi awal */ },
+        columnDefs: [{ /* sama seperti inisialisasi awal */ }],
+        responsive: true,
+        autoWidth: false,
+        order: [[3, 'asc']]
+    });
+    $('#searchInput').val('');
+    $('#filterFakultas').val('');
+    $('#filterJenis').val('');
+}
+    
     // Set default approval date to today
     const today = new Date().toISOString().split('T')[0];
     $('#approval_date').val(today);
+// Reset function
+    function resetFilters() {
+        console.log('Reset button clicked at ' + new Date().toLocaleTimeString('id-ID')); // Debugging
+        location.reload(true); // Force reload without cache
+    }
 
-    // Event handler untuk edit button
-    $(document).on('click', '.edit-btn', function() {
-        const editBtn = $(this);
-        
-        // Set basic form data
-        $('#editDocumentId').val(editBtn.data('id'));
-        $('#editFakultas').val(editBtn.data('fakultas'));
-        $('#editBagian').val(editBtn.data('unit'));
-        $('#editNama').val(editBtn.data('nama'));
-        $('#editNomor').val(editBtn.data('nomor'));
-        $('#editRevisi').val(editBtn.data('revisi'));
-        $('#editKeterangan').val(editBtn.data('keterangan'));
-        
-        // Handle file info
-        const filepath = editBtn.data('filepath');
-        const filename = editBtn.data('filename');
-        
-        if (filepath || filename) {
-            $('#currentFileInfo').show();
-            $('#currentFileName').text(filename || filepath);
-        } else {
-            $('#currentFileInfo').hide();
-        }
-        
-        // Reset form state
-        $('#editKodeGroup').hide();
-        $('#editKodeCustomGroup').hide();
-        $('#editNamaKode').prop('required', false);
-        $('#editKodeCustom').prop('required', false);
-        
-        // Set jenis dokumen dan trigger change
-        const jenisId = editBtn.data('jenis');
-        $('#editJenis').val(jenisId).trigger('change');
-        
-        // Set kode dokumen after dropdown is populated
-        const kodeId = editBtn.data('nama-kode');
-        if (kodeId) {
-            setTimeout(function() {
-                if ($('#editKodeGroup').is(':visible')) {
-                    $('#editNamaKode').val(kodeId);
-                }
-            }, 500);
-        }
-    });
+    // Assign resetFilters to button
+    $('#resetButton').on('click', resetFilters);
 
-    // Event handler untuk approve button
+// Event handler untuk edit button
+$(document).on('click', '.edit-btn', function() {
+    const editBtn = $(this);
+    const status = parseInt(editBtn.data('status'));
+
+    // Cek status lagi di sini untuk memastikan
+    if (status === 1) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tidak Bisa Diedit',
+            text: 'Dokumen ini sudah disetujui dan tidak dapat diedit lagi.',
+            confirmButtonColor: '#d33'
+        });
+        return false; // Hentikan pembukaan modal
+    }
+
+    // Set basic form data jika boleh diedit
+    $('#editDocumentId').val(editBtn.data('id'));
+    $('#editFakultas').val(editBtn.data('fakultas'));
+    $('#editBagian').val(editBtn.data('unit'));
+    $('#editNama').val(editBtn.data('nama'));
+    $('#editNomor').val(editBtn.data('nomor'));
+    $('#editRevisi').val(editBtn.data('revisi'));
+    $('#editKeterangan').val(editBtn.data('keterangan'));
+
+    // Handle file info
+    const filepath = editBtn.data('filepath');
+    const filename = editBtn.data('filename');
+    if (filepath || filename) {
+        $('#currentFileInfo').show();
+        $('#currentFileName').text(filename || filepath);
+    } else {
+        $('#currentFileInfo').hide();
+    }
+
+    // Reset form state
+    $('#editKodeGroup').hide();
+    $('#editKodeCustomGroup').hide();
+    $('#editNamaKode').prop('required', false);
+    $('#editKodeCustom').prop('required', false);
+
+    // Set jenis dokumen dan trigger change
+    const jenisId = editBtn.data('jenis');
+    $('#editJenis').val(jenisId).trigger('change');
+
+    // Set kode dokumen after dropdown is populated
+    const kodeId = editBtn.data('nama-kode');
+    if (kodeId) {
+        setTimeout(function() {
+            if ($('#editKodeGroup').is(':visible')) {
+                $('#editNamaKode').val(kodeId);
+            }
+        }, 500);
+    }
+});
+
+// Event handler untuk approve button
     $(document).on('click', '.approve-btn', function() {
         const id = $(this).data('id');
+        if (!id) {
+            console.error('No document ID found');
+            return;
+        }
         $('#approveDocumentId').val(id);
-        
-        // Reset form
-        $('#approved_by').val('');
+        console.log('Opening approve modal for ID:', id);
+        const modal = new bootstrap.Modal(document.getElementById('approveModal'));
+        modal.show();
+    });
+
+// Handler submit untuk approve form
+$('#approveForm').on('submit', function(e) {
+    e.preventDefault();
+    const formData = $(this).serialize();
+    const action = $('button[type="submit"][name="action"]:focus').val() || 
+                   $('input[name="action"]').val() || '';
+    console.log('Form data being submitted:', formData, 'Action:', action);
+
+    if (!action) {
+        console.error('No action value detected. Check button focus or form structure.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Aksi tidak terdeteksi. Silakan coba lagi.',
+            confirmButtonColor: '#d33'
+        });
+        return;
+    }
+
+    // Tambahkan action secara manual jika perlu
+    $(this).append('<input type="hidden" name="action" value="' + action + '">');
+    $(this).unbind('submit').submit();
+});
+
+    // Reset modal on hide
+    $('#approveModal').on('hidden.bs.modal', function() {
+        $(this).find('form')[0].reset();
         $('#approval_date').val(today);
-        $('#remarks').val('');
     });
 
     // Reset modal on hide
@@ -636,6 +759,8 @@ $('#filterJenis').on('change', function() {
         $(this).find('form')[0].reset();
         $('#approval_date').val(today);
     });
+
+
 
     // Delete document handler
     $(document).on('click', '.delete-document', function(e) {
@@ -938,11 +1063,10 @@ $(document).on('click', '.view-history-btn', function() {
                                 </a>
                             </div>
                         ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
-                        const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
-                                           item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
-                                           item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
-                                           item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
-                        html += `
+const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
+                   item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
+                   item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
+                   item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';                        html += `
                             <tr>
                                 <td class="text-center">${index + 1}</td>
                                 <td>${item.document_title || '-'}</td>
