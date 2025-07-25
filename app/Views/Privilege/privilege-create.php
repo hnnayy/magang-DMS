@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/privilege.css') ?>" />
 
 <div class="privilege-container">
-    <h2 class="form-title">Tambah Privilege</h2>
+    <h2 class="form-title">Create Privilege</h2>
 
     <div class="form-content">
         <form method="post" id="privilegeForm" class="needs-validation" novalidate>
@@ -16,8 +16,8 @@
             <!-- Role -->
             <div class="form-group">
                 <label for="role">Role</label>
-                <select id="role" name="role" class="form-control" required>
-                    <option value="" hidden>Pilih Role...</option>
+                <select id="role" name="role" class="select" required>
+                    <option value="" hidden>-- Select Role --</option>
                     <?php
                     $uniqueRoles = [];
                     $seenRoleNames = [];
@@ -40,7 +40,7 @@
             <!-- Submenu -->
             <div class="form-group">
                 <label for="submenu">Submenu</label>
-                <select id="submenu" name="submenu[]" multiple="multiple" class="form-control" required>
+                <select id="submenu" name="submenu[]" multiple="multiple" class="select" required>
                     <?php foreach ($submenus as $s): ?>
                         <option value="<?= $s['id']; ?>"><?= esc($s['menu_name'] . ' > ' . $s['name']); ?></option>
                     <?php endforeach; ?>

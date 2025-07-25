@@ -14,8 +14,8 @@
             <!-- Dropdown Menu -->
             <div class="form-group">
                 <label class="form-label" for="menu">Menu</label>
-                <select name="parent" class="form-select <?php echo isset($validation) && isset($validation['parent']) ? 'is-invalid' : ''; ?>" required>
-                    <option value="">-- Choose Menu --</option>
+                <select name="parent" class="form-input <?php echo isset($validation) && isset($validation['parent']) ? 'is-invalid' : ''; ?>" required>
+                    <option value="">-- Select Menu --</option>
                     <?php foreach ($menus as $menu): ?>
                         <option value="<?= $menu['id'] ?>" <?= old('parent') == $menu['id'] ? 'selected' : '' ?>>
                             <?= esc($menu['name']) ?>
@@ -32,7 +32,7 @@
             <!-- Submenu -->
             <div class="form-group <?php echo isset($validation) && isset($validation['submenu']) ? 'has-error' : ''; ?>">
                 <label for="editUnitName" class="form-label">Sub Menu</label>
-                <input type="text" name="submenu" id="editUnitName" class="form-control <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
+                <input type="text" name="submenu" id="editUnitName" class="form-input <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
                        placeholder="Enter Submenu here... "
                        value="<?php echo old('submenu'); ?>"
                        required>
