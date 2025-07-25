@@ -56,6 +56,6 @@ class UserWCSeeder extends Seeder
             ],
         ];
 
-        $this->db->table('uservc')->insertBatch($data);
+        $this->db->table('userWC')->insertBatch($data);
     }
 }
