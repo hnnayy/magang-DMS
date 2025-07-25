@@ -29,7 +29,7 @@ class Menu extends BaseController
             'title' => 'Menu List',
             'menus' => $this->menuModel->where('status !=', 0)->findAll()
         ];
-        
+
         return view('Menu/lihat-menu', $data);
     }
 
@@ -64,26 +64,20 @@ class Menu extends BaseController
             ]
         ];
 
-        // Validasi gagal
         if (!$this->validate($rules)) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', implode(' ', $validation->getErrors()));
         }
 
-        // Ubah icon: ganti spasi ke tanda minus
-        $iconInput = $this->request->getPost('icon');
-        $icon = str_replace(' ', '-', strtolower(trim($iconInput)));
-
         $data = [
             'name'   => trim($this->request->getPost('menu_name')),
-            'icon'   => $icon,
+            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
             'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
         if ($this->menuModel->insert($data)) {
             return redirect()->back()->with('added_message', 'Successfully Added');
-
         }
 
         return redirect()->back()->with('error', 'Failed to add menu.');
@@ -93,7 +87,7 @@ class Menu extends BaseController
     public function update()
     {
         $id = $this->request->getPost('id');
-        
+
         if (!$id) {
             return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
         }
@@ -111,10 +105,10 @@ class Menu extends BaseController
                 ]
             ],
             'icon' => [
-                'rules' => 'required|regex_match[/^[a-z0-9\s-]+$/]',
+                'rules' => 'required|regex_match[/^[a-z0-9\s\-]+$/]',
                 'errors' => [
                     'required'    => 'Icon wajib diisi.',
-                    'regex_match' =>  'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
+                    'regex_match' => 'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
                 ]
             ],
             'status' => [
@@ -133,12 +127,9 @@ class Menu extends BaseController
                 ->with('error', 'Validasi gagal. Silakan periksa kembali input Anda.');
         }
 
-        $iconInput = $this->request->getPost('icon');
-        $icon = str_replace(' ', '-', strtolower(trim($iconInput)));
-
         $updateData = [
             'name'   => trim($this->request->getPost('menu_name')),
-            'icon'   => $icon,
+            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
             'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
@@ -153,7 +144,7 @@ class Menu extends BaseController
     public function delete()
     {
         $id = $this->request->getPost('id');
-        
+
         if (!$id) {
             return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
         }
