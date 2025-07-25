@@ -3,6 +3,8 @@
 
 <h4>Edit Submenu</h4>
 <hr>
+<?= view('partials/alerts') ?>
+
 
 <form action="<?= base_url('submenu/update/' . $submenu['id']) ?>" method="post">
     <?= csrf_field() ?>

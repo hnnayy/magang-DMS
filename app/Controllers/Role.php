@@ -103,6 +103,6 @@ class Role extends Controller
             'status'       => ($status === 'active') ? 1 : 2,
         ]);
 
-    return redirect()->back()->with('success', 'Role baru berhasil ditambahkan.');
+    return redirect()->back()->with('added_message', 'Successfully Added.');
     }
 }
