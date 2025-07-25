@@ -19,7 +19,7 @@
     <script>
         Swal.fire({
             icon: 'error',
-            title: 'Gagal!',
+            title: 'Failed!',
             text: '<?= session()->getFlashdata('error') ?>',
         });
     </script>

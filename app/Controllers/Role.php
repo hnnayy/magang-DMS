@@ -35,20 +35,20 @@ class Role extends Controller
         $id = $this->request->getPost('id');
         
         if (empty($id)) {
-            return redirect()->back()->with('error', 'ID role tidak valid.');
+            return redirect()->back()->with('error', 'ID role not valid.');
         }
 
         // Cek apakah role exists
         $role = $this->roleModel->find($id);
         if (!$role) {
-            return redirect()->back()->with('error', 'Role tidak ditemukan.');
+            return redirect()->back()->with('error', 'Role not found.');
         }
 
         try {
             $this->roleModel->update($id, ['status' => 0]);
-            return redirect()->back()->with('deleted_message', 'Role berhasil dihapus.');
+            return redirect()->back()->with('deleted_message', 'Successfully Deleted.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus role. Silakan coba lagi.');
+            return redirect()->back()->with('error', 'Failed to delete role. Please try again.');
         }
     }
 
@@ -63,13 +63,13 @@ class Role extends Controller
 
         // Validasi input
         if (empty($id) || empty($namaRole) || empty($level) || empty($desc) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
+            return redirect()->back()->withInput()->with('error', 'All fields must be filled.');
         }
 
         // Cek apakah role exists
         $role = $this->roleModel->find($id);
         if (!$role) {
-            return redirect()->back()->with('error', 'Role tidak ditemukan.');
+            return redirect()->back()->with('error', 'Role not found.');
         }
 
         try {
@@ -80,9 +80,9 @@ class Role extends Controller
                 'status'       => ($status === 'active') ? 1 : 2,
             ]);
 
-            return redirect()->back()->with('updated_message', 'Role berhasil diperbarui.');
+            return redirect()->back()->with('updated_message', 'Successfully Updated');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui role. Silakan coba lagi.');
+            return redirect()->back()->withInput()->with('error', 'Failed to update role. Please try again.');
         }
     }
 
@@ -94,7 +94,7 @@ class Role extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
+            return redirect()->back()->withInput()->with('error', 'All fields must be filled.');
         }
         $this->roleModel->insert([
             'name'         => $nama,

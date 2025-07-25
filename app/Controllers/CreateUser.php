@@ -111,9 +111,7 @@ class CreateUser extends Controller
             'createdby' => session()->get('user_id') ?? 1
         ]);
 
-       return redirect()->back()
-        ->with('success', 'User berhasil ditambahkan!')
-        ->with('showPopup', true);
+       return redirect()->back()->with('added_message', 'Successfully Added.');
 
     }
     
@@ -159,15 +157,15 @@ class CreateUser extends Controller
 
     if (! $id || ! $this->userModel->find($id)) {
         return $this->response->setStatusCode(404)
-                              ->setJSON(['error' => 'User tidak ditemukan']);
+                              ->setJSON(['error' => 'User not found']);
     }
 
     if ($this->userModel->softDeleteById($id)) {
-        return $this->response->setJSON(['message' => 'User berhasil dihapus']);
+        return $this->response->setJSON(['deleted_message' => 'Successfully Deleted']);
     }
 
     return $this->response->setStatusCode(500)
-                          ->setJSON(['error' => 'Gagal menghapus user']);
+                          ->setJSON(['error' => 'Failed Deleted User']);
 }
 
     public function update()
@@ -182,21 +180,21 @@ class CreateUser extends Controller
         if (empty($parentId) || empty($unitId) || empty($username) ||
             empty($fullname) || empty($roleName)) {
             return $this->response->setStatusCode(400)
-                                ->setJSON(['error' => 'Semua field wajib diisi.']);
+                                ->setJSON(['error' => 'All fields are required..']);
         }
         $parent = $this->unitParentModel->find($parentId);
         if (! $parent) {
-            return $this->response->setJSON(['error' => 'Fakultas tidak valid.']);
+            return $this->response->setJSON(['error' => 'Fakultas not valid.']);
         }
         $unit = $this->unitModel->where('id', $unitId)
                                 ->where('parent_id', $parentId)
                                 ->first();
         if (! $unit) {
-            return $this->response->setJSON(['error' => 'Unit tidak cocok dengan fakultas.']);
+            return $this->response->setJSON(['error' => 'Unit does not match the faculty.']);
         }
         $role = $this->roleModel->where('name', $roleName)->first();
         if (! $role) {
-            return $this->response->setJSON(['error' => 'Role tidak valid.']);
+            return $this->response->setJSON(['error' => 'Role note valid']);
         }
         $existingUser = $this->userModel
             ->where('username', $username)
@@ -205,7 +203,7 @@ class CreateUser extends Controller
 
         if ($existingUser) {
             return $this->response->setStatusCode(400)
-                                ->setJSON(['error' => 'Username sudah digunakan oleh user lain.']);
+                                ->setJSON(['error' => 'Username is already used by another user.']);
         }
         $this->userModel->update($id, [
             'username' => $username,
@@ -227,7 +225,7 @@ class CreateUser extends Controller
             ]);
         }
 
-        return $this->response->setJSON(['message' => 'User berhasil diperbarui']);
+        return $this->response->setJSON(['updated_message' => 'Successfully Updated']);
     }
 
     public function privilege()

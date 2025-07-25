@@ -118,7 +118,7 @@
             <div class="mb-3">
                 <label class="form-label">Level</label>
                 <select name="role_level" id="editRoleLevel" class="form-select" required>
-                    <option value="">-- Pilih Level --</option>
+                    <option value="">-- Choose Level --</option>
                     <option value="1">Directorate/Faculty</option>
                     <option value="2">Unit</option>
                 </select>

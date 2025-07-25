@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-  <h4>Lihat User</h4>
+  <h4>User List</h4>
   <hr>
 
   <div class="table-responsive bg-white p-3 rounded shadow-sm">
@@ -71,7 +71,7 @@
           <div class="mb-3">
             <label for="editDirectorate">Fakultas/Direktorat</label>
             <select class="form-select" id="editDirectorate" name="fakultas" required>
-              <option value="">Pilih Fakultas/Direktorat</option>
+              <option value="">Choose Fakulty/Direktorate</option>
               <?php foreach ($unitParents as $parent): ?>
                 <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
               <?php endforeach; ?>
@@ -80,7 +80,7 @@
          <div class="mb-3">
           <label for="editUnit">Unit</label>
           <select class="form-select" id="editUnit" name="unit" required>
-            <option value="">Pilih Unit</option>
+            <option value="">Choose Unit</option>
             <?php foreach ($units as $unit): ?>
               <option value="<?= $unit['id'] ?>" data-parent="<?= $unit['parent_id'] ?>"><?= esc($unit['name']) ?></option>
             <?php endforeach; ?>
@@ -97,7 +97,7 @@
           <div class="mb-3">
             <label for="editRole">Role</label>
             <select class="form-select" id="editRole" name="role" required>
-              <option value="">Pilih Role</option>
+              <option value="">Choose Role</option>
               <?php foreach ($roles as $role): ?>
                 <option value="<?= esc($role['name']) ?>"><?= esc($role['name']) ?></option>
               <?php endforeach; ?>
@@ -105,7 +105,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
+          <button type="submit" class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>
@@ -211,7 +211,7 @@ $(document).ready(function () {
           }
 
           doc.content.push({
-            text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
+            text: '* This document contains a list of active users in the system.',
             alignment: 'left',
             italics: true,
             fontSize: 8,
@@ -276,13 +276,17 @@ $(document).ready(function () {
       },
       success: function (res) {
         $('#editUserModal').modal('hide');
-        Swal.fire('Berhasil!', res.message, 'success').then(() => {
+        Swal.fire({
+          title: 'Success',
+          text: 'Successfully Updated',
+          icon: 'success'
+        }).then(() => {
           location.reload();
         });
       },
       error: function (xhr) {
-        const err = xhr.responseJSON?.error || 'Terjadi kesalahan saat update.';
-        Swal.fire('Gagal', err, 'error');
+        const err = xhr.responseJSON?.error || 'Error occurred during the update..';
+        Swal.fire('Failed', err, 'error');
       }
     });
   });
@@ -307,12 +311,12 @@ $(document).ready(function () {
     const id = $(this).data('id');
 
     Swal.fire({
-      title: 'Yakin ingin menghapus?',
-      text: 'User akan dihapus secara permanen.',
+      title: 'Are you sure?',
+      text: 'User will be permanently deleted..',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Ya, hapus',
-      cancelButtonText: 'Batal',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#6c757d'
     }).then((result) => {
@@ -322,13 +326,17 @@ $(document).ready(function () {
           id: id
         })
         .done(function (res) {
-          Swal.fire('Berhasil!', res.message, 'success').then(() => {
+          Swal.fire({
+            title: 'Success',
+            text: 'Successfully Deleted',
+            icon: 'success'
+          }).then(() => {
             location.reload();
           });
         })
         .fail(function (xhr) {
-          const err = xhr.responseJSON?.error || 'Gagal menghapus user.';
-          Swal.fire('Gagal', err, 'error');
+          const err = xhr.responseJSON?.error || 'Failed to delete user.';
+          Swal.fire('Failed', err, 'error');
         });
       }
     });

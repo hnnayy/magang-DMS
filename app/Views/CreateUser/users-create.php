@@ -105,25 +105,7 @@
 
 <!-- SweetAlert for Flash Messages -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-<?php if (session()->getFlashdata('success')): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        confirmButtonText: 'OK'
-    });
-<?php endif; ?>
-
-<?php if (session()->getFlashdata('error')): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Failed!',
-        text: '<?= session()->getFlashdata('error') ?>',
-        confirmButtonText: 'OK'
-    });
-<?php endif; ?>
-</script>
+<!--  -->
 
 <!-- JS: Update Unit Options Based on Selected Fakultas -->
 <script>

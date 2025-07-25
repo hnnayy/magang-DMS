@@ -229,7 +229,7 @@
                 icon: 'error',
                 title: 'Validation Error',
                 text: 'Menu name already exists. Please choose a different name.',
-                confirmButtonColor: '#3085d6'
+                confirmButtonColor: '#abb3baff'
             });
             return false;
         }
