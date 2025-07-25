@@ -5,6 +5,35 @@
     <h4>Menu List</h4>
     <hr>
 
+    <!-- Flash Messages -->
+    <?php if (session()->getFlashdata('added_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('added_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('updated_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('updated_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('deleted_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('deleted_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="menuTable">
             <thead class="table-light">
@@ -17,37 +46,44 @@
                 </tr>
             </thead>
             <tbody>
-                <?php $no = 1; foreach ($menus as $menu): ?>
-                    <tr>
-                        <td class="text-center"><?= $no++ ?></td>
-                        <td><?= esc($menu['name']) ?></td>
-                        <td><?= esc($menu['icon']) ?></td>
-                        <td class="text-center">
-                            <span class="badge <?= $menu['status'] == 1 ? 'bg-success' : 'bg-secondary' ?>">
-                                <?= $menu['status'] == 1 ? 'Active' : 'Inactive' ?>
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex align-items-center justify-content-center gap-2">
-                                <form action="<?= site_url('Menu/delete/' . $menu['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-link p-0 text-danger">
-                                        <i class="bi bi-trash"></i>
+                <?php if (!empty($menus)): ?>
+                    <?php $no = 1; foreach ($menus as $menu): ?>
+                        <tr>
+                            <td class="text-center"><?= $no++ ?></td>
+                            <td><?= esc($menu['name']) ?></td>
+                            <td><?= esc($menu['icon']) ?></td>
+                            <td class="text-center">
+                                <span class="badge <?= $menu['status'] == 1 ? 'bg-success' : 'bg-secondary' ?>">
+                                    <?= $menu['status'] == 1 ? 'Active' : 'Inactive' ?>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                    <form action="<?= site_url('create-menu/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $menu['id'] ?>">
+                                        <button type="submit" class="btn btn-link p-0 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                                        onclick="openEditModal(
+                                            <?= $menu['id'] ?>, 
+                                            '<?= esc($menu['name'], 'js') ?>', 
+                                            '<?= esc($menu['icon'], 'js') ?>', 
+                                            <?= $menu['status'] ?>
+                                        )">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                </form>
-                                <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                                    onclick="openEditModal(
-                                        <?= $menu['id'] ?>, 
-                                        '<?= esc($menu['name'], 'js') ?>', 
-                                        '<?= esc($menu['icon'], 'js') ?>', 
-                                        <?= $menu['status'] ?>
-                                    )">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
-                            </div>
-                        </td>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No menu data available</td>
                     </tr>
-                <?php endforeach ?>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
@@ -61,32 +97,35 @@
         <h5 class="modal-title">Edit Menu</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="post" id="editMenuForm">
+      <form method="post" id="editMenuForm" action="<?= site_url('create-menu/update') ?>">
         <?= csrf_field() ?>
         <div class="modal-body">
             <input type="hidden" name="id" id="editMenuId">
             <div class="mb-3">
-                <label class="form-label">Menu Name </label>
+                <label class="form-label">Menu Name <span class="text-danger">*</span></label>
                 <input type="text" name="menu_name" id="editMenuName" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Icon</label>
-                <input type="text" name="icon" id="editMenuIcon" class="form-control" required>
+                <label class="form-label">Icon <span class="text-danger">*</span></label>
+                <input type="text" name="icon" id="editMenuIcon" class="form-control" required 
+                       placeholder="e.g: home, user, settings">
+                <small class="form-text text-muted">Only lowercase letters, numbers, spaces, and hyphens (-) allowed</small>
             </div>
             <div class="mb-3">
-                <label class="form-label d-block">Status</label>
+                <label class="form-label d-block">Status <span class="text-danger">*</span></label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
+                    <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1" required>
                     <label class="form-check-label" for="editStatusActive">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2">
+                    <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2" required>
                     <label class="form-check-label" for="editStatusInactive">Inactive</label>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Save Changes</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
       </form>
     </div>
@@ -103,15 +142,38 @@
 
 <script>
     $(document).ready(function () {
-        $('#menuTable').DataTable();
+        $('#menuTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "searching": true,
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries per page",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            }
+        });
+
+        // Auto hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
     });
 
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
+            text: "This menu will be deleted and cannot be recovered!",
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
@@ -123,17 +185,29 @@
     }
 
     function openEditModal(id, name, icon, status) {
-        const form = document.getElementById('editMenuForm');
-        form.action = `<?= site_url('Menu/update') ?>/${id}`;
         document.getElementById('editMenuId').value = id;
         document.getElementById('editMenuName').value = name;
         document.getElementById('editMenuIcon').value = icon;
         document.getElementById('editStatusActive').checked = status == 1;
         document.getElementById('editStatusInactive').checked = status == 2;
     }
+
+    // Icon validation on input
+    document.getElementById('editMenuIcon').addEventListener('input', function(e) {
+        const value = e.target.value;
+        const regex = /^[a-z0-9\s-]*$/;
+        
+        if (!regex.test(value)) {
+            e.target.setCustomValidity('Icon only allows lowercase letters, numbers, spaces, and hyphens (-)');
+            e.target.classList.add('is-invalid');
+        } else {
+            e.target.setCustomValidity('');
+            e.target.classList.remove('is-invalid');
+        }
+    });
 </script>
 
-<!-- Validasi nama menu tidak boleh duplikat saat edit -->
+<!-- Client-side validation for duplicate menu names -->
 <script>
     const editForm = document.getElementById('editMenuForm');
     editForm.addEventListener('submit', function (e) {
@@ -141,25 +215,25 @@
         const currentId = document.getElementById('editMenuId').value;
 
         let isDuplicate = false;
-        <?php foreach ($menus as $menu): ?>
-            if ('<?= strtolower($menu['name']) ?>' === inputName && '<?= $menu['id'] ?>' !== currentId) {
-                isDuplicate = true;
-            }
-        <?php endforeach; ?>
+        <?php if (!empty($menus)): ?>
+            <?php foreach ($menus as $menu): ?>
+                if ('<?= strtolower(trim($menu['name'])) ?>' === inputName && '<?= $menu['id'] ?>' !== currentId) {
+                    isDuplicate = true;
+                }
+            <?php endforeach; ?>
+        <?php endif; ?>
 
         if (isDuplicate) {
             e.preventDefault();
             Swal.fire({
                 icon: 'error',
-                title: 'Gagal',
-                text: 'Nama menu sudah digunakan. Silakan pilih nama lain.',
-                confirmButtonColor: '#6C63FF'
+                title: 'Validation Error',
+                text: 'Menu name already exists. Please choose a different name.',
+                confirmButtonColor: '#3085d6'
             });
+            return false;
         }
     });
 </script>
 
-
-
 <?= $this->endSection() ?>
-

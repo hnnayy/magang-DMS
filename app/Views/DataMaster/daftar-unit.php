@@ -30,8 +30,9 @@
                         </td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <form action="<?= site_url('data-master/unit/' . $unit['id'] . '/delete') ?>" method="post" class="d-inline">
+                                <form action="<?= site_url('create-unit/delete') ?>" method="post" class="d-inline">
                                     <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $unit['id'] ?>">
                                     <button type="submit" class="btn btn-link p-0" onclick="SwalConfirmDelete(this)">
                                         <i class="bi bi-trash text-danger"></i>
                                     </button>
@@ -61,7 +62,7 @@
                 <h5 class="modal-title">Edit Unit</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="post" id="editUnitForm">
+            <form method="post" id="editUnitForm" action="<?= site_url('create-unit/update') ?>">
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="editUnitId">
                 <div class="modal-body">
@@ -116,9 +117,42 @@
 </script>
 <?php endif; ?>
 
+<!-- Success messages -->
+<?php if (session()->has('added_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('added_message') ?>',
+        confirmButtonColor: '#28a745'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('updated_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('updated_message') ?>',
+        confirmButtonColor: '#28a745'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('deleted_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('deleted_message') ?>',
+        confirmButtonColor: '#28a745'
+    });
+</script>
+<?php endif; ?>
+
 <script>
     function openEditModal(id, parentId, unitName, status) {
-        $('#editUnitForm').attr('action', `<?= site_url('data-master/unit') ?>/${id}/update`);
         $('#editUnitId').val(id);
         $('#editUnitName').val(unitName);
         $('#editParentId').val(parentId);
@@ -136,10 +170,13 @@
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
+            text: 'This data will be deleted permanently!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6'
         }).then((result) => {
             if (result.isConfirmed) {
                 elem.closest('form').submit();
@@ -148,7 +185,21 @@
     }
 
     $(document).ready(function () {
-        $('#documentTable').DataTable();
+        $('#documentTable').DataTable({
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            }
+        });
     });
 </script>
 

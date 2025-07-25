@@ -33,6 +33,8 @@ class CreateUser extends Controller
     public function create()
     {
         $unitParents = $this->unitParentModel->findAll();
+        $units = $this->unitModel->findAll();
+
         $roles = $this->roleModel
                     ->select('MIN(id) as id, name') 
                     ->groupBy('name')
@@ -40,6 +42,7 @@ class CreateUser extends Controller
         $data = [
             'unitParents' => $unitParents,
             'roles'       => $roles,
+            'units'       => $units,           // ← kirim ke view
             'title'       => 'Create User'
         ];
         return view('CreateUser/users-create', $data);
@@ -108,9 +111,10 @@ class CreateUser extends Controller
             'createdby' => session()->get('user_id') ?? 1
         ]);
 
-        return redirect()->to('create-user/create')
-                        ->with('success', 'User berhasil ditambahkan!')
-                        ->with('showPopup', true);
+       return redirect()->back()
+        ->with('success', 'User berhasil ditambahkan!')
+        ->with('showPopup', true);
+
     }
     
     public function list()
@@ -149,19 +153,22 @@ class CreateUser extends Controller
         return redirect()->to('CreateUser/list');
     }
 
-    public function delete($id)
-    {
-        
-        if (! $this->userModel->find($id)) {
-            return $this->response->setStatusCode(404)
-                                ->setJSON(['error' => 'User tidak ditemukan']);
-        }
-        if ($this->userModel->softDeleteById($id)) {
-            return $this->response->setJSON(['message' => 'User berhasil dihapus']);
-        }
-        return $this->response->setStatusCode(500)
-                            ->setJSON(['error' => 'Gagal menghapus user']);
+    public function delete()
+{
+    $id = $this->request->getPost('id');
+
+    if (! $id || ! $this->userModel->find($id)) {
+        return $this->response->setStatusCode(404)
+                              ->setJSON(['error' => 'User tidak ditemukan']);
     }
+
+    if ($this->userModel->softDeleteById($id)) {
+        return $this->response->setJSON(['message' => 'User berhasil dihapus']);
+    }
+
+    return $this->response->setStatusCode(500)
+                          ->setJSON(['error' => 'Gagal menghapus user']);
+}
 
     public function update()
     {
@@ -221,38 +228,6 @@ class CreateUser extends Controller
         }
 
         return $this->response->setJSON(['message' => 'User berhasil diperbarui']);
-    }
-
-    public function getUnits($parentId)
-    {
-        $units = $this->unitModel->where('parent_id', $parentId)->findAll();
-        return $this->response->setJSON($units);
-    }
-
-    public function createRole()
-    {
-        $data = ['title' => 'Tambah Role Baru'];
-        return view('CreateUser/users-role', $data);
-    }
-
-    public function storeRole()
-    {
-        $nama   = $this->request->getPost('nama');
-        $level  = $this->request->getPost('level');
-        $desc   = $this->request->getPost('desc');
-        $status = $this->request->getPost('status');
-
-        if (empty($nama) || empty($level) || empty($desc) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'Semua field harus diisi.');
-        }
-        $this->roleModel->insert([
-            'name'         => $nama,
-            'access_level' => $level,
-            'description'  => $desc,
-            'status'       => ($status === 'active') ? 1 : 2,
-        ]);
-
-        return redirect()->to('/create-user/user-role')->with('success', 'Role baru berhasil ditambahkan.');
     }
 
     public function privilege()

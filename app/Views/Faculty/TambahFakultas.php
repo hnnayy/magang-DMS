@@ -7,7 +7,7 @@
             <h2><?= $title ?? 'Create Fakulty' ?></h2>
         </div>
 
-        <form id="createFakultasForm" method="post" action="<?= base_url('data-master/fakultas/store') ?>">
+        <form id="createFakultasForm" method="post" action="<?= base_url('create-faculty/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Nama Fakultas -->

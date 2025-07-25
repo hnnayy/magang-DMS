@@ -24,7 +24,7 @@
                     <tr>
                         <td class="text-center"><?= $i + 1 ?></td>
                         <td><?= esc($p['role']) ?></td>
-                        <td><?= esc(is_array($p['submenu']) ? implode(', ', $p['submenu']) : $p['submenu']) ?></td>
+                        <td><?= esc($p['submenu']) ?></td>
 
                         <?php
                             $allActions = ['create', 'update', 'delete', 'approve'];
@@ -75,10 +75,15 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <p id="editRoleText" class="form-control-plaintext fw-semibold mb-0"></p>
+                        <select class="form-select" id="editRole" name="role" required>
+                            <option value="">Pilih Role...</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?= $role['id'] ?>">
+                                    <?= esc($role['name']) ?>
+                                </option>
+                            <?php endforeach ?>
+                        </select>
                         <input type="hidden" id="editId" name="id">
-                        <input type="hidden" id="editRole" name="role">
-                        <input type="hidden" id="oldSubmenuId" name="old_submenu_id">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Sub Menu</label>
@@ -104,13 +109,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary w-100">Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
 
 <!-- Script JS Library -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -124,11 +128,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <!-- Script JS Custom -->
 <script>
+    const csrfName = '<?= csrf_token() ?>';
+    const csrfHash = '<?= csrf_hash() ?>';
+
     $(document).ready(function () {
         $('#privilegeTable').DataTable();
         $('#editSubmenu').select2({
@@ -141,11 +145,9 @@
 
     function openEditModal(id, roleId, roleName, submenuList, privileges) {
         $('#editId').val(id);
-        $('#editRoleText').text(roleName ?? '-');
-        $('#editRole').val(roleId);
-        const oldSubmenuId = submenuList[0];
-        $('#oldSubmenuId').val(oldSubmenuId);
+        $('#editRole').val(roleId).trigger('change');
         $('#editSubmenu').val(submenuList).trigger('change');
+        
         $('input[name="privileges[]"]').prop('checked', false);
         privileges.forEach(p => {
             $(`input[name="privileges[]"][value="${p}"]`).prop('checked', true);
@@ -158,45 +160,41 @@
         const privileges = $(form).find('input[name="privileges[]"]:checked').length;
 
         if (privileges === 0) {
-            e.preventDefault();
-            e.stopPropagation();
             const privilegesGroup = $(form).find('.privileges-options').parent();
-            let feedback = privilegesGroup.find('.invalid-feedback');
-            feedback.show();
+            privilegesGroup.find('.invalid-feedback').show();
+            return false;
         } else {
             $(form).find('.privileges-options').parent().find('.invalid-feedback').hide();
         }
 
         if (!form.checkValidity()) {
-            e.preventDefault();
             e.stopPropagation();
+            form.classList.add('was-validated');
+            return false;
         }
 
-        form.classList.add('was-validated');
-
-        if (form.checkValidity() && privileges > 0) {
-            const formData = $(this).serialize();
-            $.ajax({
-                url: '<?= base_url('privilege/update') ?>',
-                method: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(res) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: res.message,
-                        confirmButtonText: 'OK'
-                    }).then(() => {
-                        $('#editModal').modal('hide');
-                    });
-                },
-                error: function(xhr, status, error) {
-                    const msg = xhr.responseJSON?.error ?? 'Gagal memperbarui privilege';
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
-                }
-            });
-        }
+        const formData = $(this).serialize() + `&${csrfName}=${csrfHash}`;
+        $.ajax({
+            url: '<?= base_url('create-privilege/update') ?>',
+            method: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: res.message,
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    $('#editModal').modal('hide');
+                    location.reload();
+                });
+            },
+            error: function(xhr) {
+                const msg = xhr.responseJSON?.error ?? 'Gagal memperbarui privilege';
+                Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
+            }
+        });
     });
 
     function confirmDelete(id) {
@@ -210,9 +208,13 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: '<?= base_url('privilege/delete') ?>',
+                    url: '<?= base_url('create-privilege/delete') ?>',
                     method: 'POST',
-                    data: { id: id },
+                    data: {
+                        id: id,
+                        [csrfName]: csrfHash
+                    },
+                    dataType: 'json',
                     success: function (res) {
                         Swal.fire('Berhasil', res.message, 'success')
                             .then(() => location.reload());
@@ -228,4 +230,3 @@
 </script>
 
 <?= $this->endSection() ?>
-

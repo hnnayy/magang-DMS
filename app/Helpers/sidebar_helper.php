@@ -22,7 +22,7 @@ if (!function_exists('getSidebarMenuByRole')) {
                 ->join('submenu', 'submenu.id = privilege.submenu_id')
                 ->join('menu', 'menu.id = submenu.parent')
                 ->where('privilege.role_id', $roleId)
-                // ->where('privilege.can_create', 1) // hanya submenu yg boleh create
+                ->where('privilege.can_create', 1) // hanya submenu yg boleh create
                 ->where('submenu.status', 1)
                 ->where('menu.status', 1)
                 ->orderBy('menu.id ASC, submenu.id ASC')

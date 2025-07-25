@@ -13,26 +13,40 @@
   <div class="container d-flex justify-content-center align-items-center min-vh-100">
     <div class="card shadow-sm p-4" style="max-width: 500px; width: 100%; border-radius: 1rem;">
       <h4 class="mb-3 text-center">Dummy WC Login</h4>
-      <p class="text-center text-muted mb-4">Daftar Username yang ada di database DMS</p>
+      <p class="text-center text-muted mb-4">Masukkan username Anda untuk login ke DMS</p>
 
+      <!-- Tampilkan Flash Message -->
       <?php if (session()->getFlashdata('error')): ?>
         <div class="alert alert-danger">
           <?= session()->getFlashdata('error') ?>
         </div>
       <?php endif; ?>
 
+      <?php if (session()->getFlashdata('message')): ?>
+        <div class="alert alert-warning">
+          <?= session()->getFlashdata('message') ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if (session()->getFlashdata('success')): ?>
+        <div class="alert alert-success">
+          <?= session()->getFlashdata('success') ?>
+        </div>
+      <?php endif; ?>
+
+      <!-- Form Login -->
       <form method="POST" action="<?= base_url('wc-dummy/login') ?>">
         <?= csrf_field() ?>
 
         <div class="mb-3">
-          <select class="form-select" name="username" id="username" required>
-            <option value="">Pilih Username</option>
-            <?php foreach ($users as $user): ?>
-              <option value="<?= esc($user['username']) ?>">
-               <?= esc($user['username']) ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+          <input 
+            type="text" 
+            class="form-control" 
+            name="username" 
+            id="username" 
+            placeholder="Masukkan username anda..." 
+            required 
+          >
         </div>
 
         <div class="d-grid">

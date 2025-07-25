@@ -1,6 +1,7 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<!-- Select2 & CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 <link rel="stylesheet" href="<?= base_url('assets/css/privilege.css') ?>" />
 
@@ -8,7 +9,10 @@
     <h2 class="form-title">Tambah Privilege</h2>
 
     <div class="form-content">
-        <form method="post" action="<?= base_url('privilege/store') ?>" id="privilegeForm" class="needs-validation" novalidate>
+        <form method="post" id="privilegeForm" class="needs-validation" novalidate>
+            <!-- CSRF Token -->
+            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>" id="csrf-token">
+
             <!-- Role -->
             <div class="form-group">
                 <label for="role">Role</label>
@@ -64,7 +68,7 @@
     </div>
 </div>
 
-<!-- jQuery & Select2 -->
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -81,17 +85,16 @@ $(function () {
     });
 
     $('#privilegeForm').on('submit', function (e) {
-        e.preventDefault(); 
-        
+        e.preventDefault();
         const form = this;
-        const privileges = $(form).find('input[name="privileges[]"]:checked').length;
+        const privilegesCount = $('input[name="privileges[]"]:checked').length;
         const privilegesError = $('#privileges-error');
         let isValid = true;
 
         privilegesError.hide();
         $(form).removeClass('was-validated');
 
-        if (privileges === 0) {
+        if (privilegesCount === 0) {
             privilegesError.show();
             isValid = false;
         }
@@ -102,32 +105,34 @@ $(function () {
         }
 
         if (isValid) {
-            $.post('<?= base_url('privilege/store') ?>', $(this).serialize())
-                .done(res => {
+            let formData = $(form).serializeArray();
+            formData.push({
+                name: '<?= csrf_token() ?>',
+                value: $('#csrf-token').val()
+            });
+
+            $.post('<?= base_url('create-privilege/store') ?>', $.param(formData))
+                .done(function (res) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil',
                         text: res.message,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        document.getElementById("privilegeForm").reset();
+                        form.reset();
                         $('#submenu').val(null).trigger('change');
                     });
                 })
-                .fail(xhr => {
+                .fail(function (xhr) {
                     const msg = xhr.responseJSON?.error ?? 'Gagal menyimpan privilege';
-                    Swal.fire({ 
-                        icon: 'error', 
-                        title: 'Error', 
-                        text: msg 
-                    });
+                    Swal.fire({ icon: 'error', title: 'Error', text: msg });
                 });
         }
     });
 
     $('input[name="privileges[]"]').on('change', function() {
-        const privileges = $('input[name="privileges[]"]:checked').length;
-        if (privileges > 0) {
+        const checked = $('input[name="privileges[]"]:checked').length;
+        if (checked > 0) {
             $('#privileges-error').hide();
         }
     });

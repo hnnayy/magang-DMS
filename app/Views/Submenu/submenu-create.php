@@ -8,7 +8,7 @@
         </div>
 
 
-        <form id="createSubmenuForm" method="post" action="<?= base_url('submenu/store') ?>">
+        <form id="createSubmenuForm" method="post" action="<?= base_url('create-submenu/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Dropdown Menu -->

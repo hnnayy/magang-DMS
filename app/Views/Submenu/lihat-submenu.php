@@ -30,8 +30,9 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex align-items-center justify-content-center gap-2">
-                                    <form action="<?= site_url('submenu/delete/' . $submenu['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                    <form action="<?= site_url('create-submenu/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                         <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $submenu['id'] ?>">
                                         <button type="submit" class="btn btn-link p-0 text-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -62,7 +63,7 @@
         <h5 class="modal-title">Edit Submenu</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="post" id="editUnitForm">
+      <form method="post" id="editUnitForm" action="<?= site_url('create-submenu/update') ?>">
         <?= csrf_field() ?>
         <div class="modal-body">
             <input type="hidden" name="id" id="editUnitId">
@@ -80,17 +81,16 @@
                 <input type="text" name="submenu" id="editUnitName" class="form-control" required>
             </div>
             <div class="mb-3">
-    <label class="form-label d-block">Status</label>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
-        <label class="form-check-label" for="editStatusActive">Active</label>
-    </div>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2">
-        <label class="form-check-label" for="editStatusInactive">Inactive</label>
-    </div>
-</div>
-
+                <label class="form-label d-block">Status</label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="editStatusActive" value="1">
+                    <label class="form-check-label" for="editStatusActive">Active</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="status" id="editStatusInactive" value="2">
+                    <label class="form-check-label" for="editStatusInactive">Inactive</label>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary w-100">Save Changes</button>
@@ -105,7 +105,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -126,21 +126,21 @@
     }
 
     function openEditModal(id, parentId, submenuName, status) {
-    const form = document.getElementById('editUnitForm');
-    if (!form) return;
-    form.action = `/submenu/update/${id}`;
-    document.getElementById('editUnitId').value = id;
-    document.getElementById('editParentName').value = parentId;
-    document.getElementById('editUnitName').value = submenuName;
+        const form = document.getElementById('editUnitForm');
+        if (!form) return;
+        
+        // Set nilai ke form fields
+        document.getElementById('editUnitId').value = id;
+        document.getElementById('editParentName').value = parentId;
+        document.getElementById('editUnitName').value = submenuName;
 
-    // Ubah ke radio button
-    if (status == 1) {
-        document.getElementById('editStatusActive').checked = true;
-    } else {
-        document.getElementById('editStatusInactive').checked = true;
+        // Set radio button status
+        if (status == 1) {
+            document.getElementById('editStatusActive').checked = true;
+        } else {
+            document.getElementById('editStatusInactive').checked = true;
+        }
     }
-}
-
 
     $(document).ready(function () {
         const table = $('#submenuTable');

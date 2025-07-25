@@ -9,7 +9,7 @@
         </div>
 
         <?php $validation = $validation ?? \Config\Services::validation(); ?>
-        <form id="createMenuForm" method="post" action="<?= base_url('Menu/store') ?>" class="needs-validation" novalidate>
+        <form id="createMenuForm" method="post" action="<?= base_url('create-menu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
             <!-- Nama Menu -->

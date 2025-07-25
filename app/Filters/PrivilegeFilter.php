@@ -1,10 +1,12 @@
-<?
+<?php
+
 namespace App\Filters;
 
-use App\Models\PrivilegeModel;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Filters\FilterInterface;
+use App\Models\PrivilegeModel;
+use App\Models\SubmenuModel;
 
 class PrivilegeFilter implements FilterInterface
 {
@@ -12,47 +14,54 @@ class PrivilegeFilter implements FilterInterface
     {
         $session = session();
 
-        if (!$session->get('is_logged_in') || !$session->get('role_id')) {
-            return redirect()->to('/login');
+        if (!$session->get('role_id')) {
+            return redirect()->to('/wc-dummy')->with('error', 'Anda harus login terlebih dahulu.');
         }
-
-        // Pastikan argument privilege disediakan, misal: ['create-user', 'can_create']
-        if (!$arguments || count($arguments) < 2) {
-            return redirect()->to('/unauthorized');
-        }
-
-        [$submenuSlug, $privilegeType] = $arguments;
 
         $roleId = $session->get('role_id');
+        $uri = service('uri');
+        $currentRoute = $uri->getSegment(1);
+
         $privilegeModel = new PrivilegeModel();
+        $submenuModel = new SubmenuModel();
 
-        // Ambil ID submenu berdasarkan slug
-        $submenu = db_connect()
-            ->table('submenu')
-            ->select('id')
-            ->where('slug', $submenuSlug)
-            ->where('status', 1)
-            ->get()
-            ->getRow();
-
-        if (!$submenu) {
-            return redirect()->to('/unauthorized');
-        }
-
-        $hasPrivilege = $privilegeModel
+        // Ambil submenu yang bisa diakses
+        $accessibleSubmenus = $privilegeModel->select('submenu_id')
             ->where('role_id', $roleId)
-            ->where('submenu_id', $submenu->id)
-            ->where("can_$privilegeType", 1)
-            ->first();
+            ->groupStart()
+                ->where('can_create', 1)
+                ->orWhere('can_update', 1)
+                ->orWhere('can_delete', 1)
+                ->orWhere('can_approve', 1)
+            ->groupEnd()
+            ->findAll();
 
-        if (!$hasPrivilege) {
-            return redirect()->to('/unauthorized');
+        $submenuIds = array_column($accessibleSubmenus, 'submenu_id');
+        if (empty($submenuIds)) {
+            return redirect()->to('/wc-dummy')->with('error', 'Anda tidak memiliki akses ke halaman apa pun.');
         }
 
-        // Akses diperbolehkan
+        // Ambil nama-nama submenu dan cek slug-nya
+        $submenus = $submenuModel->whereIn('id', $submenuIds)->findAll();
+
+        helper('slug'); // pastikan helper di-load
+        $isAuthorized = false;
+        foreach ($submenus as $submenu) {
+            if (slugify($submenu['name']) === $currentRoute) {
+                $isAuthorized = true;
+                break;
+            }
+        }
+
+        if (!$isAuthorized) {
+            return redirect()->to('/wc-dummy')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
+        return;
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // Tidak digunakan
     }
 }

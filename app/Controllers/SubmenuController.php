@@ -23,55 +23,53 @@ class SubmenuController extends BaseController
         return view('Submenu/submenu-create', $data);
     }
 
-public function store()
-{
-    $rules = [
-        'parent'  => 'required|integer',
-        'submenu' => [
-            'label' => 'Submenu',
-            'rules' => 'required|min_length[3]|max_length[40]|regex_match[/^\S+\s+\S+/]',
-            'errors' => [
-                'regex_match' => 'Submenu harus terdiri dari minimal dua kata.'
-            ]
-        ],
-        'status'  => 'required|in_list[1,2]'
-    ];
+    public function store()
+    {
+        $rules = [
+            'parent'  => 'required|integer',
+            'submenu' => [
+                'label' => 'Submenu',
+                'rules' => 'required|min_length[3]|max_length[40]|regex_match[/^\S+\s+\S+/]',
+                'errors' => [
+                    'regex_match' => 'Submenu harus terdiri dari minimal dua kata.'
+                ]
+            ],
+            'status'  => 'required|in_list[1,2]'
+        ];
 
-    if (! $this->validate($rules)) {
-        $errors = $this->validator->getErrors();
-        return redirect()->back()->withInput()->with('validation', $errors);
+        if (! $this->validate($rules)) {
+            $errors = $this->validator->getErrors();
+            return redirect()->back()->withInput()->with('validation', $errors);
+        }
+
+        $parentId = $this->request->getPost('parent');
+        $submenuName = trim(strtolower($this->request->getPost('submenu'))); // normalized lowercase & trimmed
+
+        // Cek duplikat nama submenu dalam menu yang sama (ignore case & trim)
+        $existing = $this->submenuModel
+            ->where('parent', $parentId)
+            ->where('LOWER(TRIM(name))', $submenuName)
+            ->where('status !=', 0)
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->withInput()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Gagal!',
+                'text'  => 'Nama submenu sudah ada dalam menu yang sama.'
+            ]);
+        }
+
+        $data = [
+            'parent' => $parentId,
+            'name'   => $this->request->getPost('submenu'),
+            'status' => $this->request->getPost('status')
+        ];
+
+        $this->submenuModel->save($data);
+
+        return redirect()->to('create-submenu')->with('added_message', 'Successfully Added');
     }
-
-    $parentId = $this->request->getPost('parent');
-    $submenuName = trim(strtolower($this->request->getPost('submenu'))); // normalized lowercase & trimmed
-
-    // Cek duplikat nama submenu dalam menu yang sama (ignore case & trim)
-    $existing = $this->submenuModel
-        ->where('parent', $parentId)
-        ->where('LOWER(TRIM(name))', $submenuName)
-        ->where('status !=', 0)
-        ->first();
-
-    if ($existing) {
-        return redirect()->back()->withInput()->with('swal', [
-            'icon'  => 'error',
-            'title' => 'Gagal!',
-            'text'  => 'Nama submenu sudah ada dalam menu yang sama.'
-        ]);
-    }
-
-    $data = [
-        'parent' => $parentId,
-        'name'   => $this->request->getPost('submenu'),
-        'status' => $this->request->getPost('status')
-    ];
-
-    $this->submenuModel->save($data);
-
-    return redirect()->to('tambah-submenu')->with('added_message', 'Successfully Added');
-}
-
-
 
     public function list()
     {
@@ -86,8 +84,14 @@ public function store()
         return view('Submenu/lihat-submenu', $data);
     }
 
-    public function edit($id)
+    public function edit()
     {
+        $id = $this->request->getGet('id');
+        
+        if (!$id) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID submenu tidak ditemukan');
+        }
+
         $submenu = $this->submenuModel->find($id);
         if (! $submenu) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
@@ -99,63 +103,73 @@ public function store()
         return view('Submenu/submenu-edit', $data);
     }
 
-   public function update($id)
-{
-    $rules = [
-        'parent'  => 'required|integer',
-        'submenu' => [
-            'label' => 'Submenu',
-            'rules' => 'required|min_length[3]|max_length[40]|regex_match[/^\S+(?:\s+\S+)+$/]',
-            'errors' => [
-                'regex_match' => 'Submenu harus terdiri dari minimal dua kata.'
-            ]
-        ],
-        'status'  => 'required|in_list[1,2]',
-    ];
-
-    if (! $this->validate($rules)) {
-        return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-    }
-
-    $existing = $this->submenuModel->find($id);
-    if (! $existing) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
-    }
-
-    $parentId = $this->request->getPost('parent');
-    $submenuName = trim(strtolower($this->request->getPost('submenu')));
-
-    // Cek duplikat (ignore case, trim, exclude current ID)
-    $duplicate = $this->submenuModel
-        ->where('parent', $parentId)
-        ->where('LOWER(TRIM(name))', $submenuName)
-        ->where('id !=', $id)
-        ->where('status !=', 0)
-        ->first();
-
-    if ($duplicate) {
-        return redirect()->back()->withInput()->with('swal', [
-            'icon'  => 'error',
-            'title' => 'Gagal!',
-            'text'  => 'Nama submenu sudah digunakan pada menu yang sama.'
-        ]);
-    }
-
-    $data = [
-        'parent' => $parentId,
-        'name'   => $this->request->getPost('submenu'),
-        'status' => $this->request->getPost('status')
-    ];
-
-    $this->submenuModel->update($id, $data);
-
-    return redirect()->to('/submenu/lihat-submenu')->with('updated_message', 'Successfully Updated');
-}
-
-
-
-    public function delete($id)
+    public function update()
     {
+        $id = $this->request->getPost('id');
+        
+        if (!$id) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID submenu tidak ditemukan');
+        }
+
+        $rules = [
+            'parent'  => 'required|integer',
+            'submenu' => [
+                'label' => 'Submenu',
+                'rules' => 'required|min_length[3]|max_length[40]|regex_match[/^\S+(?:\s+\S+)+$/]',
+                'errors' => [
+                    'regex_match' => 'Submenu harus terdiri dari minimal dua kata.'
+                ]
+            ],
+            'status'  => 'required|in_list[1,2]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $existing = $this->submenuModel->find($id);
+        if (! $existing) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
+        }
+
+        $parentId = $this->request->getPost('parent');
+        $submenuName = trim(strtolower($this->request->getPost('submenu')));
+
+        // Cek duplikat (ignore case, trim, exclude current ID)
+        $duplicate = $this->submenuModel
+            ->where('parent', $parentId)
+            ->where('LOWER(TRIM(name))', $submenuName)
+            ->where('id !=', $id)
+            ->where('status !=', 0)
+            ->first();
+
+        if ($duplicate) {
+            return redirect()->back()->withInput()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Gagal!',
+                'text'  => 'Nama submenu sudah digunakan pada menu yang sama.'
+            ]);
+        }
+
+        $data = [
+            'parent' => $parentId,
+            'name'   => $this->request->getPost('submenu'),
+            'status' => $this->request->getPost('status')
+        ];
+
+        $this->submenuModel->update($id, $data);
+
+    return redirect()->back()->with('updated_message', 'Successfully Updated');
+    }
+
+    public function delete()
+    {
+        $id = $this->request->getPost('id');
+        
+        if (!$id) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID submenu tidak ditemukan');
+        }
+
         if (! $this->submenuModel->find($id)) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
         }
@@ -163,6 +177,7 @@ public function store()
         // Soft delete by setting status to 0
         $this->submenuModel->update($id, ['status' => 0]);
         session()->setFlashdata('deleted_message', 'Successfully Deleted');
-        return redirect()->to('/submenu/lihat-submenu')->with('success', 'Submenu successed delete.');
+        return redirect()->back()->with('success', 'Submenu successfully deleted.');
+
     }
 }
