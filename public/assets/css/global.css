@@ -1188,3 +1188,35 @@ input[type="date"]:valid {
     font-weight: bold;
     z-index: 10;
 }
+
+/* default sidebar (mode fullscreen) */
+.sidebar {
+    position: fixed;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    transition: all 0.3s;
+    background-color: white;
+    z-index: 1000;
+}
+
+/* jika mode split aktif (misalnya di device kecil), tambahkan class `split` */
+.sidebar.split {
+    transform: translateX(-100%);
+}
+
+/* saat toggle dibuka */
+.sidebar.split.active {
+    transform: translateX(0);
+}
+
+#overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.3);
+    z-index: 900;
+}

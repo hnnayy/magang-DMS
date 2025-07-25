@@ -1,4 +1,4 @@
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
     <div class="menu-container">
         <ul class="menu">
             <?php
@@ -28,3 +28,35 @@
         </ul>
     </div>
 </div>
+
+    <div id="overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:998;"></div>
+
+<script>
+function isSplitMode() {
+    return window.innerWidth <= 992;
+}
+
+function openSidebar() {
+    if (isSplitMode()) {
+        document.getElementById('sidebar').classList.add('active');
+        document.getElementById('overlay').style.display = 'block';
+    }
+}
+
+function closeSidebar() {
+    if (isSplitMode()) {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('overlay').style.display = 'none';
+    }
+}
+
+document.getElementById('overlay').addEventListener('click', closeSidebar);
+
+window.addEventListener('resize', function () {
+    if (!isSplitMode()) {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('overlay').style.display = 'none';
+    }
+});
+
+</script>
