@@ -35,15 +35,18 @@ class FakultasController extends Controller
             return redirect()->back()->withInput()->with('error', 'Faculty names are listed.');
         }
 
-        $this->unitParentModel->insert([
+        $result = $this->unitParentModel->insert([
             'name'        => $nama,
             'type'        => $type,
             'description' => null,
             'status'      => (int)$status,
         ]);
 
-        session()->setFlashdata('success', 'New faculty successfully added.');
-        return redirect()->to('/data-master/fakultas/create');
+        if ($result) {
+            return redirect()->to('create-faculty')->with('added_message', 'Successfully Added');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to add faculty.');
+        }
     }
 
     public function index()
@@ -52,28 +55,52 @@ class FakultasController extends Controller
         return view('Faculty/DaftarFakultas', ['unitParent' => $fakultas]);
     }
 
-    public function delete($id)
+    public function edit()
     {
-        $this->unitParentModel->update($id, ['status' => 0]);
-        session()->setFlashdata('success', 'deleted successfully.');
-        return redirect()->to('/data-master/fakultas/list');
-    }
-
-    public function update($id)
-    {
-        $nama   = $this->request->getPost('name');
-        $type   = $this->request->getPost('type');
-        $status = $this->request->getPost('status');
-
-        if (empty($nama) || empty($type) || empty($status)) {
-            session()->setFlashdata('error', 'Semua field harus diisi.');
-            return redirect()->to('/data-master/fakultas/list');
+        $id = $this->request->getGet('id');
+        
+        if (empty($id)) {
+            session()->setFlashdata('error', 'Faculty ID is required.');
+            return redirect()->to('faculty-list');
         }
 
         $fakultas = $this->unitParentModel->find($id);
         if (!$fakultas) {
-            session()->setFlashdata('error', 'Fakultas tidak ditemukan.');
-            return redirect()->to('/data-master/fakultas/list');
+            session()->setFlashdata('error', 'Faculty not found.');
+            return redirect()->to('faculty-list');
+        }
+
+        $data = [
+            'title' => 'Edit Faculty',
+            'fakultas' => $fakultas
+        ];
+        
+        return view('Faculty/EditFakultas', $data);
+    }
+
+    public function update()
+    {
+        $id     = $this->request->getPost('id');
+        $nama   = $this->request->getPost('name');
+        $type   = $this->request->getPost('type');
+        $status = $this->request->getPost('status');
+
+        if (empty($id) || empty($nama) || empty($type) || empty($status)) {
+            session()->setFlashdata('error', 'All fields are required.');
+            return redirect()->to('faculty-list');
+        }
+
+        $fakultas = $this->unitParentModel->find($id);
+        if (!$fakultas) {
+            session()->setFlashdata('error', 'Faculty not found.');
+            return redirect()->to('faculty-list');
+        }
+
+        // Check if name already exists (exclude current record)
+        $existingFakultas = $this->unitParentModel->where('name', $nama)->where('id !=', $id)->first();
+        if ($existingFakultas) {
+            session()->setFlashdata('error', 'Faculty name already exists.');
+            return redirect()->to('faculty-list');
         }
 
         $updateData = [
@@ -82,17 +109,40 @@ class FakultasController extends Controller
             'status' => (int)$status
         ];
 
-        log_message('debug', 'Update data: ' . json_encode($updateData));
-        log_message('debug', 'Update ID: ' . $id);
-
         $result = $this->unitParentModel->update($id, $updateData);
 
         if ($result) {
-            session()->setFlashdata('success', 'Faculty updated successfully.');
+            session()->setFlashdata('updated_message', 'Successfully Updated.');
         } else {
             session()->setFlashdata('error', 'Failed to update faculty.');
         }
 
-        return redirect()->to('/data-master/fakultas/list');
+        return redirect()->to('faculty-list');
+    }
+
+    public function delete()
+    {
+        $id = $this->request->getPost('id');
+        
+        if (empty($id)) {
+            session()->setFlashdata('error', 'Faculty ID is required.');
+            return redirect()->to('faculty-list');
+        }
+
+        $fakultas = $this->unitParentModel->find($id);
+        if (!$fakultas) {
+            session()->setFlashdata('error', 'Faculty not found.');
+            return redirect()->to('faculty-list');
+        }
+
+        $result = $this->unitParentModel->update($id, ['status' => 0]);
+        
+        if ($result) {
+            session()->setFlashdata('deleted_message', 'Successfully Deleted.');
+        } else {
+            session()->setFlashdata('error', 'Failed to delete faculty.');
+        }
+        
+        return redirect()->to('faculty-list');
     }
 }

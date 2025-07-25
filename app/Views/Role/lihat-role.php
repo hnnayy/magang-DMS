@@ -5,6 +5,28 @@
     <h4>Role List</h4>
     <hr>
 
+    <!-- Flash Messages -->
+    <?php if (session()->getFlashdata('deleted_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('deleted_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('updated_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('updated_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="roleTable">
             <thead class="table-light">
@@ -43,12 +65,16 @@
                     </td>
                     <td class="text-center">
                         <div class="d-flex align-items-center justify-content-center gap-2">
-                            <form action="<?= site_url('role/delete/' . $role['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                            <!-- Delete Form - Sesuaikan dengan routes POST -->
+                            <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                 <?= csrf_field() ?>
+                                <input type="hidden" name="id" value="<?= $role['id'] ?>">
                                 <button type="submit" class="btn btn-link p-0 text-danger">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            
+                            <!-- Edit Button -->
                             <button 
                                 class="btn btn-link p-0 text-primary" 
                                 data-bs-toggle="modal" 
@@ -79,7 +105,9 @@
         <h5 class="modal-title">Edit Role</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="post" id="editRoleForm">
+      
+      <!-- Form Update - Sesuaikan dengan routes POST -->
+      <form method="post" action="<?= site_url('create-role/update') ?>" id="editRoleForm">
         <?= csrf_field() ?>
         <div class="modal-body">
             <input type="hidden" name="id" id="editRoleId">
@@ -90,7 +118,7 @@
             <div class="mb-3">
                 <label class="form-label">Level</label>
                 <select name="role_level" id="editRoleLevel" class="form-select" required>
-                    <option value="">-- Pilih Level --</option>
+                    <option value="">-- Choose Level --</option>
                     <option value="1">Directorate/Faculty</option>
                     <option value="2">Unit</option>
                 </select>
@@ -105,15 +133,10 @@
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                 </select>
-
-
-
-
-
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary w-100">Save Changes</button>
+            <button type="submit" class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>
@@ -133,8 +156,11 @@
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
+            text: 'You want to delete this role?',
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
@@ -146,12 +172,29 @@
     }
 
     $(document).ready(function () {
-        $('#roleTable').DataTable();
+        $('#roleTable').DataTable({
+            responsive: true,
+            language: {
+                search: "Search roles:",
+                lengthMenu: "Show _MENU_ roles per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ roles",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
+
+        // Auto hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').fadeOut('slow');
+        }, 5000);
     });
 
     function openEditModal(id, roleName, roleLevel, roleDescription, roleStatus) {
-        const form = document.getElementById('editRoleForm');
-        form.action = `<?= site_url('role/update/') ?>${id}`;
+        // Set form action sudah di-set static di form
         document.getElementById('editRoleId').value = id;
         document.getElementById('editRoleName').value = roleName;
         document.getElementById('editRoleLevel').value = roleLevel;
@@ -167,8 +210,11 @@
         document.getElementById('editRoleStatus').value = statusText;
     }
 
+    // Handle form submission with loading state
+    $('#editRoleForm').on('submit', function() {
+        const submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+    });
 </script>
 
-
 <?= $this->endSection() ?>
-

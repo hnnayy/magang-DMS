@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="px-4 py-3 w-100">
-  <h4>Lihat User</h4>
+  <h4>User List</h4>
   <hr>
 
   <div class="table-responsive bg-white p-3 rounded shadow-sm">
@@ -53,6 +53,7 @@
   </div>
 </div>
 
+<!-- Modal Edit User -->
 <div class="modal fade" id="editUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
@@ -62,6 +63,7 @@
       </div>
       <form id="editUserForm">
         <div class="modal-body">
+          <input type="hidden" id="editUserId"> <!-- Hidden field untuk user ID -->
           <div class="mb-3">
             <label for="editEmployeeId">Employee ID</label>
             <input type="text" class="form-control" id="editEmployeeId" readonly>
@@ -69,7 +71,7 @@
           <div class="mb-3">
             <label for="editDirectorate">Fakultas/Direktorat</label>
             <select class="form-select" id="editDirectorate" name="fakultas" required>
-              <option value="">Pilih Fakultas/Direktorat</option>
+              <option value="">Choose Fakulty/Direktorate</option>
               <?php foreach ($unitParents as $parent): ?>
                 <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
               <?php endforeach; ?>
@@ -78,7 +80,7 @@
          <div class="mb-3">
           <label for="editUnit">Unit</label>
           <select class="form-select" id="editUnit" name="unit" required>
-            <option value="">Pilih Unit</option>
+            <option value="">Choose Unit</option>
             <?php foreach ($units as $unit): ?>
               <option value="<?= $unit['id'] ?>" data-parent="<?= $unit['parent_id'] ?>"><?= esc($unit['name']) ?></option>
             <?php endforeach; ?>
@@ -95,14 +97,15 @@
           <div class="mb-3">
             <label for="editRole">Role</label>
             <select class="form-select" id="editRole" name="role" required>
-              <option value="">Pilih Role</option>
+              <option value="">Choose Role</option>
               <?php foreach ($roles as $role): ?>
                 <option value="<?= esc($role['name']) ?>"><?= esc($role['name']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
+        </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
+          <button type="submit" class="btn btn-primary w-100">Save Changes</button>
         </div>
       </form>
     </div>
@@ -129,7 +132,7 @@ $(document).ready(function () {
     pageLength: 5,
     order: [],
     columnDefs: [
-      { orderable: false, targets: 7 }, // Kolom Aksi tidak bisa di-sort
+      { orderable: false, targets: 7 },
       { className: 'text-center', targets: 7 }
     ],
     buttons: [
@@ -137,9 +140,7 @@ $(document).ready(function () {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { 
-          columns: [0, 1, 2, 3, 4, 5, 6] // Exclude kolom Aksi (index 7)
-        }
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
       },
       {
         extend: 'pdfHtml5',
@@ -147,10 +148,8 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { 
-          columns: [0, 1, 2, 3, 4, 5, 6] // Exclude kolom Aksi (index 7)
-        },
-        orientation: 'landscape', // Ubah ke landscape untuk tabel yang lebar
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
+        orientation: 'landscape',
         pageSize: 'A4',
         customize: function (doc) {
           const now = new Date();
@@ -159,12 +158,10 @@ $(document).ready(function () {
             hour: '2-digit', minute: '2-digit'
           });
 
-          // Hapus judul default jika ada
           if (doc.content[0] && doc.content[0].text === 'Data Users') {
             doc.content.splice(0, 1);
           }
 
-          // Tambahkan header/judul
           doc.content.unshift({
             text: 'Data Users',
             alignment: 'center',
@@ -173,7 +170,6 @@ $(document).ready(function () {
             margin: [0, 0, 0, 15]
           });
 
-          // Style untuk header tabel
           doc.styles.tableHeader = {
             fillColor: '#eaeaea',
             color: '#000',
@@ -182,64 +178,40 @@ $(document).ready(function () {
             fontSize: 10
           };
 
-          // Style untuk body tabel
-          doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
-          doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
           doc.defaultStyle.fontSize = 9;
-          doc.styles.tableBody = { 
-            alignment: 'center', 
-            fontSize: 9 
-          };
+          doc.styles.tableBody = { alignment: 'center', fontSize: 9 };
 
-          // Footer
           doc.footer = function (currentPage, pageCount) {
             return {
               columns: [
-                { 
-                  text: 'Dicetak: ' + waktuCetak, 
-                  alignment: 'left', 
-                  margin: [40, 0] 
-                },
-                { 
-                  text: '© 2025 Telkom University – Document Management System', 
-                  alignment: 'center' 
-                },
-                { 
-                  text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, 
-                  alignment: 'right', 
-                  margin: [0, 0, 40, 0] 
-                }
+                { text: 'Dicetak: ' + waktuCetak, alignment: 'left', margin: [40, 0] },
+                { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
+                { text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, alignment: 'right', margin: [0, 0, 40, 0] }
               ],
               fontSize: 8,
               margin: [0, 10, 0, 0]
             };
           };
 
-          // Margin halaman
           doc.pageMargins = [40, 60, 40, 60];
 
-          // Konfigurasi tabel
           if (doc.content[1] && doc.content[1].table) {
-            // Atur lebar kolom untuk landscape
             doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
             doc.content[1].margin = [0, 0, 0, 0];
-            
-            // Layout border tabel
             doc.content[1].layout = {
-              hLineWidth: function () { return 0.5; },
-              vLineWidth: function () { return 0.5; },
-              hLineColor: function () { return '#000000'; },
-              vLineColor: function () { return '#000000'; },
-              paddingLeft: function () { return 5; },
-              paddingRight: function () { return 5; },
-              paddingTop: function () { return 3; },
-              paddingBottom: function () { return 3; }
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5,
+              hLineColor: () => '#000000',
+              vLineColor: () => '#000000',
+              paddingLeft: () => 5,
+              paddingRight: () => 5,
+              paddingTop: () => 3,
+              paddingBottom: () => 3
             };
           }
 
-          // Tambahkan catatan di akhir
           doc.content.push({
-            text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
+            text: '* This document contains a list of active users in the system.',
             alignment: 'left',
             italics: true,
             fontSize: 8,
@@ -250,7 +222,7 @@ $(document).ready(function () {
     ]
   });
 
-  // Event handler untuk edit user
+  // Edit User Modal Setup
   $(document).on('click', '.edit-user', function () {
     const userId = $(this).data('id');
     const employeeId = $(this).data('employee');
@@ -259,12 +231,14 @@ $(document).ready(function () {
     const unitId = $(this).data('unit');
     const roleName = $(this).data('role');
 
+    // Set values in modal
+    $('#editUserId').val(userId); // Store user ID
     $('#editEmployeeId').val(employeeId);
     $('#editUsername').val($(this).data('username'));
     $('#editFullname').val(fullname);
     $('#editDirectorate').val(parentId).trigger('change');
 
-    // Filter unit berdasarkan directorate
+    // Filter units based on selected directorate
     $('#editUnit option').each(function () {
       const optionParent = $(this).data('parent');
       if (optionParent == parentId || $(this).val() === '') {
@@ -278,22 +252,22 @@ $(document).ready(function () {
     $('#editRole').val(roleName);
   });
 
-  // Submit form edit user
+  // Handle Edit Form Submission
   $('#editUserForm').submit(function (e) {
     e.preventDefault();
-    
-    // Validasi form
+
     if (!$('#editDirectorate').val() || !$('#editUnit').val() || !$('#editRole').val()) {
       Swal.fire('Peringatan', 'Semua field harus diisi!', 'warning');
       return;
     }
 
     $.ajax({
-      url: '<?= base_url('CreateUser/update') ?>',
+      url: '<?= base_url('create-user/update') ?>', // Fixed URL
       method: 'POST',
       data: {
-        id: $('#editEmployeeId').val(),
-        username: $('#editUsername').val(),     
+        <?= csrf_token() ?>: '<?= csrf_hash() ?>',
+        id: $('#editUserId').val(), // Use hidden user ID
+        username: $('#editUsername').val(),
         fullname: $('#editFullname').val(),
         role: $('#editRole').val(),
         fakultas: $('#editDirectorate').val(),
@@ -302,21 +276,24 @@ $(document).ready(function () {
       },
       success: function (res) {
         $('#editUserModal').modal('hide');
-        Swal.fire('Berhasil!', res.message, 'success').then(() => {
+        Swal.fire({
+          title: 'Success',
+          text: 'Successfully Updated',
+          icon: 'success'
+        }).then(() => {
           location.reload();
         });
       },
       error: function (xhr) {
-        const err = xhr.responseJSON?.error || 'Terjadi kesalahan saat update.';
-        Swal.fire('Gagal', err, 'error');
+        const err = xhr.responseJSON?.error || 'Error occurred during the update..';
+        Swal.fire('Failed', err, 'error');
       }
     });
   });
 
-  // Event handler untuk perubahan directorate
+  // Handle Directorate Change
   $('#editDirectorate').on('change', function () {
     const selectedParentId = $(this).val();
-
     $('#editUnit').val('');
     $('#editUnit option').each(function () {
       const optionParent = $(this).data('parent');
@@ -328,34 +305,38 @@ $(document).ready(function () {
     });
   });
 
-  // Event handler untuk delete user
+  // Handle Delete User
   $(document).on('click', '.delete-user', function (e) {
     e.preventDefault();
     const id = $(this).data('id');
 
     Swal.fire({
-      title: 'Yakin ingin menghapus?',
-      text: 'User akan dihapus secara permanen.',
+      title: 'Are you sure?',
+      text: 'User will be permanently deleted..',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Ya, hapus',
-      cancelButtonText: 'Batal',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel',
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#6c757d'
     }).then((result) => {
       if (result.isConfirmed) {
-        $.ajax({
-          url: '<?= base_url('CreateUser/delete/') ?>' + id,
-          method: 'DELETE',
-          success: function (res) {
-            Swal.fire('Berhasil!', res.message, 'success').then(() => {
-              location.reload();
-            });
-          },
-          error: function (xhr) {
-            const err = xhr.responseJSON?.error || 'Gagal menghapus user.';
-            Swal.fire('Gagal', err, 'error');
-          }
+        $.post('<?= base_url('create-user/delete') ?>', { // Fixed URL
+          <?= csrf_token() ?>: '<?= csrf_hash() ?>',
+          id: id
+        })
+        .done(function (res) {
+          Swal.fire({
+            title: 'Success',
+            text: 'Successfully Deleted',
+            icon: 'success'
+          }).then(() => {
+            location.reload();
+          });
+        })
+        .fail(function (xhr) {
+          const err = xhr.responseJSON?.error || 'Failed to delete user.';
+          Swal.fire('Failed', err, 'error');
         });
       }
     });

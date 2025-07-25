@@ -22,17 +22,15 @@ class Menu extends BaseController
         ]);
     }
 
-    // Tampilkan semua menu yang tidak dihapus
-    public function index()
-    {
-        $data['menus'] = $this->menuModel->where('status !=', 0)->findAll();
-        return view('Menu/lihat-menu', $data);
-    }
-
-    // Alias dari index (kalau ada kebutuhan pemisahan rute)
+    // Tampilkan daftar menu
     public function list()
     {
-        return $this->index();
+        $data = [
+            'title' => 'Menu List',
+            'menus' => $this->menuModel->where('status !=', 0)->findAll()
+        ];
+
+        return view('Menu/lihat-menu', $data);
     }
 
     // Proses simpan menu baru
@@ -66,42 +64,34 @@ class Menu extends BaseController
             ]
         ];
 
-        // Validasi gagal
         if (!$this->validate($rules)) {
             return redirect()->back()
                 ->withInput()
                 ->with('error', implode(' ', $validation->getErrors()));
         }
 
-        // Ubah icon: ganti spasi ke tanda minus
-        $iconInput = $this->request->getPost('icon');
-        $icon = str_replace(' ', '-', strtolower(trim($iconInput)));
-
         $data = [
             'name'   => trim($this->request->getPost('menu_name')),
-            'icon'   => $icon,
+            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
             'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
         if ($this->menuModel->insert($data)) {
-            return redirect()->back()->with('success', 'menu added successfully
-.');
+            return redirect()->back()->with('added_message', 'Successfully Added');
         }
 
         return redirect()->back()->with('error', 'Failed to add menu.');
     }
 
-    // Soft delete menu (ubah status jadi 0)
-    public function delete($id)
-    {
-        $this->menuModel->update($id, ['status' => 0]);
-        return redirect()->to(base_url('Menu'))->with('success', 'Failed to add menu');
-    }
-
     // Proses update menu
-    public function update($id)
+    public function update()
     {
-        $data = $this->request->getPost();
+        $id = $this->request->getPost('id');
+
+        if (!$id) {
+            return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
+        }
+
         $validation = \Config\Services::validation();
 
         $rules = [
@@ -115,10 +105,10 @@ class Menu extends BaseController
                 ]
             ],
             'icon' => [
-                'rules' => 'required|regex_match[/^[a-z0-9\s-]+$/]',
+                'rules' => 'required|regex_match[/^[a-z0-9\s\-]+$/]',
                 'errors' => [
                     'required'    => 'Icon wajib diisi.',
-                    'regex_match' =>  'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
+                    'regex_match' => 'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
                 ]
             ],
             'status' => [
@@ -131,22 +121,38 @@ class Menu extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()
+            return redirect()->to(base_url('menu-list'))
                 ->withInput()
                 ->with('validation', $validation)
                 ->with('error', 'Validasi gagal. Silakan periksa kembali input Anda.');
         }
 
-        $icon = str_replace(' ', '-', strtolower(trim($data['icon'])));
-
         $updateData = [
-            'name'   => trim($data['menu_name']),
-            'icon'   => $icon,
-            'status' => $data['status'] == '1' ? 1 : 2,
+            'name'   => trim($this->request->getPost('menu_name')),
+            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
+            'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
-        $this->menuModel->update($id, $updateData);
+        if ($this->menuModel->update($id, $updateData)) {
+            return redirect()->to(base_url('menu-list'))->with('updated_message', 'Successfully Updated');
+        }
 
-        return redirect()->to(base_url('Menu'))->with('success', 'Menu berhasil diperbarui.');
+        return redirect()->to(base_url('menu-list'))->with('error', 'Failed to update menu.');
+    }
+
+    // Soft delete menu (ubah status jadi 0)
+    public function delete()
+    {
+        $id = $this->request->getPost('id');
+
+        if (!$id) {
+            return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
+        }
+
+        if ($this->menuModel->update($id, ['status' => 0])) {
+            return redirect()->to(base_url('menu-list'))->with('deleted_message', 'Successfully Deleted');
+        }
+
+        return redirect()->to(base_url('menu-list'))->with('error', 'Failed to delete menu.');
     }
 }

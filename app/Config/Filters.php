@@ -34,9 +34,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        // 'auth'          => \App\Filters\AuthFilter::class,
-        // 'auth' => \App\Filters\AuthFilter::class,
-        // 'privilege' => \App\Filters\PrivilegeFilter::class,
+        'privilege'     => \App\Filters\PrivilegeFilter::class,
+
         
 
     ];
@@ -72,21 +71,24 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, array<string, string>>>|array<string, list<string>>
      */
-    public array $globals = [
+ public array $globals = [
     'before' => [
-        // 'auth' => [
-        //     'except' => [
-        //         'parse-token',
-        //         'generatetoken',
-        //         'wc-dummy',
-                
-        //     ]
-        // ],
+        'csrf',
+        'privilege' => [
+            'except' => [
+                'parse-token',
+                'wc-dummy',
+                'wc-dummy/login',
+                'generateAllTokens',
+                'dashboard',
+                'api/decode-token',
+                'api/decode-token'
+            ],
+        ],
     ],
-    'after' => [
-        
-    ],
+    'after' => [],
 ];
+
 
 
     /**

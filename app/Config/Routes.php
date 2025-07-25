@@ -5,16 +5,111 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
+
+//alur dummy
+$routes->get('/wc-dummy', 'Dummy\TokenDummy::index');
+$routes->post('/wc-dummy/login', 'Dummy\TokenDummy::login');
+$routes->get('/parse-token', 'Dummy\TokenDummy::parseToken');
+$routes->get('/generateAllTokens', 'Dummy\TokenDummy::generateAllTokens'); // opsional
+
+if (ENVIRONMENT === 'development') {
+    $routes->get('/', fn() => redirect()->to('/wc-dummy'));
+}
+
+
+$routes->get('monev-dashboard', function () {
+    $token = session('jwt_token'); // ngambil token dari session
+
+    if (!$token) {
+        return redirect()->to('/')->with('error', 'Token tidak tersedia.');
+    }
+
+    return redirect()->to('https://clear.celoe.org/?token=' . $token);
+});
+
+$routes->post('/api/decode-token', 'Dummy\TokenDummy::apiDecodeToken');
+
+
 // $routes->get('/', 'Home::index');
 $routes->get('/dashboard', 'Home::index');
 
+// CreateUser
+$routes->get('create-user', to: 'CreateUser::create');
+$routes->get('user-list', 'CreateUser::list');
+$routes->post('create-user/store', 'CreateUser::store');
+$routes->post('create-user/delete', 'CreateUser::delete');
+$routes->post('create-user/update', 'CreateUser::update');
 
-$routes->get('lihat-user', 'CreateUser::list');
-$routes->get('tambah-user', 'CreateUser::create');
+//master data
+//unit
+$routes->get('create-unit', 'MasterData\UnitController::create');
+$routes->get('unit-list', 'MasterData\UnitController::list');
+$routes->post('create-unit/store', 'MasterData\UnitController::store');
+$routes->get('create-unit/edit', 'MasterData\UnitController::edit');
+$routes->post('create-unit/update', 'MasterData\UnitController::update');
+$routes->post('create-unit/delete', 'MasterData\UnitController::delete');
+
+//faculty
+$routes->get('create-faculty', 'MasterData\FakultasController::create');
+$routes->get('faculty-list', 'MasterData\FakultasController::index');
+$routes->post('create-faculty/store', 'MasterData\FakultasController::store');
+$routes->get('create-faculty/edit', 'MasterData\UnitController::edit');
+$routes->post('create-faculty/update/', 'MasterData\FakultasController::update');
+$routes->post('create-faculty/delete', 'MasterData\FakultasController::delete');
+
+//document type code
+$routes->get('document-type-code', 'KelolaDokumen::configJenisDokumen');
+
+
+//menu
+$routes->get('create-menu', 'Menu::create');
+$routes->get('menu-list', 'Menu::list');
+$routes->post('create-menu/store', 'Menu::store');
+$routes->post('create-menu/update', 'Menu::update');
+$routes->post('create-menu/delete', 'Menu::delete'); 
+
+//submenu
+$routes->get('create-submenu', 'SubmenuController::create');
+$routes->get('submenu-list', to: 'SubmenuController::list'); 
+$routes->post('create-submenu/store', 'SubmenuController::store'); 
+$routes->get('create-submenu/edit', 'SubmenuController::edit'); 
+$routes->post('create-submenu/update', 'SubmenuController::update'); 
+$routes->post('create-submenu/delete', 'SubmenuController::delete'); 
+
+//role
+$routes->get('create-role', 'Role::create');             
+$routes->get('role-list', 'Role::list'); 
+$routes->post('create-role/store', to: 'Role::storeRole');
+$routes->post('create-role/delete', 'Role::delete'); 
+$routes->post('create-role/update', 'Role::update'); 
+
+//privilege
+$routes->get('create-privilege', 'Privilege::create');   
+$routes->get('privilege-list', 'Privilege::list');       // Lihat daftar privilege
+$routes->post('create-privilege/store', 'Privilege::store');    
+$routes->post('create-privilege/update', 'Privilege::update');
+$routes->post('create-privilege/delete', 'Privilege::delete');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//=====================================================================================================
 // CreateUser
 $routes->get('create-user', 'CreateUser::index');
 $routes->get('create-user/list', 'CreateUser::list');
 $routes->get('create-user/create', 'CreateUser::create');
+
+
 $routes->get('CreateUser/create', 'CreateUser::create');
 $routes->post('CreateUser/store', 'CreateUser::store');
 $routes->get('CreateUser/getUnits/(:num)', 'CreateUser::getUnits/$1');
@@ -56,6 +151,8 @@ $routes->post('data-master/fakultas/delete/(:num)', 'MasterData\FakultasControll
 $routes->post('data-master/fakultas/update/(:num)', 'MasterData\FakultasController::update/$1');
 // Soft delete (ubah status atau flag deleted)
 
+$routes->post('tambah-fakultas/store', 'MasterData\FakultasController::store');
+$routes->post('tambah-fakultas/delete/(:num)', 'MasterData\FakultasController::delete/$1');
 
 
 // KelolaDokumen
@@ -211,3 +308,17 @@ $routes->get('monev-dashboard', function () {
 
     return redirect()->to('https://clear.celoe.org/?token=' . $token);
 });
+
+$routes->post('/api/decode-token', 'Dummy\TokenDummy::apiDecodeToken');
+
+
+//23-07-2025
+//nisrina
+$routes->post('daftar-dokumen/update', 'DaftarDokumen\ControllerDaftarDokumen::update');
+$routes->post('daftar-dokumen/delete/(:num)', 'DaftarDokumen\ControllerDaftarDokumen::delete/$1');
+
+//cipa
+//cipa file
+$routes->get('kelola-dokumen/file/(:num)', 'KelolaDokumen::serveFile/$1');
+$routes->get('kelola-dokumen/file/(:num)', 'KelolaDokumen::serveFile/$1');
+$routes->get('kelola-dokumen/get-history/(:num)', 'KelolaDokumen::get_history/$1');

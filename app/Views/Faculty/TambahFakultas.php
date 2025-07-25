@@ -7,7 +7,7 @@
             <h2><?= $title ?? 'Create Fakulty' ?></h2>
         </div>
 
-        <form id="createFakultasForm" method="post" action="<?= base_url('data-master/fakultas/store') ?>">
+        <form id="createFakultasForm" method="post" action="<?= base_url('create-faculty/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Nama Fakultas -->
@@ -60,25 +60,7 @@
 
 <!-- SweetAlert (Notifikasi) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
-</script>
 
 <script>
     // Fungsi untuk kapitalisasi setiap kata

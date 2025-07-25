@@ -18,13 +18,13 @@
         
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        <form id="addDocumentForm" action="<?= site_url('data-master/unit/store') ?>" method="post">
+        <form id="addDocumentForm" action="<?= site_url('create-unit/store') ?>" method="post">
             <?= csrf_field() ?>
 
             <div class="form-group">
                 <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
                 <select id="fakultas-direktorat" name="parent_id" class="form-input" required>
-                    <option value="">-- Choose Faculty/Directorate --</option>
+                    <option value="">-- Select Faculty/Directorate --</option>
                     <?php foreach ($fakultas as $f) : ?>
                         <option value="<?= $f['id'] ?>" <?= set_select('parent_id', $f['id']) ?>>
                             <?= esc($f['name']) ?>

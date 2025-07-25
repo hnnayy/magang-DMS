@@ -5,9 +5,11 @@
     <div class="form-section">
         <div class="form-section-divider">
             <h2><?= $title ?? 'Add New Role' ?></h2>
+
         </div>
 
-        <form id="createRoleForm" method="post" action="<?= base_url('role/store') ?>">
+
+        <form id="createRoleForm" method="post" action="<?= base_url('create-role/store') ?>">
             <?= csrf_field() ?>
 
             <!-- Nama Role -->

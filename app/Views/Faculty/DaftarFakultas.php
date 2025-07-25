@@ -29,8 +29,9 @@
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <!-- Tombol Hapus -->
-                                    <form action="<?= site_url('data-master/fakultas/delete/' . $fakultas['id']) ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                    <form action="<?= site_url('create-faculty/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                         <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $fakultas['id'] ?>">
                                         <button type="submit" class="btn btn-link p-0 text-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -67,8 +68,9 @@
         <h5 class="modal-title">Edit Faculty</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form method="post" id="editFakultasForm">
+      <form method="post" id="editFakultasForm" action="<?= site_url('create-faculty/update/') ?>">
         <?= csrf_field() ?>
+        <input type="hidden" name="id" id="editFakultasId">
         <div class="modal-body">
             <div class="mb-3">
                 <label class="form-label">Faculty Name</label>
@@ -110,7 +112,6 @@
 
 <?= $this->endSection() ?>
 
-
 <?= $this->section('script') ?>
 <!-- JS Libraries -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -124,11 +125,11 @@
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
-            title: 'Are you sure you want to delete?',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete!',
-            cancelButtonText: 'Cancalled'
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -143,9 +144,10 @@
 
     // Buka modal edit dan isi data
     function openEditModal(id, name, type, status) {
-        const form = document.getElementById('editFakultasForm');
-        form.action = `<?= site_url('data-master/fakultas/update/') ?>${id}`;
-
+        // Set ID di hidden input
+        document.getElementById('editFakultasId').value = id;
+        
+        // Set nama fakultas
         document.getElementById('editFakultasName').value = name;
 
         // Centang radio "type" (1 = Directorate, 2 = Faculty)
@@ -156,19 +158,43 @@
         const statusRadio = document.querySelector(`input[name="status"][value="${status}"]`);
         if (statusRadio) statusRadio.checked = true;
     }
-</script>
 
-<!-- Notifikasi jika berhasil -->
-<?php if (session()->getFlashdata('success')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'success!',
-        text: '<?= session()->getFlashdata('success') ?>',
-        showConfirmButton: false,
-        timer: 2000
-    });
+    // Show messages
+    <?php if (session()->getFlashdata('added_message')): ?>
+        Swal.fire({
+            title: 'Success!',
+            text: '<?= session()->getFlashdata('added_message') ?>',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('updated_message')): ?>
+        Swal.fire({
+            title: 'Success!',
+            text: '<?= session()->getFlashdata('updated_message') ?>',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('deleted_message')): ?>
+        Swal.fire({
+            title: 'Success!',
+            text: '<?= session()->getFlashdata('deleted_message') ?>',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        Swal.fire({
+            title: 'Error!',
+            text: '<?= session()->getFlashdata('error') ?>',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    <?php endif; ?>
 </script>
-<?php endif; ?>
 
 <?= $this->endSection() ?>

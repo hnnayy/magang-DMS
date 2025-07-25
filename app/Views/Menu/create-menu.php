@@ -1,50 +1,6 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
-<style>
-    .form-check-label {
-        color: black !important;
-    }
-    .form-check-input:checked + .form-check-label,
-    .form-check-input:focus + .form-check-label,
-    .form-check-input:hover + .form-check-label {
-        color: black !important;
-    }
-
-    .form-check-input {
-        background-color: transparent !important;
-        border-color: #adb5bd !important;
-    }
-    .form-check-input:checked {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-    .form-check-input:focus {
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-
-    .form-check-input.is-valid,
-    .form-check-input.is-invalid,
-    .was-validated .form-check-input:valid,
-    .was-validated .form-check-input:invalid {
-        background-color: transparent !important;
-        border-color: #adb5bd !important;
-    }
-    .form-check-input:checked.is-valid,
-    .form-check-input:checked.is-invalid,
-    .was-validated .form-check-input:checked:valid,
-    .was-validated .form-check-input:checked:invalid {
-        background-color: #007bff !important;
-        border-color: #007bff !important;
-    }
-    .form-check-input:focus.is-valid,
-    .form-check-input:focus.is-invalid,
-    .was-validated .form-check-input:focus:valid,
-    .was-validated .form-check-input:focus:invalid {
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-</style>
-
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
@@ -52,20 +8,29 @@
         </div>
 
         <?php $validation = $validation ?? \Config\Services::validation(); ?>
-        <form id="createMenuForm" method="post" action="<?= base_url('Menu/store') ?>" class="needs-validation" novalidate>
+
+        <form id="createMenuForm" method="post" action="<?= base_url('create-menu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
             <!-- Nama Menu -->
             <div class="form-group">
                 <label class="form-label" for="menuName">Menu Name</label>
-                <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" class="form-control" placeholder="Enter Menu here..." pattern="^[a-zA-Z0-9\s]{1,40}$" title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimum 40 karakter" maxlength="40" required>
-                <div class="invalid-feedback">Menu name is mandatory.</div>
+                <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" 
+                       class="form-input" placeholder="Enter Menu here..." 
+                       pattern="^[a-zA-Z0-9\s]{1,50}$" 
+                       title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimal 50 karakter" 
+                       maxlength="50" required>
+                <div class="invalid-feedback">Menu name is mandatory and must be alphanumeric.</div>
             </div>
 
             <!-- Icon -->
             <div class="form-group">
                 <label class="form-label" for="icon">Icon (example: fa home, fa-home, menu-icon)</label>
-                <input type="text" id="icon" name="icon" value="<?= old('icon') ?>" class="form-control" placeholder="Enter Icon here..." pattern="^[a-z0-9\s\-]{1,40}$" title="Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-), maksimum 40 karakter" maxlength="40" required>
+                <input type="text" id="icon" name="icon" value="<?= old('icon') ?>" 
+                       class="form-input" placeholder="Enter Icon here..." 
+                       pattern="^[a-z0-9\s\-]{1,40}$" 
+                       title="Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-), maksimal 40 karakter" 
+                       maxlength="40" required>
                 <div class="invalid-feedback">Icons may only contain lowercase letters, numbers, spaces, and minus signs (-).</div>
             </div>
 
@@ -78,7 +43,7 @@
                         <label class="form-check-label" for="statusActive">Active</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="status" id="statusInactive" value="0" required <?= old('status') === '0' ? 'checked' : '' ?>>
+                        <input class="form-check-input" type="radio" name="status" id="statusInactive" value="2" required <?= old('status') === '2' ? 'checked' : '' ?>>
                         <label class="form-check-label" for="statusInactive">Inactive</label>
                     </div>
                 </div>
@@ -96,27 +61,6 @@
 
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    <?php if (session()->getFlashdata('success')): ?>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#6C63FF'
-        });
-    <?php endif; ?>
-</script>
 
 <script>
 (() => {
@@ -129,10 +73,12 @@
 
         statusInputs.forEach(input => {
             if (input.checked) isStatusValid = true;
-            input.addEventListener('invalid', function() {
+
+            input.addEventListener('invalid', function () {
                 this.classList.remove('is-valid', 'is-invalid');
             });
-            input.addEventListener('change', function() {
+
+            input.addEventListener('change', function () {
                 this.classList.remove('is-valid', 'is-invalid');
             });
         });
