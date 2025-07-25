@@ -52,11 +52,11 @@ class UserWC extends Migration
         ]);
 
         $this->forge->addKey('id', true); // Primary Key
-        $this->forge->createTable('user');
+        $this->forge->createTable('userWC');
     }
 
     public function down()
     {
-        $this->forge->dropTable('user');
+        $this->forge->dropTable('userWC');
     }
 }
