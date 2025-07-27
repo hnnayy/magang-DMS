@@ -25,26 +25,20 @@ class PrivilegeFilter implements FilterInterface
         $privilegeModel = new PrivilegeModel();
         $submenuModel = new SubmenuModel();
 
-        // Ambil submenu yang bisa diakses
+        // Ambil semua submenu yang punya privilege untuk role ini (tanpa cek create/update/delete/approve)
         $accessibleSubmenus = $privilegeModel->select('submenu_id')
             ->where('role_id', $roleId)
-            ->groupStart()
-                ->where('can_create', 1)
-                ->orWhere('can_update', 1)
-                ->orWhere('can_delete', 1)
-                ->orWhere('can_approve', 1)
-            ->groupEnd()
             ->findAll();
 
         $submenuIds = array_column($accessibleSubmenus, 'submenu_id');
+
         if (empty($submenuIds)) {
             return redirect()->to('/wc-dummy')->with('error', 'Anda tidak memiliki akses ke halaman apa pun.');
         }
 
-        // Ambil nama-nama submenu dan cek slug-nya
         $submenus = $submenuModel->whereIn('id', $submenuIds)->findAll();
 
-        helper('slug'); // pastikan helper di-load
+        helper('slug');
         $isAuthorized = false;
         foreach ($submenus as $submenu) {
             if (slugify($submenu['name']) === $currentRoute) {

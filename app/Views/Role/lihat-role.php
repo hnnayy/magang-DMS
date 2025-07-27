@@ -1,11 +1,36 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<?php
+// Ambil privilege dari session untuk submenu ini
+$privileges = session()->get('privileges');
+$currentSubmenu = 'create-role'; // atau sesuai dengan slug submenu role management Anda
+
+// Set default privileges jika tidak ada
+$canCreate = isset($privileges[$currentSubmenu]['can_create']) ? $privileges[$currentSubmenu]['can_create'] : 0;
+$canUpdate = isset($privileges[$currentSubmenu]['can_update']) ? $privileges[$currentSubmenu]['can_update'] : 0;
+$canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$currentSubmenu]['can_delete'] : 0;
+?>
+
 <div class="px-4 py-3 w-100">
-    <h4>Role List</h4>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Role List</h4>
+        <?php if ($canCreate): ?>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus-circle"></i> Add Role
+            </button>
+        <?php endif; ?>
+    </div>
     <hr>
 
     <!-- Flash Messages -->
+    <?php if (session()->getFlashdata('added_message')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session()->getFlashdata('added_message') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
     <?php if (session()->getFlashdata('deleted_message')): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <?= session()->getFlashdata('deleted_message') ?>
@@ -36,7 +61,9 @@
                     <th>Level</th>
                     <th>Description</th>
                     <th>Status</th>
-                    <th class="text-center" style="width: 20%;">Action</th>
+                    <?php if ($canUpdate || $canDelete): ?>
+                        <th class="text-center" style="width: 20%;">Action</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -63,33 +90,39 @@
                             <span class="badge bg-dark">Deleted</span>
                         <?php endif; ?>
                     </td>
-                    <td class="text-center">
-                        <div class="d-flex align-items-center justify-content-center gap-2">
-                            <!-- Delete Form - Sesuaikan dengan routes POST -->
-                            <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="id" value="<?= $role['id'] ?>">
-                                <button type="submit" class="btn btn-link p-0 text-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            
-                            <!-- Edit Button -->
-                            <button 
-                                class="btn btn-link p-0 text-primary" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#editModal"
-                                onclick="openEditModal(
-                                    <?= $role['id'] ?>, 
-                                    '<?= esc($role['name']) ?>', 
-                                    '<?= esc($role['access_level']) ?>', 
-                                    '<?= esc($role['description']) ?>', 
-                                    '<?= esc($role['status']) ?>'
-                                )">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                        </div>
-                    </td>
+                    <?php if ($canUpdate || $canDelete): ?>
+                        <td class="text-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <?php if ($canDelete): ?>
+                                    <!-- Delete Form -->
+                                    <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $role['id'] ?>">
+                                        <button type="submit" class="btn btn-link p-0 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                
+                                <?php if ($canUpdate): ?>
+                                    <!-- Edit Button -->
+                                    <button 
+                                        class="btn btn-link p-0 text-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editModal"
+                                        onclick="openEditModal(
+                                            <?= $role['id'] ?>, 
+                                            '<?= esc($role['name'], 'js') ?>', 
+                                            '<?= esc($role['access_level']) ?>', 
+                                            '<?= esc($role['description'], 'js') ?>', 
+                                            '<?= esc($role['status']) ?>'
+                                        )">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -97,51 +130,98 @@
     </div>
 </div>
 
-<!-- Modal Edit -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-md modal-dialog-centered">
-    <div class="modal-content shadow border-0">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Role</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      
-      <!-- Form Update - Sesuaikan dengan routes POST -->
-      <form method="post" action="<?= site_url('create-role/update') ?>" id="editRoleForm">
-        <?= csrf_field() ?>
-        <div class="modal-body">
-            <input type="hidden" name="id" id="editRoleId">
-            <div class="mb-3">
-                <label class="form-label">Role Name</label>
-                <input type="text" name="role_name" id="editRoleName" class="form-control" required>
+<!-- Modal Add Role -->
+<?php if ($canCreate): ?>
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Level</label>
-                <select name="role_level" id="editRoleLevel" class="form-select" required>
-                    <option value="">-- Choose Level --</option>
-                    <option value="1">Directorate/Faculty</option>
-                    <option value="2">Unit</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Description</label>
-                <textarea name="role_description" id="editRoleDescription" class="form-control" required></textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Status</label>
-                <select name="role_status" id="editRoleStatus" class="form-select">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
+            <form method="post" action="<?= site_url('create-role/store') ?>" id="addRoleForm">
+                <?= csrf_field() ?>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Role Name <span class="text-danger">*</span></label>
+                        <input type="text" name="role_name" id="addRoleName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Level <span class="text-danger">*</span></label>
+                        <select name="role_level" id="addRoleLevel" class="form-select" required>
+                            <option value="">-- Choose Level --</option>
+                            <option value="1">Directorate/Faculty</option>
+                            <option value="2">Unit</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="role_description" id="addRoleDescription" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select name="role_status" id="addRoleStatus" class="form-select" required>
+                            <option value="active" selected>Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Role</button>
+                </div>
+            </form>
         </div>
-        <div class="modal-footer">
-            <button type="submit" class="btn btn-primary w-100">Save Changes</button>
-        </div>
-      </form>
     </div>
-  </div>
 </div>
+<?php endif; ?>
+
+<!-- Modal Edit Role -->
+<?php if ($canUpdate): ?>
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="<?= site_url('create-role/update') ?>" id="editRoleForm">
+                <?= csrf_field() ?>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="editRoleId">
+                    <div class="mb-3">
+                        <label class="form-label">Role Name <span class="text-danger">*</span></label>
+                        <input type="text" name="role_name" id="editRoleName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Level <span class="text-danger">*</span></label>
+                        <select name="role_level" id="editRoleLevel" class="form-select" required>
+                            <option value="">-- Choose Level --</option>
+                            <option value="1">Directorate/Faculty</option>
+                            <option value="2">Unit</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea name="role_description" id="editRoleDescription" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                        <select name="role_status" id="editRoleStatus" class="form-select" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -152,28 +232,12 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    function confirmDelete(event, form) {
-        event.preventDefault();
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'You want to delete this role?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-        return false;
-    }
-
     $(document).ready(function () {
         $('#roleTable').DataTable({
             responsive: true,
+            pageLength: 10,
+            ordering: true,
+            searching: true,
             language: {
                 search: "Search roles:",
                 lengthMenu: "Show _MENU_ roles per page",
@@ -193,8 +257,29 @@
         }, 5000);
     });
 
+    <?php if ($canDelete): ?>
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to delete this role? This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+        return false;
+    }
+    <?php endif; ?>
+
+    <?php if ($canUpdate): ?>
     function openEditModal(id, roleName, roleLevel, roleDescription, roleStatus) {
-        // Set form action sudah di-set static di form
         document.getElementById('editRoleId').value = id;
         document.getElementById('editRoleName').value = roleName;
         document.getElementById('editRoleLevel').value = roleLevel;
@@ -210,11 +295,77 @@
         document.getElementById('editRoleStatus').value = statusText;
     }
 
-    // Handle form submission with loading state
+    // Handle edit form submission with loading state
     $('#editRoleForm').on('submit', function() {
         const submitBtn = $(this).find('button[type="submit"]');
         submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
     });
+
+    // Client-side validation for duplicate role names on edit
+    const editForm = document.getElementById('editRoleForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+            const inputName = document.getElementById('editRoleName').value.trim().toLowerCase();
+            const currentId = document.getElementById('editRoleId').value;
+
+            let isDuplicate = false;
+            <?php if (!empty($roles)): ?>
+                <?php foreach ($roles as $role): ?>
+                    if ('<?= strtolower(trim($role['name'])) ?>' === inputName && '<?= $role['id'] ?>' !== currentId) {
+                        isDuplicate = true;
+                    }
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            if (isDuplicate) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Role name already exists. Please choose a different name.',
+                    confirmButtonColor: '#abb3baff'
+                });
+                return false;
+            }
+        });
+    }
+    <?php endif; ?>
+
+    <?php if ($canCreate): ?>
+    // Handle add form submission with loading state
+    $('#addRoleForm').on('submit', function() {
+        const submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+    });
+
+    // Client-side validation for duplicate role names on add
+    const addForm = document.getElementById('addRoleForm');
+    if (addForm) {
+        addForm.addEventListener('submit', function (e) {
+            const inputName = document.getElementById('addRoleName').value.trim().toLowerCase();
+
+            let isDuplicate = false;
+            <?php if (!empty($roles)): ?>
+                <?php foreach ($roles as $role): ?>
+                    if ('<?= strtolower(trim($role['name'])) ?>' === inputName) {
+                        isDuplicate = true;
+                    }
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            if (isDuplicate) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Role name already exists. Please choose a different name.',
+                    confirmButtonColor: '#abb3baff'
+                });
+                return false;
+            }
+        });
+    }
+    <?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

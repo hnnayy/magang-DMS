@@ -57,7 +57,6 @@
                     <label><input type="checkbox" name="privileges[]" value="delete"> Delete</label>
                     <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
                 </div>
-                <div class="invalid-feedback" id="privileges-error" style="display: none;">Please select at least one privilege.</div>
             </div>
 
             <!-- Tombol -->
@@ -87,17 +86,8 @@ $(function () {
     $('#privilegeForm').on('submit', function (e) {
         e.preventDefault();
         const form = this;
-        const privilegesCount = $('input[name="privileges[]"]:checked').length;
-        const privilegesError = $('#privileges-error');
         let isValid = true;
-
-        privilegesError.hide();
         $(form).removeClass('was-validated');
-
-        if (privilegesCount === 0) {
-            privilegesError.show();
-            isValid = false;
-        }
 
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
@@ -127,13 +117,6 @@ $(function () {
                     const msg = xhr.responseJSON?.error ?? 'Gagal menyimpan privilege';
                     Swal.fire({ icon: 'error', title: 'Error', text: msg });
                 });
-        }
-    });
-
-    $('input[name="privileges[]"]').on('change', function() {
-        const checked = $('input[name="privileges[]"]:checked').length;
-        if (checked > 0) {
-            $('#privileges-error').hide();
         }
     });
 });

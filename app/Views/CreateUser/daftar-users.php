@@ -16,7 +16,15 @@
           <th>Username</th>
           <th>Fullname</th>
           <th>Role</th>
-          <th class="text-center noExport">Aksi</th>
+          <?php 
+          // Check if user has any action privileges for this page
+          $privileges = session('privileges');
+          $canUpdate = isset($privileges['user-list']['can_update']) && $privileges['user-list']['can_update'] == 1;
+          $canDelete = isset($privileges['user-list']['can_delete']) && $privileges['user-list']['can_delete'] == 1;
+          
+          if ($canUpdate || $canDelete): ?>
+            <th class="text-center noExport">Aksi</th>
+          <?php endif; ?>
         </tr>
       </thead>
       <tbody>
@@ -29,23 +37,31 @@
           <td><?= esc($user['username']) ?></td>
           <td><?= esc($user['fullname']) ?></td>
           <td><?= esc($user['role_name'] ?? 'N/A') ?></td>
+          
+          <?php if ($canUpdate || $canDelete): ?>
           <td class="text-center">
-            <a href="#" class="text-danger me-2 delete-user" data-id="<?= $user['id'] ?>" title="Delete">
-              <i class="bi bi-trash"></i>
-            </a>
-            <a href="#" class="text-primary edit-user"
-              data-bs-toggle="modal"
-              data-bs-target="#editUserModal"
-              data-id="<?= $user['id'] ?>"
-              data-employee="<?= esc($user['id']) ?>"
-              data-directorate="<?= esc($user['parent_id']) ?>"
-              data-unit="<?= esc($user['unit_id']) ?>"
-              data-username="<?= esc($user['username']) ?>"
-              data-fullname="<?= esc($user['fullname']) ?>"
-              data-role="<?= esc($user['role_name']) ?>">
-              <i class="bi bi-pencil-square"></i>
-            </a>
+            <?php if ($canDelete): ?>
+              <a href="#" class="text-danger me-2 delete-user" data-id="<?= $user['id'] ?>" title="Delete">
+                <i class="bi bi-trash"></i>
+              </a>
+            <?php endif; ?>
+            
+            <?php if ($canUpdate): ?>
+              <a href="#" class="text-primary edit-user"
+                data-bs-toggle="modal"
+                data-bs-target="#editUserModal"
+                data-id="<?= $user['id'] ?>"
+                data-employee="<?= esc($user['id']) ?>"
+                data-directorate="<?= esc($user['parent_id']) ?>"
+                data-unit="<?= esc($user['unit_id']) ?>"
+                data-username="<?= esc($user['username']) ?>"
+                data-fullname="<?= esc($user['fullname']) ?>"
+                data-role="<?= esc($user['role_name']) ?>">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+            <?php endif; ?>
           </td>
+          <?php endif; ?>
         </tr>
         <?php endforeach; ?>
       </tbody>
@@ -53,7 +69,8 @@
   </div>
 </div>
 
-<!-- Modal Edit User -->
+<!-- Modal Edit User - Only show if user has update privilege -->
+<?php if ($canUpdate): ?>
 <div class="modal fade" id="editUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content shadow">
@@ -111,6 +128,7 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 <?= $this->endSection() ?>
 
@@ -127,20 +145,31 @@
 
 <script>
 $(document).ready(function () {
+  // Check privileges from PHP session
+  const canUpdate = <?= json_encode($canUpdate) ?>;
+  const canDelete = <?= json_encode($canDelete) ?>;
+  
+  // Define column definitions based on privileges
+  let columnDefs = [{ orderable: false, targets: -1 }];
+  if (canUpdate || canDelete) {
+    columnDefs.push({ className: 'text-center', targets: -1 });
+  }
+
   const table = $('#userTable').DataTable({
     dom: '<"row mb-3"<"col-md-6 export-buttons d-flex gap-2"B><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"l><"col-md-6 text-end"p>>',
     pageLength: 5,
     order: [],
-    columnDefs: [
-      { orderable: false, targets: 7 },
-      { className: 'text-center', targets: 7 }
-    ],
+    columnDefs: columnDefs,
     buttons: [
       {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+        exportOptions: { 
+          columns: function(idx, data, node) {
+            return $(node).hasClass('noExport') ? false : true;
+          }
+        }
       },
       {
         extend: 'pdfHtml5',
@@ -148,7 +177,11 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
+        exportOptions: { 
+          columns: function(idx, data, node) {
+            return $(node).hasClass('noExport') ? false : true;
+          }
+        },
         orientation: 'landscape',
         pageSize: 'A4',
         customize: function (doc) {
@@ -196,7 +229,10 @@ $(document).ready(function () {
           doc.pageMargins = [40, 60, 40, 60];
 
           if (doc.content[1] && doc.content[1].table) {
-            doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
+            const hasActionColumn = canUpdate || canDelete;
+            doc.content[1].table.widths = hasActionColumn 
+              ? ['8%', '15%', '20%', '20%', '15%', '15%', '7%']
+              : ['10%', '18%', '24%', '24%', '18%', '6%'];
             doc.content[1].margin = [0, 0, 0, 0];
             doc.content[1].layout = {
               hLineWidth: () => 0.5,
@@ -222,125 +258,129 @@ $(document).ready(function () {
     ]
   });
 
-  // Edit User Modal Setup
-  $(document).on('click', '.edit-user', function () {
-    const userId = $(this).data('id');
-    const employeeId = $(this).data('employee');
-    const fullname = $(this).data('fullname');
-    const parentId = $(this).data('directorate');
-    const unitId = $(this).data('unit');
-    const roleName = $(this).data('role');
+  // Edit User Modal Setup - Only if user has update privilege
+  if (canUpdate) {
+    $(document).on('click', '.edit-user', function () {
+      const userId = $(this).data('id');
+      const employeeId = $(this).data('employee');
+      const fullname = $(this).data('fullname');
+      const parentId = $(this).data('directorate');
+      const unitId = $(this).data('unit');
+      const roleName = $(this).data('role');
 
-    // Set values in modal
-    $('#editUserId').val(userId); // Store user ID
-    $('#editEmployeeId').val(employeeId);
-    $('#editUsername').val($(this).data('username'));
-    $('#editFullname').val(fullname);
-    $('#editDirectorate').val(parentId).trigger('change');
+      // Set values in modal
+      $('#editUserId').val(userId);
+      $('#editEmployeeId').val(employeeId);
+      $('#editUsername').val($(this).data('username'));
+      $('#editFullname').val(fullname);
+      $('#editDirectorate').val(parentId).trigger('change');
 
-    // Filter units based on selected directorate
-    $('#editUnit option').each(function () {
-      const optionParent = $(this).data('parent');
-      if (optionParent == parentId || $(this).val() === '') {
-        $(this).show();
-      } else {
-        $(this).hide();
-      }
+      // Filter units based on selected directorate
+      $('#editUnit option').each(function () {
+        const optionParent = $(this).data('parent');
+        if (optionParent == parentId || $(this).val() === '') {
+          $(this).show();
+        } else {
+          $(this).hide();
+        }
+      });
+
+      $('#editUnit').val(unitId);
+      $('#editRole').val(roleName);
     });
 
-    $('#editUnit').val(unitId);
-    $('#editRole').val(roleName);
-  });
+    // Handle Edit Form Submission
+    $('#editUserForm').submit(function (e) {
+      e.preventDefault();
 
-  // Handle Edit Form Submission
-  $('#editUserForm').submit(function (e) {
-    e.preventDefault();
-
-    if (!$('#editDirectorate').val() || !$('#editUnit').val() || !$('#editRole').val()) {
-      Swal.fire('Peringatan', 'Semua field harus diisi!', 'warning');
-      return;
-    }
-
-    $.ajax({
-      url: '<?= base_url('create-user/update') ?>', // Fixed URL
-      method: 'POST',
-      data: {
-        <?= csrf_token() ?>: '<?= csrf_hash() ?>',
-        id: $('#editUserId').val(), // Use hidden user ID
-        username: $('#editUsername').val(),
-        fullname: $('#editFullname').val(),
-        role: $('#editRole').val(),
-        fakultas: $('#editDirectorate').val(),
-        unit: $('#editUnit').val(),
-        status: 1
-      },
-      success: function (res) {
-        $('#editUserModal').modal('hide');
-        Swal.fire({
-          title: 'Success',
-          text: 'Successfully Updated',
-          icon: 'success'
-        }).then(() => {
-          location.reload();
-        });
-      },
-      error: function (xhr) {
-        const err = xhr.responseJSON?.error || 'Error occurred during the update..';
-        Swal.fire('Failed', err, 'error');
+      if (!$('#editDirectorate').val() || !$('#editUnit').val() || !$('#editRole').val()) {
+        Swal.fire('Peringatan', 'Semua field harus diisi!', 'warning');
+        return;
       }
-    });
-  });
 
-  // Handle Directorate Change
-  $('#editDirectorate').on('change', function () {
-    const selectedParentId = $(this).val();
-    $('#editUnit').val('');
-    $('#editUnit option').each(function () {
-      const optionParent = $(this).data('parent');
-      if (optionParent == selectedParentId || $(this).val() === '') {
-        $(this).show();
-      } else {
-        $(this).hide();
-      }
-    });
-  });
-
-  // Handle Delete User
-  $(document).on('click', '.delete-user', function (e) {
-    e.preventDefault();
-    const id = $(this).data('id');
-
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'User will be permanently deleted..',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, delete it',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $.post('<?= base_url('create-user/delete') ?>', { // Fixed URL
+      $.ajax({
+        url: '<?= base_url('create-user/update') ?>',
+        method: 'POST',
+        data: {
           <?= csrf_token() ?>: '<?= csrf_hash() ?>',
-          id: id
-        })
-        .done(function (res) {
+          id: $('#editUserId').val(),
+          username: $('#editUsername').val(),
+          fullname: $('#editFullname').val(),
+          role: $('#editRole').val(),
+          fakultas: $('#editDirectorate').val(),
+          unit: $('#editUnit').val(),
+          status: 1
+        },
+        success: function (res) {
+          $('#editUserModal').modal('hide');
           Swal.fire({
             title: 'Success',
-            text: 'Successfully Deleted',
+            text: 'Successfully Updated',
             icon: 'success'
           }).then(() => {
             location.reload();
           });
-        })
-        .fail(function (xhr) {
-          const err = xhr.responseJSON?.error || 'Failed to delete user.';
+        },
+        error: function (xhr) {
+          const err = xhr.responseJSON?.error || 'Error occurred during the update..';
           Swal.fire('Failed', err, 'error');
-        });
-      }
+        }
+      });
     });
-  });
+
+    // Handle Directorate Change
+    $('#editDirectorate').on('change', function () {
+      const selectedParentId = $(this).val();
+      $('#editUnit').val('');
+      $('#editUnit option').each(function () {
+        const optionParent = $(this).data('parent');
+        if (optionParent == selectedParentId || $(this).val() === '') {
+          $(this).show();
+        } else {
+          $(this).hide();
+        }
+      });
+    });
+  }
+
+  // Handle Delete User - Only if user has delete privilege
+  if (canDelete) {
+    $(document).on('click', '.delete-user', function (e) {
+      e.preventDefault();
+      const id = $(this).data('id');
+
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'User will be permanently deleted..',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          $.post('<?= base_url('create-user/delete') ?>', {
+            <?= csrf_token() ?>: '<?= csrf_hash() ?>',
+            id: id
+          })
+          .done(function (res) {
+            Swal.fire({
+              title: 'Success',
+              text: 'Successfully Deleted',
+              icon: 'success'
+            }).then(() => {
+              location.reload();
+            });
+          })
+          .fail(function (xhr) {
+            const err = xhr.responseJSON?.error || 'Failed to delete user.';
+            Swal.fire('Failed', err, 'error');
+          });
+        }
+      });
+    });
+  }
 });
 </script>
 <?= $this->endSection() ?>

@@ -146,8 +146,9 @@
                                         <a href="#" class="text-warning me-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>" title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <form action="<?= base_url('daftar-dokumen/delete/' . $row['id']) ?>" method="post" class="d-inline">
+                                        <form action="<?= base_url('document-list/delete') ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
+                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                             <a href="javascript:void(0);" class="text-danger btn-delete" data-id="<?= $row['id'] ?>" title="Hapus">
                                                 <i class="bi bi-trash"></i>
                                             </a>
@@ -158,7 +159,7 @@
                                 <!-- Modal Edit Dokumen -->
                                 <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-lg">
-                                        <form action="<?= base_url('daftar-dokumen/update') ?>" method="post" enctype="multipart/form-data">
+                                        <form action="<?= base_url('document-list/update') ?>" method="post" enctype="multipart/form-data">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                             <div class="modal-content">
@@ -393,6 +394,7 @@ $(document).ready(function() {
     });
 });
 </script>
+
 <script>
     $(document).ready(function() {
         $('#form-update').on('submit', function(e) {
@@ -401,7 +403,7 @@ $(document).ready(function() {
             const formData = new FormData(this);
 
             $.ajax({
-                url: '/daftar-dokumen/update',
+                url: '<?= base_url('document-list/update') ?>',
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -418,48 +420,48 @@ $(document).ready(function() {
         });
     });
 </script>
+
 <script>
     $(document).on('click', '.btn-delete', function() {
-    const id = $(this).data('id');
+        const id = $(this).data('id');
 
-    Swal.fire({
-        title: 'Yakin ingin menghapus dokumen ini?',
-        text: 'Tindakan ini tidak dapat dibatalkan.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#7367F0',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Ya, Hapus',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Panggil endpoint penghapusan
-            $.ajax({
-                url: '/daftar-dokumen/delete/' + id,
-                type: 'POST',
-                success: function(response) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Dokumen berhasil dihapus.',
-                        confirmButtonColor: '#7367F0'
-                    }).then(() => {
-                        location.reload(); // Refresh halaman setelah alert OK
-                    });
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: 'Terjadi kesalahan saat menghapus dokumen.',
-                        confirmButtonColor: '#7367F0'
-                    });
-                }
-            });
-        }
+        Swal.fire({
+            title: 'Yakin ingin menghapus dokumen ini?',
+            text: 'Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#7367F0',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Create a form and submit it
+                const form = $('<form>', {
+                    method: 'POST',
+                    action: '<?= base_url('document-list/delete') ?>'
+                });
+                
+                // Add CSRF token
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: '<?= csrf_token() ?>',
+                    value: '<?= csrf_hash() ?>'
+                }));
+                
+                // Add document ID
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: 'id',
+                    value: id
+                }));
+                
+                // Append form to body and submit
+                $('body').append(form);
+                form.submit();
+            }
+        });
     });
-});
-
 </script>
 
 <?= $this->endSection() ?>

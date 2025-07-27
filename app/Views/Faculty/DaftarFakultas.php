@@ -13,7 +13,15 @@
                     <th>Name Faculty</th>
                     <th>Level</th>
                     <th>Status</th>
-                    <th class="text-center">Action</th>
+                    <?php 
+                    // Check if user has any action privileges for this page
+                    $privileges = session('privileges');
+                    $canUpdate = isset($privileges['faculty-list']['can_update']) && $privileges['faculty-list']['can_update'] == 1;
+                    $canDelete = isset($privileges['faculty-list']['can_delete']) && $privileges['faculty-list']['can_delete'] == 1;
+                    
+                    if ($canUpdate || $canDelete): ?>
+                        <th class="text-center">Action</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -26,32 +34,39 @@
                             <td>
                                 <?= $fakultas['status'] == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
                             </td>
+                            
+                            <?php if ($canUpdate || $canDelete): ?>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
-                                    <!-- Tombol Hapus -->
-                                    <form action="<?= site_url('create-faculty/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= $fakultas['id'] ?>">
-                                        <button type="submit" class="btn btn-link p-0 text-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <?php if ($canDelete): ?>
+                                        <!-- Tombol Hapus -->
+                                        <form action="<?= site_url('create-faculty/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="id" value="<?= $fakultas['id'] ?>">
+                                            <button type="submit" class="btn btn-link p-0 text-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                     
-                                    <!-- Tombol Edit -->
-                                    <button 
-                                        class="btn btn-link p-0 text-primary" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editModal"
-                                        onclick="openEditModal(
-                                            <?= $fakultas['id'] ?>, 
-                                            '<?= esc($fakultas['name']) ?>', 
-                                            '<?= esc($fakultas['type']) ?>', 
-                                            '<?= esc($fakultas['status']) ?>'
-                                        )">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
+                                    <?php if ($canUpdate): ?>
+                                        <!-- Tombol Edit -->
+                                        <button 
+                                            class="btn btn-link p-0 text-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#editModal"
+                                            onclick="openEditModal(
+                                                <?= $fakultas['id'] ?>, 
+                                                '<?= esc($fakultas['name']) ?>', 
+                                                '<?= esc($fakultas['type']) ?>', 
+                                                '<?= esc($fakultas['status']) ?>'
+                                            )">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -60,7 +75,8 @@
     </div>
 </div>
 
-<!-- Modal Edit Fakultas -->
+<!-- Modal Edit Fakultas - Only show if user has update privilege -->
+<?php if ($canUpdate): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-md modal-dialog-centered">
     <div class="modal-content shadow border-0">
@@ -109,6 +125,7 @@
     </div>
   </div>
 </div>
+<?php endif; ?>
 
 <?= $this->endSection() ?>
 
@@ -121,7 +138,12 @@
 
 <!-- Script -->
 <script>
-    // Konfirmasi sebelum hapus
+    // Check privileges from PHP session
+    const canUpdate = <?= json_encode($canUpdate) ?>;
+    const canDelete = <?= json_encode($canDelete) ?>;
+
+    // Only define confirmDelete function if user has delete privilege
+    <?php if ($canDelete): ?>
     function confirmDelete(event, form) {
         event.preventDefault();
         Swal.fire({
@@ -136,13 +158,15 @@
             }
         });
     }
+    <?php endif; ?>
 
     // Inisialisasi DataTable
     $(document).ready(function () {
         $('#fakultasTable').DataTable();
     });
 
-    // Buka modal edit dan isi data
+    // Only define openEditModal function if user has update privilege
+    <?php if ($canUpdate): ?>
     function openEditModal(id, name, type, status) {
         // Set ID di hidden input
         document.getElementById('editFakultasId').value = id;
@@ -158,6 +182,7 @@
         const statusRadio = document.querySelector(`input[name="status"][value="${status}"]`);
         if (statusRadio) statusRadio.checked = true;
     }
+    <?php endif; ?>
 
     // Show messages
     <?php if (session()->getFlashdata('added_message')): ?>

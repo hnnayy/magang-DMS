@@ -69,7 +69,7 @@
                                     <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <form method="post" action="<?= base_url('kelola-dokumen/persetujuan/delete') ?>" class="d-inline-block delete-form">
+                                    <form method="post" action="<?= base_url('document-approval/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
                                         <button type="submit" class="btn btn-sm btn-outline-danger btn-action btn-delete" data-id="<?= $doc['id'] ?>" title="Hapus">
@@ -84,7 +84,7 @@
                         <div class="modal fade" id="editModal<?= $doc['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
-                                    <form method="post" action="<?= base_url('kelola-dokumen/persetujuan/update') ?>">
+                                    <form method="post" action="<?= base_url('document-approval/update') ?>">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
                                         <div class="modal-header">

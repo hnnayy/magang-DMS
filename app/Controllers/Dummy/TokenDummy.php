@@ -90,7 +90,8 @@ public function parseToken()
             ->setJSON(['error' => 'Token tidak diberikan']);
     }
 
-    log_message('info', 'Token diterima: ' . $token);
+    log_message('info', '===[ TOKEN DITERIMA ]===');
+    log_message('info', $token);
 
     $secret = getenv('jwt.secret');
     if (!$secret) {
@@ -100,7 +101,8 @@ public function parseToken()
 
     try {
         $decoded = JWT::decode($token, new Key($secret, 'HS256'));
-        log_message('info', 'Token berhasil didecode: ' . json_encode((array)$decoded));
+
+        log_message('info', "===[ TOKEN DECODED PAYLOAD ]===\n" . print_r((array)$decoded, true));
 
         // Ambil data user
         $user = $this->userModel
@@ -118,7 +120,7 @@ public function parseToken()
             ]);
         }
 
-        log_message('info', 'User ditemukan: ' . json_encode($user));
+        log_message('info', "===[ USER DITEMUKAN ]===\n" . print_r($user, true));
 
         // Ambil role user aktif
         $userRole = $this->userRoleModel
@@ -134,7 +136,7 @@ public function parseToken()
             ]);
         }
 
-        log_message('info', 'Role aktif ditemukan: ' . json_encode($userRole));
+        log_message('info', "===[ ROLE AKTIF DITEMUKAN ]===\n" . print_r($userRole, true));
 
         // Ambil privileges dan nama submenu
         $privileges = $this->privilegeModel
@@ -148,7 +150,7 @@ public function parseToken()
         $accessibleRoutes = [];
 
         foreach ($privileges as $priv) {
-            $slug = slugify($priv['submenu_name']); // contoh: 'tambah-user'
+            $slug = slugify($priv['submenu_name']);
 
             $privilegeArray[$slug] = [
                 'can_create'  => (int) $priv['can_create'],
@@ -159,25 +161,36 @@ public function parseToken()
 
             $accessibleRoutes[] = $slug;
 
-            if ((int) $priv['can_create'] === 1) {
+            if ($priv['can_create']) {
                 $accessibleRoutes[] = "$slug/store";
             }
-            if ((int) $priv['can_update'] === 1) {
+            if ($priv['can_update']) {
                 $accessibleRoutes[] = "$slug/edit";
                 $accessibleRoutes[] = "$slug/update";
             }
-            if ((int) $priv['can_delete'] === 1) {
+            if ($priv['can_delete']) {
                 $accessibleRoutes[] = "$slug/delete";
             }
-            if ((int) $priv['can_approve'] === 1) {
+            if ($priv['can_approve']) {
                 $accessibleRoutes[] = "$slug/approve";
             }
         }
 
         $accessibleRoutes = array_values(array_unique($accessibleRoutes));
 
-        log_message('info', 'Privileges: ' . json_encode($privilegeArray, JSON_UNESCAPED_SLASHES));
-        log_message('info', 'Accessible Routes: ' . json_encode($accessibleRoutes, JSON_UNESCAPED_SLASHES));
+        log_message('info', "===[ PRIVILEGES PER SUBMENU ]===");
+        foreach ($privilegeArray as $slug => $priv) {
+            log_message('info', "- $slug:");
+            log_message('info', "    can_create  : {$priv['can_create']}");
+            log_message('info', "    can_update  : {$priv['can_update']}");
+            log_message('info', "    can_delete  : {$priv['can_delete']}");
+            log_message('info', "    can_approve : {$priv['can_approve']}");
+        }
+
+        log_message('info', "===[ ACCESSIBLE ROUTES ]===");
+        foreach ($accessibleRoutes as $route) {
+            log_message('info', "- $route");
+        }
 
         // Simpan sesi
         session()->set([
@@ -195,20 +208,20 @@ public function parseToken()
             'accessible_routes'=> $accessibleRoutes,
         ]);
 
-        log_message('info', 'Sesi disimpan untuk user: ' . $user['username']);
+        log_message('info', "===[ SESI DISIMPAN UNTUK USER ]=== {$user['username']}");
 
         if ($redirect === 'dashboard') {
-            log_message('info', 'Redirecting to dashboard...');
+            log_message('info', 'Redirecting to /dashboard ...');
             return redirect()->to('/dashboard');
         }
 
-        // Tampilkan informasi token
+        // Info token
         $expiryTime = date('n/j/Y, g:i:s A', $decoded->exp);
         $currentTime = time();
         $timeLeft = $decoded->exp - $currentTime;
         $timeLeftFormatted = $timeLeft > 0 ? $timeLeft . 's' : '0s';
 
-        log_message('info', 'Token expiry: ' . $expiryTime . ' | Time left: ' . $timeLeftFormatted);
+        log_message('info', "===[ TOKEN EXPIRES ]=== $expiryTime | Time left: $timeLeftFormatted");
 
         return view('dummy_wc/dashboard_token', [
             'username'        => $user['username'],
@@ -231,6 +244,7 @@ public function parseToken()
         ]);
     }
 }
+
 
 
 

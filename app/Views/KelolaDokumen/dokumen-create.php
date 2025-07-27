@@ -7,14 +7,13 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
             <h2>Tambah Dokumen</h2>
         </div>
     
-        <form id="addDocumentForm" class="needs-validation" novalidate action="<?= base_url('kelola-dokumen/tambah') ?>" method="post" enctype="multipart/form-data">
+        <form id="addDocumentForm" class="needs-validation" novalidate action="<?= base_url('create-document/store') ?>" method="post" enctype="multipart/form-data">
 
             <?= csrf_field() ?>
 
@@ -30,16 +29,18 @@
                     <input type="text" id="bagian" class="form-input" value="<?= $unit['name'] ?? '-' ?>" readonly>
                     <input type="hidden" name="unit_id" value="<?= $unit['id'] ?? '' ?>" required>
                 </div>
+            </div>
+            
+            <!-- Nama Dokumen -->
+            <div class="form-group">
+                <label class="form-label" for="nama-dokumen">Nama Dokumen</label>
+                <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-input" 
+                    required pattern="^[a-zA-Z0-9 ]+$" placeholder="Nama Dokumen">
+                <div class="invalid-feedback">
+                    Nama Dokumen hanya boleh berisi huruf, angka, dan spasi.
                 </div>
-                <!-- Nama Dokumen -->
-                <div class="form-group">
-                    <label class="form-label" for="nama-dokumen">Nama Dokumen</label>
-                    <input type="text" id="nama-dokumen" name="nama-dokumen" class="form-input" 
-                        required pattern="^[a-zA-Z0-9 ]+$" placeholder="Nama Dokumen">
-                    <div class="invalid-feedback">
-                        Nama Dokumen hanya boleh berisi huruf, angka, dan spasi.
-                    </div>
-                </div>
+            </div>
+            
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="jenis-dokumen">Jenis Dokumen</label>
@@ -65,10 +66,12 @@
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
                 </div>
             </div>
+            
             <div class="form-group">
                 <label class="form-label" for="date-published">Tanggal Terbit</label>
                 <input type="date" id="date-published" name="date_published" class="form-input" required>
             </div>
+            
             <!-- Nomor Dokumen -->
             <div class="form-group">
                 <label class="form-label" for="no-dokumen">Nomor Dokumen</label>
@@ -80,6 +83,7 @@
                     Nomor Dokumen wajib diisi, tidak boleh mengandung spasi, dan boleh huruf, angka, atau simbol.
                 </div>
             </div>
+            
             <!-- Revisi -->
             <div class="form-group">
                 <label class="form-label" for="revisi">Revisi</label>
@@ -90,14 +94,14 @@
                     Revisi wajib diisi dan hanya boleh angka.
                 </div>
             </div>
+            
             <div class="form-group">
                 <label class="form-label" for="keterangan">Keterangan</label>
                 <textarea id="keterangan" name="keterangan" class="form-input" rows="1" placeholder="Tulis Keterangan disini..." required></textarea>
                 <div class="invalid-feedback">
-        Keterangan wajib diisi.
-    </div>
+                    Keterangan wajib diisi.
+                </div>
             </div>
-
 
             <div class="form-group">
                 <label class="form-label" for="file-upload">Unggah Berkas</label>
@@ -112,7 +116,7 @@
                     </div>
                 </div>
 
-                <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xlsx" hidden>
+                <input type="file" id="fileInput" name="file" accept=".pdf,.doc,.docx,.xls,.xlsx" hidden required>
 
                 <div id="fileInfo" class="alert alert-secondary border d-flex justify-content-between align-items-center d-none">
                     <div>
@@ -124,7 +128,7 @@
 
                 <div class="file-requirements mt-1">
                     <div class="requirements-text text-primary" style="font-size: 13px;">
-                        File Upload .doc, .docx, .xlsx, .pdf, .jpg, .png
+                        File Upload .pdf, .doc, .docx, .xls, .xlsx
                     </div>
                 </div>
             </div>
@@ -138,7 +142,11 @@
     </div>
 </div>
 
+<!-- Pass data dari PHP ke JavaScript -->
 <script>
+    // Data kode dokumen berdasarkan type dari PHP
+    const kodeDokumenByType = <?= json_encode($kode_dokumen_by_type ?? []) ?>;
+    
     // Bootstrap validation
     (() => {
         'use strict';
@@ -161,7 +169,7 @@ function handleJenisChange() {
     const jenisSelect = document.getElementById('jenis-dokumen');
     const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
     const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
-    const kodeJenis = selectedOption.getAttribute('data-kode');
+    const jenisId = selectedOption.value;
 
     const kodeGroup = document.getElementById('kode-dokumen-group');
     const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
@@ -173,7 +181,7 @@ function handleJenisChange() {
         kodeCustomGroup.style.display = 'none';
         kodeSelect.required = true;
         kodeCustomInput.required = false;
-        loadKodeDokumen(kodeJenis);
+        loadKodeDokumen(jenisId);
     } else {
         kodeGroup.style.display = 'none';
         kodeCustomGroup.style.display = 'block';
@@ -183,30 +191,45 @@ function handleJenisChange() {
     }
 }
 
-function loadKodeDokumen(jenis) {
+function loadKodeDokumen(jenisId) {
     const kodeSelect = document.getElementById('kode-dokumen');
     kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
 
-    fetch('<?= base_url('dokumen/get-kode-dokumen') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: 'jenis=' + encodeURIComponent(jenis)
-    })
-    .then(response => response.json())
-    .then(data => {
-        data.forEach(item => {
+    // Menggunakan data yang sudah disiapkan dari PHP
+    if (kodeDokumenByType[jenisId]) {
+        kodeDokumenByType[jenisId].forEach(item => {
             const option = document.createElement('option');
             option.value = item.id;
             option.textContent = item.kode + ' - ' + item.nama;
             kodeSelect.appendChild(option);
         });
-    })
-    .catch(error => {
-        console.error('Error loading kode dokumen:', error);
-    });
+    } else {
+        // Fallback jika tidak ada data di kodeDokumenByType
+        console.log('No kode dokumen found for jenisId:', jenisId);
+    }
+}
+
+// Validasi tipe file yang diizinkan
+function validateFileType(file) {
+    const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type;
+    
+    // Cek berdasarkan MIME type
+    if (allowedTypes.includes(fileType)) {
+        return true;
+    }
+    
+    // Cek berdasarkan ekstensi file sebagai fallback
+    return allowedExtensions.some(ext => fileName.endsWith(ext));
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -214,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('kode-dokumen-custom-group').style.display = 'none';
 });
 
+// File upload handlers
 document.getElementById('chooseFileBtn').addEventListener('click', function () {
     document.getElementById('fileInput').click();
 });
@@ -221,6 +245,31 @@ document.getElementById('chooseFileBtn').addEventListener('click', function () {
 document.getElementById('fileInput').addEventListener('change', function () {
     const file = this.files[0];
     if (file) {
+        // Validasi tipe file
+        if (!validateFileType(file)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Tidak Valid',
+                text: 'Hanya file PDF, Word (.doc, .docx), dan Excel (.xls, .xlsx) yang diizinkan!',
+                confirmButtonText: 'Okay'
+            });
+            this.value = ''; // Reset input file
+            return;
+        }
+        
+        // Validasi ukuran file (maksimal 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB dalam bytes
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Terlalu Besar',
+                text: 'Ukuran file maksimal 10MB!',
+                confirmButtonText: 'Okay'
+            });
+            this.value = ''; // Reset input file
+            return;
+        }
+        
         document.getElementById('fileName').textContent = file.name;
         document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
         document.getElementById('fileInfo').classList.remove('d-none');
@@ -236,8 +285,70 @@ document.getElementById('removeBtn').addEventListener('click', function () {
     document.getElementById('fileInfo').classList.add('d-none');
     document.getElementById('uploadArea').classList.remove('d-none');
 });
+
+// Drag and drop functionality dengan validasi
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '#f8f9fa';
+    this.style.borderColor = '#b41616';
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '';
+    this.style.borderColor = '#b41616';
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.style.backgroundColor = '';
+    this.style.borderColor = '#b41616';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        
+        // Validasi tipe file
+        if (!validateFileType(file)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Tidak Valid',
+                text: 'Hanya file PDF, Word (.doc, .docx), dan Excel (.xls, .xlsx) yang diizinkan!',
+                confirmButtonText: 'Okay'
+            });
+            return;
+        }
+        
+        // Validasi ukuran file (maksimal 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB dalam bytes
+        if (file.size > maxSize) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Terlalu Besar',
+                text: 'Ukuran file maksimal 10MB!',
+                confirmButtonText: 'Okay'
+            });
+            return;
+        }
+        
+        // Set file ke input
+        const fileInput = document.getElementById('fileInput');
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        
+        // Update UI
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
+        document.getElementById('fileInfo').classList.remove('d-none');
+        document.getElementById('uploadArea').classList.add('d-none');
+    }
+});
 </script>
 
+<!-- SweetAlert2 untuk notifikasi -->
 <script>
 <?php if (session()->getFlashdata('success')): ?>
     Swal.fire({
@@ -255,6 +366,5 @@ document.getElementById('removeBtn').addEventListener('click', function () {
     });
 <?php endif; ?>
 </script>
-
 
 <?= $this->endSection() ?>

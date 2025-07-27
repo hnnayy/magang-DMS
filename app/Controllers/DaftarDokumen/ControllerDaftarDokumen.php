@@ -60,18 +60,11 @@ class ControllerDaftarDokumen extends BaseController
             ->join('user user_creator', 'user_creator.id = document_revision.createdby', 'left')
             ->join('user user_document_owner', 'user_document_owner.id = document.createdby', 'left')
             ->where('document.status', 1)
-            // ->where('document.createdby !=', 0)
-            // ->groupStart()
-            //     ->where('document_approval.status', 1)
-            //     ->orWhere('document_approval.status IS NULL')
-            // ->groupEnd()
             ->groupBy('document.id')
             ->findAll();
 
-            $document = array_values($document);
+        $document = array_values($document);
 
-
-        // Ubah ID jadi nama pemilik jika tersedia
         foreach ($document as &$doc) {
             $doc['createdby'] = $doc['createdby_name'] ?? $doc['createdby'];
         }
@@ -88,11 +81,11 @@ class ControllerDaftarDokumen extends BaseController
             'clauses'          => $clauses,
         ]);
     }
-    public function update()
-    {
 
+    public function updateDokumen()
+    {
         $validation = \Config\Services::validation();
-        
+
         $validation->setRules([
             'id' => 'required|numeric',
             'type' => 'required',
@@ -100,17 +93,12 @@ class ControllerDaftarDokumen extends BaseController
             'file' => 'permit_empty|max_size[file,10240]|ext_in[file,pdf,doc,docx,xls,xlsx]'
         ]);
 
-        log_message('debug', 'POST DATA: ' . json_encode($this->request->getPost()));
-        log_message('debug', 'VALIDATION ERRORS: ' . json_encode($validation->getErrors()));
-
-
         if (!$validation->withRequest($this->request)->run()) {
             return redirect()->back()->withInput()->with('errors', $validation->getErrors());
         }
 
         $id = $this->request->getPost('id');
-        
-        // Prepare data untuk update
+
         $data = [
             'type'               => $this->request->getPost('type'),
             'kode_jenis_dokumen' => $this->request->getPost('kode_jenis_dokumen'),
@@ -120,10 +108,8 @@ class ControllerDaftarDokumen extends BaseController
             'date_published'     => $this->request->getPost('date_published'),
         ];
 
-        // Handle file upload
         $file = $this->request->getFile('file');
         if ($file && $file->isValid() && !$file->hasMoved()) {
-            // Hapus file lama jika ada
             $oldDocument = $this->documentModel->find($id);
             if ($oldDocument && !empty($oldDocument['filepath'])) {
                 $oldFilePath = ROOTPATH . 'public/uploads/' . $oldDocument['filepath'];
@@ -132,113 +118,80 @@ class ControllerDaftarDokumen extends BaseController
                 }
             }
 
-            // Upload file baru
             $newName = $file->getRandomName();
             $file->move(ROOTPATH . 'public/uploads/', $newName);
+
             $revisionData = [
                 'document_id' => $id,
                 'revision' => $this->request->getPost('revision'),
-                'filename' => $file ? $file->getClientName() : null,
-                'filepath' => $file ? $newName : null,
-                'filesize' => $file ? $file->getSize() : null,
+                'filename' => $file->getClientName(),
+                'filepath' => $newName,
+                'filesize' => $file->getSize(),
                 'remark' => $this->request->getPost('remark') ?? '',
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => session()->get('user_id') // atau yang sesuai
+                'createdby' => session()->get('user_id')
             ];
+            $this->revisionModel->insert($revisionData);
 
-            $revisionModel = new \App\Models\DocumentRevisionModel(); // pastikan model ada
-            $revisionModel->insert($revisionData);
-
-            
-            
             $data['filepath'] = $newName;
             $data['filename'] = $file->getClientName();
         }
 
-        // Handle pemilik dokumen update (createdby)
         $pemilikName = $this->request->getPost('createdby');
         if ($pemilikName) {
-            // Cari user berdasarkan nama lengkap
-            $userModel = new \App\Models\UserModel(); // Sesuaikan dengan model User Anda
-            $user = $userModel->where('fullname', $pemilikName)->first();
-            
+            $user = (new UserModel())->where('fullname', $pemilikName)->first();
             if ($user) {
                 $data['createdby'] = $user['id'];
-            } else {
-                // Jika tidak ditemukan user dengan nama tersebut, biarkan input sebagai nama langsung
-                // Atau Anda bisa menambahkan validasi error di sini
-                log_message('warning', "User dengan nama '{$pemilikName}' tidak ditemukan");
             }
         }
 
-        // Update document
         try {
             $this->documentModel->update($id, $data);
 
-            log_message('debug', '[UPDATE] Document ID: ' . $id);
-            log_message('debug', '[UPDATE] Data: ' . json_encode($data));
-            log_message('debug', '[UPDATE] Updated Row: ' . json_encode($this->documentModel->find($id)));
-
-            // Update approval jika ada perubahan
             $approveBy = $this->request->getPost('approveby');
             $approveDate = $this->request->getPost('approvedate');
-            
+
             if ($approveBy || $approveDate) {
                 $approvalData = [];
-                
-                // Jika approveBy berupa nama, cari ID user-nya
                 if ($approveBy) {
-                    $userModel = new \App\Models\UserModel();
-                    $approverUser = $userModel->where('fullname', $approveBy)->first();
+                    $approverUser = (new UserModel())->where('fullname', $approveBy)->first();
                     $approvalData['approveby'] = $approverUser ? $approverUser['id'] : $approveBy;
                 }
-                
                 if ($approveDate) {
                     $approvalData['approvedate'] = $approveDate;
                 }
-                
+
                 if (!empty($approvalData)) {
                     $this->approvalModel->where('document_id', $id)->set($approvalData)->update();
                 }
             }
 
-            return redirect()->to(base_url('daftar-dokumen'))
-                ->with('success', 'Dokumen berhasil diperbarui.');
-                
+            return redirect()->to(base_url('document-list'))->with('success', 'Dokumen berhasil diperbarui.');
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
-    public function delete($id = null)
+    public function delete()
     {
-        if ($id === null) {
+        $id = $this->request->getPost('id');
+        if (!$id) {
             return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
         }
 
         try {
-            log_message('debug', 'ID yang diterima: ' . $id);
-
             $updated = $this->documentModel->update($id, [
                 'status' => 0,
                 'createdby' => 0,
-                // 'updated_at' => date('Y-m-d H:i:s'),
             ]);
-
-            log_message('debug', 'UPDATE result: ' . var_export($updated, true));
-            log_message('debug', 'Last error: ' . json_encode($this->documentModel->errors()));
 
             if ($updated) {
                 return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
             } else {
-                return redirect()->back()->with('error', 'Dokumen tidak ditemukan atau tidak dapat dihapus.');
+                return redirect()->back()->with('error', 'Dokumen tidak ditemukan atau gagal dihapus.');
             }
-
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
-
 }

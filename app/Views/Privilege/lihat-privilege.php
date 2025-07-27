@@ -16,7 +16,17 @@
                     <th class="text-center">Update</th>
                     <th class="text-center">Delete</th>
                     <th class="text-center">Approve</th>
-                    <th class="text-center">Aksi</th>
+                    <?php 
+                    // Cek apakah user memiliki privilege untuk update atau delete
+                    $userPrivileges = session('privileges');
+                    $currentPage = 'create-privilege'; // sesuaikan dengan slug submenu privilege
+                    $canUpdate = isset($userPrivileges[$currentPage]['can_update']) && $userPrivileges[$currentPage]['can_update'] == 1;
+                    $canDelete = isset($userPrivileges[$currentPage]['can_delete']) && $userPrivileges[$currentPage]['can_delete'] == 1;
+                    
+                    // Tampilkan kolom aksi hanya jika user punya privilege update atau delete
+                    if ($canUpdate || $canDelete): ?>
+                        <th class="text-center">Aksi</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -38,24 +48,31 @@
                             </td>
                         <?php endforeach ?>
 
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-link text-primary p-0"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editModal"
-                                    onclick='openEditModal(
-                                        <?= json_encode($p['id']) ?>,
-                                        <?= json_encode($p['role_id']) ?>,
-                                        <?= json_encode($p['role']) ?>,
-                                        <?= json_encode($p['submenu_ids']) ?>,
-                                        <?= json_encode($p['actions']) ?>
-                                    )'>
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-sm btn-link text-danger p-0"
-                                    onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
+                        <?php if ($canUpdate || $canDelete): ?>
+                            <td class="text-center">
+                                <?php if ($canUpdate): ?>
+                                    <button class="btn btn-sm btn-link text-primary p-0"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editModal"
+                                            onclick='openEditModal(
+                                                <?= json_encode($p['id']) ?>,
+                                                <?= json_encode($p['role_id']) ?>,
+                                                <?= json_encode($p['role']) ?>,
+                                                <?= json_encode($p['submenu_ids']) ?>,
+                                                <?= json_encode($p['actions']) ?>
+                                            )'>
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                <?php endif; ?>
+                                
+                                <?php if ($canDelete): ?>
+                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                <?php endif; ?>
+                            </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach ?>
             </tbody>
@@ -63,7 +80,8 @@
     </div>
 </div>
 
-<!-- Modal Edit -->
+<!-- Modal Edit - Hanya tampil jika user punya privilege update -->
+<?php if ($canUpdate): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
@@ -103,9 +121,6 @@
                             <label><input type="checkbox" name="privileges[]" value="delete"> Delete</label>
                             <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
                         </div>
-                        <div class="invalid-feedback" style="display: none;">
-                            Minimal satu privilege harus dipilih.
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -115,6 +130,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Script JS Library -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -135,14 +151,19 @@
 
     $(document).ready(function () {
         $('#privilegeTable').DataTable();
+        
+        // Initialize Select2 hanya jika modal edit ada
+        <?php if ($canUpdate): ?>
         $('#editSubmenu').select2({
             width: '100%',
             placeholder: 'Pilih submenu...',
             dropdownParent: $('#editModal'),
             allowClear: true
         });
+        <?php endif; ?>
     });
 
+    <?php if ($canUpdate): ?>
     function openEditModal(id, roleId, roleName, submenuList, privileges) {
         $('#editId').val(id);
         $('#editRole').val(roleId).trigger('change');
@@ -157,15 +178,6 @@
     $('#editPrivilegeForm').on('submit', function (e) {
         e.preventDefault();
         const form = this;
-        const privileges = $(form).find('input[name="privileges[]"]:checked').length;
-
-        if (privileges === 0) {
-            const privilegesGroup = $(form).find('.privileges-options').parent();
-            privilegesGroup.find('.invalid-feedback').show();
-            return false;
-        } else {
-            $(form).find('.privileges-options').parent().find('.invalid-feedback').hide();
-        }
 
         if (!form.checkValidity()) {
             e.stopPropagation();
@@ -196,7 +208,9 @@
             }
         });
     });
+    <?php endif; ?>
 
+    <?php if ($canDelete): ?>
     function confirmDelete(id) {
         Swal.fire({
             title: 'Yakin ingin menghapus privilege ini?',
@@ -227,6 +241,7 @@
             }
         });
     }
+    <?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

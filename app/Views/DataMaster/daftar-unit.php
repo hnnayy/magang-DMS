@@ -13,7 +13,15 @@
                     <th>Faculty/Directorate</th>
                     <th>Unit</th>
                     <th class="text-center">Status</th>
-                    <th class="text-center">Action</th>
+                    <?php 
+                    // Check if user has any action privileges for this page
+                    $privileges = session('privileges');
+                    $canUpdate = isset($privileges['unit-list']['can_update']) && $privileges['unit-list']['can_update'] == 1;
+                    $canDelete = isset($privileges['unit-list']['can_delete']) && $privileges['unit-list']['can_delete'] == 1;
+                    
+                    if ($canUpdate || $canDelete): ?>
+                        <th class="text-center">Action</th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -28,26 +36,34 @@
                                 <?= $unit['status'] == 1 ? 'Active' : 'Inactive' ?>
                             </span>
                         </td>
+                        
+                        <?php if ($canUpdate || $canDelete): ?>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <form action="<?= site_url('create-unit/delete') ?>" method="post" class="d-inline">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= $unit['id'] ?>">
-                                    <button type="submit" class="btn btn-link p-0" onclick="SwalConfirmDelete(this)">
-                                        <i class="bi bi-trash text-danger"></i>
+                                <?php if ($canDelete): ?>
+                                    <form action="<?= site_url('create-unit/delete') ?>" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $unit['id'] ?>">
+                                        <button type="submit" class="btn btn-link p-0" onclick="SwalConfirmDelete(this)">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                                
+                                <?php if ($canUpdate): ?>
+                                    <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                                        onclick="openEditModal(<?= $unit['id'] ?>, '<?= esc($unit['parent_id']) ?>', '<?= esc($unit['name']) ?>', '<?= esc($unit['status']) ?>')">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                </form>
-                                <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                                    onclick="openEditModal(<?= $unit['id'] ?>, '<?= esc($unit['parent_id']) ?>', '<?= esc($unit['name']) ?>', '<?= esc($unit['status']) ?>')">
-                                    <i class="bi bi-pencil-square"></i>
-                                </button>
+                                <?php endif; ?>
                             </div>
                         </td>
+                        <?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             <?php else : ?>
                 <tr>
-                    <td class="text-center" colspan="5">Belum ada data</td>
+                    <td class="text-center" colspan="<?= ($canUpdate || $canDelete) ? '5' : '4' ?>">Belum ada data</td>
                 </tr>
             <?php endif; ?>
             </tbody>
@@ -55,6 +71,8 @@
     </div>
 </div>
 
+<!-- Modal Edit Unit - Only show if user has update privilege -->
+<?php if ($canUpdate): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
@@ -97,6 +115,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <?= $this->endSection() ?>
 
@@ -152,6 +171,12 @@
 <?php endif; ?>
 
 <script>
+    // Check privileges from PHP session
+    const canUpdate = <?= json_encode($canUpdate) ?>;
+    const canDelete = <?= json_encode($canDelete) ?>;
+
+    // Only define openEditModal function if user has update privilege
+    <?php if ($canUpdate): ?>
     function openEditModal(id, parentId, unitName, status) {
         $('#editUnitId').val(id);
         $('#editUnitName').val(unitName);
@@ -165,7 +190,10 @@
             $('#statusInactive').prop('checked', true);
         }
     }
+    <?php endif; ?>
 
+    // Only define SwalConfirmDelete function if user has delete privilege
+    <?php if ($canDelete): ?>
     function SwalConfirmDelete(elem) {
         event.preventDefault();
         Swal.fire({
@@ -183,6 +211,7 @@
             }
         });
     }
+    <?php endif; ?>
 
     $(document).ready(function () {
         $('#documentTable').DataTable({
