@@ -38,7 +38,7 @@ class DocumentTypeController extends Controller
         $use_predefined = $this->request->getPost('use_predefined') === '1';
 
         if (empty($nama)) {
-            return redirect()->back()->with('error', 'Nama kategori harus diisi.');
+            return redirect()->back()->with('error', 'Category name is required.');
         }
 
         // Check for existing name
@@ -48,7 +48,7 @@ class DocumentTypeController extends Controller
             ->first();
 
         if ($existingName) {
-            return redirect()->back()->with('error', 'Nama kategori sudah ada.');
+            return redirect()->back()->with('error', 'Category name already exists.');
         }
 
         // Check for existing kode only if kode is provided and not empty
@@ -59,7 +59,7 @@ class DocumentTypeController extends Controller
                 ->first();
 
             if ($existingKode) {
-                return redirect()->back()->with('error', 'Kode kategori sudah ada.');
+                return redirect()->back()->with('error', 'Category code already exists.');
             }
         }
 
@@ -81,9 +81,9 @@ class DocumentTypeController extends Controller
         $result = $this->documentTypeModel->save($data);
 
         if ($result) {
-            return redirect()->back()->with('success', 'Kategori berhasil ditambahkan.');
+            return redirect()->back()->with('added_message', 'Successfully Updated');
         } else {
-            return redirect()->back()->with('error', 'Gagal menambahkan kategori.');
+            return redirect()->back()->with('error', 'Failed to add category..');
         }
     }
 
@@ -95,7 +95,7 @@ class DocumentTypeController extends Controller
         $use_predefined = $this->request->getPost('use_predefined') === '1'; // Fix: checkbox handling
 
         if (empty($id) || empty($nama)) {
-            return redirect()->back()->with('error', 'ID dan nama kategori harus diisi.');
+            return redirect()->back()->with('error', 'Category ID and name already exists.');
         }
 
         // Check for existing name excluding current record
@@ -106,7 +106,7 @@ class DocumentTypeController extends Controller
             ->first();
 
         if ($existingName) {
-            return redirect()->back()->with('error', 'Nama kategori sudah ada.');
+            return redirect()->back()->with('error', 'Category name already exists.');
         }
 
         // Check for existing kode only if kode is provided and not empty
@@ -118,7 +118,7 @@ class DocumentTypeController extends Controller
                 ->first();
 
             if ($existingKode) {
-                return redirect()->back()->with('error', 'Kode kategori sudah ada.');
+                return redirect()->back()->with('error', 'Category code already exists.');
             }
         }
 
@@ -138,9 +138,9 @@ class DocumentTypeController extends Controller
         $result = $this->documentTypeModel->update($id, $data);
 
         if ($result) {
-            return redirect()->back()->with('success', 'Kategori berhasil diupdate.');
+            return redirect()->back()->with('updated_message', 'Successfully Updated');
         } else {
-            return redirect()->back()->with('error', 'Gagal mengupdate kategori.');
+            return redirect()->back()->with('error', 'Failed to update category.');
         }
     }
 
@@ -148,7 +148,7 @@ class DocumentTypeController extends Controller
     {
         $id = $this->request->getPost('id');
         if (!$id) {
-            return redirect()->back()->with('error', 'ID tidak valid.');
+            return redirect()->back()->with('error', 'ID is invalid.');
         }
 
         $result = $this->documentTypeModel->update($id, [
@@ -157,9 +157,9 @@ class DocumentTypeController extends Controller
         ]);
 
         if ($result) {
-            return redirect()->back()->with('success', 'Kategori berhasil dihapus.');
+            return redirect()->back()->with('deleted_message', 'Successfully deleted.');
         } else {
-            return redirect()->back()->with('error', 'Gagal menghapus kategori.');
+            return redirect()->back()->with('error', 'Failed delete category.');
         }
     }
 }

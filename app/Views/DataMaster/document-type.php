@@ -9,6 +9,10 @@ $canUpdate = isset($privileges['document-type']['can_update']) && $privileges['d
 $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['document-type']['can_delete'] == 1;
 ?>
 
+
+<?= $this->include('partials/alerts') ?>
+
+
 <div class="container-fluid">
     <div class="bg-white rounded shadow-sm p-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -183,31 +187,7 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 </div>
 <?php endif; ?>
 
-<!-- Delete Modal - Only show if user has delete privilege -->
-<?php if ($canDelete): ?>
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete "<span id="deleteCategoryName" class="fw-bold"></span>"?</p>
-                <p class="text-muted">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form method="post" action="<?= base_url('document-type/delete') ?>" style="display:inline-block">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="id" id="deleteId">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+
 
 <script>
     // Check privileges from PHP session
@@ -249,6 +229,46 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
     });
     <?php endforeach ?>
     <?php endif; ?>
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+<?php if ($canDelete): ?>
+function confirmDelete(id, name) {
+    Swal.fire({
+        title: 'Are you sure?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: 'rgba(118, 125, 131, 1)',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Submit delete via form programmatically
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "<?= base_url('document-type/delete') ?>";
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '<?= csrf_token() ?>';
+            csrf.value = '<?= csrf_hash() ?>';
+            form.appendChild(csrf);
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'id';
+            input.value = id;
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+<?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

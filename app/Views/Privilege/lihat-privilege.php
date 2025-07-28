@@ -1,5 +1,19 @@
+<?= $this->include('partials/alerts') ?>
 <?= $this->extend('layout/main_layout') ?>
+<style>
+    .modal {
+        z-index: 1050 !important;
+    }
+    .modal-backdrop {
+        z-index: 1040 !important;
+    }
+    .table-responsive {
+        position: relative;
+        z-index: 1;
+    }
+</style>
 <?= $this->section('content') ?>
+
 
 <div class="px-4 py-3">
     <h4>Privilege List</h4>
@@ -50,6 +64,15 @@
 
                         <?php if ($canUpdate || $canDelete): ?>
                             <td class="text-center">
+                                
+                                
+                                <?php if ($canDelete): ?>
+                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                <?php endif; ?>
+
                                 <?php if ($canUpdate): ?>
                                     <button class="btn btn-sm btn-link text-primary p-0"
                                             data-bs-toggle="modal"
@@ -64,13 +87,7 @@
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
                                 <?php endif; ?>
-                                
-                                <?php if ($canDelete): ?>
-                                    <button class="btn btn-sm btn-link text-danger p-0"
-                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                <?php endif; ?>
+
                             </td>
                         <?php endif; ?>
                     </tr>
@@ -216,6 +233,8 @@
             title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
             confirmButtonText: 'Yes, delete it',
             cancelButtonText: 'Cancel'
         }).then((result) => {
@@ -244,3 +263,4 @@
 </script>
 
 <?= $this->endSection() ?>
+
