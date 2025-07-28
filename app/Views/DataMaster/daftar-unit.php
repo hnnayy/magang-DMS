@@ -198,13 +198,12 @@
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
-            text: 'This data will be deleted permanently!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6'
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
         }).then((result) => {
             if (result.isConfirmed) {
                 elem.closest('form').submit();
