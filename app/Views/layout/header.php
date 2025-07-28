@@ -45,7 +45,7 @@
 
     <div class="topbar">
         <div class="topbar-left">
-            <div class="sidebar-toggle" onclick="openSidebar()">
+            <div class="sidebar-toggle" onclick="toggleSidebar()">
                 <i class="fi fi-rr-menu-burger"></i>
             </div>
 

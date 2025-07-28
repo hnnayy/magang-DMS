@@ -15,11 +15,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Menu List</h4>
-        <?php if ($canCreate): ?>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-circle"></i> Add Menu
-            </button>
-        <?php endif; ?>
     </div>
     <hr>
 
