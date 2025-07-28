@@ -23,34 +23,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     </div>
     <hr>
 
-    <!-- Flash Messages -->
-    <?php if (session()->getFlashdata('added_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('added_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('deleted_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('deleted_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('updated_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('updated_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="roleTable">
@@ -262,7 +234,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
-            text: 'You want to delete this role? This action cannot be undone!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',

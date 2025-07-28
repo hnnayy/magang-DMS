@@ -27,7 +27,7 @@
     <script>
         Swal.fire({
             icon: 'success',
-            title: 'Deleted',
+            title: 'Success',
             text: '<?= session()->getFlashdata('deleted_message') ?>',
             confirmButtonText: 'OK'
         });
