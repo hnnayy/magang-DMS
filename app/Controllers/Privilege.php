@@ -49,12 +49,12 @@ class Privilege extends Controller
 
         // Validasi role
         if (!$this->roleModel->find($roleId)) {
-            return $this->response->setJSON(['error' => 'Role tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error' => 'Role is not found'])->setStatusCode(404);
         }
 
         // Validasi submenu
         if (empty($submenus)) {
-            return $this->response->setJSON(['error' => 'Pilih minimal satu submenu'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => 'Select at least one submenu'])->setStatusCode(400);
         }
 
         // Loop untuk setiap submenu yang dipilih
@@ -91,7 +91,7 @@ class Privilege extends Controller
 
         return $this->response->setJSON([
             'status' => 'success',
-            'message' => 'Privilege berhasil disimpan.'
+            'message' => 'Privilege has been successfully saved.'
         ]);
     }
 
@@ -155,23 +155,23 @@ class Privilege extends Controller
 
         // Validasi ID
         if (!$id || !is_numeric($id)) {
-            return $this->response->setJSON(['error' => 'ID privilege tidak valid'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => 'Privilege ID is not valid'])->setStatusCode(400);
         }
 
         // Validasi submenu
         if (empty($submenus)) {
-            return $this->response->setJSON(['error' => 'Pilih minimal satu submenu'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => 'Select at least one submenu'])->setStatusCode(400);
         }
 
         // Validasi privilege exists
         $privilege = $this->privilegeModel->find($id);
         if (!$privilege) {
-            return $this->response->setJSON(['error' => 'Privilege tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error' => 'Privilege is not found'])->setStatusCode(404);
         }
 
         // Validasi role
         if (!$this->roleModel->find($roleId)) {
-            return $this->response->setJSON(['error' => 'Role tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error' => 'Role is not found'])->setStatusCode(404);
         }
 
         try {
@@ -181,7 +181,7 @@ class Privilege extends Controller
 
                 // Validasi submenu
                 if (!$this->submenuModel->find($submenuId)) {
-                    return $this->response->setJSON(['error' => 'Submenu tidak ditemukan'])->setStatusCode(404);
+                    return $this->response->setJSON(['error' => 'Submenu is not found'])->setStatusCode(404);
                 }
 
                 $data = [
@@ -216,12 +216,12 @@ class Privilege extends Controller
 
             return $this->response->setJSON([
                 'status' => 'success',
-                'message' => 'Privilege berhasil diperbarui'
+                'message' => 'Successfully Updated '
             ]);
 
         } catch (\Exception $e) {
             return $this->response->setJSON([
-                'error' => 'Gagal memperbarui privilege: ' . $e->getMessage()
+                'error' => 'Failed to update privilege: ' . $e->getMessage()
             ])->setStatusCode(500);
         }
     }
@@ -233,13 +233,13 @@ class Privilege extends Controller
 
         // Validasi ID
         if (!$id || !is_numeric($id)) {
-            return $this->response->setJSON(['error' => 'ID privilege tidak valid'])->setStatusCode(400);
+            return $this->response->setJSON(['error' => 'Privilege ID is not valid'])->setStatusCode(400);
         }
 
         // Validasi privilege exists
         $existing = $this->privilegeModel->find($id);
         if (!$existing) {
-            return $this->response->setJSON(['error' => 'Privilege tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error' => 'Privilege is not found'])->setStatusCode(404);
         }
 
         try {
@@ -247,12 +247,12 @@ class Privilege extends Controller
             
             return $this->response->setJSON([
                 'status' => 'success',
-                'message' => 'Privilege berhasil dihapus'
+                'message' => 'Successfully Deleted'
             ]);
 
         } catch (\Exception $e) {
             return $this->response->setJSON([
-                'error' => 'Gagal menghapus privilege: ' . $e->getMessage()
+                'error' => 'Failed to delete privilege: ' . $e->getMessage()
             ])->setStatusCode(500);
         }
     }
