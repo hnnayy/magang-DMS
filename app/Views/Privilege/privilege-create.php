@@ -75,7 +75,7 @@
 <script>
 $(function () {
     $('#submenu').select2({
-        placeholder: 'Pilih Submenu...',
+        placeholder: 'Choose Submenu...',
         width: '100%',
         allowClear: true,
         tags: false,
@@ -105,8 +105,8 @@ $(function () {
                 .done(function (res) {
                     Swal.fire({
                         icon: 'success',
-                        title: 'Berhasil',
-                        text: res.message,
+                        title: 'Success',
+                        text: 'Successfully Added',
                         confirmButtonText: 'OK'
                     }).then(() => {
                         form.reset();
@@ -114,7 +114,7 @@ $(function () {
                     });
                 })
                 .fail(function (xhr) {
-                    const msg = xhr.responseJSON?.error ?? 'Gagal menyimpan privilege';
+                    const msg = xhr.responseJSON?.error ?? 'Failed to save privilege';
                     Swal.fire({ icon: 'error', title: 'Error', text: msg });
                 });
         }
