@@ -42,24 +42,24 @@ class Menu extends BaseController
             'menu_name' => [
                 'rules' => 'required|min_length[3]|max_length[50]|is_unique[menu.name]',
                 'errors' => [
-                    'required' => 'Nama menu wajib diisi.',
-                    'min_length' => 'Nama menu minimal 3 karakter.',
-                    'max_length' => 'Nama menu maksimal 50 karakter.',
-                    'is_unique' => 'Nama menu sudah terdaftar.'
+                    'required' => 'Menu name is required.',
+                    'min_length' => 'Menu name must be at least 3 characters.',
+                    'max_length' => 'Menu name must not exceed 50 characters.',
+                    'is_unique' => 'Menu name is already used by another menu.'
                 ]
             ],
             'icon' => [
                 'rules' => 'required|regex_match[/^[a-z0-9\s\-]+$/]',
                 'errors' => [
-                    'required' => 'Icon wajib diisi.',
-                    'regex_match' => 'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
+                    'required' => 'Icon is required.',
+                    'regex_match' => 'Icon can only contain lowercase letters, numbers, spaces, and hyphens (-).'
                 ]
             ],
             'status' => [
                 'rules' => 'required|in_list[1,2]',
                 'errors' => [
-                    'required' => 'Status wajib dipilih.',
-                    'in_list' => 'Status tidak valid.'
+                    'required' => 'Status is required.',
+                    'in_list' => 'Status is invalid.'
                 ]
             ]
         ];
@@ -98,24 +98,24 @@ class Menu extends BaseController
             'menu_name' => [
                 'rules' => "required|min_length[3]|max_length[50]|is_unique[menu.name,id,{$id}]",
                 'errors' => [
-                    'required'   => 'Nama menu wajib diisi.',
-                    'min_length' => 'Nama menu minimal 3 karakter.',
-                    'max_length' => 'Nama menu maksimal 50 karakter.',
-                    'is_unique'  => 'Nama menu sudah digunakan oleh menu lain.'
+                    'required'   => 'Menu name is required.',
+                    'min_length' => 'Menu name must be at least 3 characters.',
+                    'max_length' => 'Menu name must not exceed 50 characters.',
+                    'is_unique'  => 'Menu name is already used by another menu.'
                 ]
             ],
             'icon' => [
                 'rules' => 'required|regex_match[/^[a-z0-9\s\-]+$/]',
                 'errors' => [
-                    'required'    => 'Icon wajib diisi.',
-                    'regex_match' => 'Icon hanya boleh huruf kecil, angka, spasi, dan tanda minus (-).'
+                    'required'    => 'Icon is required.',
+                    'regex_match' => 'Icon can only contain lowercase letters, numbers, spaces, and hyphens (-).'
                 ]
             ],
             'status' => [
                 'rules' => 'required|in_list[1,2]',
                 'errors' => [
-                    'required' => 'Status wajib dipilih.',
-                    'in_list'  => 'Status tidak valid.'
+                    'required' => 'Status is required.',
+                    'in_list'  => 'Status is invalid'
                 ]
             ]
         ];
@@ -124,7 +124,7 @@ class Menu extends BaseController
             return redirect()->to(base_url('menu-list'))
                 ->withInput()
                 ->with('validation', $validation)
-                ->with('error', 'Validasi gagal. Silakan periksa kembali input Anda.');
+                ->with('error', 'Validation failed. Please check your input again');
         }
 
         $updateData = [
@@ -146,7 +146,7 @@ class Menu extends BaseController
         $id = $this->request->getPost('id');
 
         if (!$id) {
-            return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
+            return redirect()->to(base_url('menu-list'))->with('error', 'Menu ID is not found.');
         }
 
         if ($this->menuModel->update($id, ['status' => 0])) {

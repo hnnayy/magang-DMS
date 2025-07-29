@@ -39,7 +39,6 @@
             <select class="form-select filter-input" id="filterPemilik">
                 <option value="">Semua Pemilik Doc</option>
                 <?php 
-                // Get unique document owners from the document data
                 $unique_owners = array_unique(array_filter(array_column($document, 'createdby')));
                 foreach ($unique_owners as $owner): 
                 ?>
@@ -126,16 +125,17 @@
                                     <td><?= esc($row['number'] ?? '-') ?></td>
                                     <td><?= esc($row['title'] ?? '-') ?></td>
                                     <td><?= esc($row['createdby'] ?? '-') ?></td>
-                                    <td>
-                                        <?php if (!empty($row['filepath'])): ?>
-                                            <a href="<?= base_url('uploads/' . $row['filepath']) ?>" target="_blank" class="text-decoration-none">
-                                                <i class="bi bi-file-earmark-text text-primary"></i> 
-                                                <span class="text-truncate d-inline-block" style="max-width: 100px;">
-                                                    <?= esc($row['filename'] ?? $row['filepath']) ?>
-                                                </span>
+                                    <td class="text-center">
+                                        <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
+                                            <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                               class="text-decoration-none" 
+                                               title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                                <i class="bi bi-download text-success fs-5"></i>
                                             </a>
                                         <?php else: ?>
-                                            -
+                                            <span class="text-muted">
+                                                <i class="bi bi-file-earmark-x"></i> Tidak ada file
+                                            </span>
                                         <?php endif; ?>
                                     </td>
                                     <td><?= esc($row['revision'] ?? '-') ?></td>
@@ -199,7 +199,7 @@
                                                             <label class="form-label small">Ganti File</label>
                                                             <input type="file" class="form-control form-control-sm" name="file">
                                                             <?php if (!empty($row['filepath'])): ?>
-                                                                <small class="text-muted">Saat ini: <?= esc($row['filepath']) ?></small>
+                                                                <small class="text-muted">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
                                                             <?php endif; ?>
                                                         </div>
                                                         <div class="col-md-3">
@@ -274,15 +274,15 @@ $(document).ready(function() {
     });
 
     // Initialize DataTables
-    const table = $('#dokumenTable').DataTable({
+    const table = $('#dokumenTable').DataTables({
         dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
         language: {
-            lengthMenu: "Show _MENU_ entries",
+            lengthMenu: "Tampilkan _MENU_ entri",
             paginate: {
-                previous: "Previous",
-                next: "Next"
+                previous: "Sebelumnya",
+                next: "Berikutnya"
             }
         },
         columnDefs: [
@@ -324,22 +324,22 @@ $(document).ready(function() {
     // Move length control to container ABOVE the table
     $('.dt-length-container').html(`
         <div class="d-flex align-items-center">
-            <label class="me-2 mb-0">Show:</label>
+            <label class="me-2 mb-0">Tampilkan:</label>
             <select class="form-select form-select-sm" id="customLength" style="width: 80px;">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
             </select>
-            <label class="ms-2 mb-0">entries</label>
+            <label class="ms-2 mb-0">entri</label>
         </div>
     `);
     
     // Create custom search box
     const searchHtml = `
         <div class="d-flex align-items-center">
-            <label class="me-2 mb-0">Search:</label>
-            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;">
+            <label class="me-2 mb-0">Cari:</label>
+            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;" placeholder="Cari dokumen...">
         </div>
     `;
     $('.dt-search-container').html(searchHtml);
@@ -430,10 +430,11 @@ $(document).ready(function() {
             text: 'Tindakan ini tidak dapat dibatalkan.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#7367F0',
+            confirmButtonColor: '#dc1a1aff',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            
         }).then((result) => {
             if (result.isConfirmed) {
                 // Create a form and submit it
@@ -463,5 +464,27 @@ $(document).ready(function() {
         });
     });
 </script>
+
+<?php if (session()->getFlashdata('success')): ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: '<?= esc(session()->getFlashdata('success')) ?>',
+        confirmButtonColor: '#6f42c1'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: '<?= esc(session()->getFlashdata('error')) ?>',
+        confirmButtonColor: '#dc3545'
+    });
+</script>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

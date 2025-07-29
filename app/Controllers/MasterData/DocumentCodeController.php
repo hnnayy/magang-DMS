@@ -55,7 +55,7 @@ class DocumentCodeController extends Controller
             ->first();
 
         if (!$kategori) {
-            return redirect()->to('/document-code')->with('error', 'Jenis dokumen tidak ditemukan.');
+            return redirect()->to('/document-code')->with('error', 'Document type is not found');
         }
 
         $existingKode = $this->kodeDokumenModel
@@ -64,7 +64,7 @@ class DocumentCodeController extends Controller
             ->first();
 
         if ($existingKode) {
-            return redirect()->to('/document-code')->with('error', 'Kode dokumen sudah ada.');
+            return redirect()->to('/document-code')->with('error', 'Document code already exist.');
         }
 
         $existingNama = $this->kodeDokumenModel
@@ -73,7 +73,7 @@ class DocumentCodeController extends Controller
             ->first();
 
         if ($existingNama) {
-            return redirect()->to('/document-code')->with('error', 'Nama dokumen sudah ada dalam jenis dokumen ini.');
+            return redirect()->to('/document-code')->with('error', 'Document name already exists in this document type.');
         }
 
         $this->kodeDokumenModel->save([
@@ -83,7 +83,7 @@ class DocumentCodeController extends Controller
             'status' => 1,
         ]);
 
-        return redirect()->to('/document-code')->with('success', 'Kode dokumen berhasil ditambahkan.');
+        return redirect()->to('/document-code')->with('added_message', 'Successfully Added');
     }
 
     public function edit()
@@ -95,7 +95,7 @@ class DocumentCodeController extends Controller
         
         $existing = $this->kodeDokumenModel->find($id);
         if (!$existing) {
-            return redirect()->to('/document-code')->with('error', 'Data kode dokumen tidak ditemukan.');
+            return redirect()->to('/document-code')->with('error', 'Document code is not found.');
         }
 
         // Cek duplikasi nama dalam kategori yang sama
@@ -106,7 +106,7 @@ class DocumentCodeController extends Controller
             ->first();
 
         if ($dupe) {
-            return redirect()->to('/document-code')->with('error', 'Nama dokumen sudah ada dalam jenis dokumen ini.');
+            return redirect()->to('/document-code')->with('error', 'Document name already exists in this document type.');
         }
 
         $this->kodeDokumenModel->update($id, [
@@ -115,14 +115,14 @@ class DocumentCodeController extends Controller
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return redirect()->to('/document-code')->with('success', 'Kode dokumen berhasil diperbarui.');
+        return redirect()->to('/document-code')->with('updated_message', 'Successfully Updated');
     }
 
     public function delete()
     {
         $id = $this->request->getPost('id');
         if (!$id) {
-            return redirect()->to('/document-code')->with('error', 'ID tidak valid.');
+            return redirect()->to('/document-code')->with('error', 'ID is invalid.');
         }
 
         $this->kodeDokumenModel->update($id, [
@@ -130,6 +130,6 @@ class DocumentCodeController extends Controller
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
 
-        return redirect()->to('/document-code')->with('success', 'Kode dokumen berhasil dihapus.');
+        return redirect()->to('/document-code')->with('deleted_message', 'Successfully Deleted.');
     }
 }

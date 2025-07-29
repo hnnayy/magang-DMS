@@ -1,8 +1,22 @@
+<?= $this->include('partials/alerts') ?>
 <?= $this->extend('layout/main_layout') ?>
+<style>
+    .modal {
+        z-index: 1050 !important;
+    }
+    .modal-backdrop {
+        z-index: 1040 !important;
+    }
+    .table-responsive {
+        position: relative;
+        z-index: 1;
+    }
+</style>
 <?= $this->section('content') ?>
 
+
 <div class="px-4 py-3">
-    <h4>Lihat Privilege</h4>
+    <h4>Privilege List</h4>
     <hr>
 
     <div class="table-responsive bg-white p-3 rounded shadow-sm">
@@ -50,6 +64,15 @@
 
                         <?php if ($canUpdate || $canDelete): ?>
                             <td class="text-center">
+                                
+                                
+                                <?php if ($canDelete): ?>
+                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                <?php endif; ?>
+
                                 <?php if ($canUpdate): ?>
                                     <button class="btn btn-sm btn-link text-primary p-0"
                                             data-bs-toggle="modal"
@@ -64,13 +87,7 @@
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
                                 <?php endif; ?>
-                                
-                                <?php if ($canDelete): ?>
-                                    <button class="btn btn-sm btn-link text-danger p-0"
-                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                <?php endif; ?>
+
                             </td>
                         <?php endif; ?>
                     </tr>
@@ -94,7 +111,7 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select class="form-select" id="editRole" name="role" required>
-                            <option value="">Pilih Role...</option>
+                            <option value="">Choose Role...</option>
                             <?php foreach ($roles as $role): ?>
                                 <option value="<?= $role['id'] ?>">
                                     <?= esc($role['name']) ?>
@@ -124,7 +141,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -156,7 +173,7 @@
         <?php if ($canUpdate): ?>
         $('#editSubmenu').select2({
             width: '100%',
-            placeholder: 'Pilih submenu...',
+            placeholder: 'Choose submenu...',
             dropdownParent: $('#editModal'),
             allowClear: true
         });
@@ -194,7 +211,7 @@
             success: function(res) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil',
+                    title: 'Success',
                     text: res.message,
                     confirmButtonText: 'OK'
                 }).then(() => {
@@ -203,8 +220,8 @@
                 });
             },
             error: function(xhr) {
-                const msg = xhr.responseJSON?.error ?? 'Gagal memperbarui privilege';
-                Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
+                const msg = xhr.responseJSON?.error ?? 'Failed to update privilege';
+                Swal.fire({ icon: 'error', title: 'Failed', text: msg });
             }
         });
     });
@@ -213,12 +230,13 @@
     <?php if ($canDelete): ?>
     function confirmDelete(id) {
         Swal.fire({
-            title: 'Yakin ingin menghapus privilege ini?',
-            text: 'Tindakan ini tidak dapat dibatalkan.',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
@@ -230,12 +248,12 @@
                     },
                     dataType: 'json',
                     success: function (res) {
-                        Swal.fire('Berhasil', res.message, 'success')
+                        Swal.fire('Success', 'Successfully deleted', 'success')
                             .then(() => location.reload());
                     },
                     error: function (xhr) {
-                        const errorMsg = xhr.responseJSON?.error ?? 'Gagal menghapus privilege';
-                        Swal.fire('Gagal', errorMsg, 'error');
+                        const errorMsg = xhr.responseJSON?.error ?? 'Failed to delete privilege';
+                        Swal.fire('Failed', errorMsg, 'error');
                     }
                 });
             }
@@ -245,3 +263,4 @@
 </script>
 
 <?= $this->endSection() ?>
+

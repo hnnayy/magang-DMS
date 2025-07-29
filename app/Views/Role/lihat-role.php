@@ -15,42 +15,9 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Role List</h4>
-        <?php if ($canCreate): ?>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-circle"></i> Add Role
-            </button>
-        <?php endif; ?>
     </div>
     <hr>
 
-    <!-- Flash Messages -->
-    <?php if (session()->getFlashdata('added_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('added_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('deleted_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('deleted_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('updated_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('updated_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="roleTable">
@@ -262,11 +229,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
-            text: 'You want to delete this role? This action cannot be undone!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
         }).then((result) => {

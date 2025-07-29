@@ -61,24 +61,24 @@ class CreateUser extends Controller
             empty($fullname) || empty($roleName)
         ) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Semua field wajib diisi.')
+                            ->with('error', 'All fields are mandatory.')
                             ->with('showPopupError', true);
         }
         if (preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $username) ||
             preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $fullname)) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Username atau Full Name tidak boleh mengandung karakter khusus.')
+                            ->with('error', 'Username or Full Name must not contain special characters.')
                             ->with('showPopupError', true);
         }
         if ($this->userModel->where('username', $username)->first()) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Username sudah digunakan.')
+                            ->with('error', 'Username already in use.')
                             ->with('showPopupError', true);
         }
         $parent = $this->unitParentModel->find($parentId);
         if (! $parent) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Fakultas/Direktorat tidak valid.')
+                            ->with('error', 'Faculty/Directorate is invalid.')
                             ->with('showPopupError', true);
         }
         $unit = $this->unitModel
@@ -87,13 +87,13 @@ class CreateUser extends Controller
                     ->first();
         if (! $unit) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Unit tidak cocok dengan Fakultas yang dipilih.')
+                            ->with('error', 'Unit does not match the selected Faculty.')
                             ->with('showPopupError', true);
         }
         $role = $this->roleModel->where('name', $roleName)->first();
         if (! $role) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Role tidak valid.')
+                            ->with('error', 'Role is invalid.')
                             ->with('showPopupError', true);
         }
         $this->userModel->insert([
@@ -253,9 +253,9 @@ class CreateUser extends Controller
         $submenu  = $this->request->getPost('submenu');   
         $actions  = $this->request->getPost('privileges'); 
         if (! $this->roleModel->find($roleId))
-            return $this->response->setJSON(['error'=>'Role tidak ditemukan'])->setStatusCode(404);
+            return $this->response->setJSON(['error'=>'Role is not found'])->setStatusCode(404);
         if (empty($submenu))
-            return $this->response->setJSON(['error'=>'Pilih minimal satu submenu'])->setStatusCode(400);
+            return $this->response->setJSON(['error'=>'Select at least one submenu'])->setStatusCode(400);
         foreach ($submenu as $sid) {
             if (! $this->submenuModel->find($sid)) continue; 
 
@@ -268,7 +268,7 @@ class CreateUser extends Controller
                 'approve'    => in_array('read',    $actions) ? 1 : 0, 
             ]);
         }
-        return $this->response->setJSON(['message'=>'Privilege berhasil disimpan']);
+        return $this->response->setJSON(['message'=>'Privilege has been successfully saved']);
     }
 
     public function softDelete($id)

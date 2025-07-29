@@ -514,13 +514,12 @@ $(document).ready(function () {
 
       Swal.fire({
         title: 'Are you sure?',
-        text: 'User will be permanently deleted..',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes, delete it',
         cancelButtonText: 'Cancel',
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d'
+        confirmButtonColor: '#d33',
+        cancelButtonColor: 'rgba(118, 125, 131, 1)',
       }).then((result) => {
         if (result.isConfirmed) {
           $.post('<?= base_url('create-user/delete') ?>', {

@@ -1,6 +1,7 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+
 <?php
 // Ambil privilege dari session untuk submenu ini
 $privileges = session()->get('privileges');
@@ -15,37 +16,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Menu List</h4>
+        
     </div>
     <hr>
 
     <!-- Flash Messages -->
-    <?php if (session()->getFlashdata('added_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('added_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
 
-    <?php if (session()->getFlashdata('updated_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('updated_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('deleted_message')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('deleted_message') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= session()->getFlashdata('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
+<?= $this->include('partials/alerts') ?>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="menuTable">
@@ -199,7 +176,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 </div>
 <?php endif; ?>
 
-<!-- Scripts -->
+<!-- Scripts -->z
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
@@ -237,12 +214,11 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
-            text: "This menu will be deleted and cannot be recovered!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {

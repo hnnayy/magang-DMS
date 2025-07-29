@@ -2,7 +2,7 @@
 <?= $this->section('content') ?>
 
 <div class="container-fluid persetujuan-container">
-    <h4 class="mb-4">Persetujuan Dokumen</h4>
+    <h4 class="mb-4">Document Approval</h4>
 
     <div class="card persetujuan-card">
         <div class="card-body">
@@ -16,15 +16,15 @@
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Fakultas/Direktorat</th>
-                            <th>Bagian/Unit/Prodi</th>
-                            <th>Nama Dokumen</th>
-                            <th>Revisi</th>
-                            <th>Jenis Dokumen</th>
-                            <th>Kode & Nama Dokumen</th>
+                            <th>Faculty/Directorate</th>
+                            <th>Department/Unit/Program</th>
+                            <th>Document Name</th>
+                            <th>Revision</th>
+                            <th>Document Type</th>
+                            <th>Code & Document Name</th>
                             <th>File</th>
                             <th>Remark</th>
-                            <th class="text-center noExport">Aksi</th>
+                            <th class="text-center noExport">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,17 +45,18 @@
                                     <?= esc($doc['kode_nama_dokumen'] ?? '-') ?>
                                 </span>
                             </td>
-                            <td>
-                                <?php if (!empty($doc['filepath'])): ?>
-                                    <a href="<?= base_url('uploads/' . $doc['filepath']) ?>" target="_blank" class="file-link">
-                                        <i class="bi bi-file-earmark-text"></i> 
-                                        <span class="file-text-truncate" title="<?= esc($doc['filename'] ?? $doc['filepath']) ?>">
-                                            <?= esc($doc['filename'] ?? $doc['filepath']) ?>
-                                        </span>
-                                    </a>
+                            <td class="text-center">
+                                <?php if (!empty($doc['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $doc['filepath'])): ?>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="<?= base_url('document-approval/serveFile?id=' . $doc['id'] . '&action=download') ?>" 
+                                           class="text-decoration-none" 
+                                           title="Download <?= esc($doc['filename'] ?? basename($doc['filepath'])) ?>">
+                                            <i class="bi bi-download text-success fs-5"></i>
+                                        </a>
+                                    </div>
                                 <?php else: ?>
                                     <span class="text-muted">
-                                        <i class="bi bi-file-earmark-x"></i> Tidak ada file
+                                        <i class="bi bi-file-earmark-x"></i> No file
                                     </span>
                                 <?php endif; ?>
                             </td>
@@ -72,7 +73,7 @@
                                     <form method="post" action="<?= base_url('document-approval/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-action btn-delete" data-id="<?= $doc['id'] ?>" title="Hapus">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger btn-action btn-delete" data-id="<?= $doc['id'] ?>" title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -80,24 +81,24 @@
                             </td>
                         </tr>
 
-                        <!-- Modal Edit -->
+                        <!-- Edit Modal -->
                         <div class="modal fade" id="editModal<?= $doc['id'] ?>" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
+                            <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <form method="post" action="<?= base_url('document-approval/update') ?>">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
                                         <div class="modal-header">
-                                            <h5 class="modal-title">Edit Dokumen</h5>
+                                            <h5 class="modal-title">Edit Document</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
                                             <div class="mb-3">
-                                                <label class="form-label">Judul</label>
+                                                <label class="form-label">Title</label>
                                                 <input type="text" name="title" class="form-control" value="<?= esc($doc['title']) ?>" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Revisi</label>
+                                                <label class="form-label">Revision</label>
                                                 <input type="text" name="revision" class="form-control" value="<?= esc($doc['revision']) ?>" required>
                                             </div>
                                             <div class="mb-3">
@@ -106,8 +107,8 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
                                         </div>
                                     </form>
                                 </div>
@@ -159,108 +160,108 @@ $(document).ready(function () {
                 className: 'btn btn-outline-success btn-sm',
                 title: 'Data_Users',
                 exportOptions: { 
-                columns: [0, 1, 2, 3, 4, 5, 6] 
+                    columns: [0, 1, 2, 3, 4, 5, 6] 
                 }
             },
             {
                 extend: 'pdfHtml5',
                 text: 'PDF',
                 className: 'btn',
-                title: 'Persetujuan Dokumen',
+                title: 'Document Approval',
                 filename: 'data_users',
                 exportOptions: { 
-                columns: [0, 1, 2, 3, 4, 5, 6] 
+                    columns: [0, 1, 2, 3, 4, 5, 6] 
                 },
-                orientation: 'potrait', 
+                orientation: 'portrait', 
                 pageSize: 'A4',
                 customize: function (doc) {
-                const now = new Date();
-                const waktuCetak = now.toLocaleString('id-ID', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                });
+                    const now = new Date();
+                    const printTime = now.toLocaleString('en-US', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
 
-                if (doc.content[0] && doc.content[0].text === 'Persetujuan Dokumen') {
-                    doc.content.splice(0, 1);
-                }
+                    if (doc.content[0] && doc.content[0].text === 'Document Approval') {
+                        doc.content.splice(0, 1);
+                    }
 
-                doc.content.unshift({
-                    text: 'Persetujuan Dokumen',
-                    alignment: 'center',
-                    bold: true,
-                    fontSize: 16,
-                    margin: [0, 0, 0, 15]
-                });
+                    doc.content.unshift({
+                        text: 'Document Approval',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 16,
+                        margin: [0, 0, 0, 15]
+                    });
 
-                doc.styles.tableHeader = {
-                    fillColor: '#eaeaea',
-                    color: '#000',
-                    alignment: 'center',
-                    bold: true,
-                    fontSize: 10
-                };
-
-                doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
-                doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-                doc.defaultStyle.fontSize = 9;
-                doc.styles.tableBody = { 
-                    alignment: 'center', 
-                    fontSize: 9 
-                };
-                // Footer
-                doc.footer = function (currentPage, pageCount) {
-                    return {
-                    columns: [
-                        { 
-                        text: 'Dicetak: ' + waktuCetak, 
-                        alignment: 'left', 
-                        margin: [40, 0] 
-                        },
-                        { 
-                        text: '© 2025 Telkom University – Document Management System', 
-                        alignment: 'center' 
-                        },
-                        { 
-                        text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, 
-                        alignment: 'right', 
-                        margin: [0, 0, 40, 0] 
-                        }
-                    ],
-                    fontSize: 8,
-                    margin: [0, 10, 0, 0]
+                    doc.styles.tableHeader = {
+                        fillColor: '#eaeaea',
+                        color: '#000',
+                        alignment: 'center',
+                        bold: true,
+                        fontSize: 10
                     };
-                };
 
-                doc.pageMargins = [40, 60, 40, 60];
-
-                if (doc.content[1] && doc.content[1].table) {
-                    doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
-                    doc.content[1].margin = [0, 0, 0, 0];
-                    doc.content[1].layout = {
-                    hLineWidth: function () { return 0.5; },
-                    vLineWidth: function () { return 0.5; },
-                    hLineColor: function () { return '#000000'; },
-                    vLineColor: function () { return '#000000'; },
-                    paddingLeft: function () { return 5; },
-                    paddingRight: function () { return 5; },
-                    paddingTop: function () { return 3; },
-                    paddingBottom: function () { return 3; }
+                    doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
+                    doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+                    doc.defaultStyle.fontSize = 9;
+                    doc.styles.tableBody = { 
+                        alignment: 'center', 
+                        fontSize: 9 
                     };
-                }
+                    // Footer
+                    doc.footer = function (currentPage, pageCount) {
+                        return {
+                            columns: [
+                                { 
+                                    text: 'Printed: ' + printTime, 
+                                    alignment: 'left', 
+                                    margin: [40, 0] 
+                                },
+                                { 
+                                    text: '© 2025 Telkom University – Document Management System', 
+                                    alignment: 'center' 
+                                },
+                                { 
+                                    text: 'Page ' + currentPage.toString() + ' of ' + pageCount, 
+                                    alignment: 'right', 
+                                    margin: [0, 0, 40, 0] 
+                                }
+                            ],
+                            fontSize: 8,
+                            margin: [0, 10, 0, 0]
+                        };
+                    };
 
-                doc.content.push({
-                    text: '* Dokumen ini berisi daftar pengguna aktif dalam sistem.',
-                    alignment: 'left',
-                    italics: true,
-                    fontSize: 8,
-                    margin: [0, 15, 0, 0]
-                });
+                    doc.pageMargins = [40, 60, 40, 60];
+
+                    if (doc.content[1] && doc.content[1].table) {
+                        doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
+                        doc.content[1].margin = [0, 0, 0, 0];
+                        doc.content[1].layout = {
+                            hLineWidth: function () { return 0.5; },
+                            vLineWidth: function () { return 0.5; },
+                            hLineColor: function () { return '#000000'; },
+                            vLineColor: function () { return '#000000'; },
+                            paddingLeft: function () { return 5; },
+                            paddingRight: function () { return 5; },
+                            paddingTop: function () { return 3; },
+                            paddingBottom: function () { return 3; }
+                        };
+                    }
+
+                    doc.content.push({
+                        text: '* This document contains a list of active users in the system.',
+                        alignment: 'left',
+                        italics: true,
+                        fontSize: 8,
+                        margin: [0, 15, 0, 0]
+                    });
                 }
             }
         ],
         lengthMenu: [10, 25, 50, 100],
         language: {
-            lengthMenu: "Tampilkan _MENU_ entri",
+            lengthMenu: "Show _MENU_ entries",
             paginate: {
                 previous: "Previous",
                 next: "Next"
@@ -278,7 +279,7 @@ $(document).ready(function () {
     $('.search-container').html(`
         <div class="d-flex align-items-center gap-2">
             <label class="mb-0">Search:</label>
-            <input type="search" class="form-control form-control-sm" id="customSearch" placeholder="Cari dokumen...">
+            <input type="search" class="form-control form-control-sm" id="customSearch" placeholder="Search documents...">
         </div>
     `);
 
@@ -343,7 +344,7 @@ $(document).ready(function () {
         updatePagination();
     });
 
-    // Handle klik pagination
+    // Handle pagination click
     $(document).on('click', '.dataTables_paginate .page-link[data-page]', function(e) {
         e.preventDefault();
         const page = parseInt($(this).data('page'));
@@ -352,20 +353,19 @@ $(document).ready(function () {
 
     updatePagination();
 
-    // Konfirmasi delete dengan SweetAlert2
+    // Delete confirmation with SweetAlert2
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const form = $(this).closest('form');
         Swal.fire({
-            title: 'Konfirmasi Hapus',
-            text: 'Apakah Anda yakin ingin menghapus dokumen ini? Tindakan ini tidak dapat dibatalkan.',
+            title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            reverseButtons: true
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#dc1a1aff', 
+            cancelButtonColor: '#327ec1ff',
+            reverseButtons: false
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -384,11 +384,9 @@ $(document).ready(function () {
 <script>
     Swal.fire({
         icon: 'success',
-        title: 'Berhasil!',
+        title: 'Success!',
         text: '<?= esc(session()->getFlashdata('success')) ?>',
-        confirmButtonColor: '#198754',
-        timer: 3000,
-        timerProgressBar: true
+        confirmButtonColor: '#6f42c1' // Purple color for the OK button
     });
 </script>
 <?php endif; ?>
@@ -397,9 +395,9 @@ $(document).ready(function () {
 <script>
     Swal.fire({
         icon: 'error',
-        title: 'Gagal!',
+        title: 'Failed!',
         text: '<?= esc(session()->getFlashdata('error')) ?>',
-        confirmButtonColor: '#dc3545'
+        confirmButtonColor: '#6f42c1' // Purple color for the OK button
     });
 </script>
 <?php endif; ?>
