@@ -9,6 +9,7 @@ use App\Models\DocumentModel;
 use App\Models\UnitModel;
 use App\Models\UnitParentModel;
 use App\Models\DocumentApprovalModel;
+use App\Models\UserModel; // Add UserModel for creator info
 use CodeIgniter\Files\File; 
 require_once ROOTPATH . 'vendor/autoload.php';
 
@@ -18,6 +19,7 @@ class PengajuanController extends BaseController
     protected $kodeDokumen = [];
     protected $documentModel;
     protected $documentRevisionModel;
+    protected $userModel; // Add userModel property
     protected $db;
     protected $helpers = ['url', 'form'];
     protected $session;
@@ -36,6 +38,7 @@ class PengajuanController extends BaseController
         $this->documentApprovalModel = new DocumentApprovalModel();
         $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
         $this->documentRevisionModel = new \App\Models\DocumentRevisionModel();
+        $this->userModel = new UserModel(); // Initialize UserModel
         $this->db = \Config\Database::connect();
        
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
@@ -224,7 +227,6 @@ class PengajuanController extends BaseController
     }
 
     // POST document-submission-list/update
-    // ✅ PERBAIKAN UTAMA: Method update yang sudah diperbaiki
     public function update()
     {
         $documentId = $this->request->getPost('document_id');
@@ -252,7 +254,7 @@ class PengajuanController extends BaseController
         $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
         $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
 
-        // ✅ PERBAIKAN: Handle document code dengan pengecekan tipe dokumen yang benar
+        // Handle document code dengan pengecekan tipe dokumen yang benar
         $finalKodeDokumenId = null;
         
         if ($jenisId) {
@@ -281,7 +283,7 @@ class PengajuanController extends BaseController
                     } else {
                         // Create new custom code
                         $newKodeData = [
-                            'document_type_id' => $jenisId, // ✅ PERBAIKAN: Gunakan document_type_id bukan type_id
+                            'document_type_id' => $jenisId,
                             'kode' => strtoupper($kodeCustom),
                             'nama' => $namaCustom,
                             'status' => 1,
@@ -487,56 +489,65 @@ class PengajuanController extends BaseController
         return $grouped;
     }
 
-    private function showList()
-    {
-        $unitParentModel = new \App\Models\UnitParentModel();
+   // FIXED: Updated showList method that matches your actual database structure
+private function showList()
+{
+    $unitParentModel = new \App\Models\UnitParentModel();
 
-        $documents = $this->documentModel
-            ->select('document.*, 
-                      dt.name AS jenis_dokumen, 
-                      unit.name AS unit_name, 
-                      unit_parent.name AS parent_name,
-                      unit.parent_id AS unit_parent_id,
-                      kd.kode AS kode_dokumen_kode,
-                      kd.nama AS kode_dokumen_nama,
-                      dr.filename AS filename,
-                      dr.filepath AS filepath')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            ->join('document_revision dr', 'dr.document_id = document.id', 'left')
-            ->where('document.createdby !=', 0)
-            ->whereIn('document.status', [0, 1, 2])
-            ->groupBy('document.id')
-            ->findAll();
+    // Enhanced query to include creator information and hierarchical data
+    // Based on your actual model structure without role_id in user table
+    $documents = $this->documentModel
+        ->select('document.*, 
+                  dt.name AS jenis_dokumen, 
+                  unit.name AS unit_name, 
+                  unit_parent.name AS parent_name,
+                  unit.parent_id AS unit_parent_id,
+                  kd.kode AS kode_dokumen_kode,
+                  kd.nama AS kode_dokumen_nama,
+                  dr.filename AS filename,
+                  dr.filepath AS filepath,
+                  creator.fullname AS creator_name,
+                  creator.unit_id AS creator_unit_id,
+                  creator_unit.parent_id AS creator_unit_parent_id,
+                  creator_unit_parent.name AS creator_unit_parent_name')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('unit', 'unit.id = document.unit_id', 'left')
+        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->join('document_revision dr', 'dr.document_id = document.id', 'left')
+        ->join('user creator', 'creator.id = document.createdby', 'left') // Join with user table for creator info
+        ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left') // Join creator's unit to get parent_id
+        ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left') // Join creator's unit parent
+        ->where('document.createdby !=', 0)
+        ->whereIn('document.status', [0, 1, 2])
+        ->groupBy('document.id')
+        ->findAll();
 
-        $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
-        $kategori_dokumen = $this->kategoriDokumen;
-        $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
-        $fakultas_list = $unitParentModel
-            ->where('status', 1)
-            ->orderBy('name', 'ASC')
-            ->findAll();
+    $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
+    $kategori_dokumen = $this->kategoriDokumen;
+    $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
+    $fakultas_list = $unitParentModel
+        ->where('status', 1)
+        ->orderBy('name', 'ASC')
+        ->findAll();
 
-        $kode_dokumen_by_type = $this->getKodeDokumenByType();
+    $kode_dokumen_by_type = $this->getKodeDokumenByType();
 
-        $data = [
-            'documents' => $documents,
-            'jenis_dokumen' => $jenis_dokumen,
-            'kategori_dokumen' => $kategori_dokumen,
-            'kode_nama_dokumen' => $kode_nama_dokumen,
-            'fakultas_list' => $fakultas_list,
-            'kode_dokumen_by_type' => $kode_dokumen_by_type,
-            'title' => 'Daftar Pengajuan Dokumen'
-        ];
+    $data = [
+        'documents' => $documents,
+        'jenis_dokumen' => $jenis_dokumen,
+        'kategori_dokumen' => $kategori_dokumen,
+        'kode_nama_dokumen' => $kode_nama_dokumen,
+        'fakultas_list' => $fakultas_list,
+        'kode_dokumen_by_type' => $kode_dokumen_by_type,
+        'title' => 'Daftar Pengajuan Dokumen'
+    ];
 
-        log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
-        log_message('debug', 'Kode dokumen by type keys: ' . implode(', ', array_keys($kode_dokumen_by_type)));
-        
-        return view('KelolaDokumen/daftar-pengajuan', $data);
-    }
-
+    log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
+    log_message('debug', 'Kode dokumen by type keys: ' . implode(', ', array_keys($kode_dokumen_by_type)));
+    
+    return view('KelolaDokumen/daftar-pengajuan', $data);
+}
     private function handleFileView()
     {
         $id = $this->request->getGet('id');
@@ -654,7 +665,6 @@ class PengajuanController extends BaseController
         ]);
     }
 
-    // ✅ PERBAIKAN: Method handleGetKodeDokumen yang sudah diperbaiki
     private function handleGetKodeDokumen()
     {
         $jenisId = $this->request->getPost('jenis');
@@ -727,7 +737,7 @@ class PengajuanController extends BaseController
         $userRoleId = session('role_id');
         $allowedRoleIds = [1, 2]; // Sesuaikan dengan ID role admin dan superadmin di database Anda
         
-        // Cek apkses berdasarkan role_id dari session atau ownership dokumen
+        // Cek akses berdasarkan role_id dari session atau ownership dokumen
         if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki akses ke file ini.');
         }

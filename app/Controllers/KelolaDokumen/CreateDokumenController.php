@@ -273,12 +273,12 @@ class CreateDokumenController extends BaseController
                 throw new \Exception('Transaction failed');
             }
 
-            return redirect()->to('/create-document')->with('success', 'Dokumen berhasil ditambahkan.');
+            return redirect()->to('/create-document')->with('added_message', 'Successfully Added.');
             
         } catch (\Exception $e) {
             $this->documentModel->db->transRollback();
             log_message('error', 'Error in tambah method: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menyimpan dokumen: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to save document:' . $e->getMessage());
         }
     }
 }
