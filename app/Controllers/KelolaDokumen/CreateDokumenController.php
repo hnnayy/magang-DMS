@@ -168,6 +168,53 @@ class CreateDokumenController extends BaseController
             return redirect()->back()->with('error', 'Jenis dokumen belum dipilih.');
         }
 
+        // Cek apakah jenis dokumen menggunakan predefined codes atau tidak
+        $documentType = $this->documentTypeModel->find($jenisId);
+        $usePredefined = str_contains($documentType['description'] ?? '', '[predefined]');
+
+        $kodeDokumenId = null;
+
+        // Validasi dan handle kode dokumen berdasarkan jenis
+        if ($usePredefined) {
+            // Untuk predefined codes, ambil dari dropdown
+            $kodeDokumenId = $this->request->getPost('kode_dokumen_id');
+            if (!$kodeDokumenId) {
+                return redirect()->back()->with('error', 'Kode dokumen belum dipilih.');
+            }
+        } else {
+            // Untuk non-predefined codes, buat entry baru di tabel kode_dokumen
+            $kodeCustom = $this->request->getPost('kode-dokumen-custom');
+            $namaCustom = $this->request->getPost('nama-dokumen-custom');
+            
+            if (!$kodeCustom || !$namaCustom) {
+                return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom wajib diisi.');
+            }
+
+            // Cek apakah kode dokumen sudah ada untuk jenis ini
+            $existingKode = $this->kodeDokumenModel
+                ->where('document_type_id', $jenisId)
+                ->where('kode', $kodeCustom)
+                ->where('status', 1)
+                ->first();
+
+            if ($existingKode) {
+                return redirect()->back()->with('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini.');
+            }
+
+            // Insert kode dokumen baru
+            $kodeDokumenData = [
+                'document_type_id' => $jenisId,
+                'kode' => $kodeCustom,
+                'nama' => $namaCustom,
+                'status' => 1,
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session('user_id')
+            ];
+
+            $this->kodeDokumenModel->insert($kodeDokumenData);
+            $kodeDokumenId = $this->kodeDokumenModel->getInsertID();
+        }
+
         $uploadPath = ROOTPATH . '../storage/uploads';
         if (!is_dir($uploadPath)) {
             mkdir($uploadPath, 0755, true);
@@ -187,13 +234,18 @@ class CreateDokumenController extends BaseController
             $result = $this->documentModel->db->query('SHOW TABLE STATUS LIKE "document"')->getRow();
             $nextId = $result->Auto_increment;
 
+            // Tentukan nama dokumen berdasarkan jenis
+            $namaDokumen = $usePredefined ? 
+                $this->request->getPost('nama-dokumen') : 
+                $this->request->getPost('nama-dokumen-custom');
+
             $this->documentModel->insert([
                 'type' => $jenisId,
-                'kode_dokumen_id' => $this->request->getPost('kode_dokumen_id'),
+                'kode_dokumen_id' => $kodeDokumenId,
                 'number' => $this->request->getPost('no-dokumen'),
                 'date_published' => $this->request->getPost('date_published'),
                 'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
-                'title' => $this->request->getPost('nama-dokumen'),
+                'title' => $namaDokumen,
                 'description' => $this->request->getPost('keterangan'),
                 'unit_id' => $unitId,
                 'status' => 0,
@@ -230,4 +282,3 @@ class CreateDokumenController extends BaseController
         }
     }
 }
-
