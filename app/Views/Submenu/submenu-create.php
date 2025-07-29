@@ -7,7 +7,7 @@
             <h2><?= $title ?? 'Add Submenu' ?></h2>
         </div>
 
-        <form id="createSubmenuForm" method="post" action="<?= base_url('create-submenu/store') ?>">
+        <form id="createSubmenuForm" method="post" action="<?= base_url('create-submenu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
             <!-- Searchable Dropdown Menu -->
@@ -18,15 +18,16 @@
                         type="text" 
                         id="menu_search" 
                         class="form-input search-input <?php echo isset($validation) && isset($validation['parent']) ? 'is-invalid' : ''; ?>" 
-                        placeholder="Search and select menu..."
+                        placeholder="Search menu..."
                         autocomplete="off"
                         required
                     >
-                    <input type="hidden" name="parent" id="selected_menu_id" value="<?= old('parent') ?>">
+                    <input type="hidden" name="parent" id="selected_menu_id" value="<?= old('parent') ?>" required>
                     <div class="search-dropdown-list" id="menu_dropdown" style="display: none;"></div>
                 </div>
+                <div class="invalid-feedback">Please select a menu.</div>
                 <?php if (isset($validation) && isset($validation['parent'])) : ?>
-                    <div class="invalid-feedback">
+                    <div class="server-error-feedback">
                         <?php echo $validation['parent']; ?>
                     </div>
                 <?php endif; ?>
@@ -38,25 +39,31 @@
                 <input type="text" name="submenu" id="editUnitName" class="form-input <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
                        placeholder="Enter Submenu here... "
                        value="<?php echo old('submenu'); ?>"
+                       pattern="^\S+\s+\S+"
+                       title="Submenu must contain at least two words"
                        required>
+                <div class="invalid-feedback">Submenu must consist of at least two words.</div>
                 <?php if (isset($validation) && isset($validation['submenu'])) : ?>
-                    <div class="invalid-feedback">
+                    <div class="server-error-feedback">
                         <?php echo $validation['submenu']; ?>
                     </div>
                 <?php endif; ?>
             </div>
 
             <!-- Status -->
-            <div class="form-group">
+            <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="active" value="1" checked required>
+                    <input class="form-check-input" type="radio" name="status" id="active" value="1" 
+                           <?= (old('status') == '1' || !old('status')) ? 'checked' : '' ?> required>
                     <label class="form-check-label" for="active">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="inactive" value="2">
+                    <input class="form-check-input" type="radio" name="status" id="inactive" value="2"
+                           <?= old('status') == '2' ? 'checked' : '' ?>>
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
+                <div class="invalid-feedback">Please select a status.</div>
             </div>
 
             <button type="submit" class="submit-btn">Submit</button>
@@ -79,200 +86,269 @@ const menuData = [
     <?php endforeach; ?>
 ];
 
-// Searchable dropdown functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('menu_search');
-    const dropdown = document.getElementById('menu_dropdown');
-    const hiddenInput = document.getElementById('selected_menu_id');
-    let selectedIndex = -1;
-    let filteredMenus = [];
-
-    // Set initial value if there's an old value
-    const oldValue = "<?= old('parent') ?>";
-    if (oldValue) {
-        const selectedMenu = menuData.find(menu => menu.id == oldValue);
-        if (selectedMenu) {
-            searchInput.value = selectedMenu.name;
-            searchInput.classList.add('has-selection');
-        }
+// Enhanced Searchable Dropdown Class
+class SearchableMenuDropdown {
+    constructor() {
+        this.searchInput = document.getElementById('menu_search');
+        this.dropdown = document.getElementById('menu_dropdown');
+        this.hiddenInput = document.getElementById('selected_menu_id');
+        this.selectedIndex = -1;
+        this.filteredMenus = [];
+        
+        this.init();
     }
 
-    // Filter and display menu options
-    function filterMenus(searchTerm) {
-        filteredMenus = menuData.filter(menu => 
-            menu.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        
-        dropdown.innerHTML = '';
-        
-        if (filteredMenus.length === 0) {
-            dropdown.innerHTML = '<div class="search-dropdown-item no-results">No menus found</div>';
-        } else {
-            filteredMenus.forEach((menu, index) => {
-                const item = document.createElement('div');
-                item.className = 'search-dropdown-item';
-                item.textContent = menu.name;
-                item.dataset.id = menu.id;
-                item.dataset.index = index;
-                dropdown.appendChild(item);
-            });
+    init() {
+        // Set initial value if there's an old value
+        const oldValue = "<?= old('parent') ?>";
+        if (oldValue) {
+            const selectedMenu = menuData.find(menu => menu.id == oldValue);
+            if (selectedMenu) {
+                this.searchInput.value = selectedMenu.name;
+                this.searchInput.classList.add('has-selection');
+                this.hideValidationError();
+            }
         }
+
+        // Event listeners
+        this.searchInput.addEventListener('input', (e) => this.handleInput(e));
+        this.searchInput.addEventListener('focus', () => this.handleFocus());
+        this.searchInput.addEventListener('click', () => this.handleClick());
+        this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+        this.searchInput.addEventListener('blur', () => this.handleBlur());
         
-        selectedIndex = -1;
-        dropdown.style.display = 'block';
+        this.dropdown.addEventListener('click', (e) => this.handleDropdownClick(e));
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => this.handleOutsideClick(e));
     }
 
-    // Handle input events
-    searchInput.addEventListener('input', function() {
-        const value = this.value.trim();
+    handleInput(e) {
+        const value = e.target.value.trim();
         
         if (value === '') {
-            dropdown.style.display = 'none';
-            hiddenInput.value = '';
-            this.classList.remove('has-selection');
+            this.dropdown.style.display = 'none';
+            this.hiddenInput.value = '';
+            this.searchInput.classList.remove('has-selection');
+            this.showValidationError();
             return;
         }
         
         // Check if current value matches exactly with a menu
         const exactMatch = menuData.find(menu => menu.name === value);
         if (!exactMatch) {
-            hiddenInput.value = '';
-            this.classList.remove('has-selection');
+            this.hiddenInput.value = '';
+            this.searchInput.classList.remove('has-selection');
+            this.showValidationError();
+        } else {
+            this.hideValidationError();
         }
         
-        filterMenus(value);
-    });
+        this.filterMenus(value);
+    }
 
-    // Handle focus events - show all options when clicked
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim() !== '') {
-            filterMenus(this.value);
+    handleFocus() {
+        if (this.searchInput.value.trim() !== '') {
+            this.filterMenus(this.searchInput.value);
         } else {
-            // Show all menus when input is focused and empty
-            filterMenus('');
+            this.filterMenus('');
         }
-    });
+    }
 
-    // Handle click events - also show dropdown
-    searchInput.addEventListener('click', function() {
-        if (this.value.trim() !== '') {
-            filterMenus(this.value);
+    handleClick() {
+        if (this.searchInput.value.trim() !== '') {
+            this.filterMenus(this.searchInput.value);
         } else {
-            // Show all menus when input is clicked and empty
-            filterMenus('');
+            this.filterMenus('');
         }
-    });
+    }
 
-    // Handle keyboard navigation
-    searchInput.addEventListener('keydown', function(e) {
-        const items = dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
+    handleKeydown(e) {
+        const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
         
         switch(e.key) {
             case 'ArrowDown':
                 e.preventDefault();
-                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                updateSelection(items);
+                this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
+                this.updateSelection(items);
                 break;
                 
             case 'ArrowUp':
                 e.preventDefault();
-                selectedIndex = Math.max(selectedIndex - 1, -1);
-                updateSelection(items);
+                this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                this.updateSelection(items);
                 break;
                 
             case 'Enter':
                 e.preventDefault();
-                if (selectedIndex >= 0 && items[selectedIndex]) {
-                    selectMenu(items[selectedIndex]);
+                if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
+                    this.selectMenu(items[this.selectedIndex]);
                 }
                 break;
                 
             case 'Escape':
-                dropdown.style.display = 'none';
-                selectedIndex = -1;
+                this.dropdown.style.display = 'none';
+                this.selectedIndex = -1;
                 break;
         }
-    });
+    }
 
-    // Update visual selection
-    function updateSelection(items) {
+    handleBlur() {
+        // Delay hiding to allow clicking on dropdown items
+        setTimeout(() => {
+            if (!this.dropdown.contains(document.activeElement)) {
+                this.dropdown.style.display = 'none';
+                // Show validation error if no valid selection
+                if (!this.hiddenInput.value && this.searchInput.value) {
+                    this.showValidationError();
+                }
+            }
+        }, 150);
+    }
+
+    handleDropdownClick(e) {
+        if (e.target.classList.contains('search-dropdown-item') && !e.target.classList.contains('no-results')) {
+            this.selectMenu(e.target);
+        }
+    }
+
+    handleOutsideClick(e) {
+        if (!this.searchInput.contains(e.target) && !this.dropdown.contains(e.target)) {
+            this.dropdown.style.display = 'none';
+            this.selectedIndex = -1;
+        }
+    }
+
+    filterMenus(searchTerm) {
+        this.filteredMenus = menuData.filter(menu => 
+            menu.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        this.dropdown.innerHTML = '';
+        
+        if (this.filteredMenus.length === 0) {
+            this.dropdown.innerHTML = '<div class="search-dropdown-item no-results">No menus found</div>';
+        } else {
+            this.filteredMenus.forEach((menu, index) => {
+                const item = document.createElement('div');
+                item.className = 'search-dropdown-item';
+                item.textContent = menu.name;
+                item.dataset.id = menu.id;
+                item.dataset.index = index;
+                this.dropdown.appendChild(item);
+            });
+        }
+        
+        this.selectedIndex = -1;
+        this.dropdown.style.display = 'block';
+    }
+
+    updateSelection(items) {
         items.forEach((item, index) => {
-            item.classList.toggle('selected', index === selectedIndex);
+            item.classList.toggle('selected', index === this.selectedIndex);
         });
     }
 
-    // Select a menu
-    function selectMenu(item) {
+    selectMenu(item) {
         const menuId = item.dataset.id;
         const menuName = item.textContent;
         
-        searchInput.value = menuName;
-        hiddenInput.value = menuId;
-        searchInput.classList.add('has-selection');
-        dropdown.style.display = 'none';
-        selectedIndex = -1;
+        this.searchInput.value = menuName;
+        this.hiddenInput.value = menuId;
+        this.searchInput.classList.add('has-selection');
+        this.dropdown.style.display = 'none';
+        this.selectedIndex = -1;
+        this.hideValidationError();
     }
 
-    // Handle click events on dropdown items
-    dropdown.addEventListener('click', function(e) {
-        if (e.target.classList.contains('search-dropdown-item') && !e.target.classList.contains('no-results')) {
-            selectMenu(e.target);
+    showValidationError() {
+        this.searchInput.classList.add('is-invalid');
+        const container = this.searchInput.closest('.form-group');
+        const feedback = container?.querySelector('.invalid-feedback');
+        if (feedback) {
+            feedback.style.display = 'block';
         }
-    });
+    }
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-            selectedIndex = -1;
+    hideValidationError() {
+        this.searchInput.classList.remove('is-invalid');
+        const container = this.searchInput.closest('.form-group');
+        const feedback = container?.querySelector('.invalid-feedback');
+        if (feedback) {
+            feedback.style.display = 'none';
         }
-    });
-});
+    }
+}
 
-// Original submenu validation
-document.getElementById('createSubmenuForm').addEventListener('submit', function (e) {
-    const submenu = document.getElementById('editUnitName');
-    const menuId = document.getElementById('selected_menu_id').value;
+// Initialize dropdown and form validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize searchable dropdown
+    const menuDropdown = new SearchableMenuDropdown();
     
-    // Validate menu selection
-    if (!menuId) {
-        e.preventDefault();
-        const searchInput = document.getElementById('menu_search');
-        searchInput.classList.add('is-invalid');
+    // Form validation
+    const form = document.getElementById('createSubmenuForm');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = form.checkValidity();
         
-        // Show error message for menu
-        let menuFeedback = document.querySelector('.search-dropdown-container + .invalid-feedback');
-        if (!menuFeedback) {
-            menuFeedback = document.createElement('div');
-            menuFeedback.className = 'invalid-feedback';
-            document.querySelector('.search-dropdown-container').parentNode.appendChild(menuFeedback);
+        // Custom validation for menu dropdown
+        const menuId = document.getElementById('selected_menu_id').value;
+        if (!menuId) {
+            isValid = false;
+            menuDropdown.showValidationError();
+        } else {
+            menuDropdown.hideValidationError();
         }
-        menuFeedback.textContent = 'Please select a valid menu.';
-        menuFeedback.style.display = 'block';
-    } else {
-        const searchInput = document.getElementById('menu_search');
-        searchInput.classList.remove('is-invalid');
-        const menuFeedback = document.querySelector('.search-dropdown-container + .invalid-feedback');
-        if (menuFeedback) menuFeedback.style.display = 'none';
-    }
+        
+        // Custom validation for submenu (at least two words)
+        const submenuInput = document.getElementById('editUnitName');
+        const submenuValue = submenuInput.value.trim();
+        const words = submenuValue.split(/\s+/).filter(word => word.length > 0);
+        
+        if (submenuValue && words.length < 2) {
+            isValid = false;
+            submenuInput.setCustomValidity('Submenu must contain at least two words');
+        } else {
+            submenuInput.setCustomValidity('');
+        }
+        
+        // Custom validation for status
+        const statusInputs = form.querySelectorAll('input[name="status"]');
+        const statusGroup = document.getElementById('status-group');
+        const isStatusChecked = Array.from(statusInputs).some(input => input.checked);
+
+        if (!isStatusChecked) {
+            isValid = false;
+            let feedback = statusGroup.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.style.display = 'block';
+            }
+        } else {
+            let feedback = statusGroup.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.style.display = 'none';
+            }
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
     
-    // Validate submenu
-    const valid = submenu.value.trim().match(/^\S+\s+\S+/);
-    if (!valid) {
-        e.preventDefault();
-        submenu.classList.add('is-invalid');
-        let feedback = document.querySelector('#editUnitName + .invalid-feedback');
-        if (!feedback) {
-            feedback = document.createElement('div');
-            feedback.className = 'invalid-feedback';
-            submenu.parentNode.appendChild(feedback);
+    // Real-time validation for submenu
+    document.getElementById('editUnitName').addEventListener('input', function() {
+        const value = this.value.trim();
+        const words = value.split(/\s+/).filter(word => word.length > 0);
+        
+        if (value && words.length < 2) {
+            this.setCustomValidity('Submenu must contain at least two words');
+        } else {
+            this.setCustomValidity('');
         }
-        feedback.textContent = 'Submenu harus terdiri dari minimal dua kata.';
-    } else {
-        submenu.classList.remove('is-invalid');
-        let feedback = document.querySelector('#editUnitName + .invalid-feedback');
-        if (feedback) feedback.remove();
-    }
+    });
 });
 </script>
 

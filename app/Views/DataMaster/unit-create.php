@@ -26,7 +26,7 @@
                 <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
                 <div class="search-dropdown-container">
                     <input type="text" id="fakultas-search" class="form-input search-input" 
-                           placeholder="Search faculty/directorate..." autocomplete="off">
+                           placeholder="Search faculty/directorate..." autocomplete="off" required>
                     <select id="fakultas-direktorat" name="parent_id" class="form-input" required style="display: none;">
                         <option value="">-- Select Faculty/Directorate --</option>
                         <?php foreach ($fakultas as $f) : ?>
@@ -118,6 +118,11 @@ $(document).ready(function() {
         if (searchTerm && !fakultasDropdown.is(':visible')) {
             fakultasDropdown.show();
         }
+
+        // Real-time validation - remove invalid state if user starts typing
+        if (searchTerm.length > 0) {
+            $(this).removeClass('is-invalid');
+        }
     });
 
     // Handle focus event
@@ -159,9 +164,17 @@ $(document).ready(function() {
     // Clear selection when search input is cleared manually
     fakultasSearch.on('keyup', function() {
         if ($(this).val() === '') {
-            $(this).removeClass('has-selection');
+            $(this).removeClass('has-selection is-valid is-invalid');
             fakultasSelect.val('');
             selectedFakultasId = null;
+        }
+        
+        // Trigger validation check if form was already validated
+        if ($('#addDocumentForm').hasClass('was-validated')) {
+            const fakultasSelect = $('#fakultas-direktorat');
+            if (!fakultasSelect.val() && $(this).val().trim() === '') {
+                $(this).addClass('is-invalid').removeClass('is-valid');
+            }
         }
     });
 });
@@ -182,9 +195,12 @@ $(document).ready(function() {
         
         if (fakultasSelect.prop('required') && !fakultasSelect.val()) {
             isValid = false;
-            fakultasSearch.addClass('is-invalid');
+            fakultasSearch.addClass('is-invalid').removeClass('is-valid');
+            // Manually show invalid feedback
+            fakultasSearch.closest('.form-group').find('.invalid-feedback').show();
         } else {
             fakultasSearch.removeClass('is-invalid').addClass('is-valid');
+            fakultasSearch.closest('.form-group').find('.invalid-feedback').hide();
         }
 
         // Additional validation for status
@@ -218,6 +234,8 @@ $(document).ready(function() {
         if (this.value.trim()) {
             this.classList.remove('is-invalid');
             this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
         }
     });
 
@@ -226,6 +244,24 @@ $(document).ready(function() {
         const fakultasSelect = $('#fakultas-direktorat');
         if (fakultasSelect.val()) {
             $(this).removeClass('is-invalid').addClass('is-valid');
+        } else if ($(this).val().trim() === '') {
+            $(this).removeClass('is-valid is-invalid');
+        }
+    });
+
+    // Additional validation when faculty search loses focus
+    $('#fakultas-search').on('blur', function() {
+        const fakultasSelect = $('#fakultas-direktorat');
+        
+        // Only validate if form was already validated (after first submit attempt)
+        if ($('#addDocumentForm').hasClass('was-validated')) {
+            if ($(this).val().trim() !== '' && !fakultasSelect.val()) {
+                // User typed something but didn't select from dropdown
+                $(this).addClass('is-invalid').removeClass('is-valid');
+            } else if ($(this).val().trim() === '' && fakultasSelect.prop('required')) {
+                // Field is empty but required
+                $(this).addClass('is-invalid').removeClass('is-valid');
+            }
         }
     });
 })();

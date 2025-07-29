@@ -1275,8 +1275,3 @@ input[type="date"]:valid {
     font-style: italic;
     cursor: default;
 }
-
-.search-input.has-selection {
-    background-color: #f0f9ff;
-    border-color: #3b82f6;
-}

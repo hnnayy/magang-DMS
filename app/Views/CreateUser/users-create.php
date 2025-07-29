@@ -196,6 +196,9 @@
             if (!exactMatch) {
                 this.hiddenInput.value = '';
                 this.searchInput.classList.remove('has-selection');
+                this.showValidationError(); // Show validation error
+            } else {
+                this.hideValidationError(); // Hide validation error if valid
             }
         }
 
@@ -204,6 +207,10 @@
             setTimeout(() => {
                 if (!this.dropdown.contains(document.activeElement)) {
                     this.hideDropdown();
+                    // Show validation error if no valid selection
+                    if (!this.hiddenInput.value && this.searchInput.value) {
+                        this.showValidationError();
+                    }
                 }
             }, 150);
         }
@@ -248,6 +255,7 @@
             this.hiddenInput.value = item[this.valueKey];
             this.searchInput.classList.add('has-selection');
             this.hideDropdown();
+            this.hideValidationError(); // Hide validation error when valid selection is made
             
             // Trigger change event for other dependencies
             this.hiddenInput.dispatchEvent(new Event('change'));
@@ -288,6 +296,27 @@
             this.searchInput.value = text;
             if (value) {
                 this.searchInput.classList.add('has-selection');
+                this.hideValidationError();
+            }
+        }
+
+        // Show validation error
+        showValidationError() {
+            this.searchInput.classList.add('is-invalid');
+            const container = this.searchInput.closest('.form-group');
+            const feedback = container?.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.style.display = 'block';
+            }
+        }
+
+        // Hide validation error
+        hideValidationError() {
+            this.searchInput.classList.remove('is-invalid');
+            const container = this.searchInput.closest('.form-group');
+            const feedback = container?.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.style.display = 'none';
             }
         }
     }
@@ -332,6 +361,7 @@
             document.getElementById('unit-search').value = '';
             document.getElementById('unit').value = '';
             document.getElementById('unit-search').classList.remove('has-selection');
+            unitDropdown.hideValidationError(); // Hide validation error when clearing
         });
 
         // Set old values if they exist (for form validation errors)
@@ -368,6 +398,22 @@
 
     form.addEventListener('submit', e => {
         let isValid = form.checkValidity();
+
+        // Custom validation for dropdown fields
+        const dropdownFields = [
+            { searchInput: document.getElementById('fakultas-search'), hiddenInput: document.getElementById('fakultas'), dropdown: fakultasDropdown },
+            { searchInput: document.getElementById('unit-search'), hiddenInput: document.getElementById('unit'), dropdown: unitDropdown },
+            { searchInput: document.getElementById('role-search'), hiddenInput: document.getElementById('role'), dropdown: roleDropdown }
+        ];
+
+        dropdownFields.forEach(field => {
+            if (!field.hiddenInput.value) {
+                isValid = false;
+                field.dropdown.showValidationError();
+            } else {
+                field.dropdown.hideValidationError();
+            }
+        });
 
         // Additional validation for status
         const statusInputs = form.querySelectorAll('input[name="status"]');
