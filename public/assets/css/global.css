@@ -1215,8 +1215,68 @@ input[type="date"]:valid {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Tambahkan background semi-transparan */
+    z-index: 998;
+    cursor: pointer; /* Tambahkan cursor pointer */
+}
+
+.search-dropdown-container {
+    position: relative;
+}
+
+.search-input {
     width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.3);
-    z-index: 900;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+}
+
+.search-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.search-dropdown-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.search-dropdown-item:hover {
+    background-color: #f9fafb;
+}
+
+.search-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.search-dropdown-item.selected {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.search-dropdown-item.no-results {
+    padding: 12px;
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    cursor: default;
+}
+
+.search-input.has-selection {
+    background-color: #f0f9ff;
+    border-color: #3b82f6;
 }

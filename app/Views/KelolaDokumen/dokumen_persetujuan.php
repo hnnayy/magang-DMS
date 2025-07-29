@@ -67,9 +67,6 @@
                             </td>
                             <td class="text-center">
                                 <div class="action-buttons">
-                                    <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
                                     <form method="post" action="<?= base_url('document-approval/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
@@ -77,6 +74,9 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -361,11 +361,10 @@ $(document).ready(function () {
             title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, Delete',
+            confirmButtonText: 'Yes, delete it ',
             cancelButtonText: 'Cancel',
-            confirmButtonColor: '#dc1a1aff', 
-            cancelButtonColor: '#327ec1ff',
-            reverseButtons: false
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
         }).then((result) => {
             if (result.isConfirmed) {
                 form.submit();
@@ -380,26 +379,6 @@ $(document).ready(function () {
 });
 </script>
 
-<?php if (session()->getFlashdata('success')): ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= esc(session()->getFlashdata('success')) ?>',
-        confirmButtonColor: '#6f42c1' // Purple color for the OK button
-    });
-</script>
-<?php endif; ?>
 
-<?php if (session()->getFlashdata('error')): ?>
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Failed!',
-        text: '<?= esc(session()->getFlashdata('error')) ?>',
-        confirmButtonColor: '#6f42c1' // Purple color for the OK button
-    });
-</script>
-<?php endif; ?>
 
 <?= $this->endSection() ?>

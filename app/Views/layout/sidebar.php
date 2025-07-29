@@ -36,27 +36,40 @@ function isSplitMode() {
     return window.innerWidth <= 992;
 }
 
-function openSidebar() {
+function toggleSidebar() {
     if (isSplitMode()) {
-        document.getElementById('sidebar').classList.add('active');
-        document.getElementById('overlay').style.display = 'block';
+        const sidebar = document.getElementById('sidebar');
+        
+        if (sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Enable scroll
+        } else {
+            sidebar.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Disable scroll
+        }
     }
 }
 
 function closeSidebar() {
     if (isSplitMode()) {
-        document.getElementById('sidebar').classList.remove('active');
-        document.getElementById('overlay').style.display = 'none';
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('active');
+        document.body.style.overflow = 'auto';
     }
 }
 
-document.getElementById('overlay').addEventListener('click', closeSidebar);
-
-window.addEventListener('resize', function () {
-    if (!isSplitMode()) {
-        document.getElementById('sidebar').classList.remove('active');
-        document.getElementById('overlay').style.display = 'none';
+// Event listener untuk klik di luar sidebar
+document.addEventListener('click', function(e) {
+    if (isSplitMode()) {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        
+        // Jika klik di luar sidebar dan bukan tombol toggle
+        if (sidebar && sidebar.classList.contains('active') && 
+            !sidebar.contains(e.target) && 
+            !sidebarToggle.contains(e.target)) {
+            closeSidebar();
+        }
     }
 });
-
 </script>
