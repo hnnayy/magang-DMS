@@ -71,7 +71,6 @@ class PengajuanController extends BaseController
     // GET document-submission-list
     public function index()
     {
-        // ✅ PERBAIKAN: Handle baik GET maupun POST request
         $action = $this->request->getGet('action') ?: $this->request->getPost('action');
         
         switch ($action) {
@@ -83,7 +82,7 @@ class PengajuanController extends BaseController
                 return $this->handleGetStatus();
             case 'get-history':
                 return $this->handleGetHistory();
-            case 'get-kode-dokumen': // ✅ TAMBAHAN: Handle AJAX request
+            case 'get-kode-dokumen':
                 return $this->handleGetKodeDokumen();
             default:
                 return $this->showList();
@@ -93,22 +92,63 @@ class PengajuanController extends BaseController
     // POST document-submission-list/store
     public function store()
     {
-        // Logic untuk create dokumen baru
         $jenisId = $this->request->getPost('type');
         $kodeDokumenId = $this->request->getPost('kode_dokumen');
+        $kodeCustom = $this->request->getPost('kode_dokumen_custom');
+        $namaCustom = $this->request->getPost('nama_dokumen_custom');
         $nomor = $this->request->getPost('nomor');
         $revisi = $this->request->getPost('revisi') ?? 'Rev. 0';
         $nama = $this->request->getPost('nama');
         $keterangan = $this->request->getPost('keterangan');
         $file = $this->request->getFile('file_dokumen');
 
-        if (empty($jenisId) || empty($kodeDokumenId) || empty($nomor) || empty($nama)) {
+        if (empty($jenisId) || empty($nomor) || empty($nama)) {
             return redirect()->back()->with('error', 'Semua field wajib harus diisi.');
+        }
+
+        // Handle document code berdasarkan tipe dokumen
+        $finalKodeDokumenId = null;
+        if ($jenisId) {
+            // Check apakah document type menggunakan predefined codes
+            $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+            if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
+                // Use predefined code
+                if ($kodeDokumenId) {
+                    $finalKodeDokumenId = $kodeDokumenId;
+                }
+            } else {
+                // Handle custom code
+                if ($kodeCustom && $namaCustom) {
+                    // Check if custom code already exists
+                    $existingKode = $this->kodeDokumenModel
+                        ->where('document_type_id', $jenisId)
+                        ->where('kode', strtoupper($kodeCustom))
+                        ->where('nama', $namaCustom)
+                        ->first();
+                    
+                    if ($existingKode) {
+                        $finalKodeDokumenId = $existingKode['id'];
+                    } else {
+                        // Create new custom code
+                        $newKodeData = [
+                            'document_type_id' => $jenisId,
+                            'kode' => strtoupper($kodeCustom),
+                            'nama' => $namaCustom,
+                            'status' => 1,
+                            'createddate' => date('Y-m-d H:i:s'),
+                            'createdby' => session('user_id')
+                        ];
+                        
+                        $this->kodeDokumenModel->insert($newKodeData);
+                        $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
+                    }
+                }
+            }
         }
 
         $data = [
             'type' => $jenisId,
-            'kode_dokumen_id' => $kodeDokumenId,
+            'kode_dokumen_id' => $finalKodeDokumenId,
             'number' => $nomor,
             'revision' => $revisi,
             'title' => $nama,
@@ -184,51 +224,80 @@ class PengajuanController extends BaseController
     }
 
     // POST document-submission-list/update
+    // ✅ PERBAIKAN UTAMA: Method update yang sudah diperbaiki
     public function update()
     {
         $documentId = $this->request->getPost('document_id');
 
         if (!$documentId) {
-            return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
+            return redirect()->back()->with('error', 'Document ID not found.');
         }
 
         $jenisId = $this->request->getPost('type');
         $kodeDokumenId = $this->request->getPost('kode_dokumen');
+        $kodeCustom = $this->request->getPost('kode_dokumen_custom');
+        $namaCustom = $this->request->getPost('nama_dokumen_custom');
         $nomor = $this->request->getPost('nomor');
-        $revisi = $this->request->getPost('revisi') ?? 'Rev. 0';
+        $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
         $nama = $this->request->getPost('nama');
         $keterangan = $this->request->getPost('keterangan');
         $file = $this->request->getFile('file_dokumen');
 
-        if (empty($jenisId) || empty($kodeDokumenId) || empty($nomor) || empty($nama)) {
-            return redirect()->back()->with('error', 'Semua field wajib harus diisi.');
-        }
-
-        $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
-        if (!$documentType) {
-            return redirect()->back()->with('error', 'Jenis dokumen tidak valid.');
-        }
-
-        $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
-        if (!$kodeDokumen) {
-            return redirect()->back()->with('error', 'Kode dokumen tidak valid.');
-        }
-
+        // Get original document
         $originalDocument = $this->documentModel->find($documentId);
         if (!$originalDocument) {
-            return redirect()->back()->with('error', 'Dokumen tidak ditemukan di database.');
+            return redirect()->back()->with('error', 'Document not found in database.');
         }
 
         $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
         $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
 
+        // ✅ PERBAIKAN: Handle document code dengan pengecekan tipe dokumen yang benar
+        $finalKodeDokumenId = null;
+        
+        if ($jenisId) {
+            // Check apakah document type menggunakan predefined codes
+            $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+            if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
+                // Use predefined code
+                if ($kodeDokumenId) {
+                    $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
+                    if ($kodeDokumen) {
+                        $finalKodeDokumenId = $kodeDokumenId;
+                    }
+                }
+            } else {
+                // Handle custom code
+                if ($kodeCustom && $namaCustom) {
+                    // Check if custom code already exists for this document type
+                    $existingKode = $this->kodeDokumenModel
+                        ->where('document_type_id', $jenisId)
+                        ->where('kode', strtoupper($kodeCustom))
+                        ->where('nama', $namaCustom)
+                        ->first();
+                    
+                    if ($existingKode) {
+                        $finalKodeDokumenId = $existingKode['id'];
+                    } else {
+                        // Create new custom code
+                        $newKodeData = [
+                            'document_type_id' => $jenisId, // ✅ PERBAIKAN: Gunakan document_type_id bukan type_id
+                            'kode' => strtoupper($kodeCustom),
+                            'nama' => $namaCustom,
+                            'status' => 1,
+                            'createddate' => date('Y-m-d H:i:s'),
+                            'createdby' => session('user_id')
+                        ];
+                        
+                        $this->kodeDokumenModel->insert($newKodeData);
+                        $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
+                    }
+                }
+            }
+        }
+
+        // Prepare document data
         $data = [
-            'type' => $jenisId,
-            'kode_dokumen_id' => $kodeDokumenId,
-            'number' => $nomor,
-            'revision' => $revisi,
-            'title' => $nama,
-            'description' => $keterangan,
             'unit_id' => $unitId,
             'status' => 0,
             'createddate' => date('Y-m-d H:i:s'),
@@ -236,10 +305,19 @@ class PengajuanController extends BaseController
             'original_document_id' => $originalDocumentId,
         ];
 
+        // Add non-empty fields only
+        if ($jenisId) $data['type'] = $jenisId;
+        if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
+        if ($nomor) $data['number'] = $nomor;
+        if ($revisi) $data['revision'] = $revisi;
+        if ($nama) $data['title'] = $nama;
+        if ($keterangan) $data['description'] = $keterangan;
+
         try {
             $this->documentModel->insert($data);
             $newDocumentId = $this->documentModel->getInsertID();
 
+            // Handle file upload
             if ($file && $file->isValid() && !$file->hasMoved()) {
                 $uploadPath = ROOTPATH . '../storage/uploads';
                 if (!is_dir($uploadPath)) {
@@ -255,11 +333,12 @@ class PengajuanController extends BaseController
                     'filename' => $file->getClientName(),
                     'filepath' => 'storage/uploads/' . $newName,
                     'filesize' => $file->getSize(),
-                    'remark' => $keterangan,
+                    'remark' => $keterangan ?: '',
                     'createddate' => date('Y-m-d H:i:s'),
                     'createdby' => session('user_id'),
                 ]);
             } else {
+                // Copy file from original document if no new file uploaded
                 $oldRevision = $this->documentRevisionModel
                     ->where('document_id', $documentId)
                     ->orderBy('id', 'DESC')
@@ -272,22 +351,23 @@ class PengajuanController extends BaseController
                         'filename' => $oldRevision['filename'],
                         'filepath' => $oldRevision['filepath'],
                         'filesize' => $oldRevision['filesize'],
-                        'remark' => $keterangan,
+                        'remark' => $keterangan ?: $oldRevision['remark'],
                         'createddate' => date('Y-m-d H:i:s'),
                         'createdby' => session('user_id'),
                     ]);
                 }
             }
 
+            // Mark original document as superseded
             $this->documentModel->update($documentId, [
                 'status' => 3,
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
 
-            return redirect()->to('document-submission-list')->with('success', 'Dokumen berhasil diperbarui.');
+            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
         } catch (\Exception $e) {
             log_message('error', 'Error updating document: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal memperbarui dokumen: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
         }
     }
 
@@ -380,7 +460,7 @@ class PengajuanController extends BaseController
         }
     }
 
-    // ✅ BARU: Method untuk mendapatkan kode dokumen berdasarkan type_id
+    // Method untuk mendapatkan kode dokumen berdasarkan type_id
     private function getKodeDokumenByType()
     {
         log_message('debug', 'Getting kode dokumen by type...');
@@ -395,7 +475,6 @@ class PengajuanController extends BaseController
 
         $grouped = [];
         foreach ($kodeList as $item) {
-            // ✅ PENTING: Group berdasarkan document_type.id (bukan name)
             $typeId = $item['type_id'];
             $grouped[$typeId][] = [
                 'id' => $item['id'],
@@ -408,7 +487,6 @@ class PengajuanController extends BaseController
         return $grouped;
     }
 
-    // ✅ PERBAIKAN: Method showList dengan tambahan data untuk edit modal
     private function showList()
     {
         $unitParentModel = new \App\Models\UnitParentModel();
@@ -441,7 +519,6 @@ class PengajuanController extends BaseController
             ->orderBy('name', 'ASC')
             ->findAll();
 
-        // ✅ SOLUSI UTAMA: Tambahkan data kode_dokumen_by_type untuk edit modal
         $kode_dokumen_by_type = $this->getKodeDokumenByType();
 
         $data = [
@@ -450,7 +527,7 @@ class PengajuanController extends BaseController
             'kategori_dokumen' => $kategori_dokumen,
             'kode_nama_dokumen' => $kode_nama_dokumen,
             'fakultas_list' => $fakultas_list,
-            'kode_dokumen_by_type' => $kode_dokumen_by_type, // ✅ KUNCI SOLUSI: Data ini yang dibutuhkan edit modal
+            'kode_dokumen_by_type' => $kode_dokumen_by_type,
             'title' => 'Daftar Pengajuan Dokumen'
         ];
 
@@ -577,10 +654,9 @@ class PengajuanController extends BaseController
         ]);
     }
 
-    // ✅ PERBAIKAN UTAMA: Method handleGetKodeDokumen yang sudah diperbaiki
+    // ✅ PERBAIKAN: Method handleGetKodeDokumen yang sudah diperbaiki
     private function handleGetKodeDokumen()
     {
-        // ✅ PENTING: Ambil parameter 'jenis' yang dikirim dari AJAX
         $jenisId = $this->request->getPost('jenis');
         
         log_message('debug', 'handleGetKodeDokumen called with jenisId: ' . $jenisId);
@@ -596,14 +672,13 @@ class PengajuanController extends BaseController
         }
 
         try {
-            // ✅ SOLUSI: Gunakan document_type.id bukan document_type.name
             $kodeList = $this->kodeDokumenModel
                 ->select('kode_dokumen.id, kode_dokumen.kode, kode_dokumen.nama')
                 ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
                 ->where('kode_dokumen.status', 1)
                 ->where('document_type.status', 1)
-                ->where('document_type.id', $jenisId) // ✅ KUNCI: Gunakan ID bukan name
-                ->like('document_type.description', '[predefined]') // ✅ TAMBAHAN: Pastikan hanya predefined
+                ->where('document_type.id', $jenisId)
+                ->like('document_type.description', '[predefined]')
                 ->findAll();
 
             log_message('debug', 'Found kode dokumen count: ' . count($kodeList));
@@ -652,7 +727,7 @@ class PengajuanController extends BaseController
         $userRoleId = session('role_id');
         $allowedRoleIds = [1, 2]; // Sesuaikan dengan ID role admin dan superadmin di database Anda
         
-        // Cek apakses berdasarkan role_id dari session atau ownership dokumen
+        // Cek apkses berdasarkan role_id dari session atau ownership dokumen
         if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki akses ke file ini.');
         }

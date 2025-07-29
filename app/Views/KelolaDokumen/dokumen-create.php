@@ -54,16 +54,34 @@
                     </select>
                 </div>
 
+                <!-- Untuk predefined codes -->
                 <div class="form-group" id="kode-dokumen-group">
                     <label class="form-label" for="kode-dokumen">Kode-Nama Dokumen</label>
                     <select id="kode-dokumen" name="kode_dokumen_id" class="form-input">
                         <option value="">-- Pilih Dokumen --</option>
                     </select>
                 </div>
+            </div>
 
-                <div class="form-group" id="kode-dokumen-custom-group" style="display: none;">
-                    <label class="form-label" for="kode-dokumen-custom">Kode & Nama Dokumen</label>
-                    <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" placeholder="Masukkan kode dan nama dokumen...">
+            <!-- Untuk non-predefined codes - pisah menjadi 2 input terpisah -->
+            <div class="form-row" id="kode-dokumen-custom-group" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="kode-dokumen-custom">Kode Dokumen</label>
+                    <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" 
+                           placeholder="Masukkan kode dokumen..." 
+                           oninput="this.value = this.value.toUpperCase()">
+                    <div class="invalid-feedback">
+                        Kode dokumen wajib diisi.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="nama-dokumen-custom">Nama Dokumen</label>
+                    <input type="text" id="nama-dokumen-custom" name="nama-dokumen-custom" class="form-input" 
+                           placeholder="Masukkan nama dokumen...">
+                    <div class="invalid-feedback">
+                        Nama dokumen wajib diisi.
+                    </div>
                 </div>
             </div>
             
@@ -175,19 +193,37 @@ function handleJenisChange() {
     const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
     const kodeSelect = document.getElementById('kode-dokumen');
     const kodeCustomInput = document.getElementById('kode-dokumen-custom');
+    const namaCustomInput = document.getElementById('nama-dokumen-custom');
 
     if (usePredefined) {
+        // Show predefined dropdown, hide custom inputs
         kodeGroup.style.display = 'block';
         kodeCustomGroup.style.display = 'none';
+        
+        // Set required attributes
         kodeSelect.required = true;
         kodeCustomInput.required = false;
+        namaCustomInput.required = false;
+        
+        // Clear custom inputs
+        kodeCustomInput.value = '';
+        namaCustomInput.value = '';
+        
+        // Load predefined codes
         loadKodeDokumen(jenisId);
     } else {
+        // Hide predefined dropdown, show custom inputs
         kodeGroup.style.display = 'none';
         kodeCustomGroup.style.display = 'block';
+        
+        // Set required attributes
         kodeSelect.required = false;
         kodeCustomInput.required = true;
+        namaCustomInput.required = true;
+        
+        // Clear predefined dropdown
         kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+        kodeSelect.value = '';
     }
 }
 
@@ -233,6 +269,7 @@ function validateFileType(file) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Hide both groups initially
     document.getElementById('kode-dokumen-group').style.display = 'none';
     document.getElementById('kode-dokumen-custom-group').style.display = 'none';
 });

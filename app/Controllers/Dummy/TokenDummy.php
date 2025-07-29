@@ -122,10 +122,12 @@ public function parseToken()
 
         log_message('info', "===[ USER DITEMUKAN ]===\n" . print_r($user, true));
 
-        // Ambil role user aktif
+        // Ambil role user aktif dengan access_level
         $userRole = $this->userRoleModel
-            ->where('user_id', $user['id'])
-            ->where('status', 1)
+            ->select('user_role.*, role.access_level, role.name as role_name')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->where('user_role.user_id', $user['id'])
+            ->where('user_role.status', 1)
             ->first();
 
         if (!$userRole) {
@@ -187,17 +189,22 @@ public function parseToken()
             log_message('info', "    can_approve : {$priv['can_approve']}");
         }
 
+        log_message('info', "===[ ACCESS LEVEL ]===");
+        log_message('info', "Role: {$userRole['role_name']} | Access Level: {$userRole['access_level']}");
+
         log_message('info', "===[ ACCESSIBLE ROUTES ]===");
         foreach ($accessibleRoutes as $route) {
             log_message('info', "- $route");
         }
 
-        // Simpan sesi
+        // Simpan sesi dengan access_level
         session()->set([
             'user_id'          => $user['id'],
             'username'         => $user['username'],
             'fullname'         => $user['fullname'],
             'role_id'          => $userRole['role_id'],
+            'role_name'        => $userRole['role_name'] ?? '-',
+            'access_level'     => $userRole['access_level'] ?? 0,
             'unit_id'          => $user['unit_id'],
             'unit_name'        => $user['unit_name'] ?? '-',
             'unit_parent_id'   => $user['parent_id'] ?? null,
@@ -208,7 +215,7 @@ public function parseToken()
             'accessible_routes'=> $accessibleRoutes,
         ]);
 
-        log_message('info', "===[ SESI DISIMPAN UNTUK USER ]=== {$user['username']}");
+        log_message('info', "===[ SESI DISIMPAN UNTUK USER ]=== {$user['username']} | Access Level: {$userRole['access_level']}");
 
         if ($redirect === 'dashboard') {
             log_message('info', 'Redirecting to /dashboard ...');
@@ -227,6 +234,8 @@ public function parseToken()
             'username'        => $user['username'],
             'fullname'        => $user['fullname'],
             'role_id'         => $userRole['role_id'],
+            'role_name'       => $userRole['role_name'],
+            'access_level'    => $userRole['access_level'],
             'token'           => $token,
             'expiry_time'     => $expiryTime,
             'time_left'       => $timeLeftFormatted,
@@ -244,8 +253,6 @@ public function parseToken()
         ]);
     }
 }
-
-
 
 
     // OPTIONAL: debug method kalau kamu butuh generate token secara manual
