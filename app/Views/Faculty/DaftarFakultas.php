@@ -150,7 +150,9 @@
             title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {

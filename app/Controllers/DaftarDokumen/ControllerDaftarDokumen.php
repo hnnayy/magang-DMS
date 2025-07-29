@@ -48,7 +48,9 @@ class ControllerDaftarDokumen extends BaseController
                 user_creator.fullname AS pemilik,
                 user_document_owner.fullname AS createdby_name,
                 document.status,
-                document.createdby
+                document.createdby,
+                document_revision.filename,
+                document_revision.filepath
             ')
             ->join('document_type dt', 'dt.id = document.type', 'left')
             ->join('unit', 'unit.id = document.unit_id', 'left')
@@ -56,7 +58,7 @@ class ControllerDaftarDokumen extends BaseController
             ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
             ->join('document_approval', 'document_approval.document_id = document.id', 'left')
             ->join('user user_approver', 'user_approver.id = document_approval.approveby', 'left')
-            ->join('document_revision', 'document_revision.document_id = document.id', 'left')
+            ->join('document_revision', 'document_revision.document_id = document.id AND document_revision.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
             ->join('user user_creator', 'user_creator.id = document_revision.createdby', 'left')
             ->join('user user_document_owner', 'user_document_owner.id = document.createdby', 'left')
             ->where('document.status', 1)
@@ -112,14 +114,14 @@ class ControllerDaftarDokumen extends BaseController
         if ($file && $file->isValid() && !$file->hasMoved()) {
             $oldDocument = $this->documentModel->find($id);
             if ($oldDocument && !empty($oldDocument['filepath'])) {
-                $oldFilePath = ROOTPATH . 'public/uploads/' . $oldDocument['filepath'];
+                $oldFilePath = ROOTPATH . 'storage/uploads/' . $oldDocument['filepath'];
                 if (file_exists($oldFilePath)) {
                     unlink($oldFilePath);
                 }
             }
 
             $newName = $file->getRandomName();
-            $file->move(ROOTPATH . 'public/uploads/', $newName);
+            $file->move(ROOTPATH . 'storage/uploads/', $newName);
 
             $revisionData = [
                 'document_id' => $id,
@@ -193,5 +195,55 @@ class ControllerDaftarDokumen extends BaseController
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    public function serveFile()
+    {
+        $userId = session('user_id');
+        if (!$userId) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda harus login untuk mengakses file.');
+        }
+
+        $documentId = $this->request->getGet('id');
+        if (!$documentId) {
+            log_message('error', 'No document ID provided in serveFile request');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID dokumen tidak ditemukan.');
+        }
+
+        $revision = $this->documentModel
+            ->select('document_revision.filepath, document_revision.filename')
+            ->join('document_revision', 'document_revision.document_id = document.id AND document_revision.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
+            ->where('document.id', $documentId)
+            ->first();
+
+        log_message('debug', 'ServeFile data for ID ' . $documentId . ': ' . json_encode($revision));
+
+        if (!$revision || empty($revision['filepath'])) {
+            log_message('error', 'No revision data for document ID: ' . $documentId);
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan.');
+        }
+
+        $filePath = ROOTPATH . 'storage/uploads/' . $revision['filepath'];
+        log_message('debug', 'ServeFile checking path: ' . $filePath . ', Exists: ' . (file_exists($filePath) ? 'true' : 'false'));
+
+        if (!file_exists($filePath)) {
+            log_message('error', 'File not found at: ' . $filePath);
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan di server.');
+        }
+
+        if (!is_readable($filePath)) {
+            log_message('error', 'File not readable at: ' . $filePath);
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak dapat diakses.');
+        }
+
+        $file = new \CodeIgniter\Files\File($filePath);
+        $mimeType = $file->getMimeType() ?: 'application/octet-stream';
+        $action = $this->request->getGet('action') ?? 'view';
+        $disposition = ($action === 'download') ? 'attachment' : 'inline';
+
+        return $this->response
+            ->setHeader('Content-Type', $mimeType)
+            ->setHeader('Content-Disposition', $disposition . '; filename="' . ($revision['filename'] ?? basename($revision['filepath'])) . '"')
+            ->setBody(file_get_contents($filePath));
     }
 }

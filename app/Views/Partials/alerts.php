@@ -29,7 +29,8 @@
             icon: 'success',
             title: 'Success',
             text: '<?= session()->getFlashdata('deleted_message') ?>',
-            confirmButtonText: 'OK'
+            confirmButtonText: 'OK',
         });
     </script>
 <?php endif; ?>
+
