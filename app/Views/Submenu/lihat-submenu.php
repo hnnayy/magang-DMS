@@ -129,12 +129,12 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
 <!-- Modal Edit Submenu -->
 <?php if ($canUpdate): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Submenu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Close button removed -->
             </div>
             <form method="post" id="editUnitForm" action="<?= site_url('create-submenu/update') ?>">
                 <?= csrf_field() ?>
@@ -142,12 +142,19 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     <input type="hidden" name="id" id="editUnitId">
                     <div class="mb-3">
                         <label class="form-label">Menu <span class="text-danger">*</span></label>
-                        <select name="parent" id="editParentName" class="form-select" required>
-                            <option value="">-- Choose Menu --</option>
-                            <?php foreach ($menus as $menu) : ?>
-                                <option value="<?= $menu['id'] ?>"><?= esc($menu['name']) ?></option>
-                            <?php endforeach ?>
-                        </select>
+                        <div class="search-dropdown-container">
+                            <input type="text" 
+                                   id="editParentName-search" 
+                                   class="form-control search-input" 
+                                   placeholder="Search menu..." 
+                                   autocomplete="off"
+                                   required>
+                            <input type="hidden" 
+                                   id="editParentName" 
+                                   name="parent" 
+                                   required>
+                            <div id="editParentName-dropdown" class="search-dropdown-list" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Submenu <span class="text-danger">*</span></label>
@@ -165,7 +172,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -182,6 +189,164 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- JS: Searchable Dropdown Implementation -->
+<script>
+    // Searchable Dropdown Class
+    class SearchableDropdown {
+        constructor(searchInputId, hiddenInputId, dropdownId, data, textKey = 'name', valueKey = 'id') {
+            this.searchInput = document.getElementById(searchInputId);
+            this.hiddenInput = document.getElementById(hiddenInputId);
+            this.dropdown = document.getElementById(dropdownId);
+            this.data = data;
+            this.textKey = textKey;
+            this.valueKey = valueKey;
+            this.filteredData = [...data];
+            this.selectedIndex = -1;
+            
+            this.init();
+        }
+
+        init() {
+            this.searchInput.addEventListener('input', (e) => this.handleInput(e));
+            this.searchInput.addEventListener('focus', () => this.showDropdown());
+            this.searchInput.addEventListener('blur', (e) => this.handleBlur(e));
+            this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-dropdown-container')) {
+                    this.hideDropdown();
+                }
+            });
+        }
+
+        handleInput(e) {
+            const query = e.target.value.toLowerCase();
+            this.filteredData = this.data.filter(item => 
+                item[this.textKey].toLowerCase().includes(query)
+            );
+            this.selectedIndex = -1;
+            this.renderDropdown();
+            this.showDropdown();
+            
+            // Clear hidden input if text doesn't match any option
+            const exactMatch = this.data.find(item => 
+                item[this.textKey].toLowerCase() === query.toLowerCase()
+            );
+            if (!exactMatch) {
+                this.hiddenInput.value = '';
+                this.searchInput.classList.remove('has-selection');
+            }
+        }
+
+        handleBlur(e) {
+            // Delay hiding to allow clicking on dropdown items
+            setTimeout(() => {
+                if (!this.dropdown.contains(document.activeElement)) {
+                    this.hideDropdown();
+                }
+            }, 150);
+        }
+
+        handleKeydown(e) {
+            if (!this.dropdown.style.display || this.dropdown.style.display === 'none') {
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.selectedIndex = Math.min(this.selectedIndex + 1, this.filteredData.length - 1);
+                    this.updateSelection();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                    this.updateSelection();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (this.selectedIndex >= 0) {
+                        this.selectItem(this.filteredData[this.selectedIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    this.hideDropdown();
+                    break;
+            }
+        }
+
+        updateSelection() {
+            const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === this.selectedIndex);
+            });
+        }
+
+        selectItem(item) {
+            this.searchInput.value = item[this.textKey];
+            this.hiddenInput.value = item[this.valueKey];
+            this.searchInput.classList.add('has-selection');
+            this.hideDropdown();
+            
+            // Trigger change event for other dependencies
+            this.hiddenInput.dispatchEvent(new Event('change'));
+        }
+
+        showDropdown() {
+            this.renderDropdown();
+            this.dropdown.style.display = 'block';
+        }
+
+        hideDropdown() {
+            this.dropdown.style.display = 'none';
+            this.selectedIndex = -1;
+        }
+
+        renderDropdown() {
+            this.dropdown.innerHTML = '';
+            
+            if (this.filteredData.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'search-dropdown-item no-results';
+                noResults.textContent = 'No results found';
+                this.dropdown.appendChild(noResults);
+                return;
+            }
+
+            this.filteredData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'search-dropdown-item';
+                div.textContent = item[this.textKey];
+                div.addEventListener('click', () => this.selectItem(item));
+                this.dropdown.appendChild(div);
+            });
+        }
+
+        setValue(value, text) {
+            this.hiddenInput.value = value;
+            this.searchInput.value = text;
+            if (value) {
+                this.searchInput.classList.add('has-selection');
+            }
+        }
+    }
+
+    // Initialize searchable dropdown for edit modal
+    let editMenuDropdown;
+    const menuData = <?= json_encode($menus) ?>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Menu dropdown for edit modal
+        editMenuDropdown = new SearchableDropdown(
+            'editParentName-search', 
+            'editParentName', 
+            'editParentName-dropdown', 
+            menuData
+        );
+    });
+</script>
 
 <script>
     $(document).ready(function () {
@@ -244,8 +409,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         
         // Set nilai ke form fields
         document.getElementById('editUnitId').value = id;
-        document.getElementById('editParentName').value = parentId;
         document.getElementById('editUnitName').value = submenuName;
+
+        // Find menu text by parentId
+        const selectedMenu = menuData.find(menu => menu.id == parentId);
+        if (selectedMenu && editMenuDropdown) {
+            editMenuDropdown.setValue(parentId, selectedMenu.name);
+        }
 
         // Set radio button status
         if (status == 1) {

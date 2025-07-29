@@ -73,12 +73,12 @@
 
 <!-- Modal Edit Unit - Only show if user has update privilege -->
 <?php if ($canUpdate): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Unit</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <!-- Close button removed -->
             </div>
             <form method="post" id="editUnitForm" action="<?= site_url('create-unit/update') ?>">
                 <?= csrf_field() ?>
@@ -86,11 +86,19 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Faculty/Directorate</label>
-                        <select name="parent_id" id="editParentId" class="form-control" required>
-                            <?php foreach ($fakultas as $f) : ?>
-                                <option value="<?= $f['id'] ?>"><?= esc($f['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="search-dropdown-container">
+                            <input type="text" 
+                                   id="editParentId-search" 
+                                   class="form-control search-input" 
+                                   placeholder="Search faculty/directorate..." 
+                                   autocomplete="off"
+                                   required>
+                            <input type="hidden" 
+                                   id="editParentId" 
+                                   name="parent_id" 
+                                   required>
+                            <div id="editParentId-dropdown" class="search-dropdown-list" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Unit</label>
@@ -108,8 +116,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary w-100">Save Changes</button>
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -124,6 +133,164 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- JS: Searchable Dropdown Implementation -->
+<script>
+    // Searchable Dropdown Class
+    class SearchableDropdown {
+        constructor(searchInputId, hiddenInputId, dropdownId, data, textKey = 'name', valueKey = 'id') {
+            this.searchInput = document.getElementById(searchInputId);
+            this.hiddenInput = document.getElementById(hiddenInputId);
+            this.dropdown = document.getElementById(dropdownId);
+            this.data = data;
+            this.textKey = textKey;
+            this.valueKey = valueKey;
+            this.filteredData = [...data];
+            this.selectedIndex = -1;
+            
+            this.init();
+        }
+
+        init() {
+            this.searchInput.addEventListener('input', (e) => this.handleInput(e));
+            this.searchInput.addEventListener('focus', () => this.showDropdown());
+            this.searchInput.addEventListener('blur', (e) => this.handleBlur(e));
+            this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-dropdown-container')) {
+                    this.hideDropdown();
+                }
+            });
+        }
+
+        handleInput(e) {
+            const query = e.target.value.toLowerCase();
+            this.filteredData = this.data.filter(item => 
+                item[this.textKey].toLowerCase().includes(query)
+            );
+            this.selectedIndex = -1;
+            this.renderDropdown();
+            this.showDropdown();
+            
+            // Clear hidden input if text doesn't match any option
+            const exactMatch = this.data.find(item => 
+                item[this.textKey].toLowerCase() === query.toLowerCase()
+            );
+            if (!exactMatch) {
+                this.hiddenInput.value = '';
+                this.searchInput.classList.remove('has-selection');
+            }
+        }
+
+        handleBlur(e) {
+            // Delay hiding to allow clicking on dropdown items
+            setTimeout(() => {
+                if (!this.dropdown.contains(document.activeElement)) {
+                    this.hideDropdown();
+                }
+            }, 150);
+        }
+
+        handleKeydown(e) {
+            if (!this.dropdown.style.display || this.dropdown.style.display === 'none') {
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.selectedIndex = Math.min(this.selectedIndex + 1, this.filteredData.length - 1);
+                    this.updateSelection();
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                    this.updateSelection();
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (this.selectedIndex >= 0) {
+                        this.selectItem(this.filteredData[this.selectedIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    this.hideDropdown();
+                    break;
+            }
+        }
+
+        updateSelection() {
+            const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === this.selectedIndex);
+            });
+        }
+
+        selectItem(item) {
+            this.searchInput.value = item[this.textKey];
+            this.hiddenInput.value = item[this.valueKey];
+            this.searchInput.classList.add('has-selection');
+            this.hideDropdown();
+            
+            // Trigger change event for other dependencies
+            this.hiddenInput.dispatchEvent(new Event('change'));
+        }
+
+        showDropdown() {
+            this.renderDropdown();
+            this.dropdown.style.display = 'block';
+        }
+
+        hideDropdown() {
+            this.dropdown.style.display = 'none';
+            this.selectedIndex = -1;
+        }
+
+        renderDropdown() {
+            this.dropdown.innerHTML = '';
+            
+            if (this.filteredData.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'search-dropdown-item no-results';
+                noResults.textContent = 'No results found';
+                this.dropdown.appendChild(noResults);
+                return;
+            }
+
+            this.filteredData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'search-dropdown-item';
+                div.textContent = item[this.textKey];
+                div.addEventListener('click', () => this.selectItem(item));
+                this.dropdown.appendChild(div);
+            });
+        }
+
+        setValue(value, text) {
+            this.hiddenInput.value = value;
+            this.searchInput.value = text;
+            if (value) {
+                this.searchInput.classList.add('has-selection');
+            }
+        }
+    }
+
+    // Initialize searchable dropdown for edit modal
+    let editFakultasDropdown;
+    const fakultasData = <?= json_encode($fakultas) ?>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Faculty dropdown for edit modal
+        editFakultasDropdown = new SearchableDropdown(
+            'editParentId-search', 
+            'editParentId', 
+            'editParentId-dropdown', 
+            fakultasData
+        );
+    });
+</script>
 
 <?php if (session()->has('swal')) : ?>
 <script>
@@ -180,7 +347,12 @@
     function openEditModal(id, parentId, unitName, status) {
         $('#editUnitId').val(id);
         $('#editUnitName').val(unitName);
-        $('#editParentId').val(parentId);
+
+        // Find faculty text by parentId and set to searchable dropdown
+        const selectedFakultas = fakultasData.find(fakultas => fakultas.id == parentId);
+        if (selectedFakultas && editFakultasDropdown) {
+            editFakultasDropdown.setValue(parentId, selectedFakultas.name);
+        }
 
         // Reset radio, lalu set sesuai value
         $('input[name="status"]').prop('checked', false);

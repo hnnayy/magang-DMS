@@ -151,9 +151,9 @@
           </div>
         </div>
         
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="width: 48%;">Cancel</button>
-          <button type="submit" class="btn btn-primary" style="width: 48%;">Save Changes</button>
+        <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
       </form>
     </div>
