@@ -72,7 +72,7 @@ class ControllerPersetujuan extends BaseController
             ->set('remark', $this->request->getPost('remark'))
             ->update();
 
-        return redirect()->back()->with('success', 'Document successfully updated.');
+        return redirect()->back()->with('updated_message', 'Successfully updated.');
     }
 
     public function delete()
@@ -92,7 +92,7 @@ class ControllerPersetujuan extends BaseController
             ->set('status', 0)
             ->update();
 
-        return redirect()->back()->with('success', 'Document successfully deleted.');
+        return redirect()->back()->with('deleted_message', 'Successfully deleted.');
     }
 
     public function serveFile()
