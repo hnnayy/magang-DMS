@@ -121,12 +121,13 @@ $routes->get('document-submission-list/get-history/(:num)', 'KelolaDokumen\Penga
 $routes->get('document-approval', 'KelolaDokumen\ControllerPersetujuan::index');
 $routes->post('document-approval/update', 'KelolaDokumen\ControllerPersetujuan::update');
 $routes->post('document-approval/delete', 'KelolaDokumen\ControllerPersetujuan::delete');
-
+$routes->get('document-approval/serveFile', 'KelolaDokumen\ControllerPersetujuan::serveFile');
 
 //document-list
 $routes->get('document-list', 'DaftarDokumen\ControllerDaftarDokumen::index');
 $routes->post('document-list/delete', 'DaftarDokumen\ControllerDaftarDokumen::delete');
 $routes->post('document-list/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
+$routes->get('document-list/serveFile', 'DaftarDokumen\ControllerDaftarDokumen::serveFile');
 
 
 
