@@ -21,23 +21,11 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
     'can_delete' => 0,
     'can_approve' => 0
 ];
-
-log_message('info', "Current User Access Level: " . $currentUserAccessLevel);
-log_message('info', "Current User Unit ID: " . $currentUserUnitId);
-log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
 ?>
 
 <div class="container-fluid">
     <div class="px-4 py-3">
         <h4 class="mb-4">Document Submission List</h4>
-
-        <!-- Debug Info (Remove in production) -->
-        <div class="alert alert-info mb-4">
-            <strong>Debug Info:</strong><br>
-            Your Access Level: <?= $currentUserAccessLevel ?> (<?= $currentUserAccessLevel == 1 ? 'High - Can see Level 2 documents in same hierarchy' : 'Low - Can see only own documents' ?>)<br>
-            Your Unit ID: <?= $currentUserUnitId ?><br>
-            Your Unit Parent ID: <?= $currentUserUnitParentId ?>
-        </div>
 
         <!-- Flash message -->
         <?php if (session()->getFlashdata('success')): ?>
@@ -112,7 +100,7 @@ log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
                         <th style="width:12%;">Code & Name</th>
                         <th style="width:10%;">File</th>
                         <th style="width:10%;">Description</th>
-                        <th style="width:8%;">Creator</th>
+                        <th style="width:8%;">Created By</th>
                         <th class="text-center" style="width:8%;">Action</th>
                     </tr>
                 </thead>
@@ -133,7 +121,6 @@ log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
                             if ($documentCreatorId == $currentUserId) {
                                 $canViewDocument = true;
                                 $showCreatorName = true;
-                                log_message('info', "Document {$doc['id']}: Own document - visible");
                             }
                             // Rule 2: Only Level 1 users can see Level 2 documents in same hierarchy
                             elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2) {
@@ -146,30 +133,7 @@ log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
                                 if ($inSameHierarchy) {
                                     $canViewDocument = true;
                                     $showCreatorName = true; // Level 1 users can see Level 2 creator names
-                                    log_message('info', "Document {$doc['id']}: Level 1 can see Level 2 document - visible (Same hierarchy: Yes)");
-                                } else {
-                                    log_message('info', "Document {$doc['id']}: Level 1 cannot see Level 2 document - not visible (Same hierarchy: No)");
                                 }
-                            }
-                            // Rule 3: Level 1 users can also see other Level 1 documents in same hierarchy
-                            elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 1) {
-                                // Check if they are in the same unit or unit parent hierarchy
-                                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
-                                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
-                                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-                                
-                                if ($inSameHierarchy) {
-                                    $canViewDocument = true;
-                                    $showCreatorName = true;
-                                    log_message('info', "Document {$doc['id']}: Level 1 can see other Level 1 document - visible (Same hierarchy: Yes)");
-                                } else {
-                                    log_message('info', "Document {$doc['id']}: Level 1 cannot see other Level 1 document - not visible (Same hierarchy: Nooo)");
-                                }
-                            }
-                            // Rule 4: Level 2 users can ONLY see their own documents (already handled in Rule 1)
-                            else {
-                                log_message('info', "Document {$doc['id']}: Access denied - Creator level: {$documentCreatorAccessLevel}, Current level: {$currentUserAccessLevel}");
                             }
                             
                             // Skip if user cannot view this document
@@ -245,11 +209,6 @@ log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
                                     <?php if ($showCreatorName): ?>
                                         <div class="text-truncate" style="max-width: 100px;" title="<?= esc($doc['creator_name'] ?? '-') ?>">
                                             <?= esc($doc['creator_name'] ?? '-') ?>
-                                            <?php if ($documentCreatorId == $currentUserId): ?>
-                                                <small class="text-primary">(You)</small>
-                                            <?php else: ?>
-                                                <small class="text-muted">(Level <?= $doc['creator_access_level'] ?? 2 ?>)</small>
-                                            <?php endif; ?>
                                         </div>
                                     <?php else: ?>
                                         <span class="text-muted">-</span>
@@ -538,6 +497,7 @@ log_message('info', "Current User Unit Parent ID: " . $currentUserUnitParentId);
         </div>
     </div>
 </div>
+
 <?php endif; ?>
 
 <!-- Scripts -->
