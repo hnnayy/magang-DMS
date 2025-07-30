@@ -44,6 +44,18 @@ class DocumentApproval extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
+            'standar_ids' => [
+                'type'       => 'TEXT',
+                'null'       => false,
+                'default' => '',
+                'comment'    => 'Comma-separated list of standard IDs',
+            ],
+            'klausul_ids' => [
+                'type'       => 'TEXT',
+                'null'       => false,
+                'default' => '',
+                'comment'    => 'Comma-separated list of clause IDs',
+            ],
         ]);
 
         $this->forge->addKey('id', true); 
