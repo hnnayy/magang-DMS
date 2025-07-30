@@ -3,11 +3,9 @@
 
 
 <?php
-// Ambil privilege dari session untuk submenu ini
 $privileges = session()->get('privileges');
-$currentSubmenu = 'create-menu'; // atau sesuai dengan slug submenu menu management Anda
+$currentSubmenu = 'create-menu';
 
-// Set default privileges jika tidak ada
 $canCreate = isset($privileges[$currentSubmenu]['can_create']) ? $privileges[$currentSubmenu]['can_create'] : 0;
 $canUpdate = isset($privileges[$currentSubmenu]['can_update']) ? $privileges[$currentSubmenu]['can_update'] : 0;
 $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$currentSubmenu]['can_delete'] : 0;
@@ -16,13 +14,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Menu List</h4>
-        
     </div>
     <hr>
 
-    <!-- Flash Messages -->
-
-<?= $this->include('partials/alerts') ?>
+    <?= $this->include('partials/alerts') ?>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="menuTable">
@@ -87,50 +82,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     </div>
 </div>
 
-<!-- Modal Add Menu -->
-<?php if ($canCreate): ?>
-<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow border-0">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" id="addMenuForm" action="<?= site_url('create-menu/store') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Menu Name <span class="text-danger">*</span></label>
-                        <input type="text" name="menu_name" id="addMenuName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Icon <span class="text-danger">*</span></label>
-                        <input type="text" name="icon" id="addMenuIcon" class="form-control" required 
-                               placeholder="e.g: home, user, settings">
-                        <small class="form-text text-muted">Only lowercase letters, numbers, spaces, and hyphens (-) allowed</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label d-block">Status <span class="text-danger">*</span></label>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="addStatusActive" value="1" required checked>
-                            <label class="form-check-label" for="addStatusActive">Active</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="addStatusInactive" value="2" required>
-                            <label class="form-check-label" for="addStatusInactive">Inactive</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Menu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
 <!-- Modal Edit Menu -->
 <?php if ($canUpdate): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -138,7 +89,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Menu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" id="editMenuForm" action="<?= site_url('create-menu/update') ?>">
                 <?= csrf_field() ?>
@@ -166,7 +116,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -203,7 +153,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             }
         });
 
-        // Auto hide alerts after 5 seconds
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
@@ -238,7 +187,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         document.getElementById('editStatusInactive').checked = status == 2;
     }
 
-    // Icon validation on input for edit
     document.getElementById('editMenuIcon').addEventListener('input', function(e) {
         const value = e.target.value;
         const regex = /^[a-z0-9\s-]*$/;
@@ -252,7 +200,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         }
     });
 
-    // Client-side validation for duplicate menu names on edit
     const editForm = document.getElementById('editMenuForm');
     editForm.addEventListener('submit', function (e) {
         const inputName = document.getElementById('editMenuName').value.trim().toLowerCase();
@@ -281,7 +228,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php endif; ?>
 
     <?php if ($canCreate): ?>
-    // Icon validation on input for add
     document.getElementById('addMenuIcon').addEventListener('input', function(e) {
         const value = e.target.value;
         const regex = /^[a-z0-9\s-]*$/;
@@ -295,7 +241,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         }
     });
 
-    // Client-side validation for duplicate menu names on add
     const addForm = document.getElementById('addMenuForm');
     addForm.addEventListener('submit', function (e) {
         const inputName = document.getElementById('addMenuName').value.trim().toLowerCase();

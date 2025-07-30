@@ -12,29 +12,26 @@
         <form id="createMenuForm" method="post" action="<?= base_url('create-menu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
-            <!-- Nama Menu -->
             <div class="form-group">
                 <label class="form-label" for="menuName">Menu Name</label>
                 <input type="text" id="menuName" name="menu_name" value="<?= old('menu_name') ?>" 
-                       class="form-input" placeholder="Enter Menu here..." 
+                       class="form-input" placeholder="Enter menu here..." 
                        pattern="^[a-zA-Z0-9\s]{1,50}$" 
                        title="Nama menu hanya boleh berisi huruf, angka, dan spasi, maksimal 50 karakter" 
                        maxlength="50" required>
                 <div class="invalid-feedback">Menu name is mandatory and must be alphanumeric.</div>
             </div>
 
-            <!-- Icon -->
             <div class="form-group">
-                <label class="form-label" for="icon">Icon (example: fa home, fa-home, menu-icon)</label>
+                <label class="form-label" for="icon">Icon (example: fa-home, menu-icon)</label>
                 <input type="text" id="icon" name="icon" value="<?= old('icon') ?>" 
-                       class="form-input" placeholder="Enter Icon here..." 
+                       class="form-input" placeholder="Enter icon here..." 
                        pattern="^[a-z0-9\s\-]{1,40}$" 
                        title="Icon hanya boleh berisi huruf kecil, angka, spasi, dan tanda minus (-), maksimal 40 karakter" 
                        maxlength="40" required>
                 <div class="invalid-feedback">Icons may only contain lowercase letters, numbers, spaces, and minus signs (-).</div>
             </div>
 
-            <!-- Status -->
             <div class="form-group">
                 <label class="form-label d-block">Status</label>
                 <div style="display: flex; gap: 30px;">
@@ -59,7 +56,6 @@
     </div>
 </div>
 
-<!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>

@@ -2,11 +2,9 @@
 <?= $this->section('content') ?>
 
 <?php
-// Ambil privilege dari session untuk submenu ini
 $privileges = session()->get('privileges');
-$currentSubmenu = 'create-role'; // atau sesuai dengan slug submenu role management Anda
+$currentSubmenu = 'create-role'; 
 
-// Set default privileges jika tidak ada
 $canCreate = isset($privileges[$currentSubmenu]['can_create']) ? $privileges[$currentSubmenu]['can_create'] : 0;
 $canUpdate = isset($privileges[$currentSubmenu]['can_update']) ? $privileges[$currentSubmenu]['can_update'] : 0;
 $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$currentSubmenu]['can_delete'] : 0;
@@ -17,7 +15,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <h4>Role List</h4>
     </div>
     <hr>
-
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="roleTable">
@@ -61,7 +58,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         <td class="text-center">
                             <div class="d-flex align-items-center justify-content-center gap-2">
                                 <?php if ($canDelete): ?>
-                                    <!-- Delete Form -->
                                     <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= $role['id'] ?>">
@@ -72,7 +68,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                 <?php endif; ?>
                                 
                                 <?php if ($canUpdate): ?>
-                                    <!-- Edit Button -->
                                     <button 
                                         class="btn btn-link p-0 text-primary" 
                                         data-bs-toggle="modal" 
@@ -96,52 +91,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         </table>
     </div>
 </div>
-
-<!-- Modal Add Role -->
-<?php if ($canCreate): ?>
-<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow border-0">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Role</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="<?= site_url('create-role/store') ?>" id="addRoleForm">
-                <?= csrf_field() ?>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Role Name <span class="text-danger">*</span></label>
-                        <input type="text" name="role_name" id="addRoleName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Level <span class="text-danger">*</span></label>
-                        <select name="role_level" id="addRoleLevel" class="form-select" required>
-                            <option value="">-- Choose Level --</option>
-                            <option value="1">Directorate/Faculty</option>
-                            <option value="2">Unit</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea name="role_description" id="addRoleDescription" class="form-control" rows="3" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="role_status" id="addRoleStatus" class="form-select" required>
-                            <option value="active" selected>Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Role</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 
 <!-- Modal Edit Role -->
 <?php if ($canUpdate): ?>
@@ -182,11 +131,15 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         <textarea name="role_description" id="editRoleDescription" class="form-control" rows="3" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="role_status" id="editRoleStatus" class="form-select" required>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                        <label class="form-label d-block">Status <span class="text-danger">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="role_status" id="statusActive" value="active" required>
+                            <label class="form-check-label" for="statusActive">Active</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="role_status" id="statusInactive" value="inactive">
+                            <label class="form-check-label" for="statusInactive">Inactive</label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -227,7 +180,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             }
         });
 
-        // Auto hide alerts after 5 seconds
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
@@ -257,8 +209,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     function openEditModal(id, roleName, roleLevel, roleDescription, roleStatus) {
         document.getElementById('editRoleId').value = id;
         document.getElementById('editRoleName').value = roleName;
-        
-        // Set radio button based on roleLevel value
+
         if (roleLevel == '1') {
             document.getElementById('editRoleLevel1').checked = true;
         } else if (roleLevel == '2') {
@@ -267,7 +218,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         
         document.getElementById('editRoleDescription').value = roleDescription;
 
-        // Convert status 1/2 to 'active'/'inactive'
         let statusText = '';
         if (roleStatus == 1) {
             statusText = 'active';
@@ -277,13 +227,11 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         document.getElementById('editRoleStatus').value = statusText;
     }
 
-    // Handle edit form submission with loading state
     $('#editRoleForm').on('submit', function() {
         const submitBtn = $(this).find('button[type="submit"]');
         submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
     });
 
-    // Client-side validation for duplicate role names on edit
     const editForm = document.getElementById('editRoleForm');
     if (editForm) {
         editForm.addEventListener('submit', function (e) {
@@ -314,13 +262,11 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php endif; ?>
 
     <?php if ($canCreate): ?>
-    // Handle add form submission with loading state
     $('#addRoleForm').on('submit', function() {
         const submitBtn = $(this).find('button[type="submit"]');
         submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
     });
 
-    // Client-side validation for duplicate role names on add
     const addForm = document.getElementById('addRoleForm');
     if (addForm) {
         addForm.addEventListener('submit', function (e) {

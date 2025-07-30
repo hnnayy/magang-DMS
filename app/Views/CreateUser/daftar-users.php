@@ -11,19 +11,18 @@
         <tr>
           <th>No</th>
           <th>Employee ID</th>
-          <th>Direktorat</th>
-          <th>Unit</th>
+          <th>Faculty/Directorate</th>
+          <th>Division/Unit/Study Program</th>
           <th>Username</th>
           <th>Fullname</th>
           <th>Role</th>
           <?php 
-          // Check if user has any action privileges for this page
           $privileges = session('privileges');
           $canUpdate = isset($privileges['user-list']['can_update']) && $privileges['user-list']['can_update'] == 1;
           $canDelete = isset($privileges['user-list']['can_delete']) && $privileges['user-list']['can_delete'] == 1;
           
           if ($canUpdate || $canDelete): ?>
-            <th class="text-center noExport">Aksi</th>
+            <th class="text-center noExport">Action</th>
           <?php endif; ?>
         </tr>
       </thead>
@@ -69,7 +68,7 @@
   </div>
 </div>
 
-<!-- Modal Edit User - Only show if user has update privilege -->
+<!-- Modal Edit User -->
 <?php if ($canUpdate): ?>
 <div class="modal fade" id="editUserModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -86,9 +85,9 @@
             <input type="text" class="form-control" id="editEmployeeId" readonly>
           </div>
           
-          <!-- Fakultas/Direktorat with Search -->
+          <!-- Fakultas/Direktorat -->
           <div class="mb-3">
-            <label class="form-label" for="editDirectorate">Fakultas/Direktorat</label>
+            <label class="form-label" for="editDirectorate">Faculty/Directorate</label>
             <div class="search-dropdown-container">
               <input type="text" id="editDirectorate-search" class="form-control search-input" 
                      placeholder="Search faculty/directorate..." autocomplete="off">
@@ -99,14 +98,13 @@
                 <?php endforeach; ?>
               </select>
               <div id="editDirectorate-dropdown" class="search-dropdown-list" style="display: none;">
-                <!-- Options will be populated here -->
               </div>
             </div>
           </div>
           
-          <!-- Unit with Search -->
+          <!-- Unit -->
           <div class="mb-3">
-            <label class="form-label" for="editUnit">Unit</label>
+            <label class="form-label" for="editUnit">Division/Unit/Study Program</label>
             <div class="search-dropdown-container">
               <input type="text" id="editUnit-search" class="form-control search-input" 
                      placeholder="Search unit..." autocomplete="off" disabled>
@@ -117,7 +115,6 @@
                 <?php endforeach; ?>
               </select>
               <div id="editUnit-dropdown" class="search-dropdown-list" style="display: none;">
-                <!-- Options will be populated here -->
               </div>
             </div>
           </div>
@@ -132,7 +129,7 @@
             <input type="text" class="form-control" id="editFullname">
           </div>
           
-          <!-- Role with Search -->
+          <!-- Role -->
           <div class="mb-3">
             <label class="form-label" for="editRole">Role</label>
             <div class="search-dropdown-container">
@@ -145,12 +142,10 @@
                 <?php endforeach; ?>
               </select>
               <div id="editRole-dropdown" class="search-dropdown-list" style="display: none;">
-                <!-- Options will be populated here -->
               </div>
             </div>
           </div>
-        </div>
-        
+        </div>   
         <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -176,11 +171,9 @@
 
 <script>
 $(document).ready(function () {
-  // Check privileges from PHP session
   const canUpdate = <?= json_encode($canUpdate) ?>;
   const canDelete = <?= json_encode($canDelete) ?>;
   
-  // Define column definitions based on privileges
   let columnDefs = [{ orderable: false, targets: -1 }];
   if (canUpdate || canDelete) {
     columnDefs.push({ className: 'text-center', targets: -1 });
@@ -190,17 +183,16 @@ $(document).ready(function () {
     dom: '<"row mb-3"<"col-md-6 export-buttons d-flex gap-2"B><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"l><"col-md-6 text-end"p>>',
     pageLength: 5,
     order: [],
-    columnDefs: columnDefs,
+    columnDefs: [
+      { orderable: false, targets: 6 },
+      { className: 'text-center', targets: 6 }
+    ],
     buttons: [
       {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { 
-          columns: function(idx, data, node) {
-            return $(node).hasClass('noExport') ? false : true;
-          }
-        }
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
       },
       {
         extend: 'pdfHtml5',
@@ -208,12 +200,8 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { 
-          columns: function(idx, data, node) {
-            return $(node).hasClass('noExport') ? false : true;
-          }
-        },
-        orientation: 'landscape',
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+        orientation: 'portrait', 
         pageSize: 'A4',
         customize: function (doc) {
           const now = new Date();
@@ -222,7 +210,7 @@ $(document).ready(function () {
             hour: '2-digit', minute: '2-digit'
           });
 
-          if (doc.content[0] && doc.content[0].text === 'Data Users') {
+          if (doc.content[0].text === 'Data Users') {
             doc.content.splice(0, 1);
           }
 
@@ -231,7 +219,7 @@ $(document).ready(function () {
             alignment: 'center',
             bold: true,
             fontSize: 16,
-            margin: [0, 0, 0, 15]
+            margin: [0, 0, 0, 10]
           });
 
           doc.styles.tableHeader = {
@@ -239,66 +227,63 @@ $(document).ready(function () {
             color: '#000',
             alignment: 'center',
             bold: true,
-            fontSize: 10
+            fontSize: 9
           };
 
-          doc.defaultStyle.fontSize = 9;
-          doc.styles.tableBody = { alignment: 'center', fontSize: 9 };
+          doc.styles.tableBodyEven = { fillColor: '#ffffff' };
+          doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
+
+          doc.defaultStyle.fontSize = 8;
+          doc.styles.tableBody = { alignment: 'left', fontSize: 8 };
 
           doc.footer = function (currentPage, pageCount) {
             return {
               columns: [
-                { text: 'Dicetak: ' + waktuCetak, alignment: 'left', margin: [40, 0] },
+                { text: waktuCetak, alignment: 'left', margin: [30, 0] },
                 { text: '© 2025 Telkom University – Document Management System', alignment: 'center' },
-                { text: 'Halaman ' + currentPage.toString() + ' dari ' + pageCount, alignment: 'right', margin: [0, 0, 40, 0] }
+                { text: currentPage.toString() + '/' + pageCount, alignment: 'right', margin: [0, 0, 30, 0] }
               ],
-              fontSize: 8,
-              margin: [0, 10, 0, 0]
+              fontSize: 9
             };
           };
 
-          doc.pageMargins = [40, 60, 40, 60];
+          doc.pageMargins = [40, 40, 40, 40];
 
           if (doc.content[1] && doc.content[1].table) {
-            const hasActionColumn = canUpdate || canDelete;
-            doc.content[1].table.widths = hasActionColumn 
-              ? ['8%', '15%', '20%', '20%', '15%', '15%', '7%']
-              : ['10%', '18%', '24%', '24%', '18%', '6%'];
+            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%'];
             doc.content[1].margin = [0, 0, 0, 0];
-            doc.content[1].layout = {
-              hLineWidth: () => 0.5,
-              vLineWidth: () => 0.5,
-              hLineColor: () => '#000000',
-              vLineColor: () => '#000000',
-              paddingLeft: () => 5,
-              paddingRight: () => 5,
-              paddingTop: () => 3,
-              paddingBottom: () => 3
-            };
           }
 
+          doc.content[doc.content.length - 1].layout = {
+            hLineWidth: function () { return 0.5; },
+            vLineWidth: function () { return 0.5; },
+            hLineColor: function () { return '#000000'; },
+            vLineColor: function () { return '#000000'; },
+            paddingLeft: function () { return 3; },
+            paddingRight: function () { return 3; },
+            paddingTop: function () { return 2; },
+            paddingBottom: function () { return 2; }
+          };
+
           doc.content.push({
-            text: '* This document contains a list of active users in the system.',
+            text: '* This document contains a list of active users in the system',
             alignment: 'left',
             italics: true,
             fontSize: 8,
-            margin: [0, 15, 0, 0]
+            margin: [0, 12, 0, 0]
           });
         }
       }
     ]
   });
 
-  // Edit User Modal Setup - Only if user has update privilege
   if (canUpdate) {
-    // Initialize searchable dropdowns for modal
     const unitParentsData = <?= json_encode($unitParents) ?>;
     const unitsData = <?= json_encode($units) ?>;
     const rolesData = <?= json_encode($roles) ?>;
     
     let currentModalUnitData = [];
     
-    // Generic function to populate dropdown
     function populateModalDropdown(dropdown, data, nameField = 'name') {
       dropdown.empty();
       
@@ -312,12 +297,10 @@ $(document).ready(function () {
       }
     }
 
-    // Initialize dropdowns
     populateModalDropdown($('#editDirectorate-dropdown'), unitParentsData);
     populateModalDropdown($('#editRole-dropdown'), rolesData);
     populateModalDropdown($('#editUnit-dropdown'), []);
 
-    // Handle Directorate search
     $('#editDirectorate-search').on('input', function() {
       const searchTerm = $(this).val().toLowerCase();
       const filteredData = unitParentsData.filter(item => 
@@ -330,7 +313,6 @@ $(document).ready(function () {
       }
     });
 
-    // Handle Unit search
     $('#editUnit-search').on('input', function() {
       const searchTerm = $(this).val().toLowerCase();
       const filteredData = currentModalUnitData.filter(item => 
@@ -343,7 +325,6 @@ $(document).ready(function () {
       }
     });
 
-    // Handle Role search
     $('#editRole-search').on('input', function() {
       const searchTerm = $(this).val().toLowerCase();
       const filteredData = rolesData.filter(item => 
@@ -356,7 +337,6 @@ $(document).ready(function () {
       }
     });
 
-    // Handle focus events
     $('#editDirectorate-search').on('focus', function() {
       $('#editDirectorate-dropdown').show();
     });
@@ -371,14 +351,12 @@ $(document).ready(function () {
       $('#editRole-dropdown').show();
     });
 
-    // Handle click outside to close dropdowns
     $(document).on('click', function(e) {
       if (!$(e.target).closest('.search-dropdown-container').length) {
         $('.search-dropdown-list').hide();
       }
     });
 
-    // Handle Directorate selection
     $('#editDirectorate-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
       const selectedId = $(this).data('id');
       const selectedText = $(this).text();
@@ -387,13 +365,11 @@ $(document).ready(function () {
       $('#editDirectorate').val(selectedId);
       $('#editDirectorate-dropdown').hide();
       
-      // Clear unit selection and update options
       $('#editUnit-search').val('').removeClass('has-selection');
       $('#editUnit').val('');
       updateModalUnitOptions(selectedId);
     });
 
-    // Handle Unit selection
     $('#editUnit-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
       const selectedId = $(this).data('id');
       const selectedText = $(this).text();
@@ -403,7 +379,6 @@ $(document).ready(function () {
       $('#editUnit-dropdown').hide();
     });
 
-    // Handle Role selection
     $('#editRole-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
       const selectedId = $(this).data('id');
       const selectedText = $(this).text();
@@ -413,7 +388,6 @@ $(document).ready(function () {
       $('#editRole-dropdown').hide();
     });
 
-    // Function to update unit options based on selected directorate
     function updateModalUnitOptions(selectedParentId) {
       if (selectedParentId) {
         currentModalUnitData = unitsData.filter(unit => unit.parent_id == selectedParentId);
@@ -426,7 +400,6 @@ $(document).ready(function () {
       }
     }
 
-    // Edit User Click Handler
     $(document).on('click', '.edit-user', function () {
       const userId = $(this).data('id');
       const employeeId = $(this).data('employee');
@@ -435,20 +408,17 @@ $(document).ready(function () {
       const unitId = $(this).data('unit');
       const roleName = $(this).data('role');
 
-      // Set basic values
       $('#editUserId').val(userId);
       $('#editEmployeeId').val(employeeId);
       $('#editUsername').val($(this).data('username'));
       $('#editFullname').val(fullname);
 
-      // Set directorate
       const selectedDirectorate = unitParentsData.find(item => item.id == parentId);
       if (selectedDirectorate) {
         $('#editDirectorate-search').val(selectedDirectorate.name).addClass('has-selection');
         $('#editDirectorate').val(parentId);
         updateModalUnitOptions(parentId);
         
-        // Set unit after updating options
         setTimeout(() => {
           const selectedUnit = currentModalUnitData.find(item => item.id == unitId);
           if (selectedUnit) {
@@ -458,7 +428,6 @@ $(document).ready(function () {
         }, 100);
       }
 
-      // Set role
       const selectedRole = rolesData.find(item => item.name === roleName);
       if (selectedRole) {
         $('#editRole-search').val(selectedRole.name).addClass('has-selection');
@@ -466,7 +435,6 @@ $(document).ready(function () {
       }
     });
 
-    // Handle Edit Form Submission
     $('#editUserForm').submit(function (e) {
       e.preventDefault();
 
@@ -506,7 +474,6 @@ $(document).ready(function () {
     });
   }
 
-  // Handle Delete User - Only if user has delete privilege
   if (canDelete) {
     $(document).on('click', '.delete-user', function (e) {
       e.preventDefault();

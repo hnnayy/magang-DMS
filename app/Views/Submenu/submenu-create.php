@@ -10,7 +10,6 @@
         <form id="createSubmenuForm" method="post" action="<?= base_url('create-submenu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
-            <!-- Searchable Dropdown Menu -->
             <div class="form-group">
                 <label class="form-label" for="menu_search">Menu</label>
                 <div class="search-dropdown-container">
@@ -33,9 +32,8 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Submenu -->
             <div class="form-group <?php echo isset($validation) && isset($validation['submenu']) ? 'has-error' : ''; ?>">
-                <label for="editUnitName" class="form-label">Sub Menu</label>
+                <label for="editUnitName" class="form-label">Submenu</label>
                 <input type="text" name="submenu" id="editUnitName" class="form-input <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
                        placeholder="Enter Submenu here... "
                        value="<?php echo old('submenu'); ?>"
@@ -50,7 +48,6 @@
                 <?php endif; ?>
             </div>
 
-            <!-- Status -->
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
@@ -76,7 +73,6 @@
 </div>
 
 <script>
-// Menu data from PHP
 const menuData = [
     <?php foreach ($menus as $menu): ?>
     {
@@ -86,7 +82,6 @@ const menuData = [
     <?php endforeach; ?>
 ];
 
-// Enhanced Searchable Dropdown Class
 class SearchableMenuDropdown {
     constructor() {
         this.searchInput = document.getElementById('menu_search');
@@ -99,7 +94,6 @@ class SearchableMenuDropdown {
     }
 
     init() {
-        // Set initial value if there's an old value
         const oldValue = "<?= old('parent') ?>";
         if (oldValue) {
             const selectedMenu = menuData.find(menu => menu.id == oldValue);
@@ -110,7 +104,6 @@ class SearchableMenuDropdown {
             }
         }
 
-        // Event listeners
         this.searchInput.addEventListener('input', (e) => this.handleInput(e));
         this.searchInput.addEventListener('focus', () => this.handleFocus());
         this.searchInput.addEventListener('click', () => this.handleClick());
@@ -119,7 +112,6 @@ class SearchableMenuDropdown {
         
         this.dropdown.addEventListener('click', (e) => this.handleDropdownClick(e));
         
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => this.handleOutsideClick(e));
     }
 
@@ -133,8 +125,7 @@ class SearchableMenuDropdown {
             this.showValidationError();
             return;
         }
-        
-        // Check if current value matches exactly with a menu
+
         const exactMatch = menuData.find(menu => menu.name === value);
         if (!exactMatch) {
             this.hiddenInput.value = '';
@@ -194,11 +185,9 @@ class SearchableMenuDropdown {
     }
 
     handleBlur() {
-        // Delay hiding to allow clicking on dropdown items
         setTimeout(() => {
             if (!this.dropdown.contains(document.activeElement)) {
                 this.dropdown.style.display = 'none';
-                // Show validation error if no valid selection
                 if (!this.hiddenInput.value && this.searchInput.value) {
                     this.showValidationError();
                 }
@@ -280,18 +269,13 @@ class SearchableMenuDropdown {
     }
 }
 
-// Initialize dropdown and form validation
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize searchable dropdown
     const menuDropdown = new SearchableMenuDropdown();
-    
-    // Form validation
     const form = document.getElementById('createSubmenuForm');
     
     form.addEventListener('submit', function(e) {
         let isValid = form.checkValidity();
-        
-        // Custom validation for menu dropdown
+
         const menuId = document.getElementById('selected_menu_id').value;
         if (!menuId) {
             isValid = false;
@@ -299,8 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             menuDropdown.hideValidationError();
         }
-        
-        // Custom validation for submenu (at least two words)
+
         const submenuInput = document.getElementById('editUnitName');
         const submenuValue = submenuInput.value.trim();
         const words = submenuValue.split(/\s+/).filter(word => word.length > 0);
@@ -311,8 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             submenuInput.setCustomValidity('');
         }
-        
-        // Custom validation for status
+
         const statusInputs = form.querySelectorAll('input[name="status"]');
         const statusGroup = document.getElementById('status-group');
         const isStatusChecked = Array.from(statusInputs).some(input => input.checked);
@@ -337,8 +319,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         form.classList.add('was-validated');
     });
-    
-    // Real-time validation for submenu
+
     document.getElementById('editUnitName').addEventListener('input', function() {
         const value = this.value.trim();
         const words = value.split(/\s+/).filter(word => word.length > 0);
