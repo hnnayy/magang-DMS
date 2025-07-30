@@ -76,53 +76,84 @@
     <div class="modal-content shadow">
       <div class="modal-header">
         <h5 class="modal-title">Edit User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form id="editUserForm">
         <div class="modal-body">
           <input type="hidden" id="editUserId"> <!-- Hidden field untuk user ID -->
+          
           <div class="mb-3">
-            <label for="editEmployeeId">Employee ID</label>
+            <label for="editEmployeeId" class="form-label">Employee ID</label>
             <input type="text" class="form-control" id="editEmployeeId" readonly>
           </div>
+          
+          <!-- Fakultas/Direktorat with Search -->
           <div class="mb-3">
-            <label for="editDirectorate">Fakultas/Direktorat</label>
-            <select class="form-select" id="editDirectorate" name="fakultas" required>
-              <option value="">Choose Fakulty/Direktorate</option>
-              <?php foreach ($unitParents as $parent): ?>
-                <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
+            <label class="form-label" for="editDirectorate">Fakultas/Direktorat</label>
+            <div class="search-dropdown-container">
+              <input type="text" id="editDirectorate-search" class="form-control search-input" 
+                     placeholder="Search faculty/directorate..." autocomplete="off">
+              <select class="form-select" id="editDirectorate" name="fakultas" required style="display: none;">
+                <option value="">Choose Fakulty/Direktorate</option>
+                <?php foreach ($unitParents as $parent): ?>
+                  <option value="<?= $parent['id'] ?>"><?= esc($parent['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <div id="editDirectorate-dropdown" class="search-dropdown-list" style="display: none;">
+                <!-- Options will be populated here -->
+              </div>
+            </div>
           </div>
-         <div class="mb-3">
-          <label for="editUnit">Unit</label>
-          <select class="form-select" id="editUnit" name="unit" required>
-            <option value="">Choose Unit</option>
-            <?php foreach ($units as $unit): ?>
-              <option value="<?= $unit['id'] ?>" data-parent="<?= $unit['parent_id'] ?>"><?= esc($unit['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
+          
+          <!-- Unit with Search -->
           <div class="mb-3">
-            <label for="editUsername">Username</label>
+            <label class="form-label" for="editUnit">Unit</label>
+            <div class="search-dropdown-container">
+              <input type="text" id="editUnit-search" class="form-control search-input" 
+                     placeholder="Search unit..." autocomplete="off" disabled>
+              <select class="form-select" id="editUnit" name="unit" required style="display: none;">
+                <option value="">Choose Unit</option>
+                <?php foreach ($units as $unit): ?>
+                  <option value="<?= $unit['id'] ?>" data-parent="<?= $unit['parent_id'] ?>"><?= esc($unit['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <div id="editUnit-dropdown" class="search-dropdown-list" style="display: none;">
+                <!-- Options will be populated here -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="editUsername" class="form-label">Username</label>
             <input type="text" class="form-control" id="editUsername">
           </div>
+          
           <div class="mb-3">
-            <label for="editFullname">Fullname</label>
+            <label for="editFullname" class="form-label">Fullname</label>
             <input type="text" class="form-control" id="editFullname">
           </div>
+          
+          <!-- Role with Search -->
           <div class="mb-3">
-            <label for="editRole">Role</label>
-            <select class="form-select" id="editRole" name="role" required>
-              <option value="">Choose Role</option>
-              <?php foreach ($roles as $role): ?>
-                <option value="<?= esc($role['name']) ?>"><?= esc($role['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
+            <label class="form-label" for="editRole">Role</label>
+            <div class="search-dropdown-container">
+              <input type="text" id="editRole-search" class="form-control search-input" 
+                     placeholder="Search role..." autocomplete="off">
+              <select class="form-select" id="editRole" name="role" required style="display: none;">
+                <option value="">Choose Role</option>
+                <?php foreach ($roles as $role): ?>
+                  <option value="<?= esc($role['name']) ?>"><?= esc($role['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <div id="editRole-dropdown" class="search-dropdown-list" style="display: none;">
+                <!-- Options will be populated here -->
+              </div>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary w-100">Save Changes</button>
+        
+        <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
       </form>
     </div>
@@ -260,6 +291,142 @@ $(document).ready(function () {
 
   // Edit User Modal Setup - Only if user has update privilege
   if (canUpdate) {
+    // Initialize searchable dropdowns for modal
+    const unitParentsData = <?= json_encode($unitParents) ?>;
+    const unitsData = <?= json_encode($units) ?>;
+    const rolesData = <?= json_encode($roles) ?>;
+    
+    let currentModalUnitData = [];
+    
+    // Generic function to populate dropdown
+    function populateModalDropdown(dropdown, data, nameField = 'name') {
+      dropdown.empty();
+      
+      if (data.length === 0) {
+        dropdown.append('<div class="search-dropdown-item no-results">No results found</div>');
+      } else {
+        data.forEach(item => {
+          const div = $('<div class="search-dropdown-item" data-id="' + item.id + '">' + item[nameField] + '</div>');
+          dropdown.append(div);
+        });
+      }
+    }
+
+    // Initialize dropdowns
+    populateModalDropdown($('#editDirectorate-dropdown'), unitParentsData);
+    populateModalDropdown($('#editRole-dropdown'), rolesData);
+    populateModalDropdown($('#editUnit-dropdown'), []);
+
+    // Handle Directorate search
+    $('#editDirectorate-search').on('input', function() {
+      const searchTerm = $(this).val().toLowerCase();
+      const filteredData = unitParentsData.filter(item => 
+        item.name.toLowerCase().includes(searchTerm)
+      );
+      populateModalDropdown($('#editDirectorate-dropdown'), filteredData);
+      
+      if (searchTerm && !$('#editDirectorate-dropdown').is(':visible')) {
+        $('#editDirectorate-dropdown').show();
+      }
+    });
+
+    // Handle Unit search
+    $('#editUnit-search').on('input', function() {
+      const searchTerm = $(this).val().toLowerCase();
+      const filteredData = currentModalUnitData.filter(item => 
+        item.name.toLowerCase().includes(searchTerm)
+      );
+      populateModalDropdown($('#editUnit-dropdown'), filteredData);
+      
+      if (searchTerm && !$('#editUnit-dropdown').is(':visible')) {
+        $('#editUnit-dropdown').show();
+      }
+    });
+
+    // Handle Role search
+    $('#editRole-search').on('input', function() {
+      const searchTerm = $(this).val().toLowerCase();
+      const filteredData = rolesData.filter(item => 
+        item.name.toLowerCase().includes(searchTerm)
+      );
+      populateModalDropdown($('#editRole-dropdown'), filteredData);
+      
+      if (searchTerm && !$('#editRole-dropdown').is(':visible')) {
+        $('#editRole-dropdown').show();
+      }
+    });
+
+    // Handle focus events
+    $('#editDirectorate-search').on('focus', function() {
+      $('#editDirectorate-dropdown').show();
+    });
+
+    $('#editUnit-search').on('focus', function() {
+      if (currentModalUnitData.length > 0) {
+        $('#editUnit-dropdown').show();
+      }
+    });
+
+    $('#editRole-search').on('focus', function() {
+      $('#editRole-dropdown').show();
+    });
+
+    // Handle click outside to close dropdowns
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('.search-dropdown-container').length) {
+        $('.search-dropdown-list').hide();
+      }
+    });
+
+    // Handle Directorate selection
+    $('#editDirectorate-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
+      const selectedId = $(this).data('id');
+      const selectedText = $(this).text();
+      
+      $('#editDirectorate-search').val(selectedText).addClass('has-selection');
+      $('#editDirectorate').val(selectedId);
+      $('#editDirectorate-dropdown').hide();
+      
+      // Clear unit selection and update options
+      $('#editUnit-search').val('').removeClass('has-selection');
+      $('#editUnit').val('');
+      updateModalUnitOptions(selectedId);
+    });
+
+    // Handle Unit selection
+    $('#editUnit-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
+      const selectedId = $(this).data('id');
+      const selectedText = $(this).text();
+      
+      $('#editUnit-search').val(selectedText).addClass('has-selection');
+      $('#editUnit').val(selectedId);
+      $('#editUnit-dropdown').hide();
+    });
+
+    // Handle Role selection
+    $('#editRole-dropdown').on('click', '.search-dropdown-item:not(.no-results)', function() {
+      const selectedId = $(this).data('id');
+      const selectedText = $(this).text();
+      
+      $('#editRole-search').val(selectedText).addClass('has-selection');
+      $('#editRole').val(selectedText);
+      $('#editRole-dropdown').hide();
+    });
+
+    // Function to update unit options based on selected directorate
+    function updateModalUnitOptions(selectedParentId) {
+      if (selectedParentId) {
+        currentModalUnitData = unitsData.filter(unit => unit.parent_id == selectedParentId);
+        populateModalDropdown($('#editUnit-dropdown'), currentModalUnitData);
+        $('#editUnit-search').prop('disabled', false).attr('placeholder', 'Search unit...');
+      } else {
+        currentModalUnitData = [];
+        populateModalDropdown($('#editUnit-dropdown'), []);
+        $('#editUnit-search').prop('disabled', true).attr('placeholder', 'Select directorate first...');
+      }
+    }
+
+    // Edit User Click Handler
     $(document).on('click', '.edit-user', function () {
       const userId = $(this).data('id');
       const employeeId = $(this).data('employee');
@@ -268,25 +435,35 @@ $(document).ready(function () {
       const unitId = $(this).data('unit');
       const roleName = $(this).data('role');
 
-      // Set values in modal
+      // Set basic values
       $('#editUserId').val(userId);
       $('#editEmployeeId').val(employeeId);
       $('#editUsername').val($(this).data('username'));
       $('#editFullname').val(fullname);
-      $('#editDirectorate').val(parentId).trigger('change');
 
-      // Filter units based on selected directorate
-      $('#editUnit option').each(function () {
-        const optionParent = $(this).data('parent');
-        if (optionParent == parentId || $(this).val() === '') {
-          $(this).show();
-        } else {
-          $(this).hide();
-        }
-      });
+      // Set directorate
+      const selectedDirectorate = unitParentsData.find(item => item.id == parentId);
+      if (selectedDirectorate) {
+        $('#editDirectorate-search').val(selectedDirectorate.name).addClass('has-selection');
+        $('#editDirectorate').val(parentId);
+        updateModalUnitOptions(parentId);
+        
+        // Set unit after updating options
+        setTimeout(() => {
+          const selectedUnit = currentModalUnitData.find(item => item.id == unitId);
+          if (selectedUnit) {
+            $('#editUnit-search').val(selectedUnit.name).addClass('has-selection');
+            $('#editUnit').val(unitId);
+          }
+        }, 100);
+      }
 
-      $('#editUnit').val(unitId);
-      $('#editRole').val(roleName);
+      // Set role
+      const selectedRole = rolesData.find(item => item.name === roleName);
+      if (selectedRole) {
+        $('#editRole-search').val(selectedRole.name).addClass('has-selection');
+        $('#editRole').val(roleName);
+      }
     });
 
     // Handle Edit Form Submission
@@ -324,20 +501,6 @@ $(document).ready(function () {
         error: function (xhr) {
           const err = xhr.responseJSON?.error || 'Error occurred during the update..';
           Swal.fire('Failed', err, 'error');
-        }
-      });
-    });
-
-    // Handle Directorate Change
-    $('#editDirectorate').on('change', function () {
-      const selectedParentId = $(this).val();
-      $('#editUnit').val('');
-      $('#editUnit option').each(function () {
-        const optionParent = $(this).data('parent');
-        if (optionParent == selectedParentId || $(this).val() === '') {
-          $(this).show();
-        } else {
-          $(this).hide();
         }
       });
     });

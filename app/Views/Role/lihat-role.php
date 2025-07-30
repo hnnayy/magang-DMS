@@ -162,11 +162,20 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Level <span class="text-danger">*</span></label>
-                        <select name="role_level" id="editRoleLevel" class="form-select" required>
-                            <option value="">-- Choose Level --</option>
-                            <option value="1">Directorate/Faculty</option>
-                            <option value="2">Unit</option>
-                        </select>
+                        <div class="mt-2 d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role_level" id="editRoleLevel1" value="1" required>
+                                <label class="form-check-label" for="editRoleLevel1">
+                                    Directorate/Faculty
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="role_level" id="editRoleLevel2" value="2" required>
+                                <label class="form-check-label" for="editRoleLevel2">
+                                    Unit
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description <span class="text-danger">*</span></label>
@@ -248,7 +257,14 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     function openEditModal(id, roleName, roleLevel, roleDescription, roleStatus) {
         document.getElementById('editRoleId').value = id;
         document.getElementById('editRoleName').value = roleName;
-        document.getElementById('editRoleLevel').value = roleLevel;
+        
+        // Set radio button based on roleLevel value
+        if (roleLevel == '1') {
+            document.getElementById('editRoleLevel1').checked = true;
+        } else if (roleLevel == '2') {
+            document.getElementById('editRoleLevel2').checked = true;
+        }
+        
         document.getElementById('editRoleDescription').value = roleDescription;
 
         // Convert status 1/2 to 'active'/'inactive'

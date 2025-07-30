@@ -23,8 +23,6 @@
     </script>
     <?php endif; ?>
 
-
-
     <?php if (session()->getFlashdata('error')): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -38,9 +36,6 @@
         });
     </script>
     <?php endif; ?>
-
-
-    
 
     <!-- Tabel Jenis Dokumen -->
     <div class="table-responsive shadow-sm rounded bg-white p-3 mb-4">
@@ -150,38 +145,37 @@
 
 <!-- Modal Add Kategori -->
 <div class="modal fade" id="addKategoriModal" tabindex="-1" aria-labelledby="addKategoriModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?= base_url('admin/dokumen/add-kategori') ?>" method="POST">
+            <form id="addKategoriForm" action="<?= base_url('admin/dokumen/add-kategori') ?>" method="POST" class="needs-validation" novalidate>
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="addKategoriModalLabel">Add Document Type</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Type Name</label>
-<input type="text" class="form-control" name="nama" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
-
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Code</label>
-                            <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="usePredefined">
-                                <label class="form-check-label" for="usePredefined">
-                                   Use Predefined Code
-                                </label>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type Name</label>
+                        <input type="text" class="form-control" name="nama" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter type name.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter code.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="usePredefined">
+                            <label class="form-check-label" for="usePredefined">
+                               Use Predefined Code
+                            </label>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -190,36 +184,35 @@
 
 <!-- Modal Edit Kategori -->
 <div class="modal fade" id="editKategoriModal" tabindex="-1" aria-labelledby="editKategoriModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?= base_url('admin/dokumen/edit-kategori') ?>" method="POST">
+            <form id="editKategoriForm" action="<?= base_url('admin/dokumen/edit-kategori') ?>" method="POST" class="needs-validation" novalidate>
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="editKategoriId">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editKategoriModalLabel">Edit Document Type</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Type Name</label>
-                            <input type="text" class="form-control" id="editKategoriNama" name="nama" ... >
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Code</label>
-                           <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
-                        </div>
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="editUsePredefined">
-                                <label class="form-check-label" for="editUsePredefined">
-                                    Use Predefined Code
-                                </label>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type Name</label>
+                        <input type="text" class="form-control" id="editKategoriNama" name="nama" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter type name.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control" name="kode" id="editKategoriKode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter code.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="use_predefined_codes" value="1" id="editUsePredefined">
+                            <label class="form-check-label" for="editUsePredefined">
+                                Use Predefined Code
+                            </label>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -230,40 +223,38 @@
 
 <!-- Modal Add Kode -->
 <div class="modal fade" id="addKodeModal" tabindex="-1" aria-labelledby="addKodeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?= base_url('admin/dokumen/add-kode') ?>" method="POST">
+            <form id="addKodeForm" action="<?= base_url('admin/dokumen/add-kode') ?>" method="POST" class="needs-validation" novalidate>
                 <?= csrf_field() ?>
                 <div class="modal-header">
                     <h5 class="modal-title" id="addKodeModalLabel">Add Document Code</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Document Type</label>
-                            <select class="form-select" name="jenis" required>
-                                <option value="">Select Document Type</option>
-                                <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Code</label>
-                            <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" required>
-
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Document Name</label>
-                            <input type="text" class="form-control" name="nama" required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <select class="form-select" name="jenis" required>
+                            <option value="">Select Document Type</option>
+                            <?php foreach ($kategori_dokumen as $kategori): ?>
+                                <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="invalid-feedback">Please select document type.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control" name="kode" style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter code.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Name</label>
+                        <input type="text" class="form-control" name="nama" required>
+                        <div class="invalid-feedback">Please enter document name.</div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -272,34 +263,32 @@
 
 <!-- Modal Edit Kode -->
 <div class="modal fade" id="editKodeModal" tabindex="-1" aria-labelledby="editKodeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form action="<?= base_url('admin/dokumen/edit-kode') ?>" method="POST">
+            <form id="editKodeForm" action="<?= base_url('admin/dokumen/edit-kode') ?>" method="POST" class="needs-validation" novalidate>
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="editKodeId">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editKodeModalLabel">Edit Document Code</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                       <div class="col-md-4">
-    <label class="form-label">Document Type</label>
-    <input type="text" class="form-control" id="editKodeJenisNama" readonly>
-    <input type="hidden" name="jenis" id="editKodeJenisValue">
-</div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Code</label>
-                                <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Enter code..." oninput="this.value = this.value.toUpperCase()" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Document Name</label>
-                            <input type="text" class="form-control" name="nama" id="editKodeNama" placeholder="Enter document name..." required>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <input type="text" class="form-control" id="editKodeJenisNama" readonly>
+                        <input type="hidden" name="jenis" id="editKodeJenisValue">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <input type="text" class="form-control" name="kode" id="editKodeKode" placeholder="Enter code..." oninput="this.value = this.value.toUpperCase()" required>
+                        <div class="invalid-feedback">Please enter code.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Name</label>
+                        <input type="text" class="form-control" name="nama" id="editKodeNama" placeholder="Enter document name..." required>
+                        <div class="invalid-feedback">Please enter document name.</div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -313,7 +302,6 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const alerts = document.querySelectorAll('.alert');
@@ -323,13 +311,88 @@
                 bsAlert.close();
             }, 5000);
         });
+
+        // Form validation for all modals
+        setupFormValidation('addKategoriForm');
+        setupFormValidation('editKategoriForm');
+        setupFormValidation('addKodeForm');
+        setupFormValidation('editKodeForm');
     });
+
+    function setupFormValidation(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            let isValid = form.checkValidity();
+
+            if (isValid) {
+                // If form is valid, submit it
+                form.classList.remove('was-validated');
+                form.submit();
+            } else {
+                // Show validation errors
+                form.classList.add('was-validated');
+            }
+        }, false);
+
+        // Real-time validation for inputs
+        const inputs = form.querySelectorAll('input[required], select[required]');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (form.classList.contains('was-validated')) {
+                        this.classList.add('is-invalid');
+                    }
+                }
+            });
+
+            // For select elements
+            input.addEventListener('change', function() {
+                if (this.value) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (form.classList.contains('was-validated')) {
+                        this.classList.add('is-invalid');
+                    }
+                }
+            });
+        });
+
+        // Reset validation when modal is closed
+        const modal = form.closest('.modal');
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', function() {
+                form.classList.remove('was-validated');
+                form.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                    el.classList.remove('is-invalid', 'is-valid');
+                });
+                form.reset();
+            });
+        }
+    }
 
     function editKategori(id, nama, kode, usePredefined) {
         document.getElementById('editKategoriId').value = id;
         document.getElementById('editKategoriNama').value = nama.toUpperCase();
         document.getElementById('editKategoriKode').value = kode;
         document.getElementById('editUsePredefined').checked = usePredefined;
+        
+        // Reset validation state
+        const form = document.getElementById('editKategoriForm');
+        form.classList.remove('was-validated');
+        form.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+            el.classList.remove('is-invalid', 'is-valid');
+        });
         
         var modal = new bootstrap.Modal(document.getElementById('editKategoriModal'));
         modal.show();
@@ -374,10 +437,16 @@
         document.getElementById('editKodeJenisNama').value = jenisNama.toUpperCase(); 
         document.getElementById('editKodeJenisValue').value = jenisId;  
 
+        // Reset validation state
+        const form = document.getElementById('editKodeForm');
+        form.classList.remove('was-validated');
+        form.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+            el.classList.remove('is-invalid', 'is-valid');
+        });
+
         var modal = new bootstrap.Modal(document.getElementById('editKodeModal'));
         modal.show();
     }
-
 
     function deleteKode(id, kode) {
         Swal.fire({

@@ -351,8 +351,8 @@ uploadArea.addEventListener('drop', function(e) {
         if (!validateFileType(file)) {
             Swal.fire({
                 icon: 'error',
-                title: 'File Tidak Valid',
-                text: 'Hanya file PDF, Word (.doc, .docx), dan Excel (.xls, .xlsx) yang diizinkan!',
+                title: 'File is Invalid',
+                text: 'Only PDF, Word (.doc, .docx), and Excel (.xls, .xlsx) files are allowed!',
                 confirmButtonText: 'Okay'
             });
             return;
@@ -363,8 +363,8 @@ uploadArea.addEventListener('drop', function(e) {
         if (file.size > maxSize) {
             Swal.fire({
                 icon: 'error',
-                title: 'File Terlalu Besar',
-                text: 'Ukuran file maksimal 10MB!',
+                title: 'File Too Large',
+                text: 'Maximum file size is 10MB',
                 confirmButtonText: 'Okay'
             });
             return;
@@ -386,22 +386,6 @@ uploadArea.addEventListener('drop', function(e) {
 </script>
 
 <!-- SweetAlert2 untuk notifikasi -->
-<script>
-<?php if (session()->getFlashdata('success')): ?>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil',
-        text: '<?= session()->getFlashdata('success') ?>',
-        confirmButtonText: 'Okay'
-    });
-<?php elseif (session()->getFlashdata('error')): ?>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal',
-        text: '<?= session()->getFlashdata('error') ?>',
-        confirmButtonText: 'Okay'
-    });
-<?php endif; ?>
-</script>
+
 
 <?= $this->endSection() ?>
