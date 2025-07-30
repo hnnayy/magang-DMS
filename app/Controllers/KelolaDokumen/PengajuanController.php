@@ -106,7 +106,7 @@ class PengajuanController extends BaseController
         $file = $this->request->getFile('file_dokumen');
 
         if (empty($jenisId) || empty($nomor) || empty($nama)) {
-            return redirect()->back()->with('error', 'Semua field wajib harus diisi.');
+            return redirect()->back()->with('error', 'All required fields must be filled.');
         }
 
         // Handle document code berdasarkan tipe dokumen
@@ -187,10 +187,10 @@ class PengajuanController extends BaseController
                 ]);
             }
 
-            return redirect()->to('document-submission-list')->with('success', 'Dokumen berhasil ditambahkan.');
+            return redirect()->to('document-submission-list')->with('success', 'Document successfully created.');
         } catch (\Exception $e) {
             log_message('error', 'Error creating document: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menambahkan dokumen: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to create document: ' . $e->getMessage());
         }
     }
 
@@ -202,7 +202,7 @@ class PengajuanController extends BaseController
         if (!$id) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'ID dokumen tidak valid'
+                'message' => 'Invalid document ID'
             ], 400);
         }
 
@@ -216,7 +216,7 @@ class PengajuanController extends BaseController
         if (!$document) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Dokumen tidak ditemukan'
+                'message' => 'Document not found'
             ], 404);
         }
 
@@ -381,7 +381,7 @@ class PengajuanController extends BaseController
         if (!$id) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'ID dokumen tidak valid.'
+                'message' => 'Invalid document ID.'
             ], 400);
         }
 
@@ -389,7 +389,7 @@ class PengajuanController extends BaseController
         if (!$doc) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Dokumen tidak ditemukan.'
+                'message' => 'Document not found.'
             ], 404); 
         }
 
@@ -401,13 +401,13 @@ class PengajuanController extends BaseController
 
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Dokumen berhasil dihapus.'
+                'message' => 'Document successfully deleted.'
             ], 200); 
         } catch (\Exception $e) {
             log_message('error', 'Error deleting document ID ' . $id . ': ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat menghapus dokumen: ' . $e->getMessage()
+                'message' => 'An error occurred while deleting document: ' . $e->getMessage()
             ], 500); 
         }
     }
@@ -425,13 +425,13 @@ class PengajuanController extends BaseController
 
         if (!$document_id || !$approved_by) {
             log_message('error', 'Missing required fields: document_id or approved_by');
-            return redirect()->back()->with('error', 'Data wajib tidak lengkap.');
+            return redirect()->back()->with('error', 'Required data is incomplete.');
         }
 
         $validActions = ['approve', 'disapprove'];
         if (!in_array(strtolower($action), $validActions)) {
             log_message('error', 'Invalid action received: ' . $action);
-            return redirect()->back()->with('error', 'Aksi tidak valid. Action received: ' . $action);
+            return redirect()->back()->with('error', 'Invalid action. Action received: ' . $action);
         }
 
         $status = strtolower($action) === 'approve' ? 1 : 2;
@@ -451,14 +451,16 @@ class PengajuanController extends BaseController
             $this->db->transComplete();
 
             if ($this->db->transStatus() === false) {
-                throw new \Exception('Transaksi gagal.');
+                throw new \Exception('Transaction failed.');
             }
 
+            $successMessage = strtolower($action) === 'approve' ? 'Document successfully approved.' : 'Document successfully disapproved.';
+            
             log_message('info', 'Document ' . $document_id . ' processed with status: ' . $status);
-            return redirect()->back()->with('success', 'Dokumen berhasil diproses.');
+            return redirect()->back()->with('success', $successMessage);
         } catch (\Exception $e) {
             log_message('error', 'Error processing approval for document ' . $document_id . ': ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal memproses dokumen: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process document: ' . $e->getMessage());
         }
     }
 
@@ -540,7 +542,7 @@ private function showList()
         'kode_nama_dokumen' => $kode_nama_dokumen,
         'fakultas_list' => $fakultas_list,
         'kode_dokumen_by_type' => $kode_dokumen_by_type,
-        'title' => 'Daftar Pengajuan Dokumen'
+        'title' => 'Document Submission List'
     ];
 
     log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
@@ -576,7 +578,7 @@ private function showList()
         
         return $this->response->setJSON([
             'success' => false,
-            'message' => 'Dokumen tidak ditemukan'
+            'message' => 'Document not found'
         ], 404);
     }
 
@@ -606,7 +608,7 @@ private function showList()
             log_message('debug', 'Document not found for id: ' . $document_id);
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Dokumen tidak ditemukan'
+                'message' => 'Document not found'
             ], 404);
         }
 
@@ -674,10 +676,10 @@ private function showList()
         log_message('debug', 'Is AJAX: ' . ($this->request->isAJAX() ? 'Yes' : 'No'));
         
         if (!$jenisId) {
-            log_message('error', 'Parameter jenis tidak ditemukan');
+            log_message('error', 'Type parameter not found');
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Parameter jenis tidak valid'
+                'message' => 'Invalid type parameter'
             ], 400);
         }
 
@@ -710,7 +712,7 @@ private function showList()
             log_message('error', 'Error in handleGetKodeDokumen: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+                'message' => 'Server error occurred: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -719,7 +721,7 @@ private function showList()
     {
         $userId = session('user_id');
         if (!$userId) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda harus login untuk mengakses file.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You must login to access files.');
         }
 
         $revision = $this->documentRevisionModel
@@ -728,7 +730,7 @@ private function showList()
             ->first();
 
         if (!$revision || empty($revision['filepath'])) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found.');
         }
 
         $document = $this->documentModel->find($documentId);
@@ -739,12 +741,12 @@ private function showList()
         
         // Cek akses berdasarkan role_id dari session atau ownership dokumen
         if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki akses ke file ini.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have access to this file.');
         }
 
         $filePath = ROOTPATH . '../' . $revision['filepath'];
         if (!file_exists($filePath)) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan di server.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found on server.');
         }
 
         $file = new File($filePath);
