@@ -1,15 +1,16 @@
 <?php
 
 namespace App\Models;
+
 use CodeIgniter\Model;
 
 class DocumentApprovalModel extends Model
 {
     protected $table = 'document_approval';
     protected $primaryKey = 'id';
-    protected $returnType = 'array';
-    protected $allowedFields = ['document_id', 'remark', 'status', 'approvedate', 'approveby'];
-    
+    protected $allowedFields = ['document_id', 'remark', 'status', 'approvedate', 'approveby', 'standar_ids', 'klausul_ids'];
+    protected $useTimestamps = false;
+
     // Method untuk join dengan document dan approver
     public function getWithRelations()
     {
