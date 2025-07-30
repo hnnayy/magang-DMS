@@ -8,6 +8,8 @@ class StandardModel extends Model
 {
     protected $table = 'standards';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nama_standar'];
+    protected $allowedFields = ['id','nama_standar'];
     protected $useTimestamps = true;
+
+    
 }

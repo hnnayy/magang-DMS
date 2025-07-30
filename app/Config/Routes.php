@@ -356,3 +356,9 @@ $routes->post('daftar-dokumen/delete/(:num)', 'DaftarDokumen\ControllerDaftarDok
 $routes->get('kelola-dokumen/file/(:num)', 'KelolaDokumen::serveFile/$1');
 $routes->get('kelola-dokumen/file/(:num)', 'KelolaDokumen::serveFile/$1');
 $routes->get('kelola-dokumen/get-history/(:num)', 'KelolaDokumen::get_history/$1');
+$routes->post('document-list/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
+$routes->get('document-list/serveFile', 'DaftarDokumen\ControllerDaftarDokumen::serveFile');
+// cipa
+$routes->get('document-approval/serveFile', 'KelolaDokumen\ControllerPersetujuan::serveFile');
+$routes->get('document-list/serveFile', 'DaftarDokumen\ControllerDaftarDokumen::serveFile');
+$routes->post('document-list/update', 'DaftarDokumen\ControllerDaftarDokumen::update');

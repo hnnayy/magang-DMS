@@ -6,9 +6,53 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
 <!-- Custom CSS -->
 <link rel="stylesheet" href="<?= base_url('assets/css/daftar-dokumen.css') ?>">
+
+<!-- Inline CSS for Readonly/Disabled Fields and Custom Multi-Select -->
+<style>
+    input[readonly], select[disabled] {
+        background-color: #f1f1f1;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    /* Custom styling for multi-select in edit modal */
+    .custom-multi-select {
+        height: auto;
+        min-height: 38px;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: white;
+    }
+    .custom-multi-select option {
+        padding: 0.25rem 0.5rem;
+    }
+    .custom-multi-select option:checked {
+        background-color: #6f42c1;
+        color: white;
+    }
+    .custom-multi-select[multiple] {
+        overflow-y: auto;
+        max-height: 150px;
+    }
+    /* Ensure compatibility with Bootstrap */
+    .custom-multi-select:focus {
+        border-color: #6f42c1;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+    }
+    /* Styling untuk pesan "Tidak ada data" */
+    .no-data-message {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
 
 <div class="container-fluid px-4 py-4">
     <h4 class="mb-4">Daftar Dokumen</h4>
@@ -16,7 +60,6 @@
     <!-- FILTER -->
     <div class="bg-light p-3 rounded mb-4 d-flex flex-wrap align-items-center gap-2">
         <strong class="form-label mb-0 me-2">Filter Data</strong>
-
         <div style="min-width:180px;">
             <select class="form-select filter-input" id="filterStandar" multiple>
                 <?php foreach ($standards as $s): ?>
@@ -24,7 +67,6 @@
                 <?php endforeach; ?>
             </select>
         </div>
-
         <div style="min-width:180px;">
             <select class="form-select filter-input" id="filterKlausul" multiple>
                 <?php foreach ($clauses as $c): ?>
@@ -34,7 +76,6 @@
                 <?php endforeach; ?>
             </select>
         </div>
-
         <div style="min-width:180px;">
             <select class="form-select filter-input" id="filterPemilik">
                 <option value="">Semua Pemilik Doc</option>
@@ -46,7 +87,6 @@
                 <?php endforeach; ?>
             </select>
         </div>
-
         <div style="min-width:180px;">
             <select class="form-select filter-input" id="filterJenis">
                 <option value="">Semua Jenis Doc</option>
@@ -55,7 +95,6 @@
                 <?php endforeach; ?>
             </select>
         </div>
-
         <div class="d-flex gap-2">
             <button class="btn btn-primary btn-sm-2" id="btnFilter">Filter</button>
             <button class="btn btn-success btn-sm-2" id="excel-button-container">Export Excel</button>
@@ -97,31 +136,49 @@
                         </thead>
                         <tbody>
                             <?php foreach ($document as $row): ?>
-                                <tr data-standar="<?= implode(',', array_column(array_filter($standards, function($s) use ($row) { return in_array($s['id'], explode(',', $row['standar_ids'] ?? '')); }), 'id')) ?>" 
-                                    data-klausul="<?= implode(',', array_column(array_filter($clauses, function($c) use ($row) { return in_array($c['id'], explode(',', $row['klausul_ids'] ?? '')); }), 'id')) ?>"
+                                <tr data-standar="<?= implode(',', array_filter(explode(',', $row['standar_ids'] ?? ''))) ?>" 
+                                    data-klausul="<?= implode(',', array_filter(explode(',', $row['klausul_ids'] ?? ''))) ?>"
                                     data-pemilik="<?= esc($row['createdby'] ?? '') ?>">
                                     <td>
-                                        <select class="form-select multiple-standar" name="standar[]" multiple>
-                                            <?php foreach ($standards as $s): ?>
-                                                <option value="<?= $s['id'] ?>"><?= $s['nama_standar'] ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <?php
+                                        $standar_ids = array_filter(explode(',', $row['standar_ids'] ?? ''));
+                                        $standar_names = array_map(function($id) use ($standards) {
+                                            foreach ($standards as $s) {
+                                                if ($s['id'] == $id) {
+                                                    return esc($s['nama_standar']);
+                                                }
+                                            }
+                                            return null;
+                                        }, $standar_ids);
+                                        $standar_names = array_filter($standar_names);
+                                        echo !empty($standar_names) ? implode(', ', $standar_names) : '-';
+                                        ?>
                                     </td>
                                     <td>
-                                        <select class="form-select multiple-klausul" name="klausul[]" multiple>
-                                            <?php foreach ($clauses as $c): ?>
-                                                <option value="<?= $c['id'] ?>"><?= $c['nomor_klausul'] ?> - <?= $c['nama_klausul'] ?> (<?= $c['nama_standar'] ?>)</option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <?php
+                                        $klausul_ids = array_filter(explode(',', $row['klausul_ids'] ?? ''));
+                                        $klausul_names = array_map(function($id) use ($clauses) {
+                                            foreach ($clauses as $c) {
+                                                if ($c['id'] == $id) {
+                                                    return esc($c['nomor_klausul'] . ' - ' . $c['nama_klausul'] . ' (' . $c['nama_standar'] . ')');
+                                                }
+                                            }
+                                            return null;
+                                        }, $klausul_ids);
+                                        $klausul_names = array_filter($klausul_names);
+                                        echo !empty($klausul_names) ? implode(', ', $klausul_names) : '-';
+                                        ?>
                                     </td>
                                     <td><?= esc($row['jenis_dokumen'] ?? '-') ?></td>
-                                    <td><?php if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])): ?>
-                                        <div>
-                                            <?= esc($row['kode_dokumen_kode']) ?> - <?= esc($row['kode_dokumen_nama']) ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="text-muted">-</span>
-                                    <?php endif; ?></td>
+                                    <td>
+                                        <?php if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])): ?>
+                                            <div>
+                                                <?= esc($row['kode_dokumen_kode']) ?> - <?= esc($row['kode_dokumen_nama']) ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?= esc($row['number'] ?? '-') ?></td>
                                     <td><?= esc($row['title'] ?? '-') ?></td>
                                     <td><?= esc($row['createdby'] ?? '-') ?></td>
@@ -159,7 +216,7 @@
                                 <!-- Modal Edit Dokumen -->
                                 <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-lg">
-                                        <form action="<?= base_url('document-list/update') ?>" method="post" enctype="multipart/form-data">
+                                        <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                             <div class="modal-content">
@@ -169,9 +226,34 @@
                                                 </div>
                                                 <div class="modal-body px-4 py-3">
                                                     <div class="row g-3">
+                                                        <!-- Dropdown Standar (Multi-Select) -->
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small">Standar</label>
+                                                            <select name="standar[]" class="form-select form-select-sm custom-multi-select" multiple required>
+                                                                <?php foreach ($standards as $s): ?>
+                                                                    <option value="<?= $s['id'] ?>" <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'selected' : '' ?>>
+                                                                        <?= $s['nama_standar'] ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <small class="text-muted">Tahan Ctrl (atau Cmd pada Mac) untuk memilih lebih dari satu.</small>
+                                                        </div>
+                                                        <!-- Dropdown Klausul (Multi-Select) -->
+                                                        <div class="col-md-6">
+                                                            <label class="form-label small">Klausul</label>
+                                                            <select name="klausul[]" class="form-select form-select-sm custom-multi-select" multiple required>
+                                                                <?php foreach ($clauses as $c): ?>
+                                                                    <option value="<?= $c['id'] ?>" <?= in_array($c['id'], array_filter(explode(',', $row['klausul_ids'] ?? ''))) ? 'selected' : '' ?>>
+                                                                        <?= $c['nomor_klausul'] ?> - <?= $c['nama_klausul'] ?> (<?= $c['nama_standar'] ?>)
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                            <small class="text-muted">Tahan Ctrl (atau Cmd pada Mac) untuk memilih lebih dari satu.</small>
+                                                        </div>
+                                                        <!-- Jenis Dokumen -->
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Jenis Dokumen</label>
-                                                            <select name="type" class="form-select form-select-sm">
+                                                            <select name="type" class="form-select form-select-sm" disabled>
                                                                 <?php foreach ($kategori_dokumen as $kategori): ?>
                                                                     <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
                                                                         <?= $kategori['name'] ?>
@@ -179,44 +261,60 @@
                                                                 <?php endforeach; ?>
                                                             </select>
                                                         </div>
+                                                        <!-- Kode Jenis -->
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Kode Jenis</label>
-                                                            <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>" readonly>
                                                         </div>
+                                                        <!-- Nomor -->
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Nomor</label>
-                                                            <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>" readonly>
                                                         </div>
+                                                        <!-- Nama Dokumen -->
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Nama Dokumen</label>
-                                                            <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>" readonly>
                                                         </div>
+                                                        <!-- Pemilik Dokumen -->
                                                         <div class="col-md-6">
                                                             <label class="form-label small">Pemilik Dokumen</label>
-                                                            <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($row['createdby'] ?? '') ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($row['createdby'] ?? '') ?>" readonly>
                                                         </div>
+                                                        <!-- File Dokumen -->
                                                         <div class="col-md-6">
-                                                            <label class="form-label small">Ganti File</label>
-                                                            <input type="file" class="form-control form-control-sm" name="file">
-                                                            <?php if (!empty($row['filepath'])): ?>
-                                                                <small class="text-muted">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
+                                                            <label class="form-label small">File Dokumen</label>
+                                                            <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
+                                                                <small class="text-muted d-block mt-1">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
+                                                                <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                                                   class="btn btn-primary btn-sm mt-1" 
+                                                                   title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                                                    <i class="bi bi-download"></i> Lihat File
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <span class="text-muted">Tidak ada file</span>
                                                             <?php endif; ?>
                                                         </div>
+                                                        <!-- Revisi -->
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Revisi</label>
-                                                            <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>">
+                                                            <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>" readonly>
                                                         </div>
+                                                        <!-- Tanggal Efektif -->
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Tanggal Efektif</label>
                                                             <input type="date" class="form-control form-control-sm" name="date_published" value="<?= esc($row['date_published']) ?>">
                                                         </div>
+                                                        <!-- Disetujui Oleh -->
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Disetujui Oleh</label>
-                                                            <input type="text" class="form-control form-control-sm" name="approveby" value="<?= esc($row['approved_by_name'] ?? '') ?>">
+                                                            <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
+                                                            <input type="text" class="form-control form-control-sm" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
                                                         </div>
+                                                        <!-- Tanggal Disetujui -->
                                                         <div class="col-md-3">
                                                             <label class="form-label small">Tanggal Disetujui</label>
-                                                            <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>">
+                                                            <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -231,8 +329,9 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+                    <!-- Container untuk pesan "Tidak ada data" -->
+                    <div class="no-data-message" style="display: none;">Tidak ada data</div>
                 </div>
-                
                 <!-- Pagination container yang akan di-sticky -->
                 <div class="pagination-container"></div>
             </div>
@@ -250,17 +349,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
 <!-- Custom JS -->
 <script>
 $(document).ready(function() {
-    // Initialize Choices.js for table selects
-    const standarSelects = document.querySelectorAll('.multiple-standar');
-    const klausulSelects = document.querySelectorAll('.multiple-klausul');
-    standarSelects.forEach(select => new Choices(select, { removeItemButton: true }));
-    klausulSelects.forEach(select => new Choices(select, { removeItemButton: true }));
-
-    // Initialize Choices.js for filter selects
+    // Initialize Choices.js for filter selects (kept for consistency with filter section)
     const filterStandar = new Choices('#filterStandar', {
         removeItemButton: true,
         placeholder: true,
@@ -274,7 +369,7 @@ $(document).ready(function() {
     });
 
     // Initialize DataTables
-    const table = $('#dokumenTable').DataTables({
+    const table = $('#dokumenTable').DataTable({
         dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
@@ -283,10 +378,12 @@ $(document).ready(function() {
             paginate: {
                 previous: "Sebelumnya",
                 next: "Berikutnya"
-            }
+            },
+            zeroRecords: "" // Kosongkan pesan default DataTables
         },
         columnDefs: [
-            { orderable: false, targets: [0, 1, -1] }
+            { orderable: false, targets: [-1] }, // Kolom Aksi tidak bisa diurutkan
+            { searchable: true, targets: [0, 1, 2, 3, 4, 5, 6, 9, 10, 11] } // Aktifkan pencarian hanya pada kolom tertentu (opsional)
         ],
         buttons: [
             {
@@ -346,7 +443,18 @@ $(document).ready(function() {
     
     // Connect custom search with DataTables
     $('#customSearch').on('keyup', function() {
-        table.search(this.value).draw();
+        const searchTerm = this.value.trim();
+        table.search(searchTerm).draw();
+
+        // Tampilkan pesan "Tidak ada data" jika tidak ada hasil pencarian
+        const visibleRows = table.rows({ filter: 'applied' }).data().length;
+        if (visibleRows === 0) {
+            $('.no-data-message').show();
+            $('#dokumenTable').hide();
+        } else {
+            $('.no-data-message').hide();
+            $('#dokumenTable').show();
+        }
     });
 
     // Connect custom length selector with DataTables
@@ -391,34 +499,64 @@ $(document).ready(function() {
         
         table.draw();
         $.fn.dataTable.ext.search.pop();
+
+        // Tampilkan pesan "Tidak ada data" jika tidak ada baris yang sesuai
+        const visibleRows = table.rows({ filter: 'applied' }).data().length;
+        if (visibleRows === 0) {
+            $('.no-data-message').show();
+            $('#dokumenTable').hide();
+        } else {
+            $('.no-data-message').hide();
+            $('#dokumenTable').show();
+        }
     });
-});
-</script>
 
-<script>
-    $(document).ready(function() {
-        $('#form-update').on('submit', function(e) {
-            e.preventDefault();
+    // Handle form submission for edit modal with SweetAlert2
+    $('.edit-form').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const modalId = '#editModal' + formData.get('id');
+        console.log('Form Data:', Object.fromEntries(formData)); // Debug form data
 
-            const formData = new FormData(this);
-
-            $.ajax({
-                url: '<?= base_url('document-list/update') ?>',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function(response) {
-                    alert('Berhasil update dokumen!');
-                    $('#editDocumentModal').modal('hide');
-                    location.reload();
-                },
-                error: function(xhr) {
-                    alert('Gagal update: ' + xhr.responseText);
-                }
-            });
+        $.ajax({
+            url: '<?= base_url('document-list/update') ?>',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            beforeSend: function() {
+                console.log('Sending AJAX request to document-list/update...');
+            },
+            success: function(response) {
+                console.log('AJAX Success Response:', response);
+                $(modalId).modal('hide'); // Close the modal
+                Swal.fire({
+                    icon: response.swal?.icon || 'error',
+                    title: response.swal?.title || 'Gagal!',
+                    text: response.swal?.text || response.message || 'Terjadi kesalahan.',
+                    confirmButtonColor: response.status === 'success' ? '#6f42c1' : (response.status === 'warning' ? '#ffc107' : '#dc3545')
+                }).then(() => {
+                    if (response.status === 'success') {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', xhr, status, error);
+                $(modalId).modal('hide'); // Close the modal
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: 'Terjadi kesalahan: ' + (xhr.responseJSON?.message || xhr.statusText || 'Unknown error'),
+                    confirmButtonColor: '#dc3545'
+                });
+            }
         });
     });
+});
 </script>
 
 <script>
@@ -430,34 +568,26 @@ $(document).ready(function() {
             text: 'Tindakan ini tidak dapat dibatalkan.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#dc1a1aff',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal',
-            
+            cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Create a form and submit it
                 const form = $('<form>', {
                     method: 'POST',
                     action: '<?= base_url('document-list/delete') ?>'
                 });
-                
-                // Add CSRF token
                 form.append($('<input>', {
                     type: 'hidden',
                     name: '<?= csrf_token() ?>',
                     value: '<?= csrf_hash() ?>'
                 }));
-                
-                // Add document ID
                 form.append($('<input>', {
                     type: 'hidden',
                     name: 'id',
                     value: id
                 }));
-                
-                // Append form to body and submit
                 $('body').append(form);
                 form.submit();
             }

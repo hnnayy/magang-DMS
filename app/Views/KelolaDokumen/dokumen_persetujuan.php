@@ -1,6 +1,28 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<?php
+// Get current user information from session
+$currentUserId = session()->get('user_id');
+$currentUserUnitId = session()->get('unit_id');
+$currentUserUnitParentId = session()->get('unit_parent_id');
+$currentUserRoleId = session()->get('role_id');
+
+// Get user's role information to determine access level
+$roleModel = new \App\Models\RoleModel();
+$currentUserRole = $roleModel->find($currentUserRoleId);
+$currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2 (lower access)
+
+// Ambil privilege untuk submenu 'document-approval' dari session
+$privileges = session('privileges');
+$docApprovalPrivileges = $privileges['document-approval'] ?? [
+    'can_create' => 0,
+    'can_update' => 0,
+    'can_delete' => 0,
+    'can_approve' => 0
+];
+?>
+
 <div class="container-fluid persetujuan-container">
     <h4 class="mb-4">Document Approval</h4>
 
@@ -24,13 +46,64 @@
                             <th>Code & Document Name</th>
                             <th>File</th>
                             <th>Remark</th>
+                            <th>Created By</th>
+                            <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
                             <th class="text-center noExport">Action</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($documents as $i => $doc): ?>
+                        <?php 
+                        $displayedCount = 0;
+                        foreach ($documents as $i => $doc): 
+                            // Check if document should be visible based on hierarchical access
+                            $documentCreatorId = $doc['createdby'] ?? 0;
+                            $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
+                            $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
+                            $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
+                            $documentCreatorName = $doc['creator_fullname'] ?? 'Unknown User';
+                            
+                            $canViewDocument = false;
+                            $showCreatorName = false; // Control creator name visibility
+                            
+                            // Access Control Rules:
+                            // Rule 1: Users can always see their own documents and their own name
+                            if ($documentCreatorId == $currentUserId) {
+                                $canViewDocument = true;
+                                $showCreatorName = true;
+                            }
+                            // Rule 2: Higher level users (level 1) can see lower level documents (level 2) in same hierarchy
+                            elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                                // Check if they are in the same organizational hierarchy
+                                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+                                
+                                if ($inSameHierarchy) {
+                                    $canViewDocument = true;
+                                    $showCreatorName = true; // Higher level users can see creator names
+                                }
+                            }
+                            // Rule 3: Same level users in same unit can see each other's documents
+                            elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
+                                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                                if ($sameUnit) {
+                                    $canViewDocument = true;
+                                    $showCreatorName = true; // Same level users can see each other's names
+                                }
+                            }
+                            
+                            // Skip if user cannot view this document
+                            if (!$canViewDocument) continue;
+                            
+                            // Skip documents with invalid creator ID
+                            if ($documentCreatorId == 0) continue;
+                            
+                            $displayedCount++;
+                        ?>
                         <tr>
-                            <td class="text-center"><?= $i + 1 ?></td>
+                            <td class="text-center"><?= $displayedCount ?></td>
                             <td><?= esc($doc['parent_name'] ?? '-') ?></td>
                             <td><?= esc($doc['unit_name'] ?? '-') ?></td>
                             <td>
@@ -65,8 +138,22 @@
                                     <?= esc($doc['remark']) ?>
                                 </span>
                             </td>
+                            <td>
+                                <?php if ($showCreatorName): ?>
+                                    <span class="text-truncate-custom" title="<?= esc($documentCreatorName) ?>">
+                                        <?= esc($documentCreatorName) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                            
+                            <!-- Action column - hanya tampil jika ada privilege update atau delete -->
+                            <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
                             <td class="text-center">
                                 <div class="action-buttons">
+                                    <!-- Delete button - hanya tampil jika ada privilege can_delete dan user bisa akses dokumen -->
+                                    <?php if ($docApprovalPrivileges['can_delete'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                                     <form method="post" action="<?= base_url('document-approval/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="document_id" value="<?= $doc['id'] ?>">
@@ -74,14 +161,23 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Edit button - hanya tampil jika ada privilege can_update dan user bisa akses dokumen -->
+                                    <?php if ($docApprovalPrivileges['can_update'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                                     <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
+                                    <?php endif; ?>
+                                    
+
                                 </div>
                             </td>
+                            <?php endif; ?>
                         </tr>
 
-                        <!-- Edit Modal -->
+                        <!-- Edit Modal - hanya tampil jika ada privilege can_update dan user bisa edit -->
+                        <?php if ($docApprovalPrivileges['can_update'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                         <div class="modal fade" id="editModal<?= $doc['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
@@ -114,6 +210,7 @@
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -146,21 +243,34 @@
 <!-- DataTables Logic -->
 <script>
 $(document).ready(function () {
+    <?php 
+    // Hitung jumlah kolom berdasarkan privilege
+    $totalColumns = 10; // kolom dasar dengan created by
+    if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']) {
+        $totalColumns = 11; // tambah kolom action
+    }
+    $actionColumnIndex = $totalColumns - 1;
+    ?>
+    
     const table = $('#persetujuanTable').DataTable({
         dom: 't', 
         pageLength: 10,
         order: [],
         columnDefs: [
-            { orderable: false, targets: 9 },
-            { className: 'text-center', targets: [0, 4, 9] }
+            <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
+            { orderable: false, targets: <?= $actionColumnIndex ?> },
+            { className: 'text-center', targets: [0, 4, <?= $actionColumnIndex ?>] }
+            <?php else: ?>
+            { className: 'text-center', targets: [0, 4] }
+            <?php endif; ?>
         ],
         buttons: [
             {
                 extend: 'excel',
                 className: 'btn btn-outline-success btn-sm',
-                title: 'Data_Users',
+                title: 'Document_Approval',
                 exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6] 
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] // Exclude file column and action column
                 }
             },
             {
@@ -168,11 +278,11 @@ $(document).ready(function () {
                 text: 'PDF',
                 className: 'btn',
                 title: 'Document Approval',
-                filename: 'data_users',
+                filename: 'document_approval',
                 exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6] 
+                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] // Exclude file column and action column
                 },
-                orientation: 'portrait', 
+                orientation: 'landscape', 
                 pageSize: 'A4',
                 customize: function (doc) {
                     const now = new Date();
@@ -186,7 +296,7 @@ $(document).ready(function () {
                     }
 
                     doc.content.unshift({
-                        text: 'Document Approval',
+                        text: 'Document Approval Report',
                         alignment: 'center',
                         bold: true,
                         fontSize: 16,
@@ -203,11 +313,12 @@ $(document).ready(function () {
 
                     doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
                     doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-                    doc.defaultStyle.fontSize = 9;
+                    doc.defaultStyle.fontSize = 8;
                     doc.styles.tableBody = { 
                         alignment: 'center', 
-                        fontSize: 9 
+                        fontSize: 8 
                     };
+                    
                     // Footer
                     doc.footer = function (currentPage, pageCount) {
                         return {
@@ -235,22 +346,22 @@ $(document).ready(function () {
                     doc.pageMargins = [40, 60, 40, 60];
 
                     if (doc.content[1] && doc.content[1].table) {
-                        doc.content[1].table.widths = ['8%', '15%', '20%', '20%', '15%', '15%', '7%'];
+                        doc.content[1].table.widths = ['6%', '12%', '16%', '20%', '8%', '12%', '16%', '10%'];
                         doc.content[1].margin = [0, 0, 0, 0];
                         doc.content[1].layout = {
                             hLineWidth: function () { return 0.5; },
                             vLineWidth: function () { return 0.5; },
                             hLineColor: function () { return '#000000'; },
                             vLineColor: function () { return '#000000'; },
-                            paddingLeft: function () { return 5; },
-                            paddingRight: function () { return 5; },
+                            paddingLeft: function () { return 4; },
+                            paddingRight: function () { return 4; },
                             paddingTop: function () { return 3; },
                             paddingBottom: function () { return 3; }
                         };
                     }
 
                     doc.content.push({
-                        text: '* This document contains a list of active users in the system.',
+                        text: '* This document contains a list of documents pending approval based on your access level.',
                         alignment: 'left',
                         italics: true,
                         fontSize: 8,
@@ -353,15 +464,17 @@ $(document).ready(function () {
 
     updatePagination();
 
-    // Delete confirmation with SweetAlert2
+    // Delete confirmation with SweetAlert2 - hanya jika ada privilege delete
+    <?php if ($docApprovalPrivileges['can_delete']): ?>
     $(document).on('click', '.btn-delete', function (e) {
         e.preventDefault();
         const form = $(this).closest('form');
         Swal.fire({
             title: 'Are you sure?',
+            text: 'This action will delete the document permanently.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Yes, delete it ',
+            confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
             confirmButtonColor: '#d33',
             cancelButtonColor: 'rgba(118, 125, 131, 1)',
@@ -371,6 +484,7 @@ $(document).ready(function () {
             }
         });
     });
+    <?php endif; ?>
 
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -378,7 +492,5 @@ $(document).ready(function () {
     });
 });
 </script>
-
-
 
 <?= $this->endSection() ?>

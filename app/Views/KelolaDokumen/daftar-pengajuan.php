@@ -27,25 +27,31 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
     <div class="px-4 py-3">
         <h4 class="mb-4">Document Submission List</h4>
 
-        <!-- Flash message -->
+        <!-- Enhanced Flash message -->
         <?php if (session()->getFlashdata('success')): ?>
         <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonColor: '#3085d6'
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '<?= session()->getFlashdata('success') ?>',
+                confirmButtonColor: '#28a745',
+                showConfirmButton: true
+            });
         });
         </script>
         <?php endif; ?>
 
         <?php if (session()->getFlashdata('error')): ?>
         <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed',
-            text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonColor: '#d33'
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '<?= session()->getFlashdata('error') ?>',
+                confirmButtonColor: '#dc3545',
+                showConfirmButton: true
+            });
         });
         </script>
         <?php endif; ?>
@@ -230,8 +236,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
                                         <button class="btn btn-sm btn-outline-primary edit-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editModal"
                                             data-id="<?= $doc['id'] ?? '' ?>"
                                             data-fakultas="<?= esc($doc['parent_name'] ?? '-') ?>"
                                             data-unit="<?= esc($doc['unit_name'] ?? '-') ?>"
@@ -258,8 +262,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                  $documentCreatorAccessLevel == 2): ?>
                                         <button class="btn btn-sm btn-outline-success approve-btn"
                                             data-id="<?= $doc['id'] ?? '' ?>"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#approveModal"
                                             title="Approve">
                                             <i class="bi bi-check-circle"></i>
                                         </button>
@@ -497,7 +499,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
         </div>
     </div>
 </div>
-
 <?php endif; ?>
 
 <!-- Scripts -->
@@ -676,7 +677,7 @@ $(document).ready(function() {
                         icon: 'warning',
                         title: 'Cannot Edit',
                         text: 'This document is already approved and cannot be edited.',
-                        confirmButtonColor: '#d33'
+                        confirmButtonColor: '#dc3545'
                     });
                     return false;
                 });
@@ -700,7 +701,7 @@ $(document).ready(function() {
         $('#approval_date').val(today);
     }
 
-    // Event handler for edit button - Only if user has update privilege
+    // Enhanced Edit Button Handler with Confirmation Alert
     if (documentPrivileges.can_update) {
         $(document).on('click', '.edit-btn', function() {
             const editBtn = $(this);
@@ -711,70 +712,121 @@ $(document).ready(function() {
                     icon: 'warning',
                     title: 'Cannot Edit',
                     text: 'This document is already approved and cannot be edited.',
-                    confirmButtonColor: '#d33'
+                    confirmButtonColor: '#dc3545'
                 });
                 return false;
             }
 
-            // Set basic form data
-            $('#editDocumentId').val(editBtn.data('id'));
-            $('#editFakultas').val(editBtn.data('fakultas'));
-            $('#editBagian').val(editBtn.data('unit'));
-            $('#editNama').val(editBtn.data('nama'));
-            $('#editNomor').val(editBtn.data('nomor'));
-            $('#editRevisi').val(editBtn.data('revisi'));
-            $('#editKeterangan').val(editBtn.data('keterangan'));
+            // Show confirmation before opening edit modal
+            Swal.fire({
+                title: 'Edit Document',
+                text: 'Are you sure you want to edit this document?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Edit It!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Proceed with original edit logic
+                    $('#editDocumentId').val(editBtn.data('id'));
+                    $('#editFakultas').val(editBtn.data('fakultas'));
+                    $('#editBagian').val(editBtn.data('unit'));
+                    $('#editNama').val(editBtn.data('nama'));
+                    $('#editNomor').val(editBtn.data('nomor'));
+                    $('#editRevisi').val(editBtn.data('revisi'));
+                    $('#editKeterangan').val(editBtn.data('keterangan'));
 
-            // Handle file info
-            const filepath = editBtn.data('filepath');
-            const filename = editBtn.data('filename');
-            if (filepath || filename) {
-                $('#currentFileInfo').show();
-                $('#currentFileName').text(filename || filepath);
-            } else {
-                $('#currentFileInfo').hide();
-            }
+                    // Handle file info
+                    const filepath = editBtn.data('filepath');
+                    const filename = editBtn.data('filename');
+                    if (filepath || filename) {
+                        $('#currentFileInfo').show();
+                        $('#currentFileName').text(filename || filepath);
+                    } else {
+                        $('#currentFileInfo').hide();
+                    }
 
-            // Reset form state
-            $('#editKodeGroup').hide();
-            $('#editKodeCustomGroup').hide();
+                    // Reset form state
+                    $('#editKodeGroup').hide();
+                    $('#editKodeCustomGroup').hide();
 
-            // Set document type
-            const jenisId = editBtn.data('jenis');
-            $('#editJenis').val(jenisId);
-            
-            // Check if this type uses predefined codes
-            const usePredefined = editBtn.data('use-predefined') === true || editBtn.data('use-predefined') === 'true';
-            
-            if (usePredefined) {
-                $('#editKodeGroup').show();
-                $('#editKodeCustomGroup').hide();
-                
-                // Load document code options
-                loadEditKodeDokumen(jenisId);
-                
-                // Set selected document code after options are loaded
-                const kodeDokumenId = editBtn.data('kode-dokumen-id');
-                if (kodeDokumenId) {
-                    setTimeout(function() {
-                        $('#editNamaKode').val(kodeDokumenId);
-                    }, 500);
+                    // Set document type
+                    const jenisId = editBtn.data('jenis');
+                    $('#editJenis').val(jenisId);
+                    
+                    // Check if this type uses predefined codes
+                    const usePredefined = editBtn.data('use-predefined') === true || editBtn.data('use-predefined') === 'true';
+                    
+                    if (usePredefined) {
+                        $('#editKodeGroup').show();
+                        $('#editKodeCustomGroup').hide();
+                        
+                        // Load document code options
+                        loadEditKodeDokumen(jenisId);
+                        
+                        // Set selected document code after options are loaded
+                        const kodeDokumenId = editBtn.data('kode-dokumen-id');
+                        if (kodeDokumenId) {
+                            setTimeout(function() {
+                                $('#editNamaKode').val(kodeDokumenId);
+                            }, 500);
+                        }
+                    } else {
+                        $('#editKodeGroup').hide();
+                        $('#editKodeCustomGroup').show();
+                        
+                        // For non-predefined, set the custom code and name from kode_dokumen table
+                        const kodeCustom = editBtn.data('kode-dokumen-kode');
+                        const namaCustom = editBtn.data('kode-dokumen-nama');
+                        
+                        $('#editKodeCustom').val(kodeCustom || '');
+                        $('#editNamaCustom').val(namaCustom || '');
+                    }
+
+                    // Show the edit modal
+                    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+                    editModal.show();
                 }
-            } else {
-                $('#editKodeGroup').hide();
-                $('#editKodeCustomGroup').show();
-                
-                // For non-predefined, set the custom code and name from kode_dokumen table
-                const kodeCustom = editBtn.data('kode-dokumen-kode');
-                const namaCustom = editBtn.data('kode-dokumen-nama');
-                
-                $('#editKodeCustom').val(kodeCustom || '');
-                $('#editNamaCustom').val(namaCustom || '');
-            }
+            });
+        });
+
+        // Enhanced Edit Form Submission with Confirmation Alert
+        $('#editModal form').on('submit', function(e) {
+            e.preventDefault();
+            
+            Swal.fire({
+                title: 'Save Changes',
+                text: 'Are you sure you want to save these changes?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Save Changes!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading alert
+                    Swal.fire({
+                        title: 'Saving Changes...',
+                        text: 'Please wait a moment',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit the form
+                    this.submit();
+                }
+            });
         });
     }
 
-    // Event handler for approve button - Only if user has approve privilege
+    // Enhanced Approve Button Handler with Confirmation Alert
     if (documentPrivileges.can_approve) {
         $(document).on('click', '.approve-btn', function() {
             const id = $(this).data('id');
@@ -782,12 +834,27 @@ $(document).ready(function() {
                 console.error('No document ID found');
                 return;
             }
-            $('#approveDocumentId').val(id);
-            const modal = new bootstrap.Modal(document.getElementById('approveModal'));
-            modal.show();
+
+            // Show confirmation before opening approve modal
+            Swal.fire({
+                title: 'Document Approval',
+                text: 'Are you sure you want to proceed with document approval?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Proceed!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#approveDocumentId').val(id);
+                    const modal = new bootstrap.Modal(document.getElementById('approveModal'));
+                    modal.show();
+                }
+            });
         });
 
-        // Submit handler for approve form
+        // Enhanced Approve Form Submission with Action-Specific Confirmation
         $('#approveForm').on('submit', function(e) {
             e.preventDefault();
             const formData = $(this).serialize();
@@ -798,15 +865,47 @@ $(document).ready(function() {
                 console.error('No action value detected. Check button focus or form structure.');
                 Swal.fire({
                     icon: 'error',
-                    title: 'Failed',
+                    title: 'Error',
                     text: 'Action not detected. Please try again.',
-                    confirmButtonColor: '#d33'
+                    confirmButtonColor: '#dc3545'
                 });
                 return;
             }
 
-            $(this).append('<input type="hidden" name="action" value="' + action + '">');
-            $(this).unbind('submit').submit();
+            // Different confirmation messages based on action
+            const isApprove = action === 'approve';
+            const confirmationConfig = {
+                title: isApprove ? 'Approve Document' : 'Disapprove Document',
+                text: isApprove ? 
+                    'Are you sure you want to approve this document?' : 
+                    'Are you sure you want to disapprove this document?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: isApprove ? '#28a745' : '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: isApprove ? 'Yes, Approve It!' : 'Yes, Disapprove It!',
+                cancelButtonText: 'Cancel'
+            };
+
+            Swal.fire(confirmationConfig).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading alert
+                    Swal.fire({
+                        title: isApprove ? 'Approving Document...' : 'Disapproving Document...',
+                        text: 'Please wait a moment',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Add action to form and submit
+                    $(this).append('<input type="hidden" name="action" value="' + action + '">');
+                    $(this).unbind('submit').submit();
+                }
+            });
         });
     }
 
@@ -828,27 +927,30 @@ $(document).ready(function() {
         });
     }
 
-    // Delete document handler - Only if user has delete privilege
+    // Enhanced Delete Document Handler with Confirmation Alert
     if (documentPrivileges.can_delete) {
         $(document).on('click', '.delete-document', function(e) {
             e.preventDefault();
             const id = $(this).data('id');
             
             Swal.fire({
-                title: 'Confirm Delete',
-                text: 'Are you sure you want to delete this document?',
+                title: 'Delete Document',
+                text: 'Are you sure you want to delete this document? This action cannot be undone!',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, Delete!',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Delete It!',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loading alert
                     Swal.fire({
-                        title: 'Deleting...',
+                        title: 'Deleting Document...',
                         text: 'Please wait a moment',
                         allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
                         didOpen: () => {
                             Swal.showLoading();
                         }
@@ -865,18 +967,18 @@ $(document).ready(function() {
                             if (response.success) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Success!',
-                                    text: response.message || 'Document successfully deleted',
-                                    confirmButtonColor: '#3085d6'
+                                    title: 'Deleted Successfully!',
+                                    text: response.message || 'Document has been successfully deleted.',
+                                    confirmButtonColor: '#28a745'
                                 }).then(() => {
                                     location.reload();
                                 });
                             } else {
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Failed!',
-                                    text: response.message || 'Error occurred while deleting document',
-                                    confirmButtonColor: '#d33'
+                                    title: 'Delete Failed!',
+                                    text: response.message || 'An error occurred while deleting the document.',
+                                    confirmButtonColor: '#dc3545'
                                 });
                             }
                         },
@@ -884,9 +986,9 @@ $(document).ready(function() {
                             console.error('Delete error:', error);
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error!',
-                                text: 'Server error occurred. Please try again.',
-                                confirmButtonColor: '#d33'
+                                title: 'Server Error!',
+                                text: 'A server error occurred. Please try again later.',
+                                confirmButtonColor: '#dc3545'
                             });
                         }
                     });
@@ -990,23 +1092,12 @@ $(document).ready(function() {
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
             ];
 
-            if (fileSize > 10) { 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'File Too Large',
-                    text: 'Maximum file size is 10MB',
-                    confirmButtonColor: '#d33'
-                });
-                $(this).val('');
-                return;
-            }
-
             if (!allowedTypes.includes(file.type)) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Unsupported File Type',
                     text: 'Only PDF, DOC, DOCX, XLS, XLSX, PPT, and PPTX files are allowed',
-                    confirmButtonColor: '#d33'
+                    confirmButtonColor: '#dc3545'
                 });
                 $(this).val('');
                 return;
@@ -1062,11 +1153,6 @@ $(document).ready(function() {
             $(this).val($(this).val().toUpperCase());
         });
     }
-
-    console.log('Document management script initialized successfully');
-    console.log('User privileges:', documentPrivileges);
-    console.log('User access level:', currentUserAccessLevel);
-    console.log('Current user ID:', currentUserId);
 });
 
 function formatFileSize(bytes) {
