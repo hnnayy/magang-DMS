@@ -6,12 +6,8 @@ use CodeIgniter\Model;
 
 class NotificationModel extends Model
 {
-    protected $table            = 'notifications';
-    protected $primaryKey       = 'id';
-    protected $allowedFields    = ['user_id', 'document_id', 'title', 'message', 'link', 'is_read'];
-    
-    // Aktifkan timestamps
-    protected $useTimestamps    = true;
-    protected $createdField     = 'created_at';
-    protected $updatedField     = ''; // tidak ada kolom updated_at
+    protected $table = 'notification';
+    protected $primaryKey = 'id';
+    protected $allowedFields = ['submenu_id', 'reference_id', 'message', 'createdby', 'createddate'];
+    protected $useTimestamps = false;
 }
