@@ -10,8 +10,10 @@ use App\Models\ClauseModel;
 use App\Models\DocumentApprovalModel;
 use App\Models\DocumentRevisionModel;
 use App\Models\UserModel;
+use App\Models\RoleModel;
 use CodeIgniter\Database\ConnectionInterface;
 use Config\Database;
+use CodeIgniter\Files\File;
 
 class ControllerDaftarDokumen extends BaseController
 {
@@ -21,6 +23,8 @@ class ControllerDaftarDokumen extends BaseController
     protected $clauseModel;
     protected $approvalModel;
     protected $revisionModel;
+    protected $userModel;
+    protected $roleModel;
     protected $db;
 
     public function __construct()
@@ -31,14 +35,37 @@ class ControllerDaftarDokumen extends BaseController
         $this->clauseModel    = new ClauseModel();
         $this->approvalModel  = new DocumentApprovalModel();
         $this->revisionModel  = new DocumentRevisionModel();
-        $this->db = Database::connect(); // Inisialisasi database secara langsung
+        $this->userModel      = new UserModel();
+        $this->roleModel      = new RoleModel();
+        $this->db = Database::connect();
     }
 
     public function index()
     {
-        $document = $this->documentModel
+        // Get current user information from session
+        $currentUserId = session()->get('user_id');
+        $currentUserUnitId = session()->get('unit_id');
+        $currentUserUnitParentId = session()->get('unit_parent_id');
+        $currentUserRoleId = session()->get('role_id');
+        $currentUserAccessLevel = session()->get('access_level') ?? 2;
+
+        log_message('debug', "Current User Access Control - ID: {$currentUserId}, Unit: {$currentUserUnitId}, Parent: {$currentUserUnitParentId}, Access Level: {$currentUserAccessLevel}");
+
+        // Fetch all documents with complete creator information and organizational data
+        $documents = $this->documentModel
             ->select('
-                document.*,
+                document.id,
+                document.title,
+                document.number,
+                document.revision,
+                document.date_published,
+                document.createdby,
+                document.type,
+                document.unit_id,
+                document.kode_dokumen_id,
+                document.standar_ids,
+                document.klausul_ids,
+                document.status,
                 dt.name AS jenis_dokumen,
                 dt.kode AS kode_jenis_dokumen,
                 unit.name AS unit_name,
@@ -48,13 +75,14 @@ class ControllerDaftarDokumen extends BaseController
                 document_approval.approvedate,
                 document_approval.approveby,
                 user_approver.fullname AS approved_by_name,
-                document_revision.createdby AS revision_creator_id,
-                user_creator.fullname AS pemilik,
-                user_document_owner.fullname AS createdby_name,
-                document.status,
-                document.createdby,
                 document_revision.filename,
-                document_revision.filepath
+                document_revision.filepath,
+                creator.id AS createdby_id,
+                creator.fullname AS creator_fullname,
+                creator.fullname AS createdby_name,
+                creator.unit_id AS creator_unit_id,
+                creator_unit.parent_id AS creator_unit_parent_id,
+                creator_role.access_level AS creator_access_level
             ')
             ->join('document_type dt', 'dt.id = document.type', 'left')
             ->join('unit', 'unit.id = document.unit_id', 'left')
@@ -63,25 +91,44 @@ class ControllerDaftarDokumen extends BaseController
             ->join('document_approval', 'document_approval.document_id = document.id', 'left')
             ->join('user user_approver', 'user_approver.id = document_approval.approveby', 'left')
             ->join('document_revision', 'document_revision.document_id = document.id AND document_revision.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
-            ->join('user user_creator', 'user_creator.id = document_revision.createdby', 'left')
-            ->join('user user_document_owner', 'user_document_owner.id = document.createdby', 'left')
+            ->join('user AS creator', 'creator.id = document.createdby', 'left')
+            ->join('unit AS creator_unit', 'creator_unit.id = creator.unit_id', 'left')
+            ->join('user_role AS creator_user_role', 'creator_user_role.user_id = creator.id AND creator_user_role.status = 1', 'left')
+            ->join('role AS creator_role', 'creator_role.id = creator_user_role.role_id', 'left')
             ->where('document.status', 1)
+            ->where('document.createddate >', 0)
             ->groupBy('document.id')
+            ->orderBy('document.id', 'DESC')
             ->findAll();
 
-        $document = array_values($document);
+        log_message('debug', 'Total documents fetched from database: ' . count($documents));
 
-        foreach ($document as &$doc) {
-            $doc['createdby'] = $doc['createdby_name'] ?? $doc['createdby'];
+        // Process documents to ensure proper data structure for the view
+        foreach ($documents as &$doc) {
+            // Ensure createdby shows the creator's full name
+            $doc['createdby'] = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
+            
+            // Ensure we have proper IDs for access control
+            $doc['createdby_id'] = $doc['createdby_id'] ?? $doc['createdby'] ?? 0;
+            
+            // Set default values for missing data
+            $doc['creator_unit_id'] = $doc['creator_unit_id'] ?? 0;
+            $doc['creator_unit_parent_id'] = $doc['creator_unit_parent_id'] ?? 0;
+            $doc['creator_access_level'] = $doc['creator_access_level'] ?? 2;
+            
+            log_message('debug', "Document {$doc['id']}: Creator ID {$doc['createdby_id']}, Unit {$doc['creator_unit_id']}, Parent {$doc['creator_unit_parent_id']}, Access Level {$doc['creator_access_level']}");
         }
 
+        // Get additional data for the view
         $kategori_dokumen = $this->typeModel->findAll();
-        $standards        = $this->standardModel->findAll();
-        $clauses          = $this->clauseModel->getWithStandard();
+        $standards = $this->standardModel->findAll();
+        $clauses = $this->clauseModel->getWithStandard();
+
+        log_message('debug', 'Documents passed to view: ' . count($documents));
 
         return view('DaftarDokumen/daftar_dokumen', [
             'title'            => 'Daftar Dokumen',
-            'document'         => $document,
+            'document'         => $documents,
             'kategori_dokumen' => $kategori_dokumen,
             'standards'        => $standards,
             'clauses'          => $clauses,
@@ -90,7 +137,7 @@ class ControllerDaftarDokumen extends BaseController
 
     public function updateDokumen()
     {
-        header('Content-Type: application/json'); // Ensure JSON response
+        header('Content-Type: application/json');
 
         $validation = \Config\Services::validation();
         $validation->setRules([
@@ -98,8 +145,8 @@ class ControllerDaftarDokumen extends BaseController
             'standar' => 'required|is_array',
             'klausul' => 'required|is_array',
             'date_published' => 'required|valid_date',
-            'approveby' => 'permit_empty|numeric', // Opsional, untuk sinkronisasi dengan document_approval
-            'approvedate' => 'permit_empty|valid_date' // Opsional, untuk sinkronisasi dengan document_approval
+            'approveby' => 'permit_empty|numeric',
+            'approvedate' => 'permit_empty|valid_date'
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
@@ -117,6 +164,27 @@ class ControllerDaftarDokumen extends BaseController
         }
 
         $id = $this->request->getPost('id');
+        $currentUserId = session()->get('user_id');
+
+        // Check if document exists
+        $document = $this->documentModel->find($id);
+        if (!$document) {
+            log_message('error', 'Document not found for ID: ' . $id);
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Dokumen tidak ditemukan.',
+                'swal' => [
+                    'title' => 'Error',
+                    'text' => 'Dokumen tidak ditemukan.',
+                    'icon' => 'error',
+                    'confirmButtonColor' => '#dc3545'
+                ]
+            ]);
+        }
+
+        // HAPUS PENGECEKAN AKSES - karena jika tombol edit muncul berarti sudah punya akses
+        // Logika: Jika user bisa melihat tombol edit, berarti dia sudah punya hak untuk edit
+
         $standar = $this->request->getPost('standar') ?? [];
         $klausul = $this->request->getPost('klausul') ?? [];
         $datePublished = $this->request->getPost('date_published');
@@ -127,36 +195,28 @@ class ControllerDaftarDokumen extends BaseController
         $dataDocument = [
             'standar_ids' => !empty($standar) ? implode(',', $standar) : '',
             'klausul_ids' => !empty($klausul) ? implode(',', $klausul) : '',
-            'date_published' => $datePublished
+            'date_published' => $datePublished,
+            'updatedby' => $currentUserId,
+            'updateddate' => time()
         ];
 
         // Data untuk tabel document_approval
         $dataApproval = [
             'document_id' => $id,
-            'standar_ids' => !empty($standar) ? implode(',', $standar) : '', // Sinkronisasi standar
-            'klausul_ids' => !empty($klausul) ? implode(',', $klausul) : '', // Sinkronisasi klausul
+            'standar_ids' => !empty($standar) ? implode(',', $standar) : '',
+            'klausul_ids' => !empty($klausul) ? implode(',', $klausul) : '',
             'approveby' => $approveBy,
-            'approvedate' => $approveDate ? date('Y-m-d H:i:s', strtotime($approveDate)) : null
+            'approvedate' => $approveDate ? date('Y-m-d H:i:s', strtotime($approveDate)) : null,
+            'updatedby' => $currentUserId,
+            'updateddate' => time()
         ];
 
         log_message('debug', 'Update data for document ID ' . $id . ': ' . json_encode($dataDocument));
         log_message('debug', 'Update data for approval ID ' . $id . ': ' . json_encode($dataApproval));
 
         try {
-            $existing = $this->documentModel->find($id);
-            if (!$existing) {
-                log_message('error', 'Document not found for ID: ' . $id);
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Dokumen tidak ditemukan.',
-                    'swal' => [
-                        'title' => 'Error',
-                        'text' => 'Dokumen tidak ditemukan.',
-                        'icon' => 'error',
-                        'confirmButtonColor' => '#dc3545'
-                    ]
-                ]);
-            }
+            // Start transaction
+            $this->db->transStart();
 
             // Update document table
             $this->documentModel->update($id, $dataDocument);
@@ -169,8 +229,25 @@ class ControllerDaftarDokumen extends BaseController
                 $this->approvalModel->insert($dataApproval);
             }
 
+            // Complete transaction
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === FALSE) {
+                log_message('error', 'Transaction failed for document ID ' . $id);
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Terjadi kesalahan saat memperbarui dokumen.',
+                    'swal' => [
+                        'title' => 'Error',
+                        'text' => 'Terjadi kesalahan saat memperbarui dokumen.',
+                        'icon' => 'error',
+                        'confirmButtonColor' => '#dc3545'
+                    ]
+                ]);
+            }
+
             if ($this->documentModel->affectedRows() > 0 || $this->approvalModel->affectedRows() > 0 || $this->approvalModel->getInsertID()) {
-                log_message('info', 'Document ID ' . $id . ' and approval updated successfully.');
+                log_message('info', 'Document ID ' . $id . ' and approval updated successfully by user ' . $currentUserId);
                 return $this->response->setJSON([
                     'status' => 'success',
                     'message' => 'Dokumen dan approval berhasil diperbarui.',
@@ -195,6 +272,8 @@ class ControllerDaftarDokumen extends BaseController
                 ]);
             }
         } catch (\Exception $e) {
+            // Rollback transaction on error
+            $this->db->transRollback();
             log_message('error', 'Error updating document ID ' . $id . ': ' . $e->getMessage());
             return $this->response->setJSON([
                 'status' => 'error',
@@ -212,44 +291,60 @@ class ControllerDaftarDokumen extends BaseController
     public function delete()
     {
         $id = $this->request->getPost('id');
+        $currentUserId = session()->get('user_id');
+
         if (!$id) {
             return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
         }
 
-        // Periksa apakah $this->db terinisialisasi
+        // Check if document exists
+        $document = $this->documentModel->find($id);
+        if (!$document) {
+            return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
+        }
+
+        // HAPUS PENGECEKAN AKSES - karena jika tombol delete muncul berarti sudah punya akses
+        // Logika: Jika user bisa melihat tombol delete, berarti dia sudah punya hak untuk delete
+
         if ($this->db === null) {
             log_message('error', 'Database connection is null in delete method for document ID: ' . $id);
             return redirect()->back()->with('error', 'Terjadi kesalahan koneksi database.');
         }
 
         try {
-            // Mulai transaksi untuk memastikan konsistensi data
+            // Start transaction
             $this->db->transStart();
 
-            // Update status di tabel document menjadi 3
-            $updatedDocument = $this->documentModel->update($id, [
-                'status' => 3, // Soft delete untuk document
+            // Soft delete: Update status di tabel document menjadi 3
+            $this->documentModel->update($id, [
+                'status' => 3,
+                'updatedby' => $currentUserId,
+                'updateddate' => time()
             ]);
 
             // Update status di tabel document_approval menjadi 0
             $existingApproval = $this->approvalModel->where('document_id', $id)->first();
             if ($existingApproval) {
                 $this->approvalModel->update($existingApproval['id'], [
-                    'status' => 0, // Soft delete untuk document_approval
+                    'status' => 0,
+                    'updatedby' => $currentUserId,
+                    'updateddate' => time()
                 ]);
             }
 
-            // Selesaikan transaksi
+            // Complete transaction
             $this->db->transComplete();
 
-            if ($this->db->transStatus() === FALSE || !$updatedDocument) {
-                return redirect()->back()->with('error', 'Dokumen tidak ditemukan atau gagal dihapus.');
+            if ($this->db->transStatus() === FALSE) {
+                log_message('error', 'Transaction failed for document deletion ID ' . $id);
+                return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus dokumen.');
             }
 
-            return redirect()->back()->with('success', 'Dokumen berhasil dihapus (soft delete).');
+            log_message('info', "Document {$id} deleted by user {$currentUserId}");
+            return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
         } catch (\Exception $e) {
             if ($this->db !== null) {
-                $this->db->transRollback(); // Rollback jika ada error
+                $this->db->transRollback();
             }
             log_message('error', 'Error deleting document ID ' . $id . ': ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -259,6 +354,10 @@ class ControllerDaftarDokumen extends BaseController
     public function serveFile()
     {
         $userId = session('user_id');
+        $currentUserAccessLevel = session()->get('access_level') ?? 2;
+        $currentUserUnitId = session()->get('unit_id');
+        $currentUserUnitParentId = session()->get('unit_parent_id');
+
         if (!$userId) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda harus login untuk mengakses file.');
         }
@@ -269,6 +368,51 @@ class ControllerDaftarDokumen extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID dokumen tidak ditemukan.');
         }
 
+        // Get document with creator information
+        $document = $this->getDocumentWithCreatorInfo($documentId);
+        if (!$document) {
+            log_message('error', 'Document not found for ID: ' . $documentId);
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Dokumen tidak ditemukan.');
+        }
+
+        // Check access permissions using the same logic as the view
+        $documentCreatorId = $document['createdby'] ?? 0;
+        $documentCreatorUnitId = $document['creator_unit_id'] ?? 0;
+        $documentCreatorUnitParentId = $document['creator_unit_parent_id'] ?? 0;
+        $documentCreatorAccessLevel = $document['creator_access_level'] ?? 2;
+
+        $canAccessFile = false;
+
+        // Access Control Rules (same as in view):
+        // Rule 1: Users can always access their own documents
+        if ($documentCreatorId == $userId) {
+            $canAccessFile = true;
+        }
+        // Rule 2: Higher level users can access lower level documents in same hierarchy
+        elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+            $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+            $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+            $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+            
+            if ($inSameHierarchy) {
+                $canAccessFile = true;
+            }
+        }
+        // Rule 3: Same level users in same unit can access each other's documents
+        elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
+            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+            if ($sameUnit) {
+                $canAccessFile = true;
+            }
+        }
+
+        if (!$canAccessFile) {
+            log_message('warning', "User {$userId} attempted to access file for document {$documentId} without permission");
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki izin untuk mengakses file ini.');
+        }
+
+        // Get file information
         $revision = $this->documentModel
             ->select('document_revision.filepath, document_revision.filename')
             ->join('document_revision', 'document_revision.document_id = document.id AND document_revision.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
@@ -295,14 +439,39 @@ class ControllerDaftarDokumen extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak dapat diakses.');
         }
 
-        $file = new \CodeIgniter\Files\File($filePath);
+        $file = new File($filePath);
         $mimeType = $file->getMimeType() ?: 'application/octet-stream';
         $action = $this->request->getGet('action') ?? 'view';
         $disposition = ($action === 'download') ? 'attachment' : 'inline';
 
+        log_message('info', "User {$userId} accessed file for document {$documentId}");
+
         return $this->response
             ->setHeader('Content-Type', $mimeType)
             ->setHeader('Content-Disposition', $disposition . '; filename="' . ($revision['filename'] ?? basename($revision['filepath'])) . '"')
+            ->setHeader('Content-Length', filesize($filePath))
             ->setBody(file_get_contents($filePath));
+    }
+
+    /**
+     * Get document with creator information
+     */
+    private function getDocumentWithCreatorInfo($documentId)
+    {
+        return $this->documentModel
+            ->select('
+                document.*,
+                creator.id AS createdby_id,
+                creator.fullname AS creator_fullname,
+                creator.unit_id AS creator_unit_id,
+                creator_unit.parent_id AS creator_unit_parent_id,
+                creator_role.access_level AS creator_access_level
+            ')
+            ->join('user AS creator', 'creator.id = document.createdby', 'left')
+            ->join('unit AS creator_unit', 'creator_unit.id = creator.unit_id', 'left')
+            ->join('user_role AS creator_user_role', 'creator_user_role.user_id = creator.id AND creator_user_role.status = 1', 'left')
+            ->join('role AS creator_role', 'creator_role.id = creator_user_role.role_id', 'left')
+            ->where('document.id', $documentId)
+            ->first();
     }
 }

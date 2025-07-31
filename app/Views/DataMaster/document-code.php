@@ -130,7 +130,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         <input type="text" class="form-control" id="addDocumentName" name="nama" required>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
@@ -167,10 +167,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         <input type="text" class="form-control" id="editDocumentName" name="nama" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
             </form>
         </div>
     </div>
@@ -223,8 +223,7 @@ function confirmDelete(id) {
             // Redirect ke endpoint hapus (POST manual lewat form)
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/document-type/delete';
-
+            form.action = '<?= base_url('document-code/delete') ?>';
             const idField = document.createElement('input');
             idField.type = 'hidden';
             idField.name = 'id';

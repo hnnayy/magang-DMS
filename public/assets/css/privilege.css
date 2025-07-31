@@ -1,3 +1,4 @@
+/* === Global Styles === */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -5,6 +6,22 @@ body {
     background-color: #f5f5f5;
 }
 
+.w-100 {
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* === Container & Titles === */
 .privilege-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -24,6 +41,7 @@ body {
     padding-bottom: 15px;
 }
 
+/* === Form Groups === */
 .form-content {
     width: 100%;
     margin-top: 20px;
@@ -35,7 +53,8 @@ body {
     border-radius: 12px;
 }
 
-.form-group label {
+.form-group label,
+.form-label {
     font-weight: 600;
     margin-bottom: 10px;
     display: block;
@@ -43,8 +62,10 @@ body {
     font-size: 16px;
 }
 
-select,
-input[type="text"] {
+/* === Inputs & Selects === */
+input[type="text"],
+.form-input,
+select {
     width: 100%;
     padding: 12px 15px;
     font-size: 16px;
@@ -55,13 +76,37 @@ input[type="text"] {
     transition: border-color 0.3s ease;
 }
 
-select:focus,
-input[type="text"]:focus {
+.form-input {
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+}
+
+.form-input:focus,
+input[type="text"]:focus,
+select:focus {
     outline: none;
     border-color: #b41616;
     box-shadow: 0 0 0 3px rgba(102, 16, 242, 0.1);
 }
 
+.form-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: none;
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.form-input.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+/* === Select2 === */
 .select2-container--default .select2-selection--multiple {
     width: 100% !important;
     min-height: 50px;
@@ -97,6 +142,21 @@ input[type="text"]:focus {
     color: #ffdddd !important;
 }
 
+.select2-dropdown {
+    border: 2px solid #e1e5e9 !important;
+    border-radius: 8px !important;
+}
+
+.select2-results__option--highlighted {
+    background-color: #b41616 !important;
+}
+
+.select2-search,
+.select2-search--dropdown {
+    display: none !important;
+}
+
+/* === Privileges Options === */
 .privileges-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -107,7 +167,6 @@ input[type="text"]:focus {
     border-radius: 8px;
     border: 2px solid #e1e5e9;
 }
-
 
 .privileges-options label {
     display: flex;
@@ -131,6 +190,7 @@ input[type="text"]:focus {
     cursor: pointer;
 }
 
+/* === Form Actions === */
 .form-actions {
     margin-top: 40px;
     display: flex;
@@ -171,20 +231,85 @@ input[type="text"]:focus {
     transform: translateY(-2px);
 }
 
-.select2-dropdown {
-    border: 2px solid #e1e5e9 !important;
-    border-radius: 8px !important;
+/* === Search Dropdown === */
+.search-dropdown-container {
+    position: relative;
 }
 
-.select2-results__option--highlighted {
-    background-color: #b41616 !important;
+.search-dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.select2-search,
-.select2-search--dropdown {
-    display: none !important;
+.search-dropdown-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
 }
 
+.search-dropdown-item:hover,
+.search-dropdown-item.selected {
+    background-color: #f8f9fa;
+}
+
+.search-dropdown-item.no-results {
+    color: #666;
+    cursor: default;
+    text-align: center;
+}
+
+/* === Selected Item Tags === */
+.selected-items-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.selected-item-tag {
+    background-color: #e53e3e;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.2s ease;
+}
+
+.selected-item-tag .remove-btn {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.selected-item-tag .remove-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* === Responsive === */
 @media (max-width: 768px) {
     .privilege-container {
         padding: 20px;
@@ -207,4 +332,3 @@ input[type="text"]:focus {
         width: 100%;
     }
 }
-

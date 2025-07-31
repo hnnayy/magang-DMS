@@ -1060,6 +1060,14 @@ body {
 
     .table-responsive {
         font-size: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+    .modal {
+        z-index: 1050 !important;
+    }
+    .modal-backdrop {
+        z-index: 1040 !important;
     }
 
     .export-buttons {
