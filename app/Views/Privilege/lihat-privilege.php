@@ -1,17 +1,5 @@
 <?= $this->include('partials/alerts') ?>
 <?= $this->extend('layout/main_layout') ?>
-<style>
-    .modal {
-        z-index: 1050 !important;
-    }
-    .modal-backdrop {
-        z-index: 1040 !important;
-    }
-    .table-responsive {
-        position: relative;
-        z-index: 1;
-    }
-</style>
 <?= $this->section('content') ?>
 
 
@@ -104,7 +92,6 @@
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Privilege</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="editPrivilegeForm">
                 <div class="modal-body">
@@ -140,9 +127,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
-                </div>
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
             </form>
         </div>
     </div>

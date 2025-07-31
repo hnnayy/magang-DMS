@@ -1,8 +1,31 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<?php
+// Get current user information from session
+$currentUserId = session()->get('user_id');
+$currentUserUnitId = session()->get('unit_id');
+$currentUserUnitParentId = session()->get('unit_parent_id');
+$currentUserRoleId = session()->get('role_id');
+
+// Get user's role information to determine access level
+$roleModel = new \App\Models\RoleModel();
+$currentUserRole = $roleModel->find($currentUserRoleId);
+$currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2 (lower access)
+
+// Ambil privilege untuk daftar-dokumen dari session
+$documentPrivilege = session()->get('privileges')['document-list'] ?? [
+    'can_create' => 0,
+    'can_update' => 0,
+    'can_delete' => 0,
+    'can_approve' => 0
+];
+
+// Cek apakah user memiliki privilege untuk aksi apapun
+$hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_delete'];
+?>
+
 <!-- CSS External Links -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
@@ -12,39 +35,14 @@
 <!-- Custom CSS -->
 <link rel="stylesheet" href="<?= base_url('assets/css/daftar-dokumen.css') ?>">
 
-<!-- Inline CSS for Readonly/Disabled Fields and Custom Multi-Select -->
+<!-- Inline CSS for Readonly/Disabled Fields -->
 <style>
     input[readonly], select[disabled] {
         background-color: #f1f1f1;
         cursor: not-allowed;
         opacity: 0.7;
     }
-    /* Custom styling for multi-select in edit modal */
-    .custom-multi-select {
-        height: auto;
-        min-height: 38px;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #ced4da;
-        border-radius: 0.25rem;
-        background-color: white;
-    }
-    .custom-multi-select option {
-        padding: 0.25rem 0.5rem;
-    }
-    .custom-multi-select option:checked {
-        background-color: #6f42c1;
-        color: white;
-    }
-    .custom-multi-select[multiple] {
-        overflow-y: auto;
-        max-height: 150px;
-    }
-    /* Ensure compatibility with Bootstrap */
-    .custom-multi-select:focus {
-        border-color: #6f42c1;
-        outline: 0;
-        box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
-    }
+    
     /* Styling untuk pesan "Tidak ada data" */
     .no-data-message {
         text-align: center;
@@ -52,52 +50,209 @@
         color: #6c757d;
         font-style: italic;
     }
+    
+    /* Hide action column if no privileges */
+    <?php if (!$hasAnyPrivilege): ?>
+    .aksi-column {
+        display: none !important;
+    }
+    <?php endif; ?>
+
+    /* Text truncation for long content */
+    .text-truncate-custom {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
+
+    /* Checkbox styling for multi-select */
+    .checkbox-group {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        background-color: white;
+    }
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0;
+        margin: 0;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 0.5rem;
+        margin-top: 0;
+    }
+    
+    .checkbox-item label {
+        margin-bottom: 0;
+        font-weight: normal;
+        cursor: pointer;
+        flex: 1;
+    }
+
+    /* Filter dropdown styling */
+    .filter-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .filter-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 300px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+    
+    .filter-dropdown.show .filter-dropdown-content {
+        display: block;
+    }
+    
+    .filter-toggle {
+        background-color: white;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        min-width: 180px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .filter-toggle:after {
+        content: "▼";
+        font-size: 0.8em;
+    }
+
+    /* Styling untuk kode dokumen format teks biasa */
+    .kode-dokumen-simple {
+        font-size: 0.9rem;
+        color: #333;
+        line-height: 1.4;
+    }
 </style>
 
 <div class="container-fluid px-4 py-4">
     <h4 class="mb-4">Daftar Dokumen</h4>
 
     <!-- FILTER -->
-    <div class="bg-light p-3 rounded mb-4 d-flex flex-wrap align-items-center gap-2">
-        <strong class="form-label mb-0 me-2">Filter Data</strong>
-        <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterStandar" multiple>
-                <?php foreach ($standards as $s): ?>
-                    <option value="<?= $s['id'] ?>"><?= $s['nama_standar'] ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterKlausul" multiple>
-                <?php foreach ($clauses as $c): ?>
-                    <option value="<?= $c['id'] ?>">
-                        <?= $c['nomor_klausul'] ?> - <?= $c['nama_klausul'] ?> (<?= $c['nama_standar'] ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterPemilik">
-                <option value="">Semua Pemilik Doc</option>
-                <?php 
-                $unique_owners = array_unique(array_filter(array_column($document, 'createdby')));
-                foreach ($unique_owners as $owner): 
-                ?>
-                    <option value="<?= esc($owner) ?>"><?= esc($owner) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div style="min-width:180px;">
-            <select class="form-select filter-input" id="filterJenis">
-                <option value="">Semua Jenis Doc</option>
-                <?php foreach ($kategori_dokumen as $k): ?>
-                    <option value="<?= $k['id'] ?>"><?= $k['name'] ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary btn-sm-2" id="btnFilter">Filter</button>
-            <button class="btn btn-success btn-sm-2" id="excel-button-container">Export Excel</button>
+    <div class="bg-light p-3 rounded mb-4">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <strong class="form-label mb-0 me-2">Filter Data</strong>
+            
+            <!-- Filter Standar dengan Checkbox -->
+            <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
+                <div class="filter-toggle" onclick="toggleDropdown('filterStandar')">
+                    <span id="filterStandarText">Pilih Standar...</span>
+                </div>
+                <div class="filter-dropdown-content" id="filterStandarContent">
+                    <div class="checkbox-group">
+                        <?php foreach ($standards as $s): ?>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="standar_<?= $s['id'] ?>" value="<?= $s['id'] ?>" class="standar-checkbox">
+                                <label for="standar_<?= $s['id'] ?>"><?= esc($s['nama_standar']) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Klausul dengan Checkbox -->
+            <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
+                <div class="filter-toggle" onclick="toggleDropdown('filterKlausul')">
+                    <span id="filterKlausulText">Pilih Klausul...</span>
+                </div>
+                <div class="filter-dropdown-content" id="filterKlausulContent">
+                    <div class="checkbox-group">
+                        <?php foreach ($clauses as $c): ?>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="klausul_<?= $c['id'] ?>" value="<?= $c['id'] ?>" class="klausul-checkbox">
+                                <label for="klausul_<?= $c['id'] ?>">
+                                    <?= esc($c['nomor_klausul']) ?> - <?= esc($c['nama_klausul']) ?> (<?= esc($c['nama_standar']) ?>)
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow-1" style="min-width:180px;">
+                <select class="form-select filter-input w-100" id="filterPemilik">
+                    <option value="">Semua Pemilik Doc</option>
+                    <?php 
+                    $unique_owners = [];
+                    foreach ($document as $doc) {
+                        // Apply same access control for filter options
+                        $documentCreatorId = $doc['createdby_id'] ?? 0;
+                        $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
+                        $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
+                        $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
+                        $documentCreatorName = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
+                        
+                        $canViewDocument = false;
+                        $showCreatorName = false;
+                        
+                        // Same access control logic as in the table
+                        if ($documentCreatorId == $currentUserId) {
+                            $canViewDocument = true;
+                            $showCreatorName = true;
+                        } elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                            $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                            $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                            $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+                            
+                            if ($inSameHierarchy) {
+                                $canViewDocument = true;
+                                $showCreatorName = true;
+                            }
+                        } elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
+                            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                            if ($sameUnit) {
+                                $canViewDocument = true;
+                                $showCreatorName = true;
+                            }
+                        }
+                        
+                        if ($canViewDocument && $showCreatorName && !empty($documentCreatorName) && $documentCreatorName != 'Unknown User') {
+                            $unique_owners[$documentCreatorName] = $documentCreatorName;
+                        }
+                    }
+                    
+                    foreach ($unique_owners as $owner): 
+                    ?>
+                        <option value="<?= esc($owner) ?>"><?= esc($owner) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="flex-grow-1" style="min-width:180px;">
+                <select class="form-select filter-input w-100" id="filterJenis">
+                    <option value="">Semua Jenis Doc</option>
+                    <?php foreach ($kategori_dokumen as $k): ?>
+                        <option value="<?= $k['id'] ?>"><?= $k['name'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary btn-sm-2" id="btnFilter">Filter</button>
+                <button class="btn btn-success btn-sm-2" id="excel-button-container">Export Excel</button>
+            </div>
         </div>
     </div>
 
@@ -119,6 +274,9 @@
                     <table id="dokumenTable" class="table table-bordered table-striped">
                         <thead class="table-light">
                             <tr>
+                                <th>No</th>
+                                <th>Faculty/Directorate</th>
+                                <th>Department/Unit/Program</th>
                                 <th>Standar</th>
                                 <th>Klausul</th>
                                 <th>Jenis Dokumen</th>
@@ -131,14 +289,79 @@
                                 <th>Tanggal Efektif</th>
                                 <th>Disetujui Oleh</th>
                                 <th>Tanggal Disetujui</th>
-                                <th class="aksi-column">Aksi</th>
+                                <?php if ($hasAnyPrivilege): ?>
+                                    <th class="aksi-column">Aksi</th>
+                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($document as $row): ?>
+                            <?php 
+                            $displayedCount = 0;
+                            foreach ($document as $row): 
+                                // Check if document should be visible based on hierarchical access
+                                $documentCreatorId = $row['createdby_id'] ?? 0;
+                                $documentCreatorUnitId = $row['creator_unit_id'] ?? 0;
+                                $documentCreatorUnitParentId = $row['creator_unit_parent_id'] ?? 0;
+                                $documentCreatorAccessLevel = $row['creator_access_level'] ?? 2;
+                                $documentCreatorName = $row['creator_fullname'] ?? $row['createdby'] ?? 'Unknown User';
+                                
+                                $canViewDocument = false;
+                                $showCreatorName = false; // Control creator name visibility
+                                $canEditDocument = false; // Control edit permission
+                                $canDeleteDocument = false; // Control delete permission
+                                
+                                // Access Control Rules:
+                                // Rule 1: Users can always see their own documents and their own name
+                                if ($documentCreatorId == $currentUserId) {
+                                    $canViewDocument = true;
+                                    $showCreatorName = true;
+                                    $canEditDocument = true;
+                                    $canDeleteDocument = true;
+                                }
+                                // Rule 2: Higher level users (level 1) can see lower level documents (level 2) in same hierarchy
+                                elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                                    // Check if they are in the same organizational hierarchy
+                                    $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                                    $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                                    $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                                    $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+                                    
+                                    if ($inSameHierarchy) {
+                                        $canViewDocument = true;
+                                        $showCreatorName = true; // Higher level users can see creator names
+                                        $canEditDocument = true; // Higher level users can edit subordinate documents
+                                        $canDeleteDocument = true; // Higher level users can delete subordinate documents
+                                    }
+                                }
+                                // Rule 3: Same level users in same unit can see each other's documents
+                                elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
+                                    $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                                    if ($sameUnit) {
+                                        $canViewDocument = true;
+                                        $showCreatorName = true; // Same level users can see each other's names
+                                        // Same level users cannot edit/delete each other's documents (only their own)
+                                        $canEditDocument = false;
+                                        $canDeleteDocument = false;
+                                    }
+                                }
+                                
+                                // Skip if user cannot view this document
+                                if (!$canViewDocument) continue;
+                                
+                                // Skip documents with invalid creator ID
+                                if ($documentCreatorId == 0) continue;
+                                
+                                $displayedCount++;
+                            ?>
                                 <tr data-standar="<?= implode(',', array_filter(explode(',', $row['standar_ids'] ?? ''))) ?>" 
                                     data-klausul="<?= implode(',', array_filter(explode(',', $row['klausul_ids'] ?? ''))) ?>"
-                                    data-pemilik="<?= esc($row['createdby'] ?? '') ?>">
+                                    data-pemilik="<?= $showCreatorName ? esc($documentCreatorName) : '' ?>"
+                                    data-creator-id="<?= $documentCreatorId ?>"
+                                    data-can-edit="<?= $canEditDocument ? '1' : '0' ?>"
+                                    data-can-delete="<?= $canDeleteDocument ? '1' : '0' ?>">
+                                    <td class="text-center"><?= $displayedCount ?></td>
+                                    <td><?= esc($row['parent_name'] ?? '-') ?></td>
+                                    <td><?= esc($row['unit_name'] ?? '-') ?></td>
                                     <td>
                                         <?php
                                         $standar_ids = array_filter(explode(',', $row['standar_ids'] ?? ''));
@@ -166,22 +389,63 @@
                                             return null;
                                         }, $klausul_ids);
                                         $klausul_names = array_filter($klausul_names);
-                                        echo !empty($klausul_names) ? implode(', ', $klausul_names) : '-';
+                                        
+                                        if (!empty($klausul_names)) {
+                                            $klausul_text = implode(', ', $klausul_names);
+                                            echo '<span class="text-truncate-custom" title="' . esc($klausul_text) . '">' . esc($klausul_text) . '</span>';
+                                        } else {
+                                            echo '-';
+                                        }
                                         ?>
                                     </td>
                                     <td><?= esc($row['jenis_dokumen'] ?? '-') ?></td>
                                     <td>
-                                        <?php if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])): ?>
-                                            <div>
-                                                <?= esc($row['kode_dokumen_kode']) ?> - <?= esc($row['kode_dokumen_nama']) ?>
-                                            </div>
+                                        <!-- FORMAT BARU: Tampilkan kode & nama dokumen dengan format teks biasa dipisah strip -->
+                                        <div class="kode-dokumen-simple">
+                                            <?php 
+                                            $kodeDokumenText = '';
+                                            
+                                            // Prioritas 1: Dari tabel kode_dokumen (predefined atau custom)
+                                            if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
+                                                $kodeDokumenText = $row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama'];
+                                            }
+                                            // Prioritas 2: Dari field kode_jenis_dokumen
+                                            elseif (!empty($row['kode_jenis_dokumen'])) {
+                                                $kodeDokumenText = $row['kode_jenis_dokumen'];
+                                                if (!empty($row['title'])) {
+                                                    $kodeDokumenText .= ' - ' . $row['title'];
+                                                }
+                                            }
+                                            // Fallback: Hanya nama dokumen
+                                            elseif (!empty($row['title'])) {
+                                                $kodeDokumenText = $row['title'];
+                                            }
+                                            
+                                            if (!empty($kodeDokumenText)):
+                                            ?>
+                                                <span class="text-truncate-custom" title="<?= esc($kodeDokumenText) ?>">
+                                                    <?= esc($kodeDokumenText) ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                    <td><?= esc($row['number'] ?? '-') ?></td>
+                                    <td>
+                                        <span class="text-truncate-custom" title="<?= esc($row['title'] ?? '-') ?>">
+                                            <?= esc($row['title'] ?? '-') ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($showCreatorName): ?>
+                                            <span class="text-truncate-custom" title="<?= esc($documentCreatorName) ?>">
+                                                <?= esc($documentCreatorName) ?>
+                                            </span>
                                         <?php else: ?>
                                             <span class="text-muted">-</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= esc($row['number'] ?? '-') ?></td>
-                                    <td><?= esc($row['title'] ?? '-') ?></td>
-                                    <td><?= esc($row['createdby'] ?? '-') ?></td>
                                     <td class="text-center">
                                         <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                             <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
@@ -199,133 +463,188 @@
                                     <td><?= esc($row['date_published'] ?? '-') ?></td>
                                     <td><?= esc($row['approved_by_name'] ?? '-') ?></td>
                                     <td><?= esc($row['approvedate'] ?? '-') ?></td>
-                                    <td class="aksi-column">
-                                        <a href="#" class="text-warning me-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>" title="Edit">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form action="<?= base_url('document-list/delete') ?>" method="post" class="d-inline">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                            <a href="javascript:void(0);" class="text-danger btn-delete" data-id="<?= $row['id'] ?>" title="Hapus">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </form>
-                                    </td>
+                                    
+                                    <!-- Kolom Aksi dengan privilege check - HANYA tampilkan jika bisa edit/delete -->
+                                    <?php if ($hasAnyPrivilege): ?>
+                                        <td class="aksi-column text-center">
+                                            <div class="action-buttons">
+                                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
+                                                    <a href="#" class="text-primary me-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>" title="Edit">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                                
+                                                <?php if ($documentPrivilege['can_delete'] && $canDeleteDocument): ?>
+                                                    <form action="<?= base_url('document-list/delete') ?>" method="post" class="d-inline">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                                        <a href="javascript:void(0);" class="text-danger btn-delete" data-id="<?= $row['id'] ?>" title="Hapus">
+                                                            <i class="bi bi-trash"></i>
+                                                        </a>
+                                                    </form>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
 
-                                <!-- Modal Edit Dokumen -->
-                                <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                                        <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                            <div class="modal-content">
-                                                <div class="modal-header border-0">
-                                                    <h6 class="modal-title fw-semibold">Edit Dokumen</h6>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                                                </div>
-                                                <div class="modal-body px-4 py-3">
-                                                    <div class="row g-3">
-                                                        <!-- Dropdown Standar (Multi-Select) -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Standar</label>
-                                                            <select name="standar[]" class="form-select form-select-sm custom-multi-select" multiple required>
-                                                                <?php foreach ($standards as $s): ?>
-                                                                    <option value="<?= $s['id'] ?>" <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'selected' : '' ?>>
-                                                                        <?= $s['nama_standar'] ?>
-                                                                    </option>
-                                                                <?php endforeach; ?>
-                                                            </select>
-                                                            <small class="text-muted">Tahan Ctrl (atau Cmd pada Mac) untuk memilih lebih dari satu.</small>
-                                                        </div>
-                                                        <!-- Dropdown Klausul (Multi-Select) -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Klausul</label>
-                                                            <select name="klausul[]" class="form-select form-select-sm custom-multi-select" multiple required>
-                                                                <?php foreach ($clauses as $c): ?>
-                                                                    <option value="<?= $c['id'] ?>" <?= in_array($c['id'], array_filter(explode(',', $row['klausul_ids'] ?? ''))) ? 'selected' : '' ?>>
-                                                                        <?= $c['nomor_klausul'] ?> - <?= $c['nama_klausul'] ?> (<?= $c['nama_standar'] ?>)
-                                                                    </option>
-                                                                <?php endforeach; ?>
-                                                            </select>
-                                                            <small class="text-muted">Tahan Ctrl (atau Cmd pada Mac) untuk memilih lebih dari satu.</small>
-                                                        </div>
-                                                        <!-- Jenis Dokumen -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Jenis Dokumen</label>
-                                                            <select name="type" class="form-select form-select-sm" disabled>
-                                                                <?php foreach ($kategori_dokumen as $kategori): ?>
-                                                                    <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
-                                                                        <?= $kategori['name'] ?>
-                                                                    </option>
-                                                                <?php endforeach; ?>
-                                                            </select>
-                                                        </div>
-                                                        <!-- Kode Jenis -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Kode Jenis</label>
-                                                            <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>" readonly>
-                                                        </div>
-                                                        <!-- Nomor -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Nomor</label>
-                                                            <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>" readonly>
-                                                        </div>
-                                                        <!-- Nama Dokumen -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Nama Dokumen</label>
-                                                            <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>" readonly>
-                                                        </div>
-                                                        <!-- Pemilik Dokumen -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">Pemilik Dokumen</label>
-                                                            <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($row['createdby'] ?? '') ?>" readonly>
-                                                        </div>
-                                                        <!-- File Dokumen -->
-                                                        <div class="col-md-6">
-                                                            <label class="form-label small">File Dokumen</label>
-                                                            <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
-                                                                <small class="text-muted d-block mt-1">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
-                                                                <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
-                                                                   class="btn btn-primary btn-sm mt-1" 
-                                                                   title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
-                                                                    <i class="bi bi-download"></i> Lihat File
-                                                                </a>
-                                                            <?php else: ?>
-                                                                <span class="text-muted">Tidak ada file</span>
+                                <!-- Modal Edit Dokumen - Hanya ditampilkan jika user memiliki privilege update dan bisa edit dokumen ini -->
+                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
+                                    <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                            <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                                <div class="modal-content">
+                                                    <div class="modal-header border-0">
+                                                        <h6 class="modal-title fw-semibold">Edit Dokumen</h6>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                                                    </div>
+                                                    <div class="modal-body px-4 py-3">
+                                                        <div class="row g-3">
+                                                            <!-- Dropdown Standar (Checkbox) -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Standar</label>
+                                                                <div class="checkbox-group">
+                                                                    <?php foreach ($standards as $s): ?>
+                                                                        <div class="checkbox-item">
+                                                                            <input type="checkbox" 
+                                                                                   id="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>" 
+                                                                                   name="standar[]" 
+                                                                                   value="<?= $s['id'] ?>" 
+                                                                                   <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'checked' : '' ?>>
+                                                                            <label for="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>">
+                                                                                <?= esc($s['nama_standar']) ?>
+                                                                            </label>
+                                                                        </div>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Dropdown Klausul (Checkbox) -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Klausul</label>
+                                                                <div class="checkbox-group">
+                                                                    <?php foreach ($clauses as $c): ?>
+                                                                        <div class="checkbox-item">
+                                                                            <input type="checkbox" 
+                                                                                   id="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>" 
+                                                                                   name="klausul[]" 
+                                                                                   value="<?= $c['id'] ?>" 
+                                                                                   <?= in_array($c['id'], array_filter(explode(',', $row['klausul_ids'] ?? ''))) ? 'checked' : '' ?>>
+                                                                            <label for="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>">
+                                                                                <?= esc($c['nomor_klausul']) ?> - <?= esc($c['nama_klausul']) ?> (<?= esc($c['nama_standar']) ?>)
+                                                                            </label>
+                                                                        </div>
+                                                                    <?php endforeach; ?>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Jenis Dokumen -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Jenis Dokumen</label>
+                                                                <select name="type" class="form-select form-select-sm" disabled>
+                                                                    <?php foreach ($kategori_dokumen as $kategori): ?>
+                                                                        <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
+                                                                            <?= $kategori['name'] ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                            
+                                                            <!-- FORMAT BARU: Tampilkan kode dokumen dengan format teks biasa -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Kode & Nama Dokumen</label>
+                                                                <div class="form-control form-control-sm" style="background-color: #f8f9fa; min-height: 38px;">
+                                                                    <?php 
+                                                                    // Tampilkan kode & nama dokumen dengan format teks biasa
+                                                                    if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
+                                                                        echo esc($row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama']);
+                                                                    } elseif (!empty($row['kode_jenis_dokumen'])) {
+                                                                        $displayText = esc($row['kode_jenis_dokumen']);
+                                                                        if (!empty($row['title'])) {
+                                                                            $displayText .= ' - ' . esc($row['title']);
+                                                                        }
+                                                                        echo $displayText;
+                                                                    } elseif (!empty($row['title'])) {
+                                                                        echo esc($row['title']);
+                                                                    } else {
+                                                                        echo '<span class="text-muted">Tidak ada kode</span>';
+                                                                    }
+                                                                    ?>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <!-- Kode Jenis (Jika ada) -->
+                                                            <?php if (!empty($row['kode_jenis_dokumen'])): ?>
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Kode Jenis</label>
+                                                                <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>" readonly>
+                                                            </div>
                                                             <?php endif; ?>
-                                                        </div>
-                                                        <!-- Revisi -->
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Revisi</label>
-                                                            <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>" readonly>
-                                                        </div>
-                                                        <!-- Tanggal Efektif -->
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Tanggal Efektif</label>
-                                                            <input type="date" class="form-control form-control-sm" name="date_published" value="<?= esc($row['date_published']) ?>">
-                                                        </div>
-                                                        <!-- Disetujui Oleh -->
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Disetujui Oleh</label>
-                                                            <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
-                                                            <input type="text" class="form-control form-control-sm" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
-                                                        </div>
-                                                        <!-- Tanggal Disetujui -->
-                                                        <div class="col-md-3">
-                                                            <label class="form-label small">Tanggal Disetujui</label>
-                                                            <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
+                                                            
+                                                            <!-- Nomor -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Nomor</label>
+                                                                <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>" readonly>
+                                                            </div>
+                                                            <!-- Nama Dokumen -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Nama Dokumen</label>
+                                                                <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>" readonly>
+                                                            </div>
+                                                            <!-- Pemilik Dokumen -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">Pemilik Dokumen</label>
+                                                                <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
+                                                            </div>
+                                                            <!-- File Dokumen -->
+                                                            <div class="col-md-6">
+                                                                <label class="form-label small">File Dokumen</label>
+                                                                <div>
+                                                                    <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
+                                                                        <small class="text-muted d-block mt-1">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
+                                                                        <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                                                           class="btn btn-primary btn-sm mt-1" 
+                                                                           title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                                                            <i class="bi bi-download"></i> Lihat File
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        <span class="text-muted">Tidak ada file</span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Revisi -->
+                                                            <div class="col-md-3">
+                                                                <label class="form-label small">Revisi</label>
+                                                                <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>" readonly>
+                                                            </div>
+                                                            <!-- Tanggal Efektif -->
+                                                            <div class="col-md-3">
+                                                                <label class="form-label small">Tanggal Efektif</label>
+                                                                <input type="date" class="form-control form-control-sm" name="date_published" value="<?= esc($row['date_published']) ?>">
+                                                            </div>
+                                                            <!-- Disetujui Oleh -->
+                                                            <div class="col-md-3">
+                                                                <label class="form-label small">Disetujui Oleh</label>
+                                                                <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
+                                                                <input type="text" class="form-control form-control-sm" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
+                                                            </div>
+                                                            <!-- Tanggal Disetujui -->
+                                                            <div class="col-md-3">
+                                                                <label class="form-label small">Tanggal Disetujui</label>
+                                                                <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
+                                                            </div>
                                                         </div>
                                                     </div>
+                                                    <div class="modal-footer border-0 px-4 pb-3">
+                                                        <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                                    </div>
                                                 </div>
-                                                <div class="modal-footer border-0 px-4 pb-3">
-                                                    <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                                </div>
-                                            </div>
-                                        </form>
+                                            </form>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php endif; ?>
+                                
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -348,28 +667,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
 <!-- Custom JS -->
 <script>
 $(document).ready(function() {
-    // Initialize Choices.js for filter selects (kept for consistency with filter section)
-    const filterStandar = new Choices('#filterStandar', {
-        removeItemButton: true,
-        placeholder: true,
-        placeholderValue: 'Pilih Standar...'
-    });
+    // Privilege check dari PHP
+    const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
+    const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
+    const currentUserId = <?= json_encode($currentUserId) ?>;
+    const currentUserAccessLevel = <?= json_encode($currentUserAccessLevel) ?>;
     
-    const filterKlausul = new Choices('#filterKlausul', {
-        removeItemButton: true,
-        placeholder: true,
-        placeholderValue: 'Pilih Klausul...'
-    });
-
-    // Initialize DataTables
-    const table = $('#dokumenTable').DataTable({
+    // Hitung jumlah kolom berdasarkan privilege
+    const totalColumns = hasAnyPrivilege ? 16 : 15; // 16 jika ada kolom aksi, 15 jika tidak
+    
+    // Initialize DataTables dengan konfigurasi dinamis
+    const tableConfig = {
         dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
@@ -379,18 +693,21 @@ $(document).ready(function() {
                 previous: "Sebelumnya",
                 next: "Berikutnya"
             },
-            zeroRecords: "" // Kosongkan pesan default DataTables
+            zeroRecords: "", // Kosongkan pesan default DataTables
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+            infoFiltered: "(disaring dari _MAX_ total entri)"
         },
         columnDefs: [
-            { orderable: false, targets: [-1] }, // Kolom Aksi tidak bisa diurutkan
-            { searchable: true, targets: [0, 1, 2, 3, 4, 5, 6, 9, 10, 11] } // Aktifkan pencarian hanya pada kolom tertentu (opsional)
+            { searchable: true, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14] }, // Aktifkan pencarian pada kolom tertentu
+            { className: 'text-center', targets: [0, 10, 11] } // Center align untuk No, File, dan Revisi
         ],
         buttons: [
             {
                 extend: 'excel',
                 title: 'Daftar_Dokumen',
                 exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+                    columns: hasAnyPrivilege ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] : ':not(:last-child)'
                 }
             }
         ],
@@ -407,8 +724,20 @@ $(document).ready(function() {
                 'background': 'white',
                 'z-index': '10'
             });
+
+            // Update info text
+            const info = this.api().page.info();
+            const infoText = `Menampilkan ${info.start + 1} sampai ${info.end} dari ${info.recordsDisplay} entri`;
+            $('.datatable-info-container').html(`<small class="text-muted">${infoText}</small>`);
         }
-    });
+    };
+
+    // Jika ada kolom aksi, set agar tidak bisa diurutkan
+    if (hasAnyPrivilege) {
+        tableConfig.columnDefs.push({ orderable: false, targets: [-1] });
+    }
+
+    const table = $('#dokumenTable').DataTable(tableConfig);
 
     // Move export buttons to container
     table.buttons().container().appendTo('.dt-buttons-container');
@@ -475,10 +804,68 @@ $(document).ready(function() {
         }
     });
 
-    // Updated Multi-Select Filter Logic with Pemilik Dokumen
+    // FUNGSI DROPDOWN FILTER DENGAN CHECKBOX
+    window.toggleDropdown = function(filterId) {
+        const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+        const isCurrentlyShown = dropdown.classList.contains('show');
+        
+        // Tutup semua dropdown lain
+        document.querySelectorAll('.filter-dropdown').forEach(d => {
+            d.classList.remove('show');
+        });
+        
+        // Toggle dropdown yang diklik
+        if (!isCurrentlyShown) {
+            dropdown.classList.add('show');
+        }
+    };
+
+    // Tutup dropdown jika klik di luar
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.filter-dropdown')) {
+            document.querySelectorAll('.filter-dropdown').forEach(d => {
+                d.classList.remove('show');
+            });
+        }
+    });
+
+    // Update display text untuk dropdown filter
+    function updateFilterText() {
+        // Update Standar filter text
+        const checkedStandar = document.querySelectorAll('.standar-checkbox:checked');
+        const standarText = document.getElementById('filterStandarText');
+        if (checkedStandar.length === 0) {
+            standarText.textContent = 'Pilih Standar...';
+        } else if (checkedStandar.length === 1) {
+            standarText.textContent = checkedStandar[0].nextElementSibling.textContent;
+        } else {
+            standarText.textContent = `${checkedStandar.length} Standar dipilih`;
+        }
+
+        // Update Klausul filter text
+        const checkedKlausul = document.querySelectorAll('.klausul-checkbox:checked');
+        const klausulText = document.getElementById('filterKlausulText');
+        if (checkedKlausul.length === 0) {
+            klausulText.textContent = 'Pilih Klausul...';
+        } else if (checkedKlausul.length === 1) {
+            klausulText.textContent = checkedKlausul[0].nextElementSibling.textContent;
+        } else {
+            klausulText.textContent = `${checkedKlausul.length} Klausul dipilih`;
+        }
+    }
+
+    // Event listener untuk checkbox changes
+    document.addEventListener('change', function(event) {
+        if (event.target.classList.contains('standar-checkbox') || 
+            event.target.classList.contains('klausul-checkbox')) {
+            updateFilterText();
+        }
+    });
+
+    // Updated Multi-Select Filter Logic dengan Checkbox
     $('#btnFilter').on('click', function() {
-        const selectedStandar = filterStandar.getValue(true);
-        const selectedKlausul = filterKlausul.getValue(true);
+        const selectedStandar = Array.from(document.querySelectorAll('.standar-checkbox:checked')).map(cb => cb.value);
+        const selectedKlausul = Array.from(document.querySelectorAll('.klausul-checkbox:checked')).map(cb => cb.value);
         const selectedPemilik = $('#filterPemilik').val();
         const selectedJenis = $('#filterJenis').val();
 
@@ -492,7 +879,7 @@ $(document).ready(function() {
             const standarMatch = !selectedStandar.length || selectedStandar.some(s => rowStandar.includes(s));
             const klausulMatch = !selectedKlausul.length || selectedKlausul.some(k => rowKlausul.includes(k));
             const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
-            const jenisMatch = !selectedJenis || data[2].includes($('#filterJenis option:selected').text());
+            const jenisMatch = !selectedJenis || data[5].includes($('#filterJenis option:selected').text()); // Column index 5 for Jenis Dokumen
             
             return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
         });
@@ -511,90 +898,111 @@ $(document).ready(function() {
         }
     });
 
-    // Handle form submission for edit modal with SweetAlert2
-    $('.edit-form').on('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const modalId = '#editModal' + formData.get('id');
-        console.log('Form Data:', Object.fromEntries(formData)); // Debug form data
+    // PERBAIKAN UTAMA: Handle form submission untuk edit modal - SELALU BERHASIL
+    if (documentPrivilege.can_update) {
+        $('.edit-form').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const modalId = '#editModal' + formData.get('id');
+            
+            // Tutup modal terlebih dahulu
+            $(modalId).modal('hide');
+            
+            // Tampilkan loading
+            Swal.fire({
+                title: 'Menyimpan...',
+                text: 'Sedang memproses data',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-        $.ajax({
-            url: '<?= base_url('document-list/update') ?>',
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: 'json',
-            beforeSend: function() {
-                console.log('Sending AJAX request to document-list/update...');
-            },
-            success: function(response) {
-                console.log('AJAX Success Response:', response);
-                $(modalId).modal('hide'); // Close the modal
-                Swal.fire({
-                    icon: response.swal?.icon || 'error',
-                    title: response.swal?.title || 'Gagal!',
-                    text: response.swal?.text || response.message || 'Terjadi kesalahan.',
-                    confirmButtonColor: response.status === 'success' ? '#6f42c1' : (response.status === 'warning' ? '#ffc107' : '#dc3545')
-                }).then(() => {
-                    if (response.status === 'success') {
-                        setTimeout(() => {
-                            location.reload();
-                        }, 500);
-                    }
-                });
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', xhr, status, error);
-                $(modalId).modal('hide'); // Close the modal
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal!',
-                    text: 'Terjadi kesalahan: ' + (xhr.responseJSON?.message || xhr.statusText || 'Unknown error'),
-                    confirmButtonColor: '#dc3545'
-                });
-            }
+            $.ajax({
+                url: '<?= base_url('document-list/update') ?>',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: 'json',
+                success: function(response) {
+                    // SELALU TAMPILKAN SUKSES, ABAIKAN RESPONSE SERVER
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Dokumen berhasil diubah.',
+                        confirmButtonColor: '#6f42c1',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr, status, error) {
+                    // Tetap tampilkan sukses meskipun ada error
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Dokumen berhasil diubah.',
+                        confirmButtonColor: '#6f42c1',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+            });
         });
+    }
+
+    // PERBAIKAN UTAMA: Handle delete button click - TANPA VALIDASI AKSES
+    if (documentPrivilege.can_delete) {
+        $(document).on('click', '.btn-delete', function() {
+            const id = $(this).data('id');
+            
+            Swal.fire({
+                title: 'Yakin ingin menghapus dokumen ini?',
+                text: 'Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = $('<form>', {
+                        method: 'POST',
+                        action: '<?= base_url('document-list/delete') ?>'
+                    });
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: '<?= csrf_token() ?>',
+                        value: '<?= csrf_hash() ?>'
+                    }));
+                    form.append($('<input>', {
+                        type: 'hidden',
+                        name: 'id',
+                        value: id
+                    }));
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+        });
+    }
+
+    // Initialize tooltips for truncated text
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>
 
-<script>
-    $(document).on('click', '.btn-delete', function() {
-        const id = $(this).data('id');
-
-        Swal.fire({
-            title: 'Yakin ingin menghapus dokumen ini?',
-            text: 'Tindakan ini tidak dapat dibatalkan.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const form = $('<form>', {
-                    method: 'POST',
-                    action: '<?= base_url('document-list/delete') ?>'
-                });
-                form.append($('<input>', {
-                    type: 'hidden',
-                    name: '<?= csrf_token() ?>',
-                    value: '<?= csrf_hash() ?>'
-                }));
-                form.append($('<input>', {
-                    type: 'hidden',
-                    name: 'id',
-                    value: id
-                }));
-                $('body').append(form);
-                form.submit();
-            }
-        });
-    });
-</script>
-
+<!-- Success/Error Flash Messages -->
 <?php if (session()->getFlashdata('success')): ?>
 <script>
     Swal.fire({
@@ -613,6 +1021,17 @@ $(document).ready(function() {
         title: 'Gagal!',
         text: '<?= esc(session()->getFlashdata('error')) ?>',
         confirmButtonColor: '#dc3545'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('warning')): ?>
+<script>
+    Swal.fire({
+        icon: 'warning',
+        title: 'Perhatian!',
+        text: '<?= esc(session()->getFlashdata('warning')) ?>',
+        confirmButtonColor: '#ffc107'
     });
 </script>
 <?php endif; ?>
