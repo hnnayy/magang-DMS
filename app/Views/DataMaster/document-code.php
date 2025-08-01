@@ -63,20 +63,17 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                 <td><?= esc($kode['nama']) ?></td>
                                 <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
+                                        <?php if ($canDelete): ?>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?= $kode['id'] ?>)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <?php endif; ?>
                                         <?php if ($canUpdate): ?>
                                             <button class="btn btn-sm btn-outline-primary me-1" 
                                                     onclick="editDocument(<?= $kode['id'] ?>, '<?= esc($kode['kategori_nama']) ?>', '<?= esc($kode['kode']) ?>', '<?= esc($kode['nama']) ?>', <?= $kode['document_type_id'] ?>)">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <?php if ($canDelete): ?>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?= $kode['id'] ?>)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        <?php endif; ?>
-
-
-
                                     </td>
                                 <?php endif; ?>
                             </tr>

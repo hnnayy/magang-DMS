@@ -57,18 +57,17 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                     
                                     <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
+                                        <?php if ($canDelete): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="confirmDelete(<?= $kategori['id'] ?>, '<?= esc($kategori['nama']) ?>')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <?php endif; ?>
                                         <?php if ($canUpdate): ?>
                                             <button type="button" class="btn btn-sm btn-outline-primary me-1"
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#editModal<?= $kategori['id'] ?>">
                                                 <i class="fas fa-edit"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                        
-                                        <?php if ($canDelete): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmDelete(<?= $kategori['id'] ?>, '<?= esc($kategori['nama']) ?>')">
-                                                <i class="fas fa-trash"></i>
                                             </button>
                                         <?php endif; ?>
                                     </td>
@@ -116,9 +115,9 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
+                                                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary">Save</button>
+                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -177,9 +176,9 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
