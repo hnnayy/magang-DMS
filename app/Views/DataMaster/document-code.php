@@ -22,8 +22,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <?php endif; ?>
     </div>
 
-
-
     <!-- Grouping data -->
     <?php 
     $grouped = [];
@@ -63,17 +61,24 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                 <td><?= esc($kode['nama']) ?></td>
                                 <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
-                                        <?php if ($canDelete): ?>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?= $kode['id'] ?>)">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($canUpdate): ?>
-                                            <button class="btn btn-sm btn-outline-primary me-1" 
-                                                    onclick="editDocument(<?= $kode['id'] ?>, '<?= esc($kode['kategori_nama']) ?>', '<?= esc($kode['kode']) ?>', '<?= esc($kode['nama']) ?>', <?= $kode['document_type_id'] ?>)">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        <?php endif; ?>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <?php if ($canDelete): ?>
+                                                <form action="<?= base_url('document-code/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="id" value="<?= $kode['id'] ?>">
+                                                    <button type="submit" class="btn btn-link p-0 text-danger" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                            <?php if ($canUpdate): ?>
+                                                <button class="btn btn-link p-0 text-primary" 
+                                                        onclick="editDocument(<?= $kode['id'] ?>, '<?= esc($kode['kategori_nama'], 'js') ?>', '<?= esc($kode['kode'], 'js') ?>', '<?= esc($kode['nama'], 'js') ?>', <?= $kode['document_type_id'] ?>)"
+                                                        title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                 <?php endif; ?>
                             </tr>
@@ -165,84 +170,70 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 <?php endif; ?>
 
+<!-- Bootstrap CSS & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     <?php if ($canUpdate): ?>
     function editDocument(id, type, code, name, typeId) {
-        document.getElementById('editId').value = id;
-        document.getElementById('editDocumentType').value = type;
-        document.getElementById('editDocumentTypeId').value = typeId;
-        document.getElementById('editCode').value = code;
-        document.getElementById('editDocumentName').value = name;
+        $('#editId').val(id);
+        $('#editDocumentType').val(type);
+        $('#editDocumentTypeId').val(typeId);
+        $('#editCode').val(code);
+        $('#editDocumentName').val(name);
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
     <?php endif; ?>
 
-</script>
+    <?php if ($canDelete): ?>
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait a moment',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                form.submit();
+            }
+        });
+        return false;
+    }
+    <?php endif; ?>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-<?php if ($canUpdate): ?>
-function editDocument(id, type, code, name, typeId) {
-    document.getElementById('editId').value = id;
-    document.getElementById('editDocumentType').value = type;
-    document.getElementById('editDocumentTypeId').value = typeId;
-    document.getElementById('editCode').value = code;
-    document.getElementById('editDocumentName').value = name;
-    new bootstrap.Modal(document.getElementById('editModal')).show();
-}
-<?php endif; ?>
-
-
-
-function confirmDelete(id) {
-    Swal.fire({
-        title: 'Are you sure?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: 'rgba(118, 125, 131, 1)',
-        confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Redirect ke endpoint hapus (POST manual lewat form)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?= base_url('document-code/delete') ?>';
-            const idField = document.createElement('input');
-            idField.type = 'hidden';
-            idField.name = 'id';
-            idField.value = id;
-            form.appendChild(idField);
-
-            const csrfField = document.createElement('input');
-            csrfField.type = 'hidden';
-            csrfField.name = '<?= csrf_token() ?>';
-            csrfField.value = '<?= csrf_hash() ?>';
-            form.appendChild(csrfField);
-
-            document.body.appendChild(form);
-            form.submit();
-        }
+    $(document).ready(function() {
+        $('[title]').tooltip();
     });
-}
-
-
-
-
 </script>
-
 
 <?= $this->endSection() ?>

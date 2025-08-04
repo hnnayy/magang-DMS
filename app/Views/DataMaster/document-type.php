@@ -9,9 +9,7 @@ $canUpdate = isset($privileges['document-type']['can_update']) && $privileges['d
 $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['document-type']['can_delete'] == 1;
 ?>
 
-
 <?= $this->include('partials/alerts') ?>
-
 
 <div class="container-fluid">
     <div class="bg-white rounded shadow-sm p-4">
@@ -54,22 +52,27 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                             <span class="badge bg-secondary">No</span>
                                         <?php endif; ?>
                                     </td>
-                                    
                                     <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
-                                        <?php if ($canDelete): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                    onclick="confirmDelete(<?= $kategori['id'] ?>, '<?= esc($kategori['nama']) ?>')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                        <?php if ($canUpdate): ?>
-                                            <button type="button" class="btn btn-sm btn-outline-primary me-1"
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#editModal<?= $kategori['id'] ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        <?php endif; ?>
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <?php if ($canDelete): ?>
+                                                <form action="<?= base_url('document-type/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="id" value="<?= $kategori['id'] ?>">
+                                                    <button type="submit" class="btn btn-link p-0 text-danger" title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                            <?php if ($canUpdate): ?>
+                                                <button class="btn btn-link p-0 text-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editModal<?= $kategori['id'] ?>"
+                                                        title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <?php endif; ?>
                                 </tr>
@@ -186,7 +189,14 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 </div>
 <?php endif; ?>
 
+<!-- Bootstrap CSS & Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     // Check privileges from PHP session
@@ -196,11 +206,33 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 
     // Only define confirmDelete function if user has delete privilege
     <?php if ($canDelete): ?>
-    function confirmDelete(id, name) {
-        document.getElementById('deleteId').value = id;
-        document.getElementById('deleteCategoryName').textContent = name;
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModal.show();
+    function confirmDelete(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Deleting...',
+                    text: 'Please wait a moment',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                form.submit();
+            }
+        });
+        return false;
     }
     <?php endif; ?>
 
@@ -210,7 +242,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
     document.getElementById('addDocumentTypeModal').addEventListener('hidden.bs.modal', function () {
         const form = this.querySelector('form');
         form.reset();
-        // Uncheck the checkbox by default
         document.getElementById('addPredefined').checked = false;
     });
 
@@ -228,46 +259,10 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
     });
     <?php endforeach ?>
     <?php endif; ?>
-</script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-<?php if ($canDelete): ?>
-function confirmDelete(id, name) {
-    Swal.fire({
-        title: 'Are you sure?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: 'rgba(118, 125, 131, 1)',
-        confirmButtonText: 'Yes, delete it',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Submit delete via form programmatically
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = "<?= base_url('document-type/delete') ?>";
-
-            const csrf = document.createElement('input');
-            csrf.type = 'hidden';
-            csrf.name = '<?= csrf_token() ?>';
-            csrf.value = '<?= csrf_hash() ?>';
-            form.appendChild(csrf);
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'id';
-            input.value = id;
-            form.appendChild(input);
-
-            document.body.appendChild(form);
-            form.submit();
-        }
+    $(document).ready(function() {
+        $('[title]').tooltip();
     });
-}
-<?php endif; ?>
 </script>
 
 <?= $this->endSection() ?>

@@ -365,21 +365,23 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                     <!-- Kolom Aksi dengan privilege check - HANYA tampilkan jika bisa edit/delete -->
                                     <?php if ($hasAnyPrivilege): ?>
                                         <td class="aksi-column text-center">
-                                            <div class="action-buttons">
-                                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
-                                                    <a href="#" class="text-primary me-2" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>" title="Edit">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                                
+                                            <div class="d-flex align-items-center justify-content-center gap-2">
                                                 <?php if ($documentPrivilege['can_delete'] && $canDeleteDocument): ?>
-                                                    <form action="<?= base_url('document-list/delete') ?>" method="post" class="d-inline">
+                                                    <form action="<?= base_url('document-list/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                                         <?= csrf_field() ?>
                                                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                                        <a href="javascript:void(0);" class="text-danger btn-delete" data-id="<?= $row['id'] ?>" title="Hapus">
+                                                        <button type="submit" class="btn btn-link p-0 text-danger" title="Delete">
                                                             <i class="bi bi-trash"></i>
-                                                        </a>
+                                                        </button>
                                                     </form>
+                                                <?php endif; ?>
+                                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
+                                                    <button class="btn btn-link p-0 text-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#editModal<?= $row['id'] ?>" 
+                                                            title="Edit">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -857,38 +859,34 @@ $(document).ready(function() {
 
     // PERBAIKAN UTAMA: Handle delete button click - TANPA VALIDASI AKSES
     if (documentPrivilege.can_delete) {
-        $(document).on('click', '.btn-delete', function() {
-            const id = $(this).data('id');
-            
+        window.confirmDelete = function(event, form) {
+            event.preventDefault();
             Swal.fire({
                 title: 'Are you sure?',
+                text: 'This action cannot be undone!',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: 'rgba(118, 125, 131, 1)',
+                confirmButtonText: 'Yes',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    const form = $('<form>', {
-                        method: 'POST',
-                        action: '<?= base_url('document-list/delete') ?>'
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait a moment',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
                     });
-                    form.append($('<input>', {
-                        type: 'hidden',
-                        name: '<?= csrf_token() ?>',
-                        value: '<?= csrf_hash() ?>'
-                    }));
-                    form.append($('<input>', {
-                        type: 'hidden',
-                        name: 'id',
-                        value: id
-                    }));
-                    $('body').append(form);
                     form.submit();
                 }
             });
-        });
+            return false;
+        };
     }
 
     // Initialize tooltips for truncated text
