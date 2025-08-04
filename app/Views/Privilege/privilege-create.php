@@ -1,17 +1,15 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+
 <!-- Custom CSS untuk privilege form -->
 <link rel="stylesheet" href="<?= base_url('assets/css/privilege.css') ?>" />
-
 <div class="privilege-container">
     <h2 class="form-title">Create Privilege</h2>
-
     <div class="form-content">
         <form method="post" id="privilegeForm" class="needs-validation" novalidate>
             <!-- CSRF Token -->
             <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>" id="csrf-token">
-
             <!-- Role -->
             <div class="form-group">
                 <label class="form-label" for="role">Role</label>
@@ -30,7 +28,6 @@
                 </div>
                 <div class="invalid-feedback">Please select a role.</div>
             </div>
-
             <!-- Submenu -->
             <div class="form-group">
                 <label class="form-label" for="submenu">Submenu</label>
@@ -47,7 +44,6 @@
                 <div id="submenu-hidden-inputs"></div>
                 <div class="invalid-feedback">Please select at least one submenu.</div>
             </div>
-
             <!-- Privileges -->
             <div class="form-group">
                 <label for="privileges" class="form-label">Privileges</label>
@@ -58,7 +54,6 @@
                     <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
                 </div>
             </div>
-
             <!-- Tombol -->
             <div class="form-actions text-center">
                 <button type="submit" class="btn btn-primary w-100">Save</button>
@@ -66,11 +61,9 @@
         </form>
     </div>
 </div>
-
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 $(function () {
     // Data dari PHP - pastikan format sesuai dengan controller
@@ -78,11 +71,10 @@ $(function () {
     const submenus = <?= json_encode(array_map(function($s) { 
         return ['id' => $s['id'], 'name' => $s['menu_name'] . ' > ' . $s['name']]; 
     }, $submenus)) ?>;
-
     console.log('Roles data:', roles);
     console.log('Submenus data:', submenus);
-
-    // Searchable Dropdown Class
+    
+    // Searchable Dropdown Class with improved smooth selection
     class SearchableDropdown {
         constructor(searchInputId, hiddenInputId, dropdownId, data, options = {}) {
             this.searchInput = document.getElementById(searchInputId);
@@ -93,10 +85,11 @@ $(function () {
             this.selectedIndex = -1;
             this.isMultiple = options.multiple || false;
             this.selectedItems = [];
+            this.isSelecting = false; // Flag to prevent blur during selection
             
             this.init();
         }
-
+        
         init() {
             this.searchInput.addEventListener('input', (e) => this.handleInput(e));
             this.searchInput.addEventListener('focus', () => this.showDropdown());
@@ -110,7 +103,7 @@ $(function () {
                 }
             });
         }
-
+        
         handleInput(e) {
             const query = e.target.value.toLowerCase();
             this.filteredData = this.data.filter(item => 
@@ -121,19 +114,26 @@ $(function () {
             this.showDropdown();
             
             if (!this.isMultiple) {
-                // For single select, clear hidden input if text doesn't match
+                // For single select, clear hidden input if text doesn't match exactly
                 const exactMatch = this.data.find(item => 
                     item.name.toLowerCase() === query.toLowerCase()
                 );
-                if (!exactMatch) {
+                if (exactMatch) {
+                    this.hiddenInput.value = exactMatch.id;
+                } else {
                     this.hiddenInput.value = '';
                 }
             }
         }
-
+        
         handleBlur(e) {
+            // Don't hide dropdown if we're in the middle of selecting
+            if (this.isSelecting) {
+                return;
+            }
+            
             setTimeout(() => {
-                if (!this.dropdown.contains(document.activeElement)) {
+                if (!this.dropdown.contains(document.activeElement) && !this.isSelecting) {
                     this.hideDropdown();
                     if (!this.isMultiple) {
                         // Restore original value if no valid selection
@@ -148,52 +148,106 @@ $(function () {
                         }
                     }
                 }
-            }, 150);
+            }, 100);
         }
-
+        
         handleKeydown(e) {
             if (!this.dropdown.style.display || this.dropdown.style.display === 'none') {
+                if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                    e.preventDefault();
+                    this.showDropdown();
+                    if (this.filteredData.length > 0) {
+                        this.selectedIndex = 0;
+                        this.updateSelection();
+                    }
+                }
                 return;
             }
-
+            
             switch (e.key) {
                 case 'ArrowDown':
                     e.preventDefault();
                     this.selectedIndex = Math.min(this.selectedIndex + 1, this.filteredData.length - 1);
                     this.updateSelection();
+                    this.scrollToSelected();
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
                     this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
                     this.updateSelection();
+                    this.scrollToSelected();
                     break;
                 case 'Enter':
                     e.preventDefault();
-                    if (this.selectedIndex >= 0) {
+                    if (this.selectedIndex >= 0 && this.filteredData[this.selectedIndex]) {
                         this.selectItem(this.filteredData[this.selectedIndex]);
                     }
                     break;
                 case 'Escape':
                     this.hideDropdown();
+                    this.searchInput.blur();
+                    break;
+                case 'Tab':
+                    if (this.selectedIndex >= 0 && this.filteredData[this.selectedIndex]) {
+                        e.preventDefault();
+                        this.selectItem(this.filteredData[this.selectedIndex]);
+                    } else {
+                        this.hideDropdown();
+                    }
                     break;
             }
         }
-
+        
+        scrollToSelected() {
+            if (this.selectedIndex >= 0) {
+                const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
+                const selectedItem = items[this.selectedIndex];
+                if (selectedItem) {
+                    selectedItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            }
+        }
+        
         updateSelection() {
             const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
             items.forEach((item, index) => {
-                item.classList.toggle('selected', index === this.selectedIndex);
+                if (index === this.selectedIndex) {
+                    item.classList.add('selected');
+                    item.style.backgroundColor = '#84848c';
+                    item.style.color = 'white';
+                } else {
+                    item.classList.remove('selected');
+                    item.style.backgroundColor = '';
+                    item.style.color = '';
+                    
+                    // Keep multiple selection styling
+                    if (this.isMultiple) {
+                        const itemData = this.filteredData[index];
+                        const isSelected = this.selectedItems.some(selected => selected.id === itemData.id);
+                        if (isSelected) {
+                            item.style.backgroundColor = '#e2e8f0';
+                            item.style.color = '#84848c';
+                        }
+                    }
+                }
             });
         }
-
+        
         selectItem(item) {
+            this.isSelecting = true;
+            
             if (this.isMultiple) {
                 this.selectMultipleItem(item);
             } else {
                 this.selectSingleItem(item);
             }
+            
+            // Reset selecting flag after a short delay
+            setTimeout(() => {
+                this.isSelecting = false;
+            }, 100);
         }
-
+        
         selectSingleItem(item) {
             this.searchInput.value = item.name;
             this.hiddenInput.value = item.id;
@@ -201,8 +255,16 @@ $(function () {
             
             // Remove validation error if exists
             this.searchInput.classList.remove('is-invalid');
+            
+            // Focus next field or blur current
+            const nextInput = this.getNextInput();
+            if (nextInput) {
+                nextInput.focus();
+            } else {
+                this.searchInput.blur();
+            }
         }
-
+        
         selectMultipleItem(item) {
             // Check if item is already selected
             const existingIndex = this.selectedItems.findIndex(selected => selected.id === item.id);
@@ -218,12 +280,22 @@ $(function () {
             this.updateMultipleDisplay();
             this.searchInput.value = ''; // Clear search after selection
             this.filteredData = [...this.data]; // Reset filtered data
+            this.selectedIndex = -1;
             this.renderDropdown();
+            
+            // Keep dropdown open for multiple selections
+            this.searchInput.focus();
             
             // Remove validation error if exists
             this.searchInput.classList.remove('is-invalid');
         }
-
+        
+        getNextInput() {
+            const allInputs = Array.from(document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"], select, textarea'));
+            const currentIndex = allInputs.indexOf(this.searchInput);
+            return allInputs[currentIndex + 1] || null;
+        }
+        
         updateMultipleDisplay() {
             const displayContainer = document.getElementById('selected-submenus');
             const hiddenInputsContainer = document.getElementById('submenu-hidden-inputs');
@@ -264,22 +336,29 @@ $(function () {
             };
             displayContainer.addEventListener('click', this.removeHandler);
         }
-
+        
         removeItem(itemId) {
             this.selectedItems = this.selectedItems.filter(item => item.id != itemId);
             this.updateMultipleDisplay();
+            this.renderDropdown(); // Re-render to update checkmarks
         }
-
+        
         showDropdown() {
             this.renderDropdown();
             this.dropdown.style.display = 'block';
+            
+            // Auto-select first item if none selected
+            if (this.selectedIndex === -1 && this.filteredData.length > 0) {
+                this.selectedIndex = 0;
+                this.updateSelection();
+            }
         }
-
+        
         hideDropdown() {
             this.dropdown.style.display = 'none';
             this.selectedIndex = -1;
         }
-
+        
         renderDropdown() {
             this.dropdown.innerHTML = '';
             
@@ -287,34 +366,65 @@ $(function () {
                 const noResults = document.createElement('div');
                 noResults.className = 'search-dropdown-item no-results';
                 noResults.textContent = 'No results found';
+                noResults.style.color = '#666';
+                noResults.style.fontStyle = 'italic';
                 this.dropdown.appendChild(noResults);
                 return;
             }
-
+            
             this.filteredData.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'search-dropdown-item';
+                div.style.cursor = 'pointer';
+                div.style.transition = 'all 0.2s ease';
                 
                 if (this.isMultiple) {
                     // Show checkmark for selected items
                     const isSelected = this.selectedItems.some(selected => selected.id === item.id);
                     div.innerHTML = `
-                        <span style="margin-right: 8px;">${isSelected ? '✓' : ''}</span>
+                        <span style="margin-right: 8px; font-weight: bold; color: #84848c;">${isSelected ? '✓' : ''}</span>
                         ${item.name}
                     `;
                     if (isSelected) {
-                        div.style.backgroundColor = '#e6f3ff'; /* Warna biru muda untuk item yang dipilih */
-                        div.style.color = '#2c5282'; /* Warna teks lebih gelap agar kontras */
+                        div.style.backgroundColor = '#e2e8f0';
+                        div.style.color = '#84848c';
                     }
                 } else {
                     div.textContent = item.name;
                 }
                 
-                div.addEventListener('click', () => this.selectItem(item));
+                // Add hover effect
+                div.addEventListener('mouseenter', () => {
+                    if (!div.classList.contains('selected')) {
+                        div.style.backgroundColor = '#f7fafc';
+                    }
+                });
+                
+                div.addEventListener('mouseleave', () => {
+                    if (!div.classList.contains('selected')) {
+                        div.style.backgroundColor = '';
+                        // Restore multiple selection styling
+                        if (this.isMultiple) {
+                            const isSelected = this.selectedItems.some(selected => selected.id === item.id);
+                            if (isSelected) {
+                                div.style.backgroundColor = '#e2e8f0';
+                                div.style.color = '#4a5568';
+                            }
+                        }
+                    }
+                });
+                
+                // Handle mouse selection
+                div.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // Prevent blur
+                    this.selectedIndex = index;
+                    this.selectItem(item);
+                });
+                
                 this.dropdown.appendChild(div);
             });
         }
-
+        
         reset() {
             this.searchInput.value = '';
             if (this.hiddenInput) {
@@ -326,9 +436,10 @@ $(function () {
             }
             this.hideDropdown();
             this.searchInput.classList.remove('is-invalid');
+            this.selectedIndex = -1;
         }
     }
-
+    
     // Initialize dropdowns
     const roleDropdown = new SearchableDropdown(
         'role-search', 
@@ -336,7 +447,7 @@ $(function () {
         'role-dropdown', 
         roles
     );
-
+    
     const submenuDropdown = new SearchableDropdown(
         'submenu-search', 
         null, // No single hidden input needed for multiple
@@ -344,7 +455,7 @@ $(function () {
         submenus,
         { multiple: true }
     );
-
+    
     // Form submission
     $('#privilegeForm').on('submit', function (e) {
         e.preventDefault();
@@ -354,7 +465,7 @@ $(function () {
         // Clear previous validation
         $(form).removeClass('was-validated');
         $('.form-input').removeClass('is-invalid');
-
+        
         // Validate role
         const roleValue = $('#role').val();
         if (!roleValue) {
@@ -365,7 +476,7 @@ $(function () {
             $('#role-search').removeClass('is-invalid');
             console.log('Role selected:', roleValue);
         }
-
+        
         // Validate submenu - check hidden inputs
         const submenuInputs = $('#submenu-hidden-inputs input[name="submenu[]"]');
         if (submenuInputs.length === 0) {
@@ -376,19 +487,19 @@ $(function () {
             $('#submenu-search').removeClass('is-invalid');
             console.log('Submenus selected:', submenuInputs.length);
         }
-
+        
         console.log('Form validation result:', isValid);
-
+        
         if (isValid) {
             // Show loading
             const submitBtn = $(form).find('button[type="submit"]');
             const originalText = submitBtn.text();
             submitBtn.text('Saving...').prop('disabled', true);
-
+            
             // Use jQuery serialize for proper form data handling
             const formData = $(form).serialize();
             console.log('Form data being sent:', formData);
-
+            
             $.ajax({
                 url: '<?= base_url('create-privilege/store') ?>',
                 type: 'POST',
@@ -441,5 +552,4 @@ $(function () {
     });
 });
 </script>
-
 <?= $this->endSection() ?>

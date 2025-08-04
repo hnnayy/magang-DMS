@@ -156,8 +156,12 @@
 
     $(document).ready(function () {
         $('#privilegeTable').DataTable();
-        
-        // Initialize Select2 hanya jika modal edit ada
+
+        // Hapus modal sisa atau overlay jika ada
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+        $('#overlay').remove(); // pastikan overlay tidak ngambang
+
         <?php if ($canUpdate): ?>
         $('#editSubmenu').select2({
             width: '100%',
@@ -167,6 +171,9 @@
         });
         <?php endif; ?>
     });
+
+
+
 
     <?php if ($canUpdate): ?>
     function openEditModal(id, roleId, roleName, submenuList, privileges) {
@@ -197,20 +204,28 @@
             data: formData,
             dataType: 'json',
             success: function(res) {
+                const modal = $('#editModal');
+
+                // Pastikan hanya 1 kali event listener
+                modal.off('hidden.bs.modal').on('hidden.bs.modal', function () {
+                    $('body').removeClass('modal-open'); // clear paksa
+                    $('.modal-backdrop').remove();       // hapus backdrop
+                    $('#overlay').remove();              // hapus overlay total
+
+                    // Reload setelah bersih
+                    location.reload();
+                });
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Success',
                     text: res.message,
                     confirmButtonText: 'OK'
                 }).then(() => {
-                    $('#editModal').modal('hide');
-                    location.reload();
+                    modal.modal('hide');
                 });
-            },
-            error: function(xhr) {
-                const msg = xhr.responseJSON?.error ?? 'Failed to update privilege';
-                Swal.fire({ icon: 'error', title: 'Failed', text: msg });
             }
+
         });
     });
     <?php endif; ?>
@@ -248,6 +263,8 @@
         });
     }
     <?php endif; ?>
+
+    
 </script>
 
 <?= $this->endSection() ?>
