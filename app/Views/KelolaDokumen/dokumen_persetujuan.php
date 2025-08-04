@@ -202,7 +202,7 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                                                 <textarea name="remark" class="form-control" rows="3"><?= esc($doc['remark']) ?></textarea>
                                             </div>
                                         </div>
-                                        <div class="modal-footer">
+                                        <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                             <button type="submit" class="btn btn-primary">Save Changes</button>
                                         </div>
@@ -236,8 +236,8 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- DataTables Logic -->
@@ -270,103 +270,7 @@ $(document).ready(function () {
                 className: 'btn btn-outline-success btn-sm',
                 title: 'Document_Approval',
                 exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] // Exclude file column and action column
-                }
-            },
-            {
-                extend: 'pdfHtml5',
-                text: 'PDF',
-                className: 'btn',
-                title: 'Document Approval',
-                filename: 'document_approval',
-                exportOptions: { 
-                    columns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] // Exclude file column and action column
-                },
-                orientation: 'landscape', 
-                pageSize: 'A4',
-                customize: function (doc) {
-                    const now = new Date();
-                    const printTime = now.toLocaleString('en-US', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                    });
-
-                    if (doc.content[0] && doc.content[0].text === 'Document Approval') {
-                        doc.content.splice(0, 1);
-                    }
-
-                    doc.content.unshift({
-                        text: 'Document Approval Report',
-                        alignment: 'center',
-                        bold: true,
-                        fontSize: 16,
-                        margin: [0, 0, 0, 15]
-                    });
-
-                    doc.styles.tableHeader = {
-                        fillColor: '#eaeaea',
-                        color: '#000',
-                        alignment: 'center',
-                        bold: true,
-                        fontSize: 10
-                    };
-
-                    doc.styles.tableBodyEven = { fillColor: '#f8f9fa' };
-                    doc.styles.tableBodyOdd = { fillColor: '#ffffff' };
-                    doc.defaultStyle.fontSize = 8;
-                    doc.styles.tableBody = { 
-                        alignment: 'center', 
-                        fontSize: 8 
-                    };
-                    
-                    // Footer
-                    doc.footer = function (currentPage, pageCount) {
-                        return {
-                            columns: [
-                                { 
-                                    text: 'Printed: ' + printTime, 
-                                    alignment: 'left', 
-                                    margin: [40, 0] 
-                                },
-                                { 
-                                    text: '© 2025 Telkom University – Document Management System', 
-                                    alignment: 'center' 
-                                },
-                                { 
-                                    text: 'Page ' + currentPage.toString() + ' of ' + pageCount, 
-                                    alignment: 'right', 
-                                    margin: [0, 0, 40, 0] 
-                                }
-                            ],
-                            fontSize: 8,
-                            margin: [0, 10, 0, 0]
-                        };
-                    };
-
-                    doc.pageMargins = [40, 60, 40, 60];
-
-                    if (doc.content[1] && doc.content[1].table) {
-                        doc.content[1].table.widths = ['6%', '12%', '16%', '20%', '8%', '12%', '16%', '10%'];
-                        doc.content[1].margin = [0, 0, 0, 0];
-                        doc.content[1].layout = {
-                            hLineWidth: function () { return 0.5; },
-                            vLineWidth: function () { return 0.5; },
-                            hLineColor: function () { return '#000000'; },
-                            vLineColor: function () { return '#000000'; },
-                            paddingLeft: function () { return 4; },
-                            paddingRight: function () { return 4; },
-                            paddingTop: function () { return 3; },
-                            paddingBottom: function () { return 3; }
-                        };
-                    }
-
-                    doc.content.push({
-                        text: '* This document contains a list of documents pending approval based on your access level.',
-                        alignment: 'left',
-                        italics: true,
-                        fontSize: 8,
-                        margin: [0, 15, 0, 0]
-                    });
+                    columns: [0, 1, 2, 3, 4, 5, 6, 8, 9] // Exclude file column (7) and action column
                 }
             }
         ],
@@ -383,8 +287,141 @@ $(document).ready(function () {
         }
     });
 
-    // Setup export buttons
-    table.buttons().container().appendTo('.export-buttons-container');
+    // Custom PDF Export Function
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape', 'pt', 'a4');
+        
+        // Header
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('Document Approval Report', doc.internal.pageSize.getWidth() / 2, 50, { align: 'center' });
+        
+        // Get table data
+        const tableData = [];
+        const headers = [
+            'No', 'Faculty/Directorate', 'Department/Unit/Program', 
+            'Document Name', 'Revision', 'Document Type', 
+            'Code & Document Name', 'Remark', 'Created By'
+        ];
+        
+        // Get visible rows from DataTable
+        const visibleRows = table.rows({ search: 'applied' }).nodes();
+        
+        for (let i = 0; i < visibleRows.length; i++) {
+            const row = visibleRows[i];
+            const cells = row.querySelectorAll('td');
+            const rowArray = [];
+            
+            // Extract data from each cell (exclude file and action columns)
+            for (let j = 0; j < cells.length; j++) {
+                if (j === 7) continue; // Skip file column (index 7)
+                if (j >= 10) continue; // Skip action column if exists
+                
+                let cellText = cells[j].textContent.trim();
+                
+                // Clean up text
+                if (cellText === 'No file') cellText = '-';
+                if (cellText.includes('Download')) cellText = 'Available';
+                
+                rowArray.push(cellText);
+            }
+            
+            if (rowArray.length === 9) { // Ensure we have exactly 9 columns
+                tableData.push(rowArray);
+            }
+        }
+        
+        // Generate table with autoTable
+        doc.autoTable({
+            head: [headers],
+            body: tableData,
+            startY: 80,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [234, 234, 234],
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+                fontSize: 8,
+                halign: 'center'
+            },
+            bodyStyles: {
+                fontSize: 7,
+                halign: 'center'
+            },
+            alternateRowStyles: {
+                fillColor: [248, 249, 250]
+            },
+            columnStyles: {
+                0: { cellWidth: 40 },   // No
+                1: { cellWidth: 80 },   // Faculty
+                2: { cellWidth: 100 },  // Department
+                3: { cellWidth: 120 },  // Document Name
+                4: { cellWidth: 50 },   // Revision
+                5: { cellWidth: 80 },   // Document Type
+                6: { cellWidth: 100 },  // Code & Name
+                7: { cellWidth: 80 },   // Remark
+                8: { cellWidth: 80 }    // Created By
+            },
+            margin: { top: 80, bottom: 60, left: 40, right: 40 },
+            didDrawPage: function(data) {
+                // Footer
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'normal');
+                
+                // Print time
+                const now = new Date();
+                const printTime = now.toLocaleString('en-US', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+                
+                doc.text(`Printed: ${printTime}`, 40, pageHeight - 40);
+                
+                // Copyright
+                doc.text('© 2025 Telkom University – Document Management System', 
+                        pageWidth / 2, pageHeight - 40, { align: 'center' });
+                
+                // Page number
+                doc.text(`Page ${data.pageNumber}`, pageWidth - 40, pageHeight - 40, { align: 'right' });
+            }
+        });
+        
+        // Add note at the bottom
+        const finalY = doc.lastAutoTable.finalY + 20;
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'italic');
+        doc.text('* This document contains a list of documents pending approval based on your access level.', 
+                 40, finalY);
+        
+        // Save the PDF
+        doc.save('document_approval.pdf');
+    }
+
+    // Setup custom export buttons
+    $('.export-buttons-container').html(`
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success btn-sm" id="exportExcel">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="exportPDF">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </button>
+        </div>
+    `);
+
+    // Handle Excel export (using existing DataTables functionality)
+    $('#exportExcel').on('click', function() {
+        table.button(0).trigger(); // Trigger first button (Excel)
+    });
+
+    // Handle PDF export (using custom function)
+    $('#exportPDF').on('click', function() {
+        exportToPDF();
+    });
 
     // Setup custom search
     $('.search-container').html(`

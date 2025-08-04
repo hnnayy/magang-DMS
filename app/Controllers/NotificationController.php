@@ -12,6 +12,7 @@ class NotificationController extends BaseController
     protected $userModel;
     protected $documentModel;
     protected $session;
+    protected $db;
 
     public function initController(\CodeIgniter\HTTP\RequestInterface $request, \CodeIgniter\HTTP\ResponseInterface $response, \Psr\Log\LoggerInterface $logger)
     {
@@ -20,6 +21,7 @@ class NotificationController extends BaseController
         $this->notificationModel = new NotificationModel();
         $this->userModel = new UserModel();
         $this->documentModel = new DocumentModel();
+        $this->db = \Config\Database::connect();
     }
 
     public function markAsRead()
@@ -30,19 +32,25 @@ class NotificationController extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Silakan login kembali']);
         }
 
-        $notificationRecipientsModel = new \App\Models\NotificationRecipientsModel();
-        $updated = $notificationRecipientsModel
-            ->where('user_id', $userId)
-            ->where('status', 0)
-            ->set(['status' => 1])
-            ->update();
+        try {
+            // Gunakan query builder langsung untuk memastikan update berhasil
+            $updated = $this->db->table('notification_recipients')
+                ->where('user_id', $userId)
+                ->where('status', 0)
+                ->update(['status' => 1]);
 
-        if ($updated === false) {
-            log_message('error', 'Gagal menandai notifikasi sebagai dibaca: ' . json_encode($notificationRecipientsModel->errors()));
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menandai notifikasi']);
+            if ($updated === false) {
+                log_message('error', 'Gagal menandai notifikasi sebagai dibaca untuk user_id: ' . $userId);
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menandai notifikasi']);
+            }
+
+            log_message('debug', "Successfully marked notifications as read for user_id: $userId");
+            return $this->response->setJSON(['status' => 'success']);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in markAsRead: ' . $e->getMessage());
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Terjadi kesalahan sistem']);
         }
-
-        return $this->response->setJSON(['status' => 'success']);
     }
 
     public function fetch()
@@ -53,43 +61,69 @@ class NotificationController extends BaseController
             return $this->response->setJSON(['status' => 'error', 'notifikasi' => [], 'message' => 'Silakan login kembali']);
         }
 
-        $user = $this->userModel->select('role_id')->where('id', $userId)->first();
-        if (!$user || !in_array($user['role_id'], [1, 2])) {
-            log_message('debug', 'fetch - User ID ' . $userId . ' does not have approval access (role_id: ' . ($user['role_id'] ?? 'N/A') . ')');
-            return $this->response->setJSON(['status' => 'success', 'notifikasi' => []]);
-        }
+        try {
+            // PERBAIKAN: Query yang lebih robust untuk fetch notifications
+            $query = $this->db->table('notification n')
+                ->select('n.id, n.message, n.createddate, n.reference_id, n.createdby, u.username as creator_username, u.fullname as creator_fullname')
+                ->join('notification_recipients nr', 'nr.notification_id = n.id', 'inner')
+                ->join('user u', 'u.id = n.createdby', 'left')
+                ->where('nr.user_id', $userId)
+                ->where('nr.status', 0)
+                ->orderBy('n.createddate', 'DESC');
+            
+            $notifikasi = $query->get()->getResultArray();
 
-        $notifikasi = $this->notificationModel
-            ->select('notification.id, notification.message, notification.createddate, notification.reference_id, 
-                     notification.createdby as creator_id, COALESCE(creator.fullname, \'Pengguna Tidak Dikenal\') as creator_name')
-            ->join('user as creator', 'creator.id = notification.createdby', 'left')
-            ->join('notification_recipients', 'notification_recipients.notification_id = notification.id', 'inner')
-            ->join('document', 'document.id = notification.reference_id', 'inner')
-            ->where('notification_recipients.user_id', $userId)
-            ->where('notification_recipients.status', 0)
-            ->groupBy('notification.id')
-            ->orderBy('notification.createddate', 'DESC')
-            ->findAll();
+            log_message('debug', 'Raw notifications fetched for user_id ' . $userId . ': ' . json_encode($notifikasi));
+            log_message('debug', 'Query executed: ' . $this->db->getLastQuery());
 
-        log_message('debug', 'fetch - Raw notifications fetched for user_id ' . $userId . ': ' . json_encode($notifikasi));
-        log_message('debug', 'fetch - Query executed: ' . $this->notificationModel->getLastQuery());
-
-        foreach ($notifikasi as &$notif) {
-            log_message('debug', 'fetch - Processing notification with creator_id: ' . ($notif['creator_id'] ?? 'N/A'));
-            if ($notif['creator_name'] === 'Pengguna Tidak Dikenal' && !empty($notif['creator_id'])) {
-                $creator = $this->userModel->find($notif['creator_id']);
-                log_message('debug', 'fetch - UserModel find result for creator_id ' . $notif['creator_id'] . ': ' . json_encode($creator));
-                $notif['creator_name'] = $creator['fullname'] ?? 'Pengguna Tidak Dikenal';
-                log_message('debug', 'fetch - Fetched creator name for creator_id ' . $notif['creator_id'] . ': ' . $notif['creator_name']);
+            // Process notifications untuk format yang konsisten
+            foreach ($notifikasi as &$notif) {
+                // Fallback untuk creator name
+                if (empty($notif['creator_fullname'])) {
+                    $notif['creator_name'] = $notif['creator_username'] ?? 'Pengguna Tidak Dikenal';
+                } else {
+                    $notif['creator_name'] = $notif['creator_fullname'];
+                }
+                
+                // Ensure consistent field names
+                $notif['creator_id'] = $notif['createdby'] ?? 'N/A';
+                
+                log_message('debug', 'Processed notification ID: ' . $notif['id'] . ' with creator_name: ' . $notif['creator_name']);
             }
-            $notif['creator_id'] = $notif['creator_id'] ?? 'N/A';
-            $notif['creator_name'] = $notif['creator_name'] ?? 'Pengguna Tidak Dikenal';
-        }
 
-        if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['status' => 'success', 'notifikasi' => $notifikasi]);
-        }
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'success', 'notifikasi' => $notifikasi]);
+            }
 
-        return view('layout/partials/notifikasi', ['notifikasi' => $notifikasi]);
+            return view('layout/partials/notifikasi', ['notifikasi' => $notifikasi]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in fetch notifications: ' . $e->getMessage());
+            return $this->response->setJSON(['status' => 'error', 'notifikasi' => [], 'message' => 'Terjadi kesalahan sistem']);
+        }
+    }
+
+    /**
+     * Method untuk testing - bisa dihapus setelah testing selesai
+     */
+    public function testNotification()
+    {
+        $userId = session()->get('user_id');
+        
+        // Test query untuk melihat data
+        $notificationCount = $this->db->table('notification')->countAllResults();
+        $recipientCount = $this->db->table('notification_recipients')->countAllResults();
+        $userNotifCount = $this->db->table('notification_recipients')->where('user_id', $userId)->countAllResults();
+        
+        $result = [
+            'total_notifications' => $notificationCount,
+            'total_recipients' => $recipientCount,
+            'user_notifications' => $userNotifCount,
+            'current_user_id' => $userId
+        ];
+        
+        log_message('debug', 'Test notification result: ' . json_encode($result));
+        
+        return $this->response->setJSON($result);
     }
 }

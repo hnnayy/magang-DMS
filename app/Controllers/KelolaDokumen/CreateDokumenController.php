@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers\KelolaDokumen;
 
 use App\Controllers\BaseController;
@@ -10,7 +11,8 @@ use App\Models\UnitParentModel;
 use App\Models\DocumentApprovalModel;
 use App\Models\NotificationModel;
 use App\Models\NotificationRecipientsModel;
-use CodeIgniter\Files\File;
+use App\Models\UserModel;
+use CodeIgniter\Files\File; 
 use FPDF;
 require_once ROOTPATH . 'vendor/autoload.php';
 
@@ -22,6 +24,7 @@ class CreateDokumenController extends BaseController
     protected $documentRevisionModel;
     protected $notificationModel;
     protected $notificationRecipientsModel;
+    protected $userModel;
     protected $db;
     protected $helpers = ['url', 'form'];
     protected $session;
@@ -38,11 +41,13 @@ class CreateDokumenController extends BaseController
         $this->kodeDokumenModel = new DocumentCodeModel();
         $this->documentModel = new DocumentModel();
         $this->documentApprovalModel = new DocumentApprovalModel();
+        $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
         $this->documentRevisionModel = new \App\Models\DocumentRevisionModel();
         $this->notificationModel = new NotificationModel();
         $this->notificationRecipientsModel = new NotificationRecipientsModel();
+        $this->userModel = new UserModel();
         $this->db = \Config\Database::connect();
-
+       
         $kategori = $this->documentTypeModel->where('status', 1)->findAll();
         $this->kategoriDokumen = array_map(function ($item) {
             return [
@@ -75,25 +80,19 @@ class CreateDokumenController extends BaseController
 
     public function add(): string
     {
-        log_message('debug', 'add - Method add dipanggil pada ' . date('Y-m-d H:i:s'));
         $unitId = session()->get('unit_id');
-        if (!$unitId) {
-            log_message('error', 'add - Session unit_id tidak ditemukan');
-            return redirect()->to('/login')->with('error', 'Silakan login kembali.');
-        }
-
         $unitModel = new UnitModel();
+
         $unitData = $unitModel
             ->select('unit.*, unit_parent.name as parent_name')
             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
             ->where('unit.id', $unitId)
             ->first();
 
-        if (!$unitData) {
-            log_message('error', 'add - Unit ID ' . $unitId . ' tidak ditemukan');
-            return redirect()->to('/login')->with('error', 'Unit tidak valid.');
-        }
-
+        // Prepare data untuk view - menggunakan logika yang sama dengan controller lama
+        $data['kategori_dokumen'] = $this->kategoriDokumen;
+        
+        // Siapkan kode dokumen berdasarkan kategori (sama seperti controller lama)
         $kodeDokumen = $this->kodeDokumenModel
             ->select('kode_dokumen.*, document_type.name as jenis_nama, document_type.id as document_type_id')
             ->join('document_type', 'document_type.id = kode_dokumen.document_type_id')
@@ -102,6 +101,7 @@ class CreateDokumenController extends BaseController
             ->orderBy('kode_dokumen.kode', 'ASC')
             ->findAll();
 
+        // Group kode dokumen berdasarkan document_type_id untuk JavaScript
         $groupedKodeDokumen = [];
         foreach ($kodeDokumen as $item) {
             $groupedKodeDokumen[$item['document_type_id']][] = [
@@ -110,105 +110,96 @@ class CreateDokumenController extends BaseController
                 'nama' => $item['nama']
             ];
         }
+        
+        // Juga buat grouping berdasarkan nama jenis (untuk kompatibilitas dengan view lama jika diperlukan)
+        $grouped = [];
+        foreach ($kodeDokumen as $item) {
+            $grouped[$item['jenis_nama']][] = $item;
+        }
 
-        $data['kategori_dokumen'] = $this->kategoriDokumen;
         $data['kode_dokumen_by_type'] = $groupedKodeDokumen;
-        $data['kode_dokumen'] = $this->kodeDokumen;
+        $data['kode_dokumen'] = $grouped;
         $data['unit'] = $unitData;
-
+        
         return view('KelolaDokumen/dokumen-create', $data);
     }
 
-    private function getApprovers($submenuId)
+    // Method ini bisa dihapus karena tidak akan digunakan lagi
+    public function getKodeDokumen()
     {
-        $db = \Config\Database::connect();
-        $userId = session('user_id');
+        $jenis = $this->request->getPost('jenis');
 
-        $user = $db->table('user')
-            ->select('unit_id')
-            ->where('id', $userId)
-            ->get()
-            ->getRowArray();
+        $matchedType = array_filter($this->kategoriDokumen, fn($item) => $item['kode'] === $jenis);
+        $matchedType = reset($matchedType);
 
-        if (!$user || empty($user['unit_id'])) {
-            log_message('error', 'getApprovers - Unit ID tidak ditemukan untuk user_id: ' . $userId);
-            return [];
+        if (!$matchedType || !$matchedType['use_predefined_codes']) {
+            return $this->response->setJSON([]);
         }
-
-        $query = $db->table('user')
-            ->select('id')
-            ->where('unit_id', $user['unit_id'])
-            ->whereIn('role_id', [1, 2]) // Approver roles
+        $documentTypeId = $matchedType['id'];
+        $results = $this->kodeDokumenModel
+            ->where('document_type_id', $documentTypeId)
             ->where('status', 1)
-            ->where('id !=', $userId); // Exclude the creator
+            ->findAll();
+        return $this->response->setJSON($results);
+    }
 
-        log_message('debug', 'getApprovers - Query: ' . $query->getCompiledSelect() . ' - Count: ' . $query->countAllResults(false));
-        $result = $query->get();
+    public function getKodeByJenis()
+    {
+        $jenis = $this->request->getPost('jenis');
 
-        if ($result === false) {
-            log_message('error', 'getApprovers - Query failed: ' . $db->getLastQuery());
-            return [];
+        $documentType = $this->documentTypeModel
+            ->where('name', $jenis)
+            ->where('status', 1)
+            ->first();
+
+        if (!$documentType) {
+            return $this->response->setJSON(['kode' => '']);
         }
 
-        $approvers = $result->getResultArray();
-        log_message('debug', 'getApprovers - Approvers found: ' . json_encode($approvers));
-        return array_column($approvers, 'id');
+        $kode = $this->kodeDokumenModel
+            ->where('document_type_id', $documentType['id'])
+            ->where('status', 1)
+            ->orderBy('id', 'ASC')
+            ->first();
+
+        return $this->response->setJSON(['kode' => $kode['kode'] ?? '']);
     }
 
     public function tambah()
     {
-        if (!session('user_id')) {
-            log_message('error', 'tambah - Session user_id tidak ditemukan');
-            return redirect()->to('/login')->with('error', 'Silakan login kembali.');
-        }
-
-        log_message('debug', 'tambah - POST data: ' . json_encode($this->request->getPost()));
-        $currentUserId = session('user_id');
-        if (!$currentUserId) {
-            log_message('error', 'tambah - Invalid or empty user_id from session');
-            return redirect()->to('/login')->with('error', 'Sesi pengguna tidak valid.');
-        }
-        log_message('debug', 'tambah - Current user_id from session: ' . $currentUserId);
-
         $file = $this->request->getFile('file');
         if (!$file->isValid() || $file->hasMoved()) {
-            log_message('error', 'tambah - Upload file gagal: ' . $file->getErrorString());
-            return redirect()->back()->with('error', 'Upload file gagal: ' . $file->getErrorString());
+            return redirect()->back()->with('error', 'Upload file gagal.');
         }
 
         $jenisId = $this->request->getPost('jenis');
         if (!$jenisId || $jenisId == "0" || $jenisId == "") {
-            log_message('error', 'tambah - Jenis dokumen belum dipilih');
             return redirect()->back()->with('error', 'Jenis dokumen belum dipilih.');
         }
 
+        // Cek apakah jenis dokumen menggunakan predefined codes atau tidak
         $documentType = $this->documentTypeModel->find($jenisId);
-        if (!$documentType) {
-            log_message('error', 'tambah - Jenis dokumen ID ' . $jenisId . ' tidak ditemukan');
-            return redirect()->back()->with('error', 'Jenis dokumen tidak valid.');
-        }
         $usePredefined = str_contains($documentType['description'] ?? '', '[predefined]');
 
         $kodeDokumenId = null;
+
+        // Validasi dan handle kode dokumen berdasarkan jenis
         if ($usePredefined) {
+            // Untuk predefined codes, ambil dari dropdown
             $kodeDokumenId = $this->request->getPost('kode_dokumen_id');
             if (!$kodeDokumenId) {
-                log_message('error', 'tambah - Kode dokumen belum dipilih');
                 return redirect()->back()->with('error', 'Kode dokumen belum dipilih.');
             }
-            $kodeExists = $this->kodeDokumenModel->find($kodeDokumenId);
-            if (!$kodeExists) {
-                log_message('error', 'tambah - Kode dokumen ID ' . $kodeDokumenId . ' tidak ditemukan');
-                return redirect()->back()->with('error', 'Kode dokumen tidak valid.');
-            }
         } else {
+            // Untuk non-predefined codes, buat entry baru di tabel kode_dokumen
             $kodeCustom = $this->request->getPost('kode-dokumen-custom');
             $namaCustom = $this->request->getPost('nama-dokumen-custom');
+            
             if (!$kodeCustom || !$namaCustom) {
-                log_message('error', 'tambah - Kode dokumen dan nama dokumen custom wajib diisi');
                 return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom wajib diisi.');
             }
 
+            // Cek apakah kode dokumen sudah ada untuk jenis ini
             $existingKode = $this->kodeDokumenModel
                 ->where('document_type_id', $jenisId)
                 ->where('kode', $kodeCustom)
@@ -216,23 +207,20 @@ class CreateDokumenController extends BaseController
                 ->first();
 
             if ($existingKode) {
-                log_message('error', 'tambah - Kode dokumen "' . $kodeCustom . '" sudah ada');
                 return redirect()->back()->with('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini.');
             }
 
+            // Insert kode dokumen baru
             $kodeDokumenData = [
                 'document_type_id' => $jenisId,
                 'kode' => $kodeCustom,
                 'nama' => $namaCustom,
                 'status' => 1,
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => $currentUserId
+                'createdby' => session('user_id')
             ];
 
-            if (!$this->kodeDokumenModel->insert($kodeDokumenData)) {
-                log_message('error', 'tambah - Gagal insert kode_dokumen: ' . json_encode($this->kodeDokumenModel->errors()));
-                return redirect()->back()->with('error', 'Gagal menyimpan kode dokumen: ' . json_encode($this->kodeDokumenModel->errors()));
-            }
+            $this->kodeDokumenModel->insert($kodeDokumenData);
             $kodeDokumenId = $this->kodeDokumenModel->getInsertID();
         }
 
@@ -242,144 +230,170 @@ class CreateDokumenController extends BaseController
         }
 
         $newName = $file->getRandomName();
-        if (!$file->move($uploadPath, $newName)) {
-            log_message('error', 'tambah - Gagal memindahkan file ke ' . $uploadPath . ': ' . $file->getErrorString());
-            return redirect()->back()->with('error', 'Gagal menyimpan file: ' . $file->getErrorString());
-        }
+        $file->move($uploadPath, $newName);
 
         $unitId = $this->request->getPost('unit_id') ?? 99;
         $unitModel = new \App\Models\UnitModel();
         $unitData = $unitModel->select('parent_id')->where('id', $unitId)->first();
-        if (!$unitData) {
-            log_message('error', 'tambah - Unit ID ' . $unitId . ' tidak ditemukan');
-            return redirect()->back()->with('error', 'Unit tidak valid.');
-        }
+        $unitParentId = $unitData['parent_id'] ?? null;
 
         $this->documentModel->db->transStart();
 
         try {
             $result = $this->documentModel->db->query('SHOW TABLE STATUS LIKE "document"')->getRow();
-            if (!$result) {
-                throw new \Exception('Gagal mendapatkan auto_increment untuk tabel document');
-            }
             $nextId = $result->Auto_increment;
 
+            // Tentukan nama dokumen berdasarkan jenis
             $namaDokumen = $usePredefined ? 
                 $this->request->getPost('nama-dokumen') : 
                 $this->request->getPost('nama-dokumen-custom');
 
-            if (empty($namaDokumen)) {
-                throw new \Exception('Nama dokumen tidak boleh kosong');
-            }
-
-            $noDokumen = $this->request->getPost('no-dokumen');
-            $datePublished = $this->request->getPost('date_published');
-            if (empty($noDokumen) || empty($datePublished)) {
-                throw new \Exception('Nomor dokumen dan tanggal publikasi wajib diisi');
-            }
-
-            $documentData = [
+            $this->documentModel->insert([
                 'type' => $jenisId,
                 'kode_dokumen_id' => $kodeDokumenId,
-                'number' => $noDokumen,
-                'date_published' => $datePublished,
+                'number' => $this->request->getPost('no-dokumen'),
+                'date_published' => $this->request->getPost('date_published'),
                 'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
                 'title' => $namaDokumen,
-                'description' => $this->request->getPost('keterangan') ?? '',
+                'description' => $this->request->getPost('keterangan'),
                 'unit_id' => $unitId,
                 'status' => 0,
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => $currentUserId,
-                'original_document_id' => $nextId,
-            ];
+                'createdby' => session('user_id'),
+                'original_document_id' => $nextId, 
+            ]);
 
-            if (!$this->documentModel->insert($documentData)) {
-                throw new \Exception('Gagal insert document: ' . json_encode($this->documentModel->errors()));
-            }
             $documentId = $this->documentModel->getInsertID();
 
-            $revisionData = [
+            $this->documentRevisionModel->insert([
                 'document_id' => $documentId,
                 'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
                 'filename' => $file->getClientName(),
                 'filepath' => 'storage/uploads/' . $newName,
                 'filesize' => $file->getSize(),
-                'remark' => $this->request->getPost('keterangan') ?? '',
+                'remark' => $this->request->getPost('keterangan'),
                 'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => $currentUserId,
-            ];
-
-            if (!$this->documentRevisionModel->insert($revisionData)) {
-                throw new \Exception('Gagal insert document_revision: ' . json_encode($this->documentRevisionModel->errors()));
-            }
-
-            $submenuId = 1; // Replace with logic to determine submenu_id
-            $notificationData = [
-                'submenu_id' => $submenuId,
-                'reference_id' => $documentId,
-                'message' => 'Dokumen baru "' . $namaDokumen . '" ditambahkan, menunggu persetujuan.',
-                'createdby' => $currentUserId,
-                'createddate' => date('Y-m-d H:i:s'),
-            ];
-
-            log_message('debug', 'tambah - Notification data before insert: ' . json_encode($notificationData));
-            $notificationInsert = $this->notificationModel->insert($notificationData);
-            if (!$notificationInsert) {
-                throw new \Exception('Gagal insert notification: ' . json_encode($this->notificationModel->errors()));
-            }
-
-            $notificationId = $this->notificationModel->getInsertID();
-            $approvers = $this->getApprovers($submenuId);
-
-            if (!empty($approvers)) {
-                foreach ($approvers as $userId) {
-                    if ($userId === 0 || $userId === null) {
-                        log_message('error', 'tambah - Invalid user_id detected: ' . $userId);
-                        continue; // Skip invalid user IDs
-                    }
-                    $recipientData = [
-                        'notification_id' => $notificationId,
-                        'user_id' => $userId,
-                        'status' => 0,
-                    ];
-                    log_message('debug', 'tambah - Inserting recipient for user_id: ' . $userId);
-                    if (!$this->notificationRecipientsModel->insert($recipientData)) {
-                        log_message('error', 'tambah - Failed to insert recipient for user_id ' . $userId . ': ' . json_encode($this->notificationRecipientsModel->errors()));
-                        throw new \Exception('Gagal insert notification_recipients for user_id ' . $userId);
-                    }
-                }
-            } else {
-                log_message('info', 'tambah - No approvers found for submenu_id: ' . $submenuId);
-            }
+                'createdby' => session('user_id'),
+            ]);
 
             $this->documentModel->db->transComplete();
-            log_message('debug', 'tambah - Transaction status: ' . ($this->documentModel->db->transStatus() ? 'Success' : 'Failed'));
 
             if ($this->documentModel->db->transStatus() === false) {
-                throw new \Exception('Transaksi gagal: ' . json_encode($this->documentModel->db->error()));
+                throw new \Exception('Transaction failed');
             }
 
-            return redirect()->to('/create-document')->with('added_message', 'Dokumen berhasil ditambahkan.')->with('trigger_notification', true);
+            // BUAT NOTIFIKASI SETELAH DOKUMEN BERHASIL DISIMPAN
+            $this->createDocumentNotification($documentId, $namaDokumen, $documentType['name']);
+
+            return redirect()->to('/create-document')->with('added_message', 'Successfully Added.');
+            
         } catch (\Exception $e) {
             $this->documentModel->db->transRollback();
-            log_message('error', 'tambah - Error in tambah: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menyimpan dokumen: ' . $e->getMessage());
+            log_message('error', 'Error in tambah method: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to save document:' . $e->getMessage());
         }
     }
 
-    public function approval($id = null): string
-    {
-        if (!$id) {
-            log_message('error', 'approval - No reference_id provided for approval');
-            return redirect()->to('/document-submission-list')->with('error', 'Invalid document ID.');
+    /**
+     * Membuat notifikasi untuk dokumen baru
+     */
+   /**
+ * Membuat notifikasi untuk dokumen baru - VERSI DEBUG
+ */
+private function createDocumentNotification($documentId, $documentTitle, $documentTypeName)
+{
+    try {
+        $creatorId = session('user_id');
+        $creatorName = session('fullname') ?? session('username') ?? 'User';
+        
+        // DEBUG: Log creator info
+        log_message('debug', "Creating notification - Creator ID: $creatorId, Creator Name: $creatorName");
+        
+        // Buat pesan notifikasi
+        $message = "Dokumen baru '{$documentTitle}' ({$documentTypeName}) telah ditambahkan oleh {$creatorName}";
+        
+        // Insert ke tabel notification
+        $notificationData = [
+            'message' => $message,
+            'reference_id' => $documentId,
+            'createdby' => $creatorId,
+            'createddate' => date('Y-m-d H:i:s')
+        ];
+        
+        $notificationId = $this->notificationModel->insert($notificationData);
+        
+        if (!$notificationId) {
+            log_message('error', 'Gagal membuat notifikasi: ' . json_encode($this->notificationModel->errors()));
+            return false;
         }
 
-        $document = $this->documentModel->find($id);
-        if (!$document) {
-            log_message('error', 'approval - Document with ID ' . $id . ' not found');
-            return redirect()->to('/document-submission-list')->with('error', 'Document not found.');
+        log_message('debug', "Notification created with ID: $notificationId");
+
+        // Dapatkan semua user yang perlu menerima notifikasi (kecuali creator)
+        // PERBAIKAN: Tambahkan lebih banyak debugging dan pastikan query benar
+        
+        // Cek semua user terlebih dahulu
+        $allUsers = $this->userModel->findAll();
+        log_message('debug', "Total users in database: " . count($allUsers));
+        log_message('debug', "All users: " . json_encode(array_column($allUsers, 'id')));
+        
+        // Filter user yang aktif dan bukan creator
+        $recipients = $this->userModel
+            ->where('id !=', $creatorId)
+            ->where('status', 1) // Pastikan kolom status ada dan nilainya 1 untuk aktif
+            ->findAll();
+        
+        log_message('debug', "Recipients found: " . count($recipients));
+        log_message('debug', "Recipients data: " . json_encode($recipients));
+        
+        // Jika tidak ada recipients dengan status = 1, coba ambil semua user kecuali creator
+        if (empty($recipients)) {
+            log_message('warning', 'No recipients found with status = 1, trying without status filter');
+            $recipients = $this->userModel
+                ->where('id !=', $creatorId)
+                ->findAll();
+                
+            log_message('debug', "Recipients without status filter: " . count($recipients));
+        }
+        
+        // Insert ke tabel notification_recipients untuk setiap user
+        $successCount = 0;
+        $errorCount = 0;
+        
+        foreach ($recipients as $user) {
+            $recipientData = [
+                'notification_id' => $notificationId,
+                'user_id' => $user['id'],
+                'status' => 0 // 0 = belum dibaca, 1 = sudah dibaca
+            ];
+            
+            log_message('debug', "Inserting recipient: " . json_encode($recipientData));
+            
+            $insertResult = $this->notificationRecipientsModel->insert($recipientData);
+            
+            if ($insertResult) {
+                $successCount++;
+                log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
+            } else {
+                $errorCount++;
+                log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+            }
         }
 
-        return redirect()->to('/document-submission-list?reference_id=' . $id);
+        log_message('info', "Notifikasi dokumen berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
+        
+        // Verifikasi data yang tersimpan
+        $savedRecipients = $this->notificationRecipientsModel
+            ->where('notification_id', $notificationId)
+            ->findAll();
+        log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
+        
+        return $notificationId;
+
+    } catch (\Exception $e) {
+        log_message('error', 'Error creating document notification: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return false;
     }
+}
 }

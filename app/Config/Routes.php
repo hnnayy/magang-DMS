@@ -31,7 +31,7 @@ $routes->post('/api/decode-token', 'Dummy\TokenDummy::apiDecodeToken');
 
 
 // $routes->get('/', 'Home::index');
-$routes->get('/dashboard', 'Home::index');
+$routes->get('/dashboard', 'Home::dashboard');
 
 // CreateUser
 $routes->get('create-user', to: 'CreateUser::create');
@@ -131,8 +131,11 @@ $routes->get('document-list/serveFile', 'DaftarDokumen\ControllerDaftarDokumen::
 
 
 
-
-
+//notif cipa
+$routes->post('notification/markAsRead', 'NotificationController::markAsRead');
+$routes->get('notification/fetch', 'NotificationController::fetch');
+$routes->post('notification/fetch', 'NotificationController::fetch'); // Support POST juga
+$routes->get('notification/test', 'NotificationController::testNotification'); // Temporary untuk testing
 
 
 

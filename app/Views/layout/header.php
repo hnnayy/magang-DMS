@@ -50,26 +50,15 @@
             </div>
 
             <div class="logo">
-                <a href="<?= base_url('/') ?>">
+                <a href="<?= base_url('dashboard') ?>">
                     <img src="<?= base_url('assets/images/logo/telkom-logo.png') ?>" alt="Telkom-logo" class="logo-img" />
                 </a>
             </div>
         </div>
 
         <div class="user-info">
-            <div class="dropdown me-3" id="notificationDropdown">
-                <a class="nav-link notif-icon-wrapper" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fi fi-rr-bell"></i>
-                    <?php if (!empty($notifikasi)) : ?>
-                        <span class="notif-badge"><?= count($notifikasi) ?></span>
-                    <?php endif; ?>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" id="notif-list" style="max-height: 300px; overflow-y: auto;">
-                    <li class="dropdown-header">Notifikasi</li>
-                    <?= view('layout/partials/notifikasi', ['notifikasi' => $notifikasi ?? []]) ?>
-                </ul>
-
-            </div>
+            <!-- PERUBAHAN: Ganti bagian notifikasi dengan View Cell -->
+            <?= view_cell('NotificationCell::render') ?>
 
             <i class="fi fi-rr-search"></i>
 

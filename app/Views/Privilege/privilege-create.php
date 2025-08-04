@@ -244,7 +244,6 @@ $(function () {
                 displayContainer.appendChild(tag);
                 
                 // Create individual hidden input for each selected submenu
-                // Controller expects 'submenu[]' not 'submenu'
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
                 hiddenInput.name = 'submenu[]';
@@ -304,8 +303,8 @@ $(function () {
                         ${item.name}
                     `;
                     if (isSelected) {
-                        div.style.backgroundColor = '#f0f8ff';
-                        div.style.color = '#e53e3e';
+                        div.style.backgroundColor = '#e6f3ff'; /* Warna biru muda untuk item yang dipilih */
+                        div.style.color = '#2c5282'; /* Warna teks lebih gelap agar kontras */
                     }
                 } else {
                     div.textContent = item.name;
@@ -376,18 +375,6 @@ $(function () {
         } else {
             $('#submenu-search').removeClass('is-invalid');
             console.log('Submenus selected:', submenuInputs.length);
-        }
-
-        // Validate privileges
-        const privilegesChecked = $('input[name="privileges[]"]:checked').length;
-        if (privilegesChecked === 0) {
-            isValid = false;
-            console.log('No privileges selected');
-            Swal.fire({
-                icon: 'warning',
-                title: 'Warning',
-                text: 'Please select at least one privilege'
-            });
         }
 
         console.log('Form validation result:', isValid);

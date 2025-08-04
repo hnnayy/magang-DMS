@@ -337,23 +337,190 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-//mark as read notif
+//notif
+// Tambahkan di file dashboard.js atau buat file notification.js terpisah
 
-document.addEventListener('DOMContentLoaded', function () {
-    const notifDropdown = document.getElementById('notificationDropdown');
-
-    if (notifDropdown) {
-        notifDropdown.addEventListener('show.bs.dropdown', function () {
-            fetch(BASE_URL + 'notification/markAsRead', {
-                method: 'POST'
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.querySelectorAll('.notif-badge').forEach(el => el.remove());
-                }
-            })
-            .catch(err => console.error('Gagal fetch notifikasi:', err));
+$(document).ready(function() {
+    // Handle click pada notifikasi
+    $(document).on('click', '.notification-link', function(e) {
+        e.preventDefault();
+        
+        const notificationId = $(this).data('notification-id');
+        const href = $(this).attr('href');
+        
+        // Mark as read via AJAX
+        markNotificationAsRead(notificationId, function(success) {
+            if (success) {
+                // Remove notification from dropdown
+                $(`.notification-item[data-notification-id="${notificationId}"]`).fadeOut();
+                
+                // Update notification count
+                updateNotificationCount();
+                
+                // Redirect to the link
+                window.location.href = href;
+            } else {
+                // Still redirect even if marking as read failed
+                window.location.href = href;
+            }
         });
+    });
+    
+    // Auto refresh notifications every 30 seconds
+    setInterval(function() {
+        refreshNotifications();
+    }, 30000);
+});
+
+/**
+ * Mark notification as read
+ */
+function markNotificationAsRead(notificationId, callback) {
+    $.ajax({
+        url: BASE_URL + 'notification/markAsRead',
+        type: 'POST',
+        data: {
+            notification_id: notificationId,
+            [csrfToken]: csrfHash
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                console.log('Notification marked as read');
+                callback(true);
+            } else {
+                console.error('Failed to mark notification as read:', response.message);
+                callback(false);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('AJAX error marking notification as read:', error);
+            callback(false);
+        }
+    });
+}
+
+/**
+ * Update notification count badge
+ */
+function updateNotificationCount() {
+    const remainingNotifications = $('.notification-item').not(':hidden').length - 1; // -1 for divider
+    const badge = $('.notif-badge');
+    
+    if (remainingNotifications > 0) {
+        badge.text(remainingNotifications).show();
+    } else {
+        badge.hide();
+        // Update dropdown content to show no notifications
+        $('#notif-list').html(`
+            <li class="dropdown-header">Notifikasi</li>
+            <li class="notification-item">
+                <div class="dropdown-item text-muted text-center py-3">
+                    <i class="bi bi-bell-slash mb-2" style="font-size: 2rem;"></i>
+                    <div>Tidak ada notifikasi baru</div>
+                </div>
+            </li>
+        `);
+    }
+}
+
+/**
+ * Refresh notifications without page reload
+ */
+function refreshNotifications() {
+    $.ajax({
+        url: BASE_URL + 'notification/fetch',
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                updateNotificationDropdown(response.notifications, response.count);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error refreshing notifications:', error);
+        }
+    });
+}
+
+/**
+ * Update notification dropdown content
+ */
+function updateNotificationDropdown(notifications, count) {
+    let html = '<li class="dropdown-header">Notifikasi</li>';
+    
+    if (notifications && notifications.length > 0) {
+        notifications.forEach(function(notif) {
+            const creatorName = notif.creator_fullname || notif.creator_name || 'Pengguna Tidak Dikenal';
+            const createdDate = new Date(notif.createddate).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            html += `
+                <li class="notification-item" data-notification-id="${notif.id}">
+                    <a class="dropdown-item d-flex align-items-center notification-link" 
+                       href="${BASE_URL}document-submission-list?reference_id=${notif.reference_id || ''}"
+                       data-notification-id="${notif.id}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" class="me-2">
+                            <path fill="#007bff" d="M 30.398438 2 L 7 2 L 7 48 L 43 48 L 43 14.601563 Z M 15 28 L 31 28 L 31 30 L 15 30 Z M 35 36 L 15 36 L 15 34 L 35 34 Z M 35 24 L 15 24 L 15 22 L 35 22 Z M 30 15 L 30 4.398438 L 40.601563 15 Z"></path>
+                        </svg>
+                        <div class="notification-content">
+                            <div class="fw-bold">
+                                ${creatorName}
+                                ${notif.createdby ? `<small class="text-muted">(ID: ${notif.createdby})</small>` : ''}
+                            </div>
+                            <div class="notification-message">${notif.message}</div>
+                            <small class="text-muted">${createdDate}</small>
+                        </div>
+                        <span class="ms-auto">
+                            <i class="bi bi-circle-fill text-primary" style="font-size: 8px;" title="Belum dibaca"></i>
+                        </span>
+                    </a>
+                </li>
+            `;
+        });
+        
+        html += `
+            <li><hr class="dropdown-divider"></li>
+            <li class="text-center">
+                <a class="dropdown-item text-primary" href="${BASE_URL}notifications">
+                    <small>Lihat semua notifikasi</small>
+                </a>
+            </li>
+        `;
+        
+        // Update badge
+        $('.notif-badge').text(count).show();
+    } else {
+        html += `
+            <li class="notification-item">
+                <div class="dropdown-item text-muted text-center py-3">
+                    <i class="bi bi-bell-slash mb-2" style="font-size: 2rem;"></i>
+                    <div>Tidak ada notifikasi baru</div>
+                </div>
+            </li>
+        `;
+        
+        // Hide badge
+        $('.notif-badge').hide();
+    }
+    
+    $('#notif-list').html(html);
+}
+
+// Get CSRF token and hash from meta tags
+const csrfToken = $('meta[name="csrf-token"]').attr('content');
+let csrfHash = $('meta[name="csrf-hash"]').attr('content');
+
+// Update CSRF hash after each AJAX request
+$(document).ajaxComplete(function(event, xhr, settings) {
+    const newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
+    if (newHash) {
+        csrfHash = newHash;
+        $('meta[name="csrf-hash"]').attr('content', newHash);
     }
 });

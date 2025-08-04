@@ -82,7 +82,10 @@ class Filters extends BaseFilters
                 'generateAllTokens',
                 'dashboard',
                 'api/decode-token',
-                'api/decode-token'
+                'api/decode-token',
+                'notification/markAsRead',
+                'notification/fetch',
+                'notification/test',
             ],
         ],
     ],

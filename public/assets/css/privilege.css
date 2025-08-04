@@ -106,56 +106,6 @@ select:focus {
     display: block;
 }
 
-/* === Select2 === */
-.select2-container--default .select2-selection--multiple {
-    width: 100% !important;
-    min-height: 50px;
-    border: 2px solid #e1e5e9 !important;
-    border-radius: 8px !important;
-    background-color: #fff !important;
-    padding: 5px !important;
-    box-sizing: border-box;
-}
-
-.select2-container--default .select2-selection--multiple:focus-within {
-    border-color: #b41616 !important;
-    box-shadow: 0 0 0 3px rgba(102, 16, 242, 0.1);
-}
-
-.select2-selection__choice {
-    background-color: rgb(229, 229, 229) !important;
-    color: #000 !important;
-    border: none !important;
-    border-radius: 6px !important;
-    padding: 8px 12px !important;
-    margin: 3px !important;
-    font-size: 14px !important;
-}
-
-.select2-selection__choice__remove {
-    color: #000 !important;
-    font-weight: bold;
-    margin-right: 8px !important;
-}
-
-.select2-selection__choice__remove:hover {
-    color: #ffdddd !important;
-}
-
-.select2-dropdown {
-    border: 2px solid #e1e5e9 !important;
-    border-radius: 8px !important;
-}
-
-.select2-results__option--highlighted {
-    background-color: #b41616 !important;
-}
-
-.select2-search,
-.select2-search--dropdown {
-    display: none !important;
-}
-
 /* === Privileges Options === */
 .privileges-options {
     display: grid;
@@ -258,8 +208,7 @@ select:focus {
     transition: background-color 0.2s;
 }
 
-.search-dropdown-item:hover,
-.search-dropdown-item.selected {
+.search-dropdown-item:hover {
     background-color: #f8f9fa;
 }
 
@@ -331,4 +280,10 @@ select:focus {
     .btn {
         width: 100%;
     }
+}
+
+/* Custom Styles for Selected Submenu Items */
+.search-dropdown-item.selected {
+    background-color: #e6f3ff; /* Warna biru muda untuk item yang dipilih */
+    color: #2c5282; /* Warna teks lebih gelap untuk kontras */
 }

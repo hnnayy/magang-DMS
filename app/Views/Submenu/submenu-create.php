@@ -35,7 +35,7 @@
             <div class="form-group <?php echo isset($validation) && isset($validation['submenu']) ? 'has-error' : ''; ?>">
                 <label for="editUnitName" class="form-label">Submenu</label>
                 <input type="text" name="submenu" id="editUnitName" class="form-input <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
-                       placeholder="Enter Submenu here... "
+                       placeholder="Enter Submenu here..."
                        value="<?php echo old('submenu'); ?>"
                        pattern="^\S+\s+\S+"
                        title="Submenu must contain at least two words"
@@ -89,11 +89,13 @@ class SearchableMenuDropdown {
         this.hiddenInput = document.getElementById('selected_menu_id');
         this.selectedIndex = -1;
         this.filteredMenus = [];
+        this.debounceTimeout = null;
         
         this.init();
     }
 
     init() {
+        // Pre-fill input if there's an old value
         const oldValue = "<?= old('parent') ?>";
         if (oldValue) {
             const selectedMenu = menuData.find(menu => menu.id == oldValue);
@@ -104,80 +106,96 @@ class SearchableMenuDropdown {
             }
         }
 
+        // Event listeners
         this.searchInput.addEventListener('input', (e) => this.handleInput(e));
         this.searchInput.addEventListener('focus', () => this.handleFocus());
-        this.searchInput.addEventListener('click', () => this.handleClick());
         this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
         this.searchInput.addEventListener('blur', () => this.handleBlur());
-        
         this.dropdown.addEventListener('click', (e) => this.handleDropdownClick(e));
-        
         document.addEventListener('click', (e) => this.handleOutsideClick(e));
+    }
+
+    debounce(func, wait) {
+        return (...args) => {
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
     }
 
     handleInput(e) {
         const value = e.target.value.trim();
         
-        if (value === '') {
-            this.dropdown.style.display = 'none';
-            this.hiddenInput.value = '';
-            this.searchInput.classList.remove('has-selection');
-            this.showValidationError();
-            return;
-        }
+        // Debounce filtering to improve performance
+        this.debounce(() => {
+            if (value === '') {
+                this.dropdown.style.display = 'none';
+                this.hiddenInput.value = '';
+                this.searchInput.classList.remove('has-selection');
+                this.showValidationError();
+                return;
+            }
 
-        const exactMatch = menuData.find(menu => menu.name === value);
-        if (!exactMatch) {
-            this.hiddenInput.value = '';
-            this.searchInput.classList.remove('has-selection');
-            this.showValidationError();
-        } else {
-            this.hideValidationError();
-        }
-        
-        this.filterMenus(value);
+            const exactMatch = menuData.find(menu => menu.name.toLowerCase() === value.toLowerCase());
+            if (exactMatch) {
+                this.hiddenInput.value = exactMatch.id;
+                this.searchInput.classList.add('has-selection');
+                this.hideValidationError();
+                this.dropdown.style.display = 'none';
+            } else {
+                this.hiddenInput.value = '';
+                this.searchInput.classList.remove('has-selection');
+                this.showValidationError();
+            }
+            
+            this.filterMenus(value);
+        }, 300)();
     }
 
     handleFocus() {
-        if (this.searchInput.value.trim() !== '') {
-            this.filterMenus(this.searchInput.value);
-        } else {
-            this.filterMenus('');
-        }
-    }
-
-    handleClick() {
-        if (this.searchInput.value.trim() !== '') {
-            this.filterMenus(this.searchInput.value);
-        } else {
-            this.filterMenus('');
-        }
+        this.searchInput.select(); // Select text on focus for easier editing
+        this.filterMenus(this.searchInput.value.trim());
     }
 
     handleKeydown(e) {
         const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
         
-        switch(e.key) {
+        switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
                 this.selectedIndex = Math.min(this.selectedIndex + 1, items.length - 1);
                 this.updateSelection(items);
+                if (this.selectedIndex >= 0) {
+                    items[this.selectedIndex].scrollIntoView({ block: 'nearest' });
+                }
                 break;
                 
             case 'ArrowUp':
                 e.preventDefault();
                 this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
                 this.updateSelection(items);
+                if (this.selectedIndex >= 0) {
+                    items[this.selectedIndex].scrollIntoView({ block: 'nearest' });
+                }
                 break;
                 
             case 'Enter':
                 e.preventDefault();
                 if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
                     this.selectMenu(items[this.selectedIndex]);
+                } else {
+                    const exactMatch = menuData.find(menu => menu.name.toLowerCase() === this.searchInput.value.trim().toLowerCase());
+                    if (exactMatch) {
+                        this.searchInput.value = exactMatch.name;
+                        this.hiddenInput.value = exactMatch.id;
+                        this.searchInput.classList.add('has-selection');
+                        this.dropdown.style.display = 'none';
+                        this.hideValidationError();
+                    }
                 }
                 break;
                 
             case 'Escape':
+                e.preventDefault();
                 this.dropdown.style.display = 'none';
                 this.selectedIndex = -1;
                 break;
@@ -186,7 +204,7 @@ class SearchableMenuDropdown {
 
     handleBlur() {
         setTimeout(() => {
-            if (!this.dropdown.contains(document.activeElement)) {
+            if (!this.dropdown.contains(document.activeElement) && !this.searchInput.contains(document.activeElement)) {
                 this.dropdown.style.display = 'none';
                 if (!this.hiddenInput.value && this.searchInput.value) {
                     this.showValidationError();
@@ -196,8 +214,9 @@ class SearchableMenuDropdown {
     }
 
     handleDropdownClick(e) {
-        if (e.target.classList.contains('search-dropdown-item') && !e.target.classList.contains('no-results')) {
-            this.selectMenu(e.target);
+        const item = e.target.closest('.search-dropdown-item');
+        if (item && !item.classList.contains('no-results')) {
+            this.selectMenu(item);
         }
     }
 
@@ -224,6 +243,7 @@ class SearchableMenuDropdown {
                 item.textContent = menu.name;
                 item.dataset.id = menu.id;
                 item.dataset.index = index;
+                item.tabIndex = 0; // Make items focusable for accessibility
                 this.dropdown.appendChild(item);
             });
         }
@@ -248,6 +268,7 @@ class SearchableMenuDropdown {
         this.dropdown.style.display = 'none';
         this.selectedIndex = -1;
         this.hideValidationError();
+        this.searchInput.focus(); // Keep focus on input after selection
     }
 
     showValidationError() {

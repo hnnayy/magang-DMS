@@ -162,6 +162,7 @@
             this.valueKey = valueKey;
             this.filteredData = [...data];
             this.selectedIndex = -1;
+            this.isDropdownOpen = false;
             
             this.init();
         }
@@ -169,8 +170,8 @@
         init() {
             this.searchInput.addEventListener('input', (e) => this.handleInput(e));
             this.searchInput.addEventListener('focus', () => this.showDropdown());
-            this.searchInput.addEventListener('blur', (e) => this.handleBlur(e));
             this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
+            this.searchInput.addEventListener('click', () => this.showDropdown());
             
             // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
@@ -178,47 +179,35 @@
                     this.hideDropdown();
                 }
             });
+
+            // Prevent blur from hiding dropdown when clicking dropdown items
+            this.dropdown.addEventListener('mousedown', (e) => e.preventDefault());
         }
 
         handleInput(e) {
-            const query = e.target.value.toLowerCase();
+            const query = e.target.value.toLowerCase().trim();
             this.filteredData = this.data.filter(item => 
                 item[this.textKey].toLowerCase().includes(query)
             );
-            this.selectedIndex = -1;
+            this.selectedIndex = this.filteredData.length > 0 ? 0 : -1;
             this.renderDropdown();
             this.showDropdown();
             
-            // Clear hidden input if text doesn't match any option
+            // Auto-select if there's an exact match
             const exactMatch = this.data.find(item => 
-                item[this.textKey].toLowerCase() === query.toLowerCase()
+                item[this.textKey].toLowerCase() === query
             );
-            if (!exactMatch) {
+            if (exactMatch) {
+                this.selectItem(exactMatch, false);
+            } else {
                 this.hiddenInput.value = '';
                 this.searchInput.classList.remove('has-selection');
-                this.showValidationError(); // Show validation error
-            } else {
-                this.hideValidationError(); // Hide validation error if valid
+                this.showValidationError();
             }
-        }
-
-        handleBlur(e) {
-            // Delay hiding to allow clicking on dropdown items
-            setTimeout(() => {
-                if (!this.dropdown.contains(document.activeElement)) {
-                    this.hideDropdown();
-                    // Show validation error if no valid selection
-                    if (!this.hiddenInput.value && this.searchInput.value) {
-                        this.showValidationError();
-                    }
-                }
-            }, 150);
         }
 
         handleKeydown(e) {
-            if (!this.dropdown.style.display || this.dropdown.style.display === 'none') {
-                return;
-            }
+            if (!this.isDropdownOpen) return;
 
             switch (e.key) {
                 case 'ArrowDown':
@@ -228,17 +217,30 @@
                     break;
                 case 'ArrowUp':
                     e.preventDefault();
-                    this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                    this.selectedIndex = Math.max(this.selectedIndex - 1, 0);
                     this.updateSelection();
                     break;
                 case 'Enter':
                     e.preventDefault();
-                    if (this.selectedIndex >= 0) {
+                    if (this.selectedIndex >= 0 && this.filteredData.length > 0) {
                         this.selectItem(this.filteredData[this.selectedIndex]);
+                    } else if (this.filteredData.length === 1) {
+                        this.selectItem(this.filteredData[0]);
                     }
                     break;
                 case 'Escape':
+                    e.preventDefault();
                     this.hideDropdown();
+                    break;
+                case 'Tab':
+                    if (this.isDropdownOpen) {
+                        e.preventDefault();
+                        if (this.selectedIndex >= 0) {
+                            this.selectItem(this.filteredData[this.selectedIndex]);
+                        } else if (this.filteredData.length === 1) {
+                            this.selectItem(this.filteredData[0]);
+                        }
+                    }
                     break;
             }
         }
@@ -247,28 +249,39 @@
             const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
             items.forEach((item, index) => {
                 item.classList.toggle('selected', index === this.selectedIndex);
+                if (index === this.selectedIndex) {
+                    item.scrollIntoView({ block: 'nearest' });
+                }
             });
         }
 
-        selectItem(item) {
+        selectItem(item, hideDropdown = true) {
             this.searchInput.value = item[this.textKey];
             this.hiddenInput.value = item[this.valueKey];
             this.searchInput.classList.add('has-selection');
-            this.hideDropdown();
-            this.hideValidationError(); // Hide validation error when valid selection is made
-            
-            // Trigger change event for other dependencies
+            if (hideDropdown) {
+                this.hideDropdown();
+            }
+            this.hideValidationError();
             this.hiddenInput.dispatchEvent(new Event('change'));
         }
 
         showDropdown() {
-            this.renderDropdown();
-            this.dropdown.style.display = 'block';
+            if (this.filteredData.length > 0 || this.searchInput.value) {
+                this.renderDropdown();
+                this.dropdown.style.display = 'block';
+                this.isDropdownOpen = true;
+                this.updateSelection();
+            }
         }
 
         hideDropdown() {
             this.dropdown.style.display = 'none';
+            this.isDropdownOpen = false;
             this.selectedIndex = -1;
+            if (!this.hiddenInput.value && this.searchInput.value) {
+                this.showValidationError();
+            }
         }
 
         renderDropdown() {
@@ -284,7 +297,7 @@
 
             this.filteredData.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = 'search-dropdown-item';
+                div.className = `search-dropdown-item ${index === this.selectedIndex ? 'selected' : ''}`;
                 div.textContent = item[this.textKey];
                 div.addEventListener('click', () => this.selectItem(item));
                 this.dropdown.appendChild(div);
@@ -300,7 +313,6 @@
             }
         }
 
-        // Show validation error
         showValidationError() {
             this.searchInput.classList.add('is-invalid');
             const container = this.searchInput.closest('.form-group');
@@ -310,7 +322,6 @@
             }
         }
 
-        // Hide validation error
         hideValidationError() {
             this.searchInput.classList.remove('is-invalid');
             const container = this.searchInput.closest('.form-group');
@@ -361,7 +372,7 @@
             document.getElementById('unit-search').value = '';
             document.getElementById('unit').value = '';
             document.getElementById('unit-search').classList.remove('has-selection');
-            unitDropdown.hideValidationError(); // Hide validation error when clearing
+            unitDropdown.hideValidationError();
         });
 
         // Set old values if they exist (for form validation errors)
@@ -374,7 +385,6 @@
 
         if (oldFakultas && oldFakultasText) {
             fakultasDropdown.setValue(oldFakultas, oldFakultasText);
-            // Trigger change to populate units
             document.getElementById('fakultas').dispatchEvent(new Event('change'));
         }
 
@@ -440,7 +450,7 @@
         
         if (fullnameValue && words.length < 2) {
             isValid = false;
-            fullnameInput.setCustomValidity('Full name must contain at least two words');
+            fullnameInput.set	globalThisValidity('Full name must contain at least two words');
         } else {
             fullnameInput.setCustomValidity('');
         }
