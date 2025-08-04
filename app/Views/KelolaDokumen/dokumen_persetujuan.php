@@ -37,25 +37,24 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                 <table id="persetujuanTable" class="table table-bordered table-striped persetujuan-table">
                     <thead>
                         <tr>
-                            <th>No</th>
-                            <th>Faculty/Directorate</th>
-                            <th>Department/Unit/Program</th>
-                            <th>Document Name</th>
-                            <th>Revision</th>
-                            <th>Document Type</th>
-                            <th>Code & Document Name</th>
-                            <th>File</th>
-                            <th>Remark</th>
-                            <th>Created By</th>
+                            <th class="text-center" style="width:5%;">Document ID</th>
+                            <th style="width:12%;">Faculty/Directorate</th>
+                            <th style="width:12%;">Department/Unit/Program</th>
+                            <th style="width:15%;">Document Name</th>
+                            <th class="text-center" style="width:8%;">Revision</th>
+                            <th style="width:10%;">Document Type</th>
+                            <th style="width:12%;">Code & Document Name</th>
+                            <th class="text-center" style="width:8%;">File</th>
+                            <th style="width:12%;">Remark</th>
+                            <th style="width:10%;">Created By</th>
                             <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
-                            <th class="text-center noExport">Action</th>
+                            <th class="text-center noExport" style="width:8%;">Action</th>
                             <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
                         <?php 
-                        $displayedCount = 0;
-                        foreach ($documents as $i => $doc): 
+                        foreach ($documents as $doc): 
                             // Check if document should be visible based on hierarchical access
                             $documentCreatorId = $doc['createdby'] ?? 0;
                             $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
@@ -99,11 +98,9 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                             
                             // Skip documents with invalid creator ID
                             if ($documentCreatorId == 0) continue;
-                            
-                            $displayedCount++;
                         ?>
-                        <tr>
-                            <td class="text-center"><?= $displayedCount ?></td>
+                        <tr data-document-id="<?= esc($doc['id']) ?>">
+                            <td class="text-center"><?= esc($doc['id']) ?></td>
                             <td><?= esc($doc['parent_name'] ?? '-') ?></td>
                             <td><?= esc($doc['unit_name'] ?? '-') ?></td>
                             <td>
@@ -147,12 +144,9 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                                     <span class="text-muted">-</span>
                                 <?php endif; ?>
                             </td>
-                            
-                            <!-- Action column - hanya tampil jika ada privilege update atau delete -->
                             <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
                             <td class="text-center">
                                 <div class="action-buttons">
-                                    <!-- Delete button - hanya tampil jika ada privilege can_delete dan user bisa akses dokumen -->
                                     <?php if ($docApprovalPrivileges['can_delete'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                                     <form method="post" action="<?= base_url('document-approval/delete') ?>" class="d-inline-block delete-form">
                                         <?= csrf_field() ?>
@@ -162,21 +156,15 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                                         </button>
                                     </form>
                                     <?php endif; ?>
-                                    
-                                    <!-- Edit button - hanya tampil jika ada privilege can_update dan user bisa akses dokumen -->
                                     <?php if ($docApprovalPrivileges['can_update'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                                     <button class="btn btn-sm btn-outline-primary btn-action" data-bs-toggle="modal" data-bs-target="#editModal<?= $doc['id'] ?>" title="Edit">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
                                     <?php endif; ?>
-                                    
-
                                 </div>
                             </td>
                             <?php endif; ?>
                         </tr>
-
-                        <!-- Edit Modal - hanya tampil jika ada privilege can_update dan user bisa edit -->
                         <?php if ($docApprovalPrivileges['can_update'] && ($documentCreatorId == $currentUserId || $currentUserAccessLevel < $documentCreatorAccessLevel)): ?>
                         <div class="modal fade" id="editModal<?= $doc['id'] ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
@@ -240,7 +228,14 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- DataTables Logic -->
+<style>
+/* Highlight style for the selected document row */
+tr.document-highlight {
+    background-color: #d3d3d3 !important; /* Light gray background */
+    transition: background-color 0.3s ease;
+}
+</style>
+
 <script>
 $(document).ready(function () {
     <?php 
@@ -255,13 +250,18 @@ $(document).ready(function () {
     const table = $('#persetujuanTable').DataTable({
         dom: 't', 
         pageLength: 10,
-        order: [],
+        order: [[0, 'asc']], // Default sort by Document ID
         columnDefs: [
+            {
+                targets: 0, // Document ID column
+                searchable: true, // Allow searching by document_id
+                orderable: true // Allow sorting by document_id
+            },
             <?php if ($docApprovalPrivileges['can_update'] || $docApprovalPrivileges['can_delete']): ?>
-            { orderable: false, targets: <?= $actionColumnIndex ?> },
-            { className: 'text-center', targets: [0, 4, <?= $actionColumnIndex ?>] }
+            { orderable: false, searchable: false, targets: <?= $actionColumnIndex ?> },
+            { className: 'text-center', targets: [0, 4, 7, <?= $actionColumnIndex ?>] }
             <?php else: ?>
-            { className: 'text-center', targets: [0, 4] }
+            { className: 'text-center', targets: [0, 4, 7] }
             <?php endif; ?>
         ],
         buttons: [
@@ -277,6 +277,7 @@ $(document).ready(function () {
         lengthMenu: [10, 25, 50, 100],
         language: {
             lengthMenu: "Show _MENU_ entries",
+            zeroRecords: "No data found",
             paginate: {
                 previous: "Previous",
                 next: "Next"
@@ -300,7 +301,7 @@ $(document).ready(function () {
         // Get table data
         const tableData = [];
         const headers = [
-            'No', 'Faculty/Directorate', 'Department/Unit/Program', 
+            'Document ID', 'Faculty/Directorate', 'Department/Unit/Program', 
             'Document Name', 'Revision', 'Document Type', 
             'Code & Document Name', 'Remark', 'Created By'
         ];
@@ -353,7 +354,7 @@ $(document).ready(function () {
                 fillColor: [248, 249, 250]
             },
             columnStyles: {
-                0: { cellWidth: 40 },   // No
+                0: { cellWidth: 40 },   // Document ID
                 1: { cellWidth: 80 },   // Faculty
                 2: { cellWidth: 100 },  // Department
                 3: { cellWidth: 120 },  // Document Name
@@ -488,8 +489,75 @@ $(document).ready(function () {
         $('.dataTables_paginate').html(paginationHtml);
     }
 
+    // Filter and highlight document from URL parameter
+    function filterAndHighlightDocumentFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const documentId = urlParams.get('document_id');
+        
+        if (documentId) {
+            // Add custom filter to show only the row with the matching document_id
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    const row = $('#persetujuanTable').DataTable().row(dataIndex);
+                    const rowDocumentId = row.node().getAttribute('data-document-id') || '';
+                    return rowDocumentId === documentId;
+                }
+            );
+            table.draw();
+
+            // Find the row with the matching document ID
+            let targetRow = null;
+            table.rows().every(function() {
+                const rowNode = this.node();
+                if ($(rowNode).data('document-id') == documentId) {
+                    targetRow = rowNode;
+                    return false; // Break the loop
+                }
+            });
+
+            if (targetRow) {
+                // Remove previous highlights
+                $('#persetujuanTable tbody tr').removeClass('document-highlight');
+                
+                // Apply highlight class
+                $(targetRow).addClass('document-highlight');
+                
+                // Ensure the row is visible and scroll to it
+                setTimeout(() => {
+                    const $row = $(targetRow);
+                    if ($row.length) {
+                        $('html, body').animate({
+                            scrollTop: $row.offset().top - 100
+                        }, 500);
+                        
+                        // Fade out highlight after 5 seconds
+                        setTimeout(() => {
+                            $row.removeClass('document-highlight');
+                        }, 5000);
+                    }
+                }, 100); // Delay to ensure DataTables has rendered
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Document Not Found',
+                    text: 'The document with ID ' + documentId + ' was not found or you do not have access to it.',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        } else {
+            // If no document_id in URL, clear any existing filters
+            $.fn.dataTable.ext.search.pop();
+            table.draw();
+        }
+    }
+
+    // Call filter and highlight function after table is initialized
+    filterAndHighlightDocumentFromUrl();
+
+    // Re-apply filter and highlight on page change or redraw
     table.on('draw', function() {
         updatePagination();
+        filterAndHighlightDocumentFromUrl();
     });
 
     // Handle pagination click
@@ -498,8 +566,6 @@ $(document).ready(function () {
         const page = parseInt($(this).data('page'));
         table.page(page).draw(false);
     });
-
-    updatePagination();
 
     // Delete confirmation with SweetAlert2 - hanya jika ada privilege delete
     <?php if ($docApprovalPrivileges['can_delete']): ?>
@@ -526,6 +592,40 @@ $(document).ready(function () {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Enhanced search with debounce
+    let searchTimeout;
+    $('#customSearch').on('input', function() {
+        clearTimeout(searchTimeout);
+        const searchTerm = this.value;
+        
+        searchTimeout = setTimeout(function() {
+            table.search(searchTerm).draw();
+        }, 300);
+    });
+
+    // Keyboard shortcuts
+    $(document).keydown(function(e) {
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            $('#customSearch').focus();
+        }
+        
+        if (e.key === 'Escape') {
+            $('.modal.show').modal('hide');
+        }
+    });
+
+    // Hover effects for table rows
+    $('#persetujuanTable tbody').on('mouseenter', 'tr', function() {
+        if (!$(this).hasClass('document-highlight')) {
+            $(this).addClass('table-active');
+        }
+    }).on('mouseleave', 'tr', function() {
+        if (!$(this).hasClass('document-highlight')) {
+            $(this).removeClass('table-active');
+        }
     });
 });
 </script>

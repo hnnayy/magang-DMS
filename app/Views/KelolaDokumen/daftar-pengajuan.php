@@ -96,7 +96,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
             <table class="table table-bordered table-hover align-middle" id="documentsTable">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center" style="width:5%;">No</th>
+                        <th class="text-center" style="width:5%;">Document ID</th>
                         <th style="width:12%;">Faculty</th>
                         <th style="width:10%;">Department</th>
                         <th style="width:15%;">Document Name</th>
@@ -147,8 +147,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                             ?>
                             
                             <?php if ($documentCreatorId != 0): ?>
-                            <tr>
-                                <td class="text-center"></td>
+                            <tr data-document-id="<?= esc($doc['id']) ?>">
+                                <td class="text-center"><?= esc($doc['id']) ?></td>
                                 <td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
                                     <?= esc($doc['parent_name'] ?? '-') ?>
                                 </td>
@@ -509,6 +509,14 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<style>
+/* Highlight style for the selected document row */
+tr.document-highlight {
+    background-color: #d3d3d3 !important; /* Light gray background */
+    transition: background-color 0.3s ease;
+}
+</style>
+
 <script>
 // Global variables
 var kodeDokumenByType = <?= json_encode($kode_dokumen_by_type ?? []) ?>;
@@ -613,12 +621,9 @@ $(document).ready(function() {
             }
         },
         columnDefs: [{
-            targets: 0,
-            searchable: false,
-            orderable: false,
-            render: function(data, type, row, meta) {
-                return meta.row + meta.settings._iDisplayStart + 1;
-            }
+            targets: 0, // Document ID column
+            searchable: true, // Allow searching by document_id
+            orderable: true // Allow sorting by document_id
         }, {
             targets: [11], // Action column
             orderable: false,
@@ -626,7 +631,7 @@ $(document).ready(function() {
         }],
         responsive: true,
         autoWidth: false,
-        order: [[3, 'asc']] 
+        order: [[0, 'asc']] // Default sort by Document ID
     });
 
     $('.dataTables_filter').hide();
@@ -661,6 +666,76 @@ $(document).ready(function() {
         $.fn.dataTable.ext.search.pop(); 
     });
 
+    // Filter and highlight document from URL parameter
+    function filterAndHighlightDocumentFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const documentId = urlParams.get('document_id');
+        
+        if (documentId) {
+            // Add custom filter to show only the row with the matching document_id
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    const row = $('#documentsTable').DataTable().row(dataIndex);
+                    const rowDocumentId = row.node().getAttribute('data-document-id') || '';
+                    return rowDocumentId === documentId;
+                }
+            );
+            table.draw();
+
+            // Find the row with the matching document ID
+            let targetRow = null;
+            table.rows().every(function() {
+                const rowNode = this.node();
+                if ($(rowNode).data('document-id') == documentId) {
+                    targetRow = rowNode;
+                    return false; // Break the loop
+                }
+            });
+
+            if (targetRow) {
+                // Remove previous highlights
+                $('#documentsTable tbody tr').removeClass('document-highlight');
+                
+                // Apply highlight class
+                $(targetRow).addClass('document-highlight');
+                
+                // Ensure the row is visible and scroll to it
+                setTimeout(() => {
+                    const $row = $(targetRow);
+                    if ($row.length) {
+                        $('html, body').animate({
+                            scrollTop: $row.offset().top - 100
+                        }, 500);
+                        
+                        // Fade out highlight after 5 seconds
+                        setTimeout(() => {
+                            $row.removeClass('document-highlight');
+                        }, 5000);
+                    }
+                }, 100); // Delay to ensure DataTables has rendered
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Document Not Found',
+                    text: 'The document with ID ' + documentId + ' was not found or you do not have access to it.',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        } else {
+            // If no document_id in URL, clear any existing filters
+            $.fn.dataTable.ext.search.pop();
+            table.draw();
+        }
+    }
+
+    // Call filter and highlight function after table is initialized
+    filterAndHighlightDocumentFromUrl();
+
+    // Re-apply filter and highlight on page change
+    table.on('draw', function() {
+        filterAndHighlightDocumentFromUrl();
+    });
+
     // Check status for edit buttons - Only if user has update privilege
     if (documentPrivileges.can_update) {
         $('.edit-btn').each(function() {
@@ -691,7 +766,15 @@ $(document).ready(function() {
     }
 
     function resetFilters() {
-        location.reload(true);
+        // Clear DataTables search and custom filters
+        table.search('').columns().search('');
+        $.fn.dataTable.ext.search.pop();
+        $('#searchInput').val('');
+        $('#filterFakultas').val('');
+        $('#filterJenis').val('');
+        table.draw();
+        // Reload page to ensure clean state
+        window.location.href = '<?= base_url('document-submission-list') ?>';
     }
 
     $('#resetButton').on('click', resetFilters);
@@ -1142,9 +1225,13 @@ $(document).ready(function() {
     });
 
     $('#documentsTable tbody').on('mouseenter', 'tr', function() {
-        $(this).addClass('table-active');
+        if (!$(this).hasClass('document-highlight')) {
+            $(this).addClass('table-active');
+        }
     }).on('mouseleave', 'tr', function() {
-        $(this).removeClass('table-active');
+        if (!$(this).hasClass('document-highlight')) {
+            $(this).removeClass('table-active');
+        }
     });
 
     // Auto uppercase for custom code input - Only if user has update privilege

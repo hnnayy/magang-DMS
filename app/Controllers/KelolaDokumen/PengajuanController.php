@@ -193,9 +193,8 @@ class PengajuanController extends BaseController
                 ]);
             }
 
-            // BUAT NOTIFIKASI SETELAH DOKUMEN BERHASIL DISIMPAN
-            $documentTypeName = $documentType['name'] ?? 'Unknown Type';
-            $this->createDocumentNotification($newDocumentId, $nama, $documentTypeName, 'created');
+            // NO NOTIFICATION FOR CREATE ACTION - REMOVED
+            // Document creation does not generate notifications
 
             return redirect()->to('document-submission-list')->with('success', 'Document successfully created.');
         } catch (\Exception $e) {
@@ -237,157 +236,246 @@ class PengajuanController extends BaseController
     }
 
     // POST document-submission-list/update
-    public function update()
-    {
-        $documentId = $this->request->getPost('document_id');
+    // POST document-submission-list/update
+// POST document-submission-list/update
+public function update()
+{
+    $documentId = $this->request->getPost('document_id');
 
-        if (!$documentId) {
-            return redirect()->back()->with('error', 'Document ID not found.');
-        }
+    if (!$documentId) {
+        return redirect()->back()->with('error', 'Document ID not found.');
+    }
 
-        $jenisId = $this->request->getPost('type');
-        $kodeDokumenId = $this->request->getPost('kode_dokumen');
-        $kodeCustom = $this->request->getPost('kode_dokumen_custom');
-        $namaCustom = $this->request->getPost('nama_dokumen_custom');
-        $nomor = $this->request->getPost('nomor');
-        $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
-        $nama = $this->request->getPost('nama');
-        $keterangan = $this->request->getPost('keterangan');
-        $file = $this->request->getFile('file_dokumen');
+    $jenisId = $this->request->getPost('type');
+    $kodeDokumenId = $this->request->getPost('kode_dokumen');
+    $kodeCustom = $this->request->getPost('kode_dokumen_custom');
+    $namaCustom = $this->request->getPost('nama_dokumen_custom');
+    $nomor = $this->request->getPost('nomor');
+    $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
+    $nama = $this->request->getPost('nama');
+    $keterangan = $this->request->getPost('keterangan');
+    $file = $this->request->getFile('file_dokumen');
 
-        // Get original document
-        $originalDocument = $this->documentModel->find($documentId);
-        if (!$originalDocument) {
-            return redirect()->back()->with('error', 'Document not found in database.');
-        }
+    // Get original document
+    $originalDocument = $this->documentModel->find($documentId);
+    if (!$originalDocument) {
+        return redirect()->back()->with('error', 'Document not found in database.');
+    }
 
-        $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
-        $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
+    $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
+    $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
 
-        // Handle document code dengan pengecekan tipe dokumen yang benar
-        $finalKodeDokumenId = null;
-        $documentType = null;
-        
-        if ($jenisId) {
-            // Check apakah document type menggunakan predefined codes
-            $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
-            if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
-                // Use predefined code
-                if ($kodeDokumenId) {
-                    $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
-                    if ($kodeDokumen) {
-                        $finalKodeDokumenId = $kodeDokumenId;
-                    }
+    // Handle document code dengan pengecekan tipe dokumen yang benar
+    $finalKodeDokumenId = null;
+    $documentType = null;
+    
+    if ($jenisId) {
+        // Check apakah document type menggunakan predefined codes
+        $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+        if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
+            // Use predefined code
+            if ($kodeDokumenId) {
+                $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
+                if ($kodeDokumen) {
+                    $finalKodeDokumenId = $kodeDokumenId;
                 }
-            } else {
-                // Handle custom code
-                if ($kodeCustom && $namaCustom) {
-                    // Check if custom code already exists for this document type
-                    $existingKode = $this->kodeDokumenModel
-                        ->where('document_type_id', $jenisId)
-                        ->where('kode', strtoupper($kodeCustom))
-                        ->where('nama', $namaCustom)
-                        ->first();
+            }
+        } else {
+            // Handle custom code
+            if ($kodeCustom && $namaCustom) {
+                // Check if custom code already exists for this document type
+                $existingKode = $this->kodeDokumenModel
+                    ->where('document_type_id', $jenisId)
+                    ->where('kode', strtoupper($kodeCustom))
+                    ->where('nama', $namaCustom)
+                    ->first();
+                
+                if ($existingKode) {
+                    $finalKodeDokumenId = $existingKode['id'];
+                } else {
+                    // Create new custom code
+                    $newKodeData = [
+                        'document_type_id' => $jenisId,
+                        'kode' => strtoupper($kodeCustom),
+                        'nama' => $namaCustom,
+                        'status' => 1,
+                        'createddate' => date('Y-m-d H:i:s'),
+                        'createdby' => session('user_id')
+                    ];
                     
-                    if ($existingKode) {
-                        $finalKodeDokumenId = $existingKode['id'];
-                    } else {
-                        // Create new custom code
-                        $newKodeData = [
-                            'document_type_id' => $jenisId,
-                            'kode' => strtoupper($kodeCustom),
-                            'nama' => $namaCustom,
-                            'status' => 1,
-                            'createddate' => date('Y-m-d H:i:s'),
-                            'createdby' => session('user_id')
-                        ];
-                        
-                        $this->kodeDokumenModel->insert($newKodeData);
-                        $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
-                    }
+                    $this->kodeDokumenModel->insert($newKodeData);
+                    $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
                 }
             }
         }
+    }
 
-        // Prepare document data
-        $data = [
-            'unit_id' => $unitId,
-            'status' => 0,
-            'createddate' => date('Y-m-d H:i:s'),
-            'createdby' => session('user_id'),
-            'original_document_id' => $originalDocumentId,
-        ];
+    // Prepare document data
+    $data = [
+        'unit_id' => $unitId,
+        'status' => 0,
+        'createddate' => date('Y-m-d H:i:s'),
+        'createdby' => session('user_id'),
+        'original_document_id' => $originalDocumentId,
+    ];
 
-        // Add non-empty fields only
-        if ($jenisId) $data['type'] = $jenisId;
-        if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
-        if ($nomor) $data['number'] = $nomor;
-        if ($revisi) $data['revision'] = $revisi;
-        if ($nama) $data['title'] = $nama;
-        if ($keterangan) $data['description'] = $keterangan;
+    // Add non-empty fields only
+    if ($jenisId) $data['type'] = $jenisId;
+    if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
+    if ($nomor) $data['number'] = $nomor;
+    if ($revisi) $data['revision'] = $revisi;
+    if ($nama) $data['title'] = $nama;
+    if ($keterangan) $data['description'] = $keterangan;
 
-        try {
-            $this->documentModel->insert($data);
-            $newDocumentId = $this->documentModel->getInsertID();
+    try {
+        $this->documentModel->insert($data);
+        $newDocumentId = $this->documentModel->getInsertID();
 
-            // Handle file upload
-            if ($file && $file->isValid() && !$file->hasMoved()) {
-                $uploadPath = ROOTPATH . '../storage/uploads';
-                if (!is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
+        // Handle file upload
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $uploadPath = ROOTPATH . '../storage/uploads';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
 
-                $newName = $file->getRandomName();
-                $file->move($uploadPath, $newName);
+            $newName = $file->getRandomName();
+            $file->move($uploadPath, $newName);
 
+            $this->documentRevisionModel->insert([
+                'document_id' => $newDocumentId,
+                'revision' => $revisi,
+                'filename' => $file->getClientName(),
+                'filepath' => 'storage/uploads/' . $newName,
+                'filesize' => $file->getSize(),
+                'remark' => $keterangan ?: '',
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session('user_id'),
+            ]);
+        } else {
+            // Copy file from original document if no new file uploaded
+            $oldRevision = $this->documentRevisionModel
+                ->where('document_id', $documentId)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if ($oldRevision) {
                 $this->documentRevisionModel->insert([
                     'document_id' => $newDocumentId,
                     'revision' => $revisi,
-                    'filename' => $file->getClientName(),
-                    'filepath' => 'storage/uploads/' . $newName,
-                    'filesize' => $file->getSize(),
-                    'remark' => $keterangan ?: '',
+                    'filename' => $oldRevision['filename'],
+                    'filepath' => $oldRevision['filepath'],
+                    'filesize' => $oldRevision['filesize'],
+                    'remark' => $keterangan ?: $oldRevision['remark'],
                     'createddate' => date('Y-m-d H:i:s'),
                     'createdby' => session('user_id'),
                 ]);
-            } else {
-                // Copy file from original document if no new file uploaded
-                $oldRevision = $this->documentRevisionModel
-                    ->where('document_id', $documentId)
-                    ->orderBy('id', 'DESC')
-                    ->first();
-
-                if ($oldRevision) {
-                    $this->documentRevisionModel->insert([
-                        'document_id' => $newDocumentId,
-                        'revision' => $revisi,
-                        'filename' => $oldRevision['filename'],
-                        'filepath' => $oldRevision['filepath'],
-                        'filesize' => $oldRevision['filesize'],
-                        'remark' => $keterangan ?: $oldRevision['remark'],
-                        'createddate' => date('Y-m-d H:i:s'),
-                        'createdby' => session('user_id'),
-                    ]);
-                }
             }
-
-            // Mark original document as superseded
-            $this->documentModel->update($documentId, [
-                'status' => 3,
-                'updated_at' => date('Y-m-d H:i:s'),
-            ]);
-
-            // BUAT NOTIFIKASI SETELAH DOKUMEN BERHASIL DIUPDATE
-            $documentTypeName = $documentType['name'] ?? 'Unknown Type';
-            $documentTitle = $nama ?: $originalDocument['title'];
-            $this->createDocumentNotification($newDocumentId, $documentTitle, $documentTypeName, 'updated');
-
-            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
-        } catch (\Exception $e) {
-            log_message('error', 'Error updating document: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
         }
+
+        // Mark original document as superseded
+        $this->documentModel->update($documentId, [
+            'status' => 3,
+        ]);
+
+        // CREATE NOTIFICATION FOR UPDATE ACTION - ENGLISH MESSAGE
+        $documentTypeName = $documentType['name'] ?? 'Unknown Type';
+        $documentTitle = $nama ?: $originalDocument['title'];
+        
+        // Get user info for notification - sama seperti di approve function
+        $updaterName = session('fullname') ?? session('username') ?? 'User';
+        $updaterId = session('user_id');
+        
+        // Log untuk debugging dengan lebih detail
+        log_message('debug', 'Starting notification creation for document update');
+        log_message('debug', 'Document ID: ' . $newDocumentId);
+        log_message('debug', 'Document Title: ' . $documentTitle);
+        log_message('debug', 'Document Type: ' . $documentTypeName);
+        log_message('debug', 'Updater ID: ' . $updaterId);
+        log_message('debug', 'Updater Name: ' . $updaterName);
+        
+        // Cek apakah semua data yang diperlukan ada
+        if (!$updaterId) {
+            log_message('error', 'No updater ID found in session');
+            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated (notification skipped - no user ID).');
+        }
+        
+        // Create notification message - ENGLISH ONLY
+        $message = "Document '{$documentTitle}' ({$documentTypeName}) has been updated by {$updaterName}";
+        log_message('debug', 'Notification message: ' . $message);
+        
+        // Insert into notification table
+        $notificationData = [
+            'message' => $message,
+            'reference_id' => $newDocumentId,
+            'createdby' => $updaterId,
+            'createddate' => date('Y-m-d H:i:s')
+        ];
+        
+        log_message('debug', 'Notification data to insert: ' . json_encode($notificationData));
+        
+        try {
+            $notificationId = $this->notificationModel->insert($notificationData);
+            log_message('debug', 'Notification insert result: ' . ($notificationId ? $notificationId : 'FALSE'));
+            
+            if (!$notificationId) {
+                $errors = $this->notificationModel->errors();
+                log_message('error', 'Failed to create update notification - Model errors: ' . json_encode($errors));
+                log_message('error', 'Last query: ' . $this->notificationModel->getLastQuery());
+            } else {
+                log_message('debug', "Update notification created with ID: $notificationId");
+
+                // Get all users who need to receive notifications (except updater)
+                $recipients = $this->userModel
+                    ->where('id !=', $updaterId)
+                    ->where('status', 1)
+                    ->findAll();
+                
+                log_message('debug', "Recipients with status=1: " . count($recipients));
+                
+                // If no recipients with status = 1, try without status filter
+                if (empty($recipients)) {
+                    log_message('debug', 'No recipients with status=1, trying without status filter');
+                    $recipients = $this->userModel
+                        ->where('id !=', $updaterId)
+                        ->findAll();
+                    log_message('debug', "Recipients without status filter: " . count($recipients));
+                }
+                
+                // Insert into notification_recipients table for each user
+                $recipientSuccessCount = 0;
+                $recipientErrorCount = 0;
+                
+                foreach ($recipients as $user) {
+                    $recipientData = [
+                        'notification_id' => $notificationId,
+                        'user_id' => $user['id'],
+                        'status' => 0
+                    ];
+                    
+                    $recipientResult = $this->notificationRecipientsModel->insert($recipientData);
+                    
+                    if ($recipientResult) {
+                        $recipientSuccessCount++;
+                    } else {
+                        $recipientErrorCount++;
+                        log_message('error', 'Failed to insert recipient for user_id: ' . $user['id'] . ' - Errors: ' . json_encode($this->notificationRecipientsModel->errors()));
+                    }
+                }
+                
+                log_message('info', "Document update notification created with ID: $notificationId for document: $newDocumentId. Recipients: Success=$recipientSuccessCount, Errors=$recipientErrorCount");
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception while creating update notification: ' . $e->getMessage());
+            log_message('error', 'Exception trace: ' . $e->getTraceAsString());
+        }
+
+        return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error updating document: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
     }
+}
 
     // POST document-submission-list/delete
     public function delete()
@@ -415,8 +503,8 @@ class PengajuanController extends BaseController
                 'createdby' => 0
             ]);
 
-            // BUAT NOTIFIKASI SETELAH DOKUMEN DIHAPUS
-            $this->createDocumentNotification($id, $doc['title'], '', 'deleted');
+            // NO NOTIFICATION FOR DELETE ACTION - REMOVED
+            // Document deletion does not generate notifications
 
             return $this->response->setJSON([
                 'success' => true,
@@ -489,7 +577,7 @@ class PengajuanController extends BaseController
                 throw new \Exception('Transaction failed.');
             }
 
-            // BUAT NOTIFIKASI SETELAH APPROVE/DISAPPROVE
+            // CREATE NOTIFICATION FOR APPROVAL ACTION - ENGLISH MESSAGE
             $actionText = strtolower($action) === 'approve' ? 'approved' : 'disapproved';
             $this->createApprovalNotification($document_id, $document['title'], $document['document_type_name'], $actionText, $approverName, $remarks);
 
@@ -800,9 +888,10 @@ class PengajuanController extends BaseController
     }
 
     /**
-     * Membuat notifikasi untuk dokumen - VERSI LENGKAP DENGAN DEBUG
+     * Create notification for document updates only - ENGLISH MESSAGES
+     * Only called for UPDATE actions, not CREATE or DELETE
      */
-    private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'created')
+    private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
     {
         try {
             $creatorId = session('user_id');
@@ -811,22 +900,10 @@ class PengajuanController extends BaseController
             // DEBUG: Log creator info
             log_message('debug', "Creating notification - Document ID: $documentId, Creator ID: $creatorId, Creator Name: $creatorName, Action: $action");
             
-            // Buat pesan notifikasi berdasarkan action
-            switch ($action) {
-                case 'created':
-                    $message = "Dokumen baru '{$documentTitle}' ({$documentTypeName}) telah ditambahkan oleh {$creatorName}";
-                    break;
-                case 'updated':
-                    $message = "Dokumen '{$documentTitle}' ({$documentTypeName}) telah diperbarui oleh {$creatorName}";
-                    break;
-                case 'deleted':
-                    $message = "Dokumen '{$documentTitle}' telah dihapus oleh {$creatorName}";
-                    break;
-                default:
-                    $message = "Dokumen '{$documentTitle}' telah dimodifikasi oleh {$creatorName}";
-            }
+            // Create notification message based on action - ENGLISH ONLY
+            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been updated by {$creatorName}";
             
-            // Insert ke tabel notification
+            // Insert into notification table
             $notificationData = [
                 'message' => $message,
                 'reference_id' => $documentId,
@@ -837,21 +914,21 @@ class PengajuanController extends BaseController
             $notificationId = $this->notificationModel->insert($notificationData);
             
             if (!$notificationId) {
-                log_message('error', 'Gagal membuat notifikasi: ' . json_encode($this->notificationModel->errors()));
+                log_message('error', 'Failed to create notification: ' . json_encode($this->notificationModel->errors()));
                 return false;
             }
 
             log_message('debug', "Notification created with ID: $notificationId");
 
-            // Dapatkan semua user yang perlu menerima notifikasi (kecuali creator)
+            // Get all users who need to receive notifications (except creator)
             $recipients = $this->userModel
                 ->where('id !=', $creatorId)
-                ->where('status', 1) // Pastikan user aktif
+                ->where('status', 1) // Make sure user is active
                 ->findAll();
             
             log_message('debug', "Recipients found: " . count($recipients));
             
-            // Jika tidak ada recipients dengan status = 1, coba ambil semua user kecuali creator
+            // If no recipients with status = 1, try to get all users except creator
             if (empty($recipients)) {
                 log_message('warning', 'No recipients found with status = 1, trying without status filter');
                 $recipients = $this->userModel
@@ -861,7 +938,7 @@ class PengajuanController extends BaseController
                 log_message('debug', "Recipients without status filter: " . count($recipients));
             }
             
-            // Insert ke tabel notification_recipients untuk setiap user
+            // Insert into notification_recipients table for each user
             $successCount = 0;
             $errorCount = 0;
             
@@ -869,7 +946,7 @@ class PengajuanController extends BaseController
                 $recipientData = [
                     'notification_id' => $notificationId,
                     'user_id' => $user['id'],
-                    'status' => 0 // 0 = belum dibaca, 1 = sudah dibaca
+                    'status' => 0 // 0 = unread, 1 = read
                 ];
                 
                 $insertResult = $this->notificationRecipientsModel->insert($recipientData);
@@ -882,7 +959,7 @@ class PengajuanController extends BaseController
                 }
             }
 
-            log_message('info', "Notifikasi dokumen berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
+            log_message('info', "Document notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
             
             return $notificationId;
 
@@ -894,7 +971,7 @@ class PengajuanController extends BaseController
     }
 
     /**
-     * Membuat notifikasi untuk approval/disapproval dokumen
+     * Create notification for document approval/disapproval - ENGLISH MESSAGES
      */
     private function createApprovalNotification($documentId, $documentTitle, $documentTypeName, $action, $approverName, $remarks = '')
     {
@@ -903,15 +980,15 @@ class PengajuanController extends BaseController
             
             log_message('debug', "Creating approval notification - Document ID: $documentId, Approver: $approverName, Action: $action");
             
-            // Buat pesan notifikasi berdasarkan action
-            $actionText = $action === 'approved' ? 'disetujui' : 'ditolak';
-            $message = "Dokumen '{$documentTitle}' ({$documentTypeName}) telah {$actionText} oleh {$approverName}";
+            // Create notification message based on action - ENGLISH ONLY
+            $actionText = $action === 'approved' ? 'approved' : 'disapproved';
+            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$actionText} by {$approverName}";
             
             if (!empty($remarks)) {
-                $message .= ". Catatan: {$remarks}";
+                $message .= ". Remarks: {$remarks}";
             }
             
-            // Insert ke tabel notification
+            // Insert into notification table
             $notificationData = [
                 'message' => $message,
                 'reference_id' => $documentId,
@@ -922,17 +999,17 @@ class PengajuanController extends BaseController
             $notificationId = $this->notificationModel->insert($notificationData);
             
             if (!$notificationId) {
-                log_message('error', 'Gagal membuat notifikasi approval: ' . json_encode($this->notificationModel->errors()));
+                log_message('error', 'Failed to create approval notification: ' . json_encode($this->notificationModel->errors()));
                 return false;
             }
 
             log_message('debug', "Approval notification created with ID: $notificationId");
 
-            // Dapatkan creator dokumen dan semua user lain (kecuali approver)
+            // Get document creator and all other users (except approver)
             $document = $this->documentModel->find($documentId);
             $documentCreator = $document['createdby'] ?? null;
             
-            // Dapatkan recipients: creator dokumen + semua user aktif kecuali approver
+            // Get recipients: document creator + all active users except approver
             $recipients = $this->userModel
                 ->where('id !=', $approverId)
                 ->where('status', 1)
@@ -940,7 +1017,7 @@ class PengajuanController extends BaseController
                 
             log_message('debug', "Approval notification recipients found: " . count($recipients));
             
-            // Insert ke tabel notification_recipients untuk setiap user
+            // Insert into notification_recipients table for each user
             $successCount = 0;
             $errorCount = 0;
             
@@ -948,7 +1025,7 @@ class PengajuanController extends BaseController
                 $recipientData = [
                     'notification_id' => $notificationId,
                     'user_id' => $user['id'],
-                    'status' => 0 // 0 = belum dibaca, 1 = sudah dibaca
+                    'status' => 0 // 0 = unread, 1 = read
                 ];
                 
                 $insertResult = $this->notificationRecipientsModel->insert($recipientData);
@@ -961,7 +1038,7 @@ class PengajuanController extends BaseController
                 }
             }
 
-            log_message('info', "Notifikasi approval berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
+            log_message('info', "Approval notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
             
             return $notificationId;
 
