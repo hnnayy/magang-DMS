@@ -236,246 +236,156 @@ class PengajuanController extends BaseController
     }
 
     // POST document-submission-list/update
-    // POST document-submission-list/update
-// POST document-submission-list/update
-public function update()
-{
-    $documentId = $this->request->getPost('document_id');
+    public function update()
+    {
+        $documentId = $this->request->getPost('document_id');
 
-    if (!$documentId) {
-        return redirect()->back()->with('error', 'Document ID not found.');
-    }
+        if (!$documentId) {
+            return redirect()->back()->with('error', 'Document ID not found.');
+        }
 
-    $jenisId = $this->request->getPost('type');
-    $kodeDokumenId = $this->request->getPost('kode_dokumen');
-    $kodeCustom = $this->request->getPost('kode_dokumen_custom');
-    $namaCustom = $this->request->getPost('nama_dokumen_custom');
-    $nomor = $this->request->getPost('nomor');
-    $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
-    $nama = $this->request->getPost('nama');
-    $keterangan = $this->request->getPost('keterangan');
-    $file = $this->request->getFile('file_dokumen');
+        $jenisId = $this->request->getPost('type');
+        $kodeDokumenId = $this->request->getPost('kode_dokumen');
+        $kodeCustom = $this->request->getPost('kode_dokumen_custom');
+        $namaCustom = $this->request->getPost('nama_dokumen_custom');
+        $nomor = $this->request->getPost('nomor');
+        $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
+        $nama = $this->request->getPost('nama');
+        $keterangan = $this->request->getPost('keterangan');
+        $file = $this->request->getFile('file_dokumen');
 
-    // Get original document
-    $originalDocument = $this->documentModel->find($documentId);
-    if (!$originalDocument) {
-        return redirect()->back()->with('error', 'Document not found in database.');
-    }
+        // Get original document
+        $originalDocument = $this->documentModel->find($documentId);
+        if (!$originalDocument) {
+            return redirect()->back()->with('error', 'Document not found in database.');
+        }
 
-    $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
-    $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
+        $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
+        $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
 
-    // Handle document code dengan pengecekan tipe dokumen yang benar
-    $finalKodeDokumenId = null;
-    $documentType = null;
-    
-    if ($jenisId) {
-        // Check apakah document type menggunakan predefined codes
-        $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
-        if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
-            // Use predefined code
-            if ($kodeDokumenId) {
-                $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
-                if ($kodeDokumen) {
-                    $finalKodeDokumenId = $kodeDokumenId;
+        // Handle document code dengan pengecekan tipe dokumen yang benar
+        $finalKodeDokumenId = null;
+        $documentType = null;
+        
+        if ($jenisId) {
+            // Check apakah document type menggunakan predefined codes
+            $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+            if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
+                // Use predefined code
+                if ($kodeDokumenId) {
+                    $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
+                    if ($kodeDokumen) {
+                        $finalKodeDokumenId = $kodeDokumenId;
+                    }
                 }
-            }
-        } else {
-            // Handle custom code
-            if ($kodeCustom && $namaCustom) {
-                // Check if custom code already exists for this document type
-                $existingKode = $this->kodeDokumenModel
-                    ->where('document_type_id', $jenisId)
-                    ->where('kode', strtoupper($kodeCustom))
-                    ->where('nama', $namaCustom)
-                    ->first();
+            } else {
+                // Handle custom code
+                if ($kodeCustom && $namaCustom) {
+                    // Check if custom code already exists for this document type
+                    $existingKode = $this->kodeDokumenModel
+                        ->where('document_type_id', $jenisId)
+                        ->where('kode', strtoupper($kodeCustom))
+                        ->where('nama', $namaCustom)
+                        ->first();
                 
-                if ($existingKode) {
-                    $finalKodeDokumenId = $existingKode['id'];
-                } else {
-                    // Create new custom code
-                    $newKodeData = [
-                        'document_type_id' => $jenisId,
-                        'kode' => strtoupper($kodeCustom),
-                        'nama' => $namaCustom,
-                        'status' => 1,
-                        'createddate' => date('Y-m-d H:i:s'),
-                        'createdby' => session('user_id')
-                    ];
-                    
-                    $this->kodeDokumenModel->insert($newKodeData);
-                    $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
+                    if ($existingKode) {
+                        $finalKodeDokumenId = $existingKode['id'];
+                    } else {
+                        // Create new custom code
+                        $newKodeData = [
+                            'document_type_id' => $jenisId,
+                            'kode' => strtoupper($kodeCustom),
+                            'nama' => $namaCustom,
+                            'status' => 1,
+                            'createddate' => date('Y-m-d H:i:s'),
+                            'createdby' => session('user_id')
+                        ];
+                        
+                        $this->kodeDokumenModel->insert($newKodeData);
+                        $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
+                    }
                 }
             }
         }
-    }
 
-    // Prepare document data
-    $data = [
-        'unit_id' => $unitId,
-        'status' => 0,
-        'createddate' => date('Y-m-d H:i:s'),
-        'createdby' => session('user_id'),
-        'original_document_id' => $originalDocumentId,
-    ];
+        // Prepare document data
+        $data = [
+            'unit_id' => $unitId,
+            'status' => 0,
+            'createddate' => date('Y-m-d H:i:s'),
+            'createdby' => session('user_id'),
+            'original_document_id' => $originalDocumentId,
+        ];
 
-    // Add non-empty fields only
-    if ($jenisId) $data['type'] = $jenisId;
-    if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
-    if ($nomor) $data['number'] = $nomor;
-    if ($revisi) $data['revision'] = $revisi;
-    if ($nama) $data['title'] = $nama;
-    if ($keterangan) $data['description'] = $keterangan;
+        // Add non-empty fields only
+        if ($jenisId) $data['type'] = $jenisId;
+        if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
+        if ($nomor) $data['number'] = $nomor;
+        if ($revisi) $data['revision'] = $revisi;
+        if ($nama) $data['title'] = $nama;
+        if ($keterangan) $data['description'] = $keterangan;
 
-    try {
-        $this->documentModel->insert($data);
-        $newDocumentId = $this->documentModel->getInsertID();
+        try {
+            $this->documentModel->insert($data);
+            $newDocumentId = $this->documentModel->getInsertID();
 
-        // Handle file upload
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $uploadPath = ROOTPATH . '../storage/uploads';
-            if (!is_dir($uploadPath)) {
-                mkdir($uploadPath, 0755, true);
-            }
+            // Handle file upload
+            if ($file && $file->isValid() && !$file->hasMoved()) {
+                $uploadPath = ROOTPATH . '../storage/uploads';
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
 
-            $newName = $file->getRandomName();
-            $file->move($uploadPath, $newName);
+                $newName = $file->getRandomName();
+                $file->move($uploadPath, $newName);
 
-            $this->documentRevisionModel->insert([
-                'document_id' => $newDocumentId,
-                'revision' => $revisi,
-                'filename' => $file->getClientName(),
-                'filepath' => 'storage/uploads/' . $newName,
-                'filesize' => $file->getSize(),
-                'remark' => $keterangan ?: '',
-                'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => session('user_id'),
-            ]);
-        } else {
-            // Copy file from original document if no new file uploaded
-            $oldRevision = $this->documentRevisionModel
-                ->where('document_id', $documentId)
-                ->orderBy('id', 'DESC')
-                ->first();
-
-            if ($oldRevision) {
                 $this->documentRevisionModel->insert([
                     'document_id' => $newDocumentId,
                     'revision' => $revisi,
-                    'filename' => $oldRevision['filename'],
-                    'filepath' => $oldRevision['filepath'],
-                    'filesize' => $oldRevision['filesize'],
-                    'remark' => $keterangan ?: $oldRevision['remark'],
+                    'filename' => $file->getClientName(),
+                    'filepath' => 'storage/uploads/' . $newName,
+                    'filesize' => $file->getSize(),
+                    'remark' => $keterangan ?: '',
                     'createddate' => date('Y-m-d H:i:s'),
                     'createdby' => session('user_id'),
                 ]);
-            }
-        }
-
-        // Mark original document as superseded
-        $this->documentModel->update($documentId, [
-            'status' => 3,
-        ]);
-
-        // CREATE NOTIFICATION FOR UPDATE ACTION - ENGLISH MESSAGE
-        $documentTypeName = $documentType['name'] ?? 'Unknown Type';
-        $documentTitle = $nama ?: $originalDocument['title'];
-        
-        // Get user info for notification - sama seperti di approve function
-        $updaterName = session('fullname') ?? session('username') ?? 'User';
-        $updaterId = session('user_id');
-        
-        // Log untuk debugging dengan lebih detail
-        log_message('debug', 'Starting notification creation for document update');
-        log_message('debug', 'Document ID: ' . $newDocumentId);
-        log_message('debug', 'Document Title: ' . $documentTitle);
-        log_message('debug', 'Document Type: ' . $documentTypeName);
-        log_message('debug', 'Updater ID: ' . $updaterId);
-        log_message('debug', 'Updater Name: ' . $updaterName);
-        
-        // Cek apakah semua data yang diperlukan ada
-        if (!$updaterId) {
-            log_message('error', 'No updater ID found in session');
-            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated (notification skipped - no user ID).');
-        }
-        
-        // Create notification message - ENGLISH ONLY
-        $message = "Document '{$documentTitle}' ({$documentTypeName}) has been updated by {$updaterName}";
-        log_message('debug', 'Notification message: ' . $message);
-        
-        // Insert into notification table
-        $notificationData = [
-            'message' => $message,
-            'reference_id' => $newDocumentId,
-            'createdby' => $updaterId,
-            'createddate' => date('Y-m-d H:i:s')
-        ];
-        
-        log_message('debug', 'Notification data to insert: ' . json_encode($notificationData));
-        
-        try {
-            $notificationId = $this->notificationModel->insert($notificationData);
-            log_message('debug', 'Notification insert result: ' . ($notificationId ? $notificationId : 'FALSE'));
-            
-            if (!$notificationId) {
-                $errors = $this->notificationModel->errors();
-                log_message('error', 'Failed to create update notification - Model errors: ' . json_encode($errors));
-                log_message('error', 'Last query: ' . $this->notificationModel->getLastQuery());
             } else {
-                log_message('debug', "Update notification created with ID: $notificationId");
+                // Copy file from original document if no new file uploaded
+                $oldRevision = $this->documentRevisionModel
+                    ->where('document_id', $documentId)
+                    ->orderBy('id', 'DESC')
+                    ->first();
 
-                // Get all users who need to receive notifications (except updater)
-                $recipients = $this->userModel
-                    ->where('id !=', $updaterId)
-                    ->where('status', 1)
-                    ->findAll();
-                
-                log_message('debug', "Recipients with status=1: " . count($recipients));
-                
-                // If no recipients with status = 1, try without status filter
-                if (empty($recipients)) {
-                    log_message('debug', 'No recipients with status=1, trying without status filter');
-                    $recipients = $this->userModel
-                        ->where('id !=', $updaterId)
-                        ->findAll();
-                    log_message('debug', "Recipients without status filter: " . count($recipients));
+                if ($oldRevision) {
+                    $this->documentRevisionModel->insert([
+                        'document_id' => $newDocumentId,
+                        'revision' => $revisi,
+                        'filename' => $oldRevision['filename'],
+                        'filepath' => $oldRevision['filepath'],
+                        'filesize' => $oldRevision['filesize'],
+                        'remark' => $keterangan ?: $oldRevision['remark'],
+                        'createddate' => date('Y-m-d H:i:s'),
+                        'createdby' => session('user_id'),
+                    ]);
                 }
-                
-                // Insert into notification_recipients table for each user
-                $recipientSuccessCount = 0;
-                $recipientErrorCount = 0;
-                
-                foreach ($recipients as $user) {
-                    $recipientData = [
-                        'notification_id' => $notificationId,
-                        'user_id' => $user['id'],
-                        'status' => 0
-                    ];
-                    
-                    $recipientResult = $this->notificationRecipientsModel->insert($recipientData);
-                    
-                    if ($recipientResult) {
-                        $recipientSuccessCount++;
-                    } else {
-                        $recipientErrorCount++;
-                        log_message('error', 'Failed to insert recipient for user_id: ' . $user['id'] . ' - Errors: ' . json_encode($this->notificationRecipientsModel->errors()));
-                    }
-                }
-                
-                log_message('info', "Document update notification created with ID: $notificationId for document: $newDocumentId. Recipients: Success=$recipientSuccessCount, Errors=$recipientErrorCount");
             }
-        } catch (\Exception $e) {
-            log_message('error', 'Exception while creating update notification: ' . $e->getMessage());
-            log_message('error', 'Exception trace: ' . $e->getTraceAsString());
-        }
 
-        return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
-        
-    } catch (\Exception $e) {
-        log_message('error', 'Error updating document: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
+            // Mark original document as superseded
+            $this->documentModel->update($documentId, [
+                'status' => 3,
+            ]);
+
+            // CREATE NOTIFICATION FOR UPDATE ACTION
+            $documentTypeName = $documentType['name'] ?? 'Unknown Type';
+            $documentTitle = $nama ?: $originalDocument['title'];
+            $this->createDocumentNotification($newDocumentId, $documentTitle, $documentTypeName);
+
+            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
+        } catch (\Exception $e) {
+            log_message('error', 'Error updating document: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
+        }
     }
-}
 
     // POST document-submission-list/delete
     public function delete()
@@ -503,9 +413,7 @@ public function update()
                 'createdby' => 0
             ]);
 
-            // NO NOTIFICATION FOR DELETE ACTION - REMOVED
-            // Document deletion does not generate notifications
-
+            // NO NOTIFICATION FOR DELETE ACTION
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Document successfully deleted.'
@@ -577,7 +485,7 @@ public function update()
                 throw new \Exception('Transaction failed.');
             }
 
-            // CREATE NOTIFICATION FOR APPROVAL ACTION - ENGLISH MESSAGE
+            // CREATE NOTIFICATION FOR APPROVAL ACTION
             $actionText = strtolower($action) === 'approve' ? 'approved' : 'disapproved';
             $this->createApprovalNotification($document_id, $document['title'], $document['document_type_name'], $actionText, $approverName, $remarks);
 
@@ -624,7 +532,6 @@ public function update()
         $unitParentModel = new \App\Models\UnitParentModel();
 
         // Enhanced query to include creator information and hierarchical data
-        // Based on your actual model structure without role_id in user table
         $documents = $this->documentModel
             ->select('document.*, 
                       dt.name AS jenis_dokumen, 
@@ -644,9 +551,9 @@ public function update()
             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
             ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
             ->join('document_revision dr', 'dr.document_id = document.id', 'left')
-            ->join('user creator', 'creator.id = document.createdby', 'left') // Join with user table for creator info
-            ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left') // Join creator's unit to get parent_id
-            ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left') // Join creator's unit parent
+            ->join('user creator', 'creator.id = document.createdby', 'left')
+            ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left')
+            ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left')
             ->where('document.createdby !=', 0)
             ->whereIn('document.status', [0, 1, 2])
             ->groupBy('document.id')
@@ -865,9 +772,8 @@ public function update()
         
         // Menggunakan role_id dari session untuk pengecekan akses
         $userRoleId = session('role_id');
-        $allowedRoleIds = [1, 2]; // Sesuaikan dengan ID role admin dan superadmin di database Anda
+        $allowedRoleIds = [1, 2];
         
-        // Cek akses berdasarkan role_id dari session atau ownership dokumen
         if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have access to this file.');
         }
@@ -888,54 +794,57 @@ public function update()
     }
 
     /**
-     * Create notification for document updates only - ENGLISH MESSAGES
-     * Only called for UPDATE actions, not CREATE or DELETE
+     * Create notification for document updates - ENGLISH MESSAGES
+     * Only users with access_level=1, same unit_id, and same unit_parent_id receive notifications
      */
     private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
     {
         try {
-            $creatorId = session('user_id');
-            $creatorName = session('fullname') ?? session('username') ?? 'User';
+            $updaterId = session('user_id');
+            $updaterName = session('fullname') ?? session('username') ?? 'User';
+            $updaterUnitId = session('unit_id');
+            $updaterUnitParentId = session('unit_parent_id');
             
-            // DEBUG: Log creator info
-            log_message('debug', "Creating notification - Document ID: $documentId, Creator ID: $creatorId, Creator Name: $creatorName, Action: $action");
-            
-            // Create notification message based on action - ENGLISH ONLY
-            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been updated by {$creatorName}";
+            log_message('debug', "Creating update notification - Document ID: $documentId, Updater ID: $updaterId, Updater Name: $updaterName, Unit ID: $updaterUnitId, Unit Parent ID: $updaterUnitParentId");
+
+            // Create notification message - ENGLISH ONLY
+            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$action} by {$updaterName}";
             
             // Insert into notification table
             $notificationData = [
                 'message' => $message,
                 'reference_id' => $documentId,
-                'createdby' => $creatorId,
+                'createdby' => $updaterId,
                 'createddate' => date('Y-m-d H:i:s')
             ];
             
             $notificationId = $this->notificationModel->insert($notificationData);
             
             if (!$notificationId) {
-                log_message('error', 'Failed to create notification: ' . json_encode($this->notificationModel->errors()));
+                log_message('error', 'Failed to create update notification: ' . json_encode($this->notificationModel->errors()));
                 return false;
             }
 
-            log_message('debug', "Notification created with ID: $notificationId");
+            log_message('debug', "Update notification created with ID: $notificationId");
 
-            // Get all users who need to receive notifications (except creator)
+            // Get users with access_level=1, same unit_id, and same unit_parent_id
             $recipients = $this->userModel
-                ->where('id !=', $creatorId)
-                ->where('status', 1) // Make sure user is active
+                ->select('user.*')
+                ->join('user_role', 'user_role.user_id = user.id', 'left')
+                ->join('role', 'role.id = user_role.role_id', 'left')
+                ->join('unit', 'unit.id = user.unit_id', 'left')
+                ->where('user.id !=', $updaterId)
+                ->where('user.status', 1)
+                ->where('role.access_level', 1)
+                ->where('user.unit_id', $updaterUnitId)
+                ->where('unit.parent_id', $updaterUnitParentId)
                 ->findAll();
             
             log_message('debug', "Recipients found: " . count($recipients));
+            log_message('debug', "Recipients data: " . json_encode($recipients));
             
-            // If no recipients with status = 1, try to get all users except creator
             if (empty($recipients)) {
-                log_message('warning', 'No recipients found with status = 1, trying without status filter');
-                $recipients = $this->userModel
-                    ->where('id !=', $creatorId)
-                    ->findAll();
-                    
-                log_message('debug', "Recipients without status filter: " . count($recipients));
+                log_message('warning', 'No recipients found matching criteria: access_level=1, unit_id=' . $updaterUnitId . ', unit_parent_id=' . $updaterUnitParentId);
             }
             
             // Insert into notification_recipients table for each user
@@ -953,18 +862,19 @@ public function update()
                 
                 if ($insertResult) {
                     $successCount++;
+                    log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
                 } else {
                     $errorCount++;
                     log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
                 }
             }
 
-            log_message('info', "Document notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
+            log_message('info', "Update notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
             
             return $notificationId;
 
         } catch (\Exception $e) {
-            log_message('error', 'Error creating document notification: ' . $e->getMessage());
+            log_message('error', 'Error creating update notification: ' . $e->getMessage());
             log_message('error', 'Stack trace: ' . $e->getTraceAsString());
             return false;
         }
@@ -972,6 +882,7 @@ public function update()
 
     /**
      * Create notification for document approval/disapproval - ENGLISH MESSAGES
+     * Only the document creator receives the notification
      */
     private function createApprovalNotification($documentId, $documentTitle, $documentTypeName, $action, $approverName, $remarks = '')
     {
@@ -980,10 +891,9 @@ public function update()
             
             log_message('debug', "Creating approval notification - Document ID: $documentId, Approver: $approverName, Action: $action");
             
-            // Create notification message based on action - ENGLISH ONLY
+            // Create notification message - ENGLISH ONLY
             $actionText = $action === 'approved' ? 'approved' : 'disapproved';
             $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$actionText} by {$approverName}";
-            
             if (!empty($remarks)) {
                 $message .= ". Remarks: {$remarks}";
             }
@@ -1005,40 +915,42 @@ public function update()
 
             log_message('debug', "Approval notification created with ID: $notificationId");
 
-            // Get document creator and all other users (except approver)
+            // Get document creator
             $document = $this->documentModel->find($documentId);
-            $documentCreator = $document['createdby'] ?? null;
+            $documentCreatorId = $document['createdby'] ?? null;
             
-            // Get recipients: document creator + all active users except approver
-            $recipients = $this->userModel
-                ->where('id !=', $approverId)
-                ->where('status', 1)
-                ->findAll();
-                
-            log_message('debug', "Approval notification recipients found: " . count($recipients));
-            
-            // Insert into notification_recipients table for each user
-            $successCount = 0;
-            $errorCount = 0;
-            
-            foreach ($recipients as $user) {
-                $recipientData = [
-                    'notification_id' => $notificationId,
-                    'user_id' => $user['id'],
-                    'status' => 0 // 0 = unread, 1 = read
-                ];
-                
-                $insertResult = $this->notificationRecipientsModel->insert($recipientData);
-                
-                if ($insertResult) {
-                    $successCount++;
-                } else {
-                    $errorCount++;
-                    log_message('error', "Failed to insert approval notification recipient for user_id: " . $user['id']);
-                }
+            if (!$documentCreatorId) {
+                log_message('warning', 'No creator found for document ID: ' . $documentId);
+                return $notificationId;
             }
 
-            log_message('info', "Approval notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
+            // Verify creator exists and is active
+            $creator = $this->userModel
+                ->where('id', $documentCreatorId)
+                ->where('status', 1)
+                ->first();
+                
+            if (!$creator) {
+                log_message('warning', 'Creator not found or inactive for user_id: ' . $documentCreatorId);
+                return $notificationId;
+            }
+            
+            // Insert into notification_recipients table for document creator
+            $recipientData = [
+                'notification_id' => $notificationId,
+                'user_id' => $documentCreatorId,
+                'status' => 0 // 0 = unread, 1 = read
+            ];
+            
+            $insertResult = $this->notificationRecipientsModel->insert($recipientData);
+            
+            if ($insertResult) {
+                log_message('debug', "Successfully inserted approval notification recipient for creator_id: " . $documentCreatorId);
+            } else {
+                log_message('error', "Failed to insert approval notification recipient for creator_id: " . $documentCreatorId . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+            }
+
+            log_message('info', "Approval notification successfully created with ID: $notificationId for creator_id: $documentCreatorId");
             
             return $notificationId;
 

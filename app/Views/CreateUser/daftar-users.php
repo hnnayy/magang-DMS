@@ -181,7 +181,7 @@ $(document).ready(function () {
 
   const table = $('#userTable').DataTable({
     dom: '<"row mb-3"<"col-md-6 export-buttons d-flex gap-2"B><"col-md-6 text-end"f>>rt<"row mt-3"<"col-md-6"l><"col-md-6 text-end"p>>',
-    pageLength: 5,
+    pageLength: 10,
     order: [],
     columnDefs: [
       { orderable: false, targets: 6 },

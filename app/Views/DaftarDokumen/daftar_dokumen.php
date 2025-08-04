@@ -104,11 +104,14 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                         $canViewDocument = false;
                         $showCreatorName = false;
                         
-                        // Same access control logic as in the table
+                        // Access Control Rules:
+                        // Rule 1: Users can always see their own documents and their own name
                         if ($documentCreatorId == $currentUserId) {
                             $canViewDocument = true;
                             $showCreatorName = true;
-                        } elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                        }
+                        // Rule 2: Higher level users (level 1) can see lower level documents in same hierarchy
+                        elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
                             $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
                             $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
                             $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
@@ -118,12 +121,10 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                 $canViewDocument = true;
                                 $showCreatorName = true;
                             }
-                        } elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-                            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                            if ($sameUnit) {
-                                $canViewDocument = true;
-                                $showCreatorName = true;
-                            }
+                        }
+                        // Rule 3: Level 2 users can only see their own documents
+                        elseif ($currentUserAccessLevel == 2) {
+                            $canViewDocument = false;
                         }
                         
                         if ($canViewDocument && $showCreatorName && !empty($documentCreatorName) && $documentCreatorName != 'Unknown User') {
@@ -231,16 +232,9 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                         $canDeleteDocument = true; // Higher level users can delete subordinate documents
                                     }
                                 }
-                                // Rule 3: Same level users in same unit can see each other's documents
-                                elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-                                    $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                                    if ($sameUnit) {
-                                        $canViewDocument = true;
-                                        $showCreatorName = true; // Same level users can see each other's names
-                                        // Same level users cannot edit/delete each other's documents (only their own)
-                                        $canEditDocument = false;
-                                        $canDeleteDocument = false;
-                                    }
+                                // Rule 3: Level 2 users can only see their own documents
+                                elseif ($currentUserAccessLevel == 2) {
+                                    $canViewDocument = false;
                                 }
                                 
                                 // Skip if user cannot view this document

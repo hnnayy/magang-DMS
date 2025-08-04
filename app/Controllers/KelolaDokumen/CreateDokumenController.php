@@ -300,18 +300,23 @@ class CreateDokumenController extends BaseController
    /**
  * Membuat notifikasi untuk dokumen baru - VERSI DEBUG
  */
+/**
+ * Membuat notifikasi untuk dokumen baru dengan aturan khusus
+ */
 private function createDocumentNotification($documentId, $documentTitle, $documentTypeName)
 {
     try {
         $creatorId = session('user_id');
         $creatorName = session('fullname') ?? session('username') ?? 'User';
-        
+        $creatorUnitId = session('unit_id');
+        $creatorUnitParentId = session('unit_parent_id');
+
         // DEBUG: Log creator info
-        log_message('debug', "Creating notification - Creator ID: $creatorId, Creator Name: $creatorName");
-        
+        log_message('debug', "Creating notification - Creator ID: $creatorId, Creator Name: $creatorName, Unit ID: $creatorUnitId, Unit Parent ID: $creatorUnitParentId");
+
         // Buat pesan notifikasi
         $message = "Dokumen baru '{$documentTitle}' ({$documentTypeName}) telah ditambahkan oleh {$creatorName}";
-        
+
         // Insert ke tabel notification
         $notificationData = [
             'message' => $message,
@@ -319,9 +324,9 @@ private function createDocumentNotification($documentId, $documentTitle, $docume
             'createdby' => $creatorId,
             'createddate' => date('Y-m-d H:i:s')
         ];
-        
+
         $notificationId = $this->notificationModel->insert($notificationData);
-        
+
         if (!$notificationId) {
             log_message('error', 'Gagal membuat notifikasi: ' . json_encode($this->notificationModel->errors()));
             return false;
@@ -329,48 +334,41 @@ private function createDocumentNotification($documentId, $documentTitle, $docume
 
         log_message('debug', "Notification created with ID: $notificationId");
 
-        // Dapatkan semua user yang perlu menerima notifikasi (kecuali creator)
-        // PERBAIKAN: Tambahkan lebih banyak debugging dan pastikan query benar
-        
-        // Cek semua user terlebih dahulu
-        $allUsers = $this->userModel->findAll();
-        log_message('debug', "Total users in database: " . count($allUsers));
-        log_message('debug', "All users: " . json_encode(array_column($allUsers, 'id')));
-        
-        // Filter user yang aktif dan bukan creator
+        // Dapatkan pengguna dengan level 1, unit_id, dan unit_parent_id yang sama
         $recipients = $this->userModel
-            ->where('id !=', $creatorId)
-            ->where('status', 1) // Pastikan kolom status ada dan nilainya 1 untuk aktif
+            ->select('user.*')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->join('unit', 'unit.id = user.unit_id', 'left')
+            ->where('user.id !=', $creatorId) // Kecuali pembuat dokumen
+            ->where('user.status', 1) // Pengguna aktif
+            ->where('role.access_level', 1) // Level 1
+            ->where('user.unit_id', $creatorUnitId) // Unit ID sama
+            ->where('unit.parent_id', $creatorUnitParentId) // Unit Parent ID sama
             ->findAll();
-        
+
         log_message('debug', "Recipients found: " . count($recipients));
         log_message('debug', "Recipients data: " . json_encode($recipients));
-        
-        // Jika tidak ada recipients dengan status = 1, coba ambil semua user kecuali creator
+
         if (empty($recipients)) {
-            log_message('warning', 'No recipients found with status = 1, trying without status filter');
-            $recipients = $this->userModel
-                ->where('id !=', $creatorId)
-                ->findAll();
-                
-            log_message('debug', "Recipients without status filter: " . count($recipients));
+            log_message('warning', 'No recipients found matching criteria: access_level=1, unit_id=' . $creatorUnitId . ', unit_parent_id=' . $creatorUnitParentId);
         }
-        
-        // Insert ke tabel notification_recipients untuk setiap user
+
+        // Insert ke tabel notification_recipients untuk setiap pengguna
         $successCount = 0;
         $errorCount = 0;
-        
+
         foreach ($recipients as $user) {
             $recipientData = [
                 'notification_id' => $notificationId,
                 'user_id' => $user['id'],
                 'status' => 0 // 0 = belum dibaca, 1 = sudah dibaca
             ];
-            
+
             log_message('debug', "Inserting recipient: " . json_encode($recipientData));
-            
+
             $insertResult = $this->notificationRecipientsModel->insert($recipientData);
-            
+
             if ($insertResult) {
                 $successCount++;
                 log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
@@ -381,13 +379,13 @@ private function createDocumentNotification($documentId, $documentTitle, $docume
         }
 
         log_message('info', "Notifikasi dokumen berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
-        
+
         // Verifikasi data yang tersimpan
         $savedRecipients = $this->notificationRecipientsModel
             ->where('notification_id', $notificationId)
             ->findAll();
         log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
-        
+
         return $notificationId;
 
     } catch (\Exception $e) {

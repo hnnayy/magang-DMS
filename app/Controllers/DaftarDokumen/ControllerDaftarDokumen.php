@@ -103,8 +103,56 @@ class ControllerDaftarDokumen extends BaseController
 
         log_message('debug', 'Total documents fetched from database: ' . count($documents));
 
+        // Filter documents based on hierarchical access control
+        $filteredDocuments = [];
+        foreach ($documents as $doc) {
+            $documentCreatorId = $doc['createdby_id'] ?? 0;
+            $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
+            $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
+            $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
+            
+            $canViewDocument = false;
+            
+            // Access Control Rules:
+            // Rule 1: Users can always see their own documents
+            if ($documentCreatorId == $currentUserId) {
+                $canViewDocument = true;
+                log_message('debug', "Document {$doc['id']}: Own document - Access granted");
+            }
+            // Rule 2: Higher level users (level 1) can see lower level documents in same hierarchy
+            elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+                
+                if ($inSameHierarchy) {
+                    $canViewDocument = true;
+                    log_message('debug', "Document {$doc['id']}: Higher level access - Creator Level {$documentCreatorAccessLevel}, Current Level {$currentUserAccessLevel} - Access granted");
+                } else {
+                    log_message('debug', "Document {$doc['id']}: Different hierarchy - Access denied");
+                }
+            }
+            // Rule 3: Level 2 users can only see their own documents
+            elseif ($currentUserAccessLevel == 2) {
+                log_message('debug', "Document {$doc['id']}: Level 2 user can only see own documents - Access denied unless creator");
+            }
+            
+            // Skip documents with invalid creator ID
+            if ($documentCreatorId == 0) {
+                log_message('debug', "Document {$doc['id']}: Invalid creator ID - Skipped");
+                continue;
+            }
+            
+            if ($canViewDocument) {
+                $filteredDocuments[] = $doc;
+            }
+        }
+
+        log_message('debug', 'Documents accessible to current user: ' . count($filteredDocuments));
+
         // Process documents to ensure proper data structure for the view
-        foreach ($documents as &$doc) {
+        foreach ($filteredDocuments as &$doc) {
             // Ensure createdby shows the creator's full name
             $doc['createdby'] = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
             
@@ -124,11 +172,11 @@ class ControllerDaftarDokumen extends BaseController
         $standards = $this->standardModel->findAll();
         $clauses = $this->clauseModel->getWithStandard();
 
-        log_message('debug', 'Documents passed to view: ' . count($documents));
+        log_message('debug', 'Documents passed to view: ' . count($filteredDocuments));
 
         return view('DaftarDokumen/daftar_dokumen', [
             'title'            => 'Daftar Dokumen',
-            'document'         => $documents,
+            'document'         => $filteredDocuments,
             'kategori_dokumen' => $kategori_dokumen,
             'standards'        => $standards,
             'clauses'          => $clauses,
@@ -165,9 +213,10 @@ class ControllerDaftarDokumen extends BaseController
 
         $id = $this->request->getPost('id');
         $currentUserId = session()->get('user_id');
+        $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
         // Check if document exists
-        $document = $this->documentModel->find($id);
+        $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
             log_message('error', 'Document not found for ID: ' . $id);
             return $this->response->setJSON([
@@ -182,8 +231,21 @@ class ControllerDaftarDokumen extends BaseController
             ]);
         }
 
-        // HAPUS PENGECEKAN AKSES - karena jika tombol edit muncul berarti sudah punya akses
-        // Logika: Jika user bisa melihat tombol edit, berarti dia sudah punya hak untuk edit
+        // Check if user has permission to update this document
+        $canUpdate = $this->canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel);
+        if (!$canUpdate) {
+            log_message('warning', "User {$currentUserId} attempted to update document {$id} without permission");
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Anda tidak memiliki izin untuk mengubah dokumen ini.',
+                'swal' => [
+                    'title' => 'Error',
+                    'text' => 'Anda tidak memiliki izin untuk mengubah dokumen ini.',
+                    'icon' => 'error',
+                    'confirmButtonColor' => '#dc3545'
+                ]
+            ]);
+        }
 
         $standar = $this->request->getPost('standar') ?? [];
         $klausul = $this->request->getPost('klausul') ?? [];
@@ -292,19 +354,24 @@ class ControllerDaftarDokumen extends BaseController
     {
         $id = $this->request->getPost('id');
         $currentUserId = session()->get('user_id');
+        $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
         if (!$id) {
             return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
         }
 
         // Check if document exists
-        $document = $this->documentModel->find($id);
+        $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
             return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
         }
 
-        // HAPUS PENGECEKAN AKSES - karena jika tombol delete muncul berarti sudah punya akses
-        // Logika: Jika user bisa melihat tombol delete, berarti dia sudah punya hak untuk delete
+        // Check if user has permission to delete this document
+        $canDelete = $this->canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel);
+        if (!$canDelete) {
+            log_message('warning', "User {$currentUserId} attempted to delete document {$id} without permission");
+            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus dokumen ini.');
+        }
 
         if ($this->db === null) {
             log_message('error', 'Database connection is null in delete method for document ID: ' . $id);
@@ -383,7 +450,7 @@ class ControllerDaftarDokumen extends BaseController
 
         $canAccessFile = false;
 
-        // Access Control Rules (same as in view):
+        // Access Control Rules:
         // Rule 1: Users can always access their own documents
         if ($documentCreatorId == $userId) {
             $canAccessFile = true;
@@ -399,12 +466,9 @@ class ControllerDaftarDokumen extends BaseController
                 $canAccessFile = true;
             }
         }
-        // Rule 3: Same level users in same unit can access each other's documents
-        elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-            if ($sameUnit) {
-                $canAccessFile = true;
-            }
+        // Rule 3: Level 2 users can only access their own documents
+        elseif ($currentUserAccessLevel == 2) {
+            $canAccessFile = false;
         }
 
         if (!$canAccessFile) {
@@ -473,5 +537,36 @@ class ControllerDaftarDokumen extends BaseController
             ->join('role AS creator_role', 'creator_role.id = creator_user_role.role_id', 'left')
             ->where('document.id', $documentId)
             ->first();
+    }
+
+    /**
+     * Check if current user can modify (update/delete) the document
+     */
+    private function canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel)
+    {
+        $documentCreatorId = $document['createdby'] ?? 0;
+        $documentCreatorAccessLevel = $document['creator_access_level'] ?? 2;
+        
+        // Users can always modify their own documents
+        if ($documentCreatorId == $currentUserId) {
+            return true;
+        }
+        
+        // Higher level users can modify lower level documents in same hierarchy
+        if ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+            $currentUserUnitId = session()->get('unit_id');
+            $currentUserUnitParentId = session()->get('unit_parent_id');
+            $documentCreatorUnitId = $document['creator_unit_id'] ?? 0;
+            $documentCreatorUnitParentId = $document['creator_unit_parent_id'] ?? 0;
+            
+            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+            $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+            $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+            $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+            
+            return $inSameHierarchy;
+        }
+        
+        return false;
     }
 }

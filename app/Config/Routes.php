@@ -6,12 +6,13 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 
-//alur dummy
-$routes->get('/wc-dummy', 'Dummy\TokenDummy::index');
-$routes->post('/wc-dummy/login', 'Dummy\TokenDummy::login');
-$routes->get('/parse-token', 'Dummy\TokenDummy::parseToken');
-$routes->get('/generateAllTokens', 'Dummy\TokenDummy::generateAllTokens'); // opsional
+// Alur dummy untuk login
+$routes->get('/wc-dummy', 'Dummy\LoginController::index');
+$routes->post('/wc-dummy/login', 'Dummy\LoginController::login');
+$routes->get('/parse-token', 'Dummy\LoginController::parseToken');
 
+// Alur untuk generate token
+$routes->get('/generateAllTokens', 'Dummy\GenerateTokenController::generateAllTokens');
 if (ENVIRONMENT === 'development') {
     $routes->get('/', fn() => redirect()->to('/wc-dummy'));
 }

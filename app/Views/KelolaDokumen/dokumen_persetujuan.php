@@ -71,7 +71,7 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                                 $canViewDocument = true;
                                 $showCreatorName = true;
                             }
-                            // Rule 2: Higher level users (level 1) can see lower level documents (level 2) in same hierarchy
+                            // Rule 2: Higher level users (level 1) can see all documents in same hierarchy
                             elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
                                 // Check if they are in the same organizational hierarchy
                                 $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
@@ -84,13 +84,10 @@ $docApprovalPrivileges = $privileges['document-approval'] ?? [
                                     $showCreatorName = true; // Higher level users can see creator names
                                 }
                             }
-                            // Rule 3: Same level users in same unit can see each other's documents
-                            elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-                                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                                if ($sameUnit) {
-                                    $canViewDocument = true;
-                                    $showCreatorName = true; // Same level users can see each other's names
-                                }
+                            // Rule 3: Level 2 users can only see their own documents
+                            elseif ($currentUserAccessLevel == 2) {
+                                // No additional conditions; only own documents are visible
+                                $canViewDocument = false;
                             }
                             
                             // Skip if user cannot view this document

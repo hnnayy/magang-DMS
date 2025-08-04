@@ -92,7 +92,7 @@ class ControllerPersetujuan extends BaseController
                 $canViewDocument = true;
                 log_message('debug', "Document {$doc['id']}: Own document - Access granted");
             }
-            // Rule 2: Higher level users can see lower level documents in same hierarchy
+            // Rule 2: Higher level users (level 1) can see lower level documents in same hierarchy
             elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
                 // Check organizational hierarchy
                 $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
@@ -107,19 +107,9 @@ class ControllerPersetujuan extends BaseController
                     log_message('debug', "Document {$doc['id']}: Different hierarchy - Access denied");
                 }
             }
-            // Rule 3: Same level users in same unit can see each other's documents
-            elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                if ($sameUnit) {
-                    $canViewDocument = true;
-                    log_message('debug', "Document {$doc['id']}: Same level, same unit - Access granted");
-                } else {
-                    log_message('debug', "Document {$doc['id']}: Same level, different unit - Access denied");
-                }
-            }
-            // Rule 4: Lower level users cannot see higher level documents
-            else {
-                log_message('debug', "Document {$doc['id']}: Lower level user cannot access higher level document - Access denied");
+            // Rule 3: Level 2 users can only see their own documents
+            elseif ($currentUserAccessLevel == 2) {
+                log_message('debug', "Document {$doc['id']}: Level 2 user can only see own documents - Access denied unless creator");
             }
             
             // Skip documents with invalid creator ID
@@ -349,11 +339,9 @@ class ControllerPersetujuan extends BaseController
             if ($inSameHierarchy) {
                 $canAccessFile = true;
             }
-        } elseif ($currentUserAccessLevel == $documentCreatorAccessLevel) {
-            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-            if ($sameUnit) {
-                $canAccessFile = true;
-            }
+        } elseif ($currentUserAccessLevel == 2) {
+            // Level 2 users can only access their own files
+            $canAccessFile = false;
         }
 
         if (!$canAccessFile) {
