@@ -1,15 +1,4 @@
-/* === Global Styles === */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f5f5f5;
-}
-
-.w-100 {
-    width: 100%;
-}
-
+/* === Privilege Form Styles Only === */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -63,9 +52,9 @@ body {
 }
 
 /* === Inputs & Selects === */
-input[type="text"],
-.form-input,
-select {
+.privilege-container input[type="text"],
+.privilege-container .form-input,
+.privilege-container select {
     width: 100%;
     padding: 12px 15px;
     font-size: 16px;
@@ -76,33 +65,33 @@ select {
     transition: border-color 0.3s ease;
 }
 
-.form-input {
+.privilege-container .form-input {
     padding: 10px 12px;
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 14px;
 }
 
-.form-input:focus,
-input[type="text"]:focus,
-select:focus {
+.privilege-container .form-input:focus,
+.privilege-container input[type="text"]:focus,
+.privilege-container select:focus {
     outline: none;
     border-color: #b41616;
-    box-shadow: 0 0 0 3px rgba(102, 16, 242, 0.1);
+    box-shadow: 0 0 0 3px rgba(180, 22, 22, 0.1);
 }
 
-.form-input.is-invalid {
+.privilege-container .form-input.is-invalid {
     border-color: #dc3545;
 }
 
-.invalid-feedback {
+.privilege-container .invalid-feedback {
     display: none;
     color: #dc3545;
     font-size: 12px;
     margin-top: 5px;
 }
 
-.form-input.is-invalid ~ .invalid-feedback {
+.privilege-container .form-input.is-invalid ~ .invalid-feedback {
     display: block;
 }
 
@@ -150,7 +139,7 @@ select:focus {
     border-top: 1px solid #e1e5e9;
 }
 
-.btn {
+.privilege-container .btn {
     padding: 12px 25px;
     border-radius: 8px;
     border: none;
@@ -161,24 +150,28 @@ select:focus {
     min-width: 120px;
 }
 
-.btn-secondary {
+.privilege-container .btn-secondary {
     background-color: rgb(227, 228, 229);
     color: #000;
 }
 
-.btn-secondary:hover {
+.privilege-container .btn-secondary:hover {
     background-color: #5a6268;
     transform: translateY(-2px);
 }
 
-.btn-primary {
+.privilege-container .btn-primary {
     background-color: #b41616;
     color: #fff;
 }
 
-.btn-primary:hover {
-    background-color: #b41616;
+.privilege-container .btn-primary:hover {
+    background-color: #a01414;
     transform: translateY(-2px);
+}
+
+.privilege-container .w-100 {
+    width: 100%;
 }
 
 /* === Search Dropdown === */
@@ -264,26 +257,20 @@ select:focus {
         padding: 20px;
         margin: 10px;
     }
-
+    
     .form-title {
         font-size: 24px;
     }
-
+    
     .privileges-options {
         grid-template-columns: 1fr;
     }
-
+    
     .form-actions {
         flex-direction: column;
     }
-
-    .btn {
+    
+    .privilege-container .btn {
         width: 100%;
     }
-}
-
-/* Custom Styles for Selected Submenu Items */
-.search-dropdown-item.selected {
-    background-color: #e6f3ff; /* Warna biru muda untuk item yang dipilih */
-    color: #2c5282; /* Warna teks lebih gelap untuk kontras */
 }

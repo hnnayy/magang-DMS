@@ -1,14 +1,23 @@
+// ===== SIDEBAR FUNCTIONALITY =====
 function toggleSubmenu(element) {
+    // Prevent event from bubbling up to document
+    event.stopPropagation();
+    
     const parent = element.parentElement;
     const isCurrentlyOpen = parent.classList.contains('open');
     
-    
+    // Close all other submenus
     document.querySelectorAll('.has-submenu.open').forEach(item => {
-        item.classList.remove('open');
+        if (item !== parent) {
+            item.classList.remove('open');
+        }
     });
     
+    // Toggle current submenu
     if (!isCurrentlyOpen) {
         parent.classList.add('open');
+    } else {
+        parent.classList.remove('open');
     }
 }
 
@@ -17,49 +26,102 @@ function toggleProfileMenu() {
     dropdown.classList.toggle('active');
 }
 
-// Close profile dropdown when clicking outside
-document.addEventListener('click', function(event) {
-    const dropdown = document.querySelector('.profile-dropdown');
-    if (!dropdown.contains(event.target)) {
-        dropdown.classList.remove('active');
+// ===== RESPONSIVE SIDEBAR FUNCTIONS =====
+function isSplitMode() {
+    return window.innerWidth <= 992;
+}
+
+function toggleSidebar() {
+    if (isSplitMode()) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        if (sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        } else {
+            sidebar.classList.add('active');
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
     }
+}
+
+function closeSidebar() {
+    if (isSplitMode()) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        sidebar.classList.remove('active');
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// ===== EVENT LISTENERS SETUP =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sidebar toggle button
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+
+    // Initialize sidebar overlay click to close
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    console.log('Dashboard loaded successfully');
 });
 
-// Close submenu when clicking outside
+// ===== CLICK OUTSIDE HANDLERS =====
 document.addEventListener('click', function(event) {
-    if (!event.target.closest('.has-submenu')) {
+    // Handle profile dropdown close
+    const profileDropdown = document.querySelector('.profile-dropdown');
+    if (profileDropdown && !profileDropdown.contains(event.target)) {
+        profileDropdown.classList.remove('active');
+    }
+    
+    // Handle submenu close - ONLY if not clicking inside sidebar
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && !sidebar.contains(event.target)) {
+        // Only close submenus if clicking outside sidebar entirely
         document.querySelectorAll('.has-submenu.open').forEach(item => {
             item.classList.remove('open');
         });
     }
+    
+    // Handle responsive sidebar close
+    if (isSplitMode()) {
+        const sidebarToggle = document.querySelector('.sidebar-toggle');
+        
+        // Close sidebar if clicking outside AND not on toggle button
+        if (sidebar && sidebar.classList.contains('active') && 
+            !sidebar.contains(event.target) && 
+            (!sidebarToggle || !sidebarToggle.contains(event.target))) {
+            closeSidebar();
+        }
+    }
 });
 
-// Mobile menu toggle (untuk responsive)
+// ===== PREVENT SUBMENU LINKS FROM CLOSING PARENT =====
+document.addEventListener('click', function(event) {
+    // If clicking on a submenu link, don't close the submenu
+    if (event.target.closest('.submenu a')) {
+        event.stopPropagation();
+    }
+});
+
+// ===== MOBILE MENU TOGGLE (Legacy support) =====
 function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('mobile-active');
+    if (sidebar) {
+        sidebar.classList.toggle('mobile-active');
+    }
 }
 
-// Add mobile menu button functionality if needed
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize any additional functionality here
-    console.log('Dashboard loaded successfully');
-});
-
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.querySelector('.sidebar-overlay');
-
-    sidebar.classList.toggle('active');
-
-    if (sidebar.classList.contains('active')) {
-        overlay.style.display = 'block';
-    } else {
-        overlay.style.display = 'none';
-    }
-    }
-
-// daftar pengajuan
+// ===== SEARCH FUNCTIONALITY =====
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
@@ -68,58 +130,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const entriesStart = document.getElementById('entriesStart');
     const entriesEnd = document.getElementById('entriesEnd');
     const entriesTotal = document.getElementById('entriesTotal');
+    
+    if (searchInput && tableBody) {
+        let allRows = Array.from(tableBody.querySelectorAll('tr'));
+        let filteredRows = [...allRows];
 
-    let allRows = Array.from(tableBody.querySelectorAll('tr'));
-    let filteredRows = [...allRows];
+        function performSearch() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            filteredRows = allRows.filter(row => {
+                const cells = row.querySelectorAll('td');
+                const values = Array.from(cells).map(cell => cell.textContent.toLowerCase());
+                return searchTerm === '' || values.some(text => text.includes(searchTerm));
+            });
+            displayResults();
+        }
 
-    function performSearch() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+        function displayResults() {
+            allRows.forEach(row => row.style.display = 'none');
+            
+            if (filteredRows.length === 0) {
+                if (noResults) noResults.style.display = 'block';
+                if (tableBody.parentElement) tableBody.parentElement.style.display = 'none';
+            } else {
+                if (noResults) noResults.style.display = 'none';
+                if (tableBody.parentElement) tableBody.parentElement.style.display = 'table';
+                filteredRows.forEach((row, index) => {
+                    row.style.display = '';
+                    if (row.cells[0]) row.cells[0].textContent = index + 1;
+                });
+            }
 
-        filteredRows = allRows.filter(row => {
-            const cells = row.querySelectorAll('td');
-            const values = Array.from(cells).map(cell => cell.textContent.toLowerCase());
-            return searchTerm === '' || values.some(text => text.includes(searchTerm));
+            const total = filteredRows.length;
+            if (entriesStart) entriesStart.textContent = total > 0 ? '1' : '0';
+            if (entriesEnd) entriesEnd.textContent = total.toString();
+            if (entriesTotal) entriesTotal.textContent = total.toString();
+        }
+
+        searchInput.addEventListener('input', performSearch);
+        if (searchBtn) searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
         });
 
         displayResults();
     }
-
-    function displayResults() {
-        allRows.forEach(row => row.style.display = 'none');
-
-        if (filteredRows.length === 0) {
-            noResults.style.display = 'block';
-            tableBody.parentElement.style.display = 'none';
-        } else {
-            noResults.style.display = 'none';
-            tableBody.parentElement.style.display = 'table';
-
-            filteredRows.forEach((row, index) => {
-                row.style.display = '';
-                row.cells[0].textContent = index + 1;
-            });
-        }
-
-        const total = filteredRows.length;
-        entriesStart.textContent = total > 0 ? '1' : '0';
-        entriesEnd.textContent = total.toString();
-        entriesTotal.textContent = total.toString();
-    }
-
-    searchInput.addEventListener('input', performSearch);
-    searchBtn.addEventListener('click', performSearch);
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
-
-    displayResults();
 });
 
-// <!-- ✅ JavaScript Dropdown Dinamis -->
-
- const dokumenInternal = [
+// ===== DOCUMENT MANAGEMENT =====
+const dokumenInternal = [
     { kode: 'UAT', nama: 'User Acceptances Test' },
     { kode: 'PM', nama: 'Pedoman Mutu/Pedoman Lain' },
     { kode: 'SM', nama: 'Sasaran Mutu' },
@@ -135,93 +195,92 @@ document.addEventListener('DOMContentLoaded', function() {
     { kode: 'FM', nama: 'Formulir tanpa Prosedur' },
     { kode: 'FMP', nama: 'Formulir Milik Prosedur' },
     { kode: 'FMI', nama: 'Formulir Milik Instruksi Kerja' }
-  ];
+];
 
-  const dokumenEksternal = [
+const dokumenEksternal = [
     { kode: 'DI', nama: 'Dokumen Internal' },
     { kode: 'DE', nama: 'Dokumen Eksternal' },
     { kode: 'KM', nama: 'Kebijakan Mutu' }
-  ];
+];
 
-  function updateKodeOptions() {
-    const jenis = document.getElementById("jenis-dokumen").value;
+function updateKodeOptions() {
+    const jenis = document.getElementById("jenis-dokumen");
     const kodeSelect = document.getElementById("kode-dokumen");
-    kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+    
+    if (jenis && kodeSelect) {
+        kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+        const data = jenis.value === 'internal' ? dokumenInternal : dokumenEksternal;
+        data.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.kode;
+            option.text = `${item.kode} - ${item.nama}`;
+            kodeSelect.appendChild(option);
+        });
+    }
+}
 
-    const data = jenis === 'internal' ? dokumenInternal : dokumenEksternal;
+// ===== PROGRAM STUDY MANAGEMENT =====
+const prodiOptions = {
+    FTE: [
+        'Electrical Energy Engineering',
+        'Teknik Biomedis',
+        'Teknik Telekomunikasi',
+        'Teknik Elektro',
+        'Smart Science and Technology (Teknik Fisika)',
+        'Teknik Komputer',
+        'Teknik Pangan'
+    ],
+    FRI: [
+        'Teknik Industri',
+        'Sistem Informasi',
+        'Digital Supply Chain',
+        'Manajemen Rekayasa Industri'
+    ],
+    FIF: [
+        'Informatika',
+        'Rekayasa Perangkat Lunak',
+        'Cybersecurity',
+        'Teknologi Informasi',
+        'Sains Data'
+    ],
+    FEB: [
+        'Akuntansi',
+        'Manajemen',
+        'Leisure Management',
+        'Administrasi Bisnis',
+        'Digital Business'
+    ],
+    FKS: [
+        'Ilmu Komunikasi',
+        'Digital Public Relation',
+        'Digital Content Broadcasting',
+        'Psikologi (Digital Psychology)'
+    ],
+    FIK: [
+        'Visual Arts',
+        'Desain Komunikasi Visual',
+        'Desain Produk & Inovasi',
+        'Desain Interior',
+        'Kriya (Fashion & Textile Design)',
+        'Film dan Animasi'
+    ],
+    FIT: [
+        'Ilmu Komunikasi',
+        'Digital Public Relation',
+        'Digital Content Broadcasting',
+        'Psikologi (Digital Psychology)'
+    ]
+};
 
-    data.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item.kode;
-      option.text = `${item.kode} - ${item.nama}`;
-      kodeSelect.appendChild(option);
-    });
-  }
-
-// Daftar prodi berdasarkan fakultas
-    const prodiOptions = {
-        FTE: [
-            'Electrical Energy Engineering',
-            'Teknik Biomedis',
-            'Teknik Telekomunikasi',
-            'Teknik Elektro',
-            'Smart Science and Technology (Teknik Fisika)',
-            'Teknik Komputer',
-            'Teknik Pangan'
-        ],
-        FRI: [
-            'Teknik Industri',
-            'Sistem Informasi',
-            'Digital Supply Chain',
-            'Manajemen Rekayasa Industri'
-        ],
-        FIF: [
-            'Informatika',
-            'Rekayasa Perangkat Lunak',
-            'Cybersecurity',
-            'Teknologi Informasi',
-            'Sains Data'
-        ],
-        FEB: [
-            'Akuntansi',
-            'Manajemen',
-            'Leisure Management',
-            'Administrasi Bisnis',
-            'Digital Business'
-        ],
-        FKS: [
-            'Ilmu Komunikasi',
-            'Digital Public Relation',
-            'Digital Content Broadcasting',
-            'Psikologi (Digital Psychology)'
-        ],
-        FIK: [
-            'Visual Arts',
-            'Desain Komunikasi Visual',
-            'Desain Produk & Inovasi',
-            'Desain Interior',
-            'Kriya (Fashion & Textile Design)',
-            'Film dan Animasi'
-        ],
-        FIT: [
-            'Ilmu Komunikasi',
-            'Digital Public Relation',
-            'Digital Content Broadcasting',
-            'Psikologi (Digital Psychology)'
-        ]
-    };
-
-    // Fungsi untuk memperbarui dropdown prodi saat fakultas berubah
-    function updateProdi() {
-        const fakultas = document.getElementById('fakultas').value;
-        const prodiSelect = document.getElementById('prodi');
-
-        // Reset dropdown prodi
+function updateProdi() {
+    const fakultas = document.getElementById('fakultas');
+    const prodiSelect = document.getElementById('prodi');
+    
+    if (fakultas && prodiSelect) {
         prodiSelect.innerHTML = '<option value="" disabled selected hidden>Please Select Program Study...</option>';
-
-        // Tampilkan opsi prodi sesuai fakultas
-        if (fakultas && prodiOptions[fakultas]) {
-            prodiOptions[fakultas].forEach(function (prodi) {
+        
+        if (fakultas.value && prodiOptions[fakultas.value]) {
+            prodiOptions[fakultas.value].forEach(function (prodi) {
                 const option = document.createElement('option');
                 option.value = prodi;
                 option.textContent = prodi;
@@ -229,140 +288,135 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+}
 
+// ===== DOCUMENT FORM HANDLERS =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit button handlers
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const editElements = {
+                'editDocumentId': btn.dataset.id,
+                'editFakultas': btn.dataset.fakultas,
+                'editBagian': btn.dataset.bagian,
+                'editNama': btn.dataset.nama,
+                'editNomor': btn.dataset.nomor,
+                'editRevisi': btn.dataset.revisi,
+                'editJenis': btn.dataset.jenis,
+                'editKode': btn.dataset.kode,
+                'editKeterangan': btn.dataset.keterangan
+            };
 
-//daftar pengajuan
-document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.getElementById('editDocumentId').value = btn.dataset.id;
-                document.getElementById('editFakultas').value = btn.dataset.fakultas;
-                document.getElementById('editBagian').value = btn.dataset.bagian;
-                document.getElementById('editNama').value = btn.dataset.nama;
-                document.getElementById('editNomor').value = btn.dataset.nomor;
-                document.getElementById('editRevisi').value = btn.dataset.revisi;
-                document.getElementById('editJenis').value = btn.dataset.jenis;
-                document.getElementById('editKode').value = btn.dataset.kode;
-                document.getElementById('editKeterangan').value = btn.dataset.keterangan;
+            Object.keys(editElements).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) element.value = editElements[key];
             });
         });
+    });
 
-        // Isi ID untuk approve
-        document.querySelectorAll('.approve-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.getElementById('approveDocumentId').value = btn.dataset.id;
-            });
+    // Approve button handlers
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const approveElement = document.getElementById('approveDocumentId');
+            if (approveElement) approveElement.value = btn.dataset.id;
         });
-
-        // Fungsi contoh untuk form submission
-        function handleEditSubmit(e) {
-            e.preventDefault();
-            alert("Form edit disubmit!");
-            // Implementasikan logic AJAX atau form POST di sini
-        }
-
-        function handleApproveSubmit(e) {
-            e.preventDefault();
-            alert("Dokumen disetujui!");
-            // Implementasikan logic AJAX atau form POST di sini
-        }
-
-        function deleteDocument(id) {
-            if (confirm("Yakin ingin menghapus dokumen ini?")) {
-                alert("Dokumen dengan ID " + id + " dihapus.");
-                // Implementasi penghapusan bisa dilakukan di sini
-            }
-        }
-
-
-
-        function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filterFakultas').value = '';
-            document.getElementById('filterJenis').value = '';
-        }
-
-//pusher
-
-document.addEventListener('DOMContentLoaded', function () {
-    const userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
-    const notifList = document.getElementById('notif-list');
-    const notifCount = document.getElementById('notif-count');
-
-    // Fungsi ambil notifikasi dari backend
-    function loadNotifications() {
-        fetch('/notifications/get')
-            .then(response => response.json())
-            .then(data => {
-                notifList.innerHTML = '<li class="dropdown-header">Notifikasi</li>';
-                let unread = 0;
-
-                data.forEach(notif => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <a href="${notif.link ?? '#'}" class="dropdown-item notif-item ${notif.is_read == 0 ? 'fw-bold' : ''}" data-id="${notif.id}">
-                            ${notif.message}
-                            <br><small class="text-muted">${notif.created_at}</small>
-                        </a>`;
-                    notifList.appendChild(li);
-
-                    if (notif.is_read == 0) unread++;
-                });
-
-                notifCount.textContent = unread;
-                notifCount.style.display = unread > 0 ? 'inline-block' : 'none';
-            });
-    }
-
-    // Tandai sebagai dibaca saat klik
-    notifList.addEventListener('click', function (e) {
-        if (e.target.classList.contains('notif-item')) {
-            const notifId = e.target.dataset.id;
-            fetch(`/notifications/read/${notifId}`, { method: 'POST' })
-                .then(() => loadNotifications());
-        }
-    });
-
-    // Jalankan saat page load
-    loadNotifications();
-
-    // Setup Pusher untuk real-time
-    const pusher = new Pusher(PUSHER_KEY, {
-        cluster: PUSHER_CLUSTER
-    });
-
-    const channel = pusher.subscribe(`user-${userId}`);
-    channel.bind('new-notification', function (data) {
-        loadNotifications(); // refresh list
     });
 });
 
+function handleEditSubmit(e) {
+    e.preventDefault();
+    alert("Form edit disubmit!");
+    // Implementasikan logic AJAX atau form POST di sini
+}
 
-//notif
-// Tambahkan di file dashboard.js atau buat file notification.js terpisah
+function handleApproveSubmit(e) {
+    e.preventDefault();
+    alert("Dokumen disetujui!");
+    // Implementasikan logic AJAX atau form POST di sini
+}
 
+function deleteDocument(id) {
+    if (confirm("Yakin ingin menghapus dokumen ini?")) {
+        alert("Dokumen dengan ID " + id + " dihapus.");
+        // Implementasi penghapusan bisa dilakukan di sini
+    }
+}
+
+function resetFilters() {
+    const elements = ['searchInput', 'filterFakultas', 'filterJenis'];
+    elements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = '';
+    });
+}
+
+// ===== NOTIFICATION SYSTEM =====
+document.addEventListener('DOMContentLoaded', function () {
+    const userIdMeta = document.querySelector('meta[name="user-id"]');
+    const notifList = document.getElementById('notif-list');
+    const notifCount = document.getElementById('notif-count');
+    
+    if (userIdMeta && notifList && notifCount) {
+        const userId = userIdMeta.getAttribute('content');
+        
+        function loadNotifications() {
+            fetch('/notifications/get')
+                .then(response => response.json())
+                .then(data => {
+                    notifList.innerHTML = '<li class="dropdown-header">Notifikasi</li>';
+                    let unread = 0;
+                    data.forEach(notif => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <a href="${notif.link ?? '#'}" class="dropdown-item notif-item ${notif.is_read == 0 ? 'fw-bold' : ''}" data-id="${notif.id}">
+                                ${notif.message}
+                                <br><small class="text-muted">${notif.created_at}</small>
+                            </a>`;
+                        notifList.appendChild(li);
+                        if (notif.is_read == 0) unread++;
+                    });
+                    notifCount.textContent = unread;
+                    notifCount.style.display = unread > 0 ? 'inline-block' : 'none';
+                })
+                .catch(error => console.error('Error loading notifications:', error));
+        }
+
+        // Mark notification as read when clicked
+        notifList.addEventListener('click', function (e) {
+            if (e.target.classList.contains('notif-item')) {
+                const notifId = e.target.dataset.id;
+                fetch(`/notifications/read/${notifId}`, { method: 'POST' })
+                    .then(() => loadNotifications())
+                    .catch(error => console.error('Error marking notification as read:', error));
+            }
+        });
+
+        loadNotifications();
+
+        // Setup Pusher for real-time notifications (if available)
+        if (typeof Pusher !== 'undefined' && typeof PUSHER_KEY !== 'undefined') {
+            const pusher = new Pusher(PUSHER_KEY, {
+                cluster: PUSHER_CLUSTER
+            });
+            const channel = pusher.subscribe(`user-${userId}`);
+            channel.bind('new-notification', function (data) {
+                loadNotifications();
+            });
+        }
+    }
+});
+
+// ===== JQUERY-BASED NOTIFICATION HANDLERS =====
 $(document).ready(function() {
-    // Handle click pada notifikasi
+    // Handle notification clicks
     $(document).on('click', '.notification-link', function(e) {
         e.preventDefault();
         
         const notificationId = $(this).data('notification-id');
         const href = $(this).attr('href');
         
-        // Mark as read via AJAX
         markNotificationAsRead(notificationId, function(success) {
-            if (success) {
-                // Remove notification from dropdown
-                $(`.notification-item[data-notification-id="${notificationId}"]`).fadeOut();
-                
-                // Update notification count
-                updateNotificationCount();
-                
-                // Redirect to the link
-                window.location.href = href;
-            } else {
-                // Still redirect even if marking as read failed
-                window.location.href = href;
-            }
+            window.location.href = href;
         });
     });
     
@@ -372,81 +426,81 @@ $(document).ready(function() {
     }, 30000);
 });
 
-/**
- * Mark notification as read
- */
 function markNotificationAsRead(notificationId, callback) {
-    $.ajax({
-        url: BASE_URL + 'notification/markAsRead',
-        type: 'POST',
-        data: {
-            notification_id: notificationId,
-            [csrfToken]: csrfHash
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                console.log('Notification marked as read');
-                callback(true);
-            } else {
-                console.error('Failed to mark notification as read:', response.message);
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    const csrfHash = $('meta[name="csrf-hash"]').attr('content');
+    
+    if (typeof $ !== 'undefined' && csrfToken && csrfHash) {
+        $.ajax({
+            url: BASE_URL + 'notification/markAsRead',
+            type: 'POST',
+            data: {
+                notification_id: notificationId,
+                [csrfToken]: csrfHash
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    console.log('Notification marked as read');
+                    callback(true);
+                } else {
+                    console.error('Failed to mark notification as read:', response.message);
+                    callback(false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error marking notification as read:', error);
                 callback(false);
             }
-        },
-        error: function(xhr, status, error) {
-            console.error('AJAX error marking notification as read:', error);
-            callback(false);
-        }
-    });
-}
-
-/**
- * Update notification count badge
- */
-function updateNotificationCount() {
-    const remainingNotifications = $('.notification-item').not(':hidden').length - 1; // -1 for divider
-    const badge = $('.notif-badge');
-    
-    if (remainingNotifications > 0) {
-        badge.text(remainingNotifications).show();
+        });
     } else {
-        badge.hide();
-        // Update dropdown content to show no notifications
-        $('#notif-list').html(`
-            <li class="dropdown-header">Notifikasi</li>
-            <li class="notification-item">
-                <div class="dropdown-item text-muted text-center py-3">
-                    <i class="bi bi-bell-slash mb-2" style="font-size: 2rem;"></i>
-                    <div>Tidak ada notifikasi baru</div>
-                </div>
-            </li>
-        `);
+        callback(false);
     }
 }
 
-/**
- * Refresh notifications without page reload
- */
-function refreshNotifications() {
-    $.ajax({
-        url: BASE_URL + 'notification/fetch',
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                updateNotificationDropdown(response.notifications, response.count);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('Error refreshing notifications:', error);
+function updateNotificationCount() {
+    if (typeof $ !== 'undefined') {
+        const remainingNotifications = $('.notification-item').not(':hidden').length - 1;
+        const badge = $('.notif-badge');
+        
+        if (remainingNotifications > 0) {
+            badge.text(remainingNotifications).show();
+        } else {
+            badge.hide();
+            $('#notif-list').html(`
+                <li class="dropdown-header">Notifikasi</li>
+                <li class="notification-item">
+                    <div class="dropdown-item text-muted text-center py-3">
+                        <i class="bi bi-bell-slash mb-2" style="font-size: 2rem;"></i>
+                        <div>Tidak ada notifikasi baru</div>
+                    </div>
+                </li>
+            `);
         }
-    });
+    }
 }
 
-/**
- * Update notification dropdown content
- */
+function refreshNotifications() {
+    if (typeof $ !== 'undefined' && typeof BASE_URL !== 'undefined') {
+        $.ajax({
+            url: BASE_URL + 'notification/fetch',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    updateNotificationDropdown(response.notifications, response.count);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error refreshing notifications:', error);
+            }
+        });
+    }
+}
+
 function updateNotificationDropdown(notifications, count) {
+    if (typeof $ === 'undefined' || typeof BASE_URL === 'undefined') return;
+    
     let html = '<li class="dropdown-header">Notifikasi</li>';
     
     if (notifications && notifications.length > 0) {
@@ -493,7 +547,6 @@ function updateNotificationDropdown(notifications, count) {
             </li>
         `;
         
-        // Update badge
         $('.notif-badge').text(count).show();
     } else {
         html += `
@@ -505,22 +558,19 @@ function updateNotificationDropdown(notifications, count) {
             </li>
         `;
         
-        // Hide badge
         $('.notif-badge').hide();
     }
     
     $('#notif-list').html(html);
 }
 
-// Get CSRF token and hash from meta tags
-const csrfToken = $('meta[name="csrf-token"]').attr('content');
-let csrfHash = $('meta[name="csrf-hash"]').attr('content');
-
-// Update CSRF hash after each AJAX request
-$(document).ajaxComplete(function(event, xhr, settings) {
-    const newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
-    if (newHash) {
-        csrfHash = newHash;
-        $('meta[name="csrf-hash"]').attr('content', newHash);
-    }
+// ===== CSRF TOKEN MANAGEMENT =====
+$(document).ready(function() {
+    // Update CSRF hash after each AJAX request
+    $(document).ajaxComplete(function(event, xhr, settings) {
+        const newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
+        if (newHash) {
+            $('meta[name="csrf-hash"]').attr('content', newHash);
+        }
+    });
 });
