@@ -35,119 +35,17 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 <!-- Custom CSS -->
 <link rel="stylesheet" href="<?= base_url('assets/css/daftar-dokumen.css') ?>">
 
-<!-- Inline CSS for Readonly/Disabled Fields -->
 <style>
-    input[readonly], select[disabled] {
-        background-color: #f1f1f1;
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-    
-    /* Styling untuk pesan "Tidak ada data" */
-    .no-data-message {
-        text-align: center;
-        padding: 20px;
-        color: #6c757d;
-        font-style: italic;
-    }
-    
     /* Hide action column if no privileges */
     <?php if (!$hasAnyPrivilege): ?>
     .aksi-column {
         display: none !important;
     }
     <?php endif; ?>
-
-    /* Text truncation for long content */
-    .text-truncate-custom {
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: inline-block;
-    }
-
-    /* Checkbox styling for multi-select */
-    .checkbox-group {
-        max-height: 200px;
-        overflow-y: auto;
-        border: 1px solid #ced4da;
-        border-radius: 0.375rem;
-        padding: 0.5rem;
-        background-color: white;
-    }
-    
-    .checkbox-item {
-        display: flex;
-        align-items: center;
-        padding: 0.25rem 0;
-        margin: 0;
-    }
-    
-    .checkbox-item input[type="checkbox"] {
-        margin-right: 0.5rem;
-        margin-top: 0;
-    }
-    
-    .checkbox-item label {
-        margin-bottom: 0;
-        font-weight: normal;
-        cursor: pointer;
-        flex: 1;
-    }
-
-    /* Filter dropdown styling */
-    .filter-dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    
-    .filter-dropdown-content {
-        display: none;
-        position: absolute;
-        background-color: white;
-        min-width: 300px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-        z-index: 1000;
-        border: 1px solid #ced4da;
-        border-radius: 0.375rem;
-        max-height: 250px;
-        overflow-y: auto;
-        padding: 0.5rem;
-    }
-    
-    .filter-dropdown.show .filter-dropdown-content {
-        display: block;
-    }
-    
-    .filter-toggle {
-        background-color: white;
-        border: 1px solid #ced4da;
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.375rem;
-        cursor: pointer;
-        min-width: 180px;
-        text-align: left;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .filter-toggle:after {
-        content: "▼";
-        font-size: 0.8em;
-    }
-
-    /* Styling untuk kode dokumen format teks biasa */
-    .kode-dokumen-simple {
-        font-size: 0.9rem;
-        color: #333;
-        line-height: 1.4;
-    }
 </style>
 
 <div class="container-fluid px-4 py-4">
-    <h4 class="mb-4">Daftar Dokumen</h4>
+    <h4 class="mb-4">Document List</h4>
 
     <!-- FILTER -->
     <div class="bg-light p-3 rounded mb-4">
@@ -157,7 +55,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
             <!-- Filter Standar dengan Checkbox -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterStandar')">
-                    <span id="filterStandarText">Pilih Standar...</span>
+                    <span id="filterStandarText">Select Standard...</span>
                 </div>
                 <div class="filter-dropdown-content" id="filterStandarContent">
                     <div class="checkbox-group">
@@ -174,7 +72,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
             <!-- Filter Klausul dengan Checkbox -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterKlausul')">
-                    <span id="filterKlausulText">Pilih Klausul...</span>
+                    <span id="filterKlausulText">Select Clause...</span>
                 </div>
                 <div class="filter-dropdown-content" id="filterKlausulContent">
                     <div class="checkbox-group">
@@ -192,7 +90,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 
             <div class="flex-grow-1" style="min-width:180px;">
                 <select class="form-select filter-input w-100" id="filterPemilik">
-                    <option value="">Semua Pemilik Doc</option>
+                    <option value="">All Document Owners</option>
                     <?php 
                     $unique_owners = [];
                     foreach ($document as $doc) {
@@ -242,7 +140,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 
             <div class="flex-grow-1" style="min-width:180px;">
                 <select class="form-select filter-input w-100" id="filterJenis">
-                    <option value="">Semua Jenis Doc</option>
+                    <option value="">All Document Types</option>
                     <?php foreach ($kategori_dokumen as $k): ?>
                         <option value="<?= $k['id'] ?>"><?= $k['name'] ?></option>
                     <?php endforeach; ?>
@@ -277,20 +175,20 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                 <th>No</th>
                                 <th>Faculty/Directorate</th>
                                 <th>Department/Unit/Program</th>
-                                <th>Standar</th>
-                                <th>Klausul</th>
-                                <th>Jenis Dokumen</th>
-                                <th>Kode & Nama Dokumen</th>
-                                <th>Nomor Dokumen</th>
-                                <th>Nama Dokumen</th>
-                                <th>Pemilik Dokumen</th>
-                                <th>File Dokumen</th>
-                                <th>Revisi</th>
-                                <th>Tanggal Efektif</th>
-                                <th>Disetujui Oleh</th>
-                                <th>Tanggal Disetujui</th>
+                                <th>Standard</th>
+                                <th>Clause</th>
+                                <th>Document Type</th>
+                                <th>Code & Document Name</th>
+                                <th>Document Number</th>
+                                <th>Document Name</th>
+                                <th>Document Owner</th>
+                                <th>Document File</th>
+                                <th>Revision</th>
+                                <th>Effective Date</th>
+                                <th>Approved By</th>
+                                <th>Approval Date</th>
                                 <?php if ($hasAnyPrivilege): ?>
-                                    <th class="aksi-column">Aksi</th>
+                                    <th class="aksi-column">Action</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -450,12 +348,12 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                         <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                             <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
                                                class="text-decoration-none" 
-                                               title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                               title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
                                                 <i class="bi bi-download text-success fs-5"></i>
                                             </a>
                                         <?php else: ?>
                                             <span class="text-muted">
-                                                <i class="bi bi-file-earmark-x"></i> Tidak ada file
+                                                <i class="bi bi-file-earmark-x"></i> No file
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -497,14 +395,14 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                                 <div class="modal-content">
                                                     <div class="modal-header border-0">
-                                                        <h6 class="modal-title fw-semibold">Edit Dokumen</h6>
+                                                        <h6 class="modal-title fw-semibold">Edit Document</h6>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                                     </div>
                                                     <div class="modal-body px-4 py-3">
                                                         <div class="row g-3">
                                                             <!-- Dropdown Standar (Checkbox) -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Standar</label>
+                                                                <label class="form-label small">Standard</label>
                                                                 <div class="checkbox-group">
                                                                     <?php foreach ($standards as $s): ?>
                                                                         <div class="checkbox-item">
@@ -522,7 +420,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             </div>
                                                             <!-- Dropdown Klausul (Checkbox) -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Klausul</label>
+                                                                <label class="form-label small">Clause</label>
                                                                 <div class="checkbox-group">
                                                                     <?php foreach ($clauses as $c): ?>
                                                                         <div class="checkbox-item">
@@ -540,7 +438,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             </div>
                                                             <!-- Jenis Dokumen -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Jenis Dokumen</label>
+                                                                <label class="form-label small">Document Type</label>
                                                                 <select name="type" class="form-select form-select-sm" disabled>
                                                                     <?php foreach ($kategori_dokumen as $kategori): ?>
                                                                         <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
@@ -552,7 +450,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             
                                                             <!-- FORMAT BARU: Tampilkan kode dokumen dengan format teks biasa -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Kode & Nama Dokumen</label>
+                                                                <label class="form-label small">Code & Document Name</label>
                                                                 <div class="form-control form-control-sm" style="background-color: #f8f9fa; min-height: 38px;">
                                                                     <?php 
                                                                     // Tampilkan kode & nama dokumen dengan format teks biasa
@@ -567,7 +465,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                                     } elseif (!empty($row['title'])) {
                                                                         echo esc($row['title']);
                                                                     } else {
-                                                                        echo '<span class="text-muted">Tidak ada kode</span>';
+                                                                        echo '<span class="text-muted">No code</span>';
                                                                     }
                                                                     ?>
                                                                 </div>
@@ -576,68 +474,68 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             <!-- Kode Jenis (Jika ada) -->
                                                             <?php if (!empty($row['kode_jenis_dokumen'])): ?>
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Kode Jenis</label>
+                                                                <label class="form-label small">Type Code</label>
                                                                 <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>" readonly>
                                                             </div>
                                                             <?php endif; ?>
                                                             
                                                             <!-- Nomor -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Nomor</label>
+                                                                <label class="form-label small">Number</label>
                                                                 <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>" readonly>
                                                             </div>
                                                             <!-- Nama Dokumen -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Nama Dokumen</label>
+                                                                <label class="form-label small">Document Name</label>
                                                                 <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>" readonly>
                                                             </div>
                                                             <!-- Pemilik Dokumen -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">Pemilik Dokumen</label>
+                                                                <label class="form-label small">Document Owner</label>
                                                                 <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
                                                             </div>
                                                             <!-- File Dokumen -->
                                                             <div class="col-md-6">
-                                                                <label class="form-label small">File Dokumen</label>
+                                                                <label class="form-label small">Document File</label>
                                                                 <div>
                                                                     <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                                                         <small class="text-muted d-block mt-1">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
                                                                         <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
                                                                            class="btn btn-primary btn-sm mt-1" 
-                                                                           title="Unduh <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
-                                                                            <i class="bi bi-download"></i> Lihat File
+                                                                           title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                                                            <i class="bi bi-download"></i> View File
                                                                         </a>
                                                                     <?php else: ?>
-                                                                        <span class="text-muted">Tidak ada file</span>
+                                                                        <span class="text-muted">No file</span>
                                                                     <?php endif; ?>
                                                                 </div>
                                                             </div>
                                                             <!-- Revisi -->
                                                             <div class="col-md-3">
-                                                                <label class="form-label small">Revisi</label>
+                                                                <label class="form-label small">Revision</label>
                                                                 <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>" readonly>
                                                             </div>
                                                             <!-- Tanggal Efektif -->
                                                             <div class="col-md-3">
-                                                                <label class="form-label small">Tanggal Efektif</label>
+                                                                <label class="form-label small">Effective Date</label>
                                                                 <input type="date" class="form-control form-control-sm" name="date_published" value="<?= esc($row['date_published']) ?>">
                                                             </div>
                                                             <!-- Disetujui Oleh -->
                                                             <div class="col-md-3">
-                                                                <label class="form-label small">Disetujui Oleh</label>
+                                                                <label class="form-label small">Approved By</label>
                                                                 <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
                                                                 <input type="text" class="form-control form-control-sm" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
                                                             </div>
                                                             <!-- Tanggal Disetujui -->
                                                             <div class="col-md-3">
-                                                                <label class="form-label small">Tanggal Disetujui</label>
+                                                                <label class="form-label small">Approval Date</label>
                                                                 <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer border-0 px-4 pb-3">
-                                                        <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
-                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                                                     </div>
                                                 </div>
                                             </form>
@@ -649,7 +547,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                         </tbody>
                     </table>
                     <!-- Container untuk pesan "Tidak ada data" -->
-                    <div class="no-data-message" style="display: none;">Tidak ada data</div>
+                    <div class="no-data-message" style="display: none;">No data</div>
                 </div>
                 <!-- Pagination container yang akan di-sticky -->
                 <div class="pagination-container"></div>
@@ -688,15 +586,15 @@ $(document).ready(function() {
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
         language: {
-            lengthMenu: "Tampilkan _MENU_ entri",
+            lengthMenu: "Show _MENU_ entries",
             paginate: {
-                previous: "Sebelumnya",
-                next: "Berikutnya"
+                previous: "Previous",
+                next: "Next"
             },
-            zeroRecords: "", // Kosongkan pesan default DataTables
-            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-            infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
-            infoFiltered: "(disaring dari _MAX_ total entri)"
+            zeroRecords: "",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "Showing 0 to 0 of 0 entries",
+            infoFiltered: "(filtered from _MAX_ total entries)"
         },
         columnDefs: [
             { searchable: true, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14] }, // Aktifkan pencarian pada kolom tertentu
@@ -727,7 +625,7 @@ $(document).ready(function() {
 
             // Update info text
             const info = this.api().page.info();
-            const infoText = `Menampilkan ${info.start + 1} sampai ${info.end} dari ${info.recordsDisplay} entri`;
+            const infoText = `Showing ${info.start + 1} to ${info.end} of ${info.recordsDisplay} entries`;
             $('.datatable-info-container').html(`<small class="text-muted">${infoText}</small>`);
         }
     };
@@ -750,22 +648,22 @@ $(document).ready(function() {
     // Move length control to container ABOVE the table
     $('.dt-length-container').html(`
         <div class="d-flex align-items-center">
-            <label class="me-2 mb-0">Tampilkan:</label>
+            <label class="me-2 mb-0">Show:</label>
             <select class="form-select form-select-sm" id="customLength" style="width: 80px;">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
                 <option value="100">100</option>
             </select>
-            <label class="ms-2 mb-0">entri</label>
+            <label class="ms-2 mb-0">entries</label>
         </div>
     `);
     
     // Create custom search box
     const searchHtml = `
         <div class="d-flex align-items-center">
-            <label class="me-2 mb-0">Cari:</label>
-            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;" placeholder="Cari dokumen...">
+            <label class="me-2 mb-0">Search:</label>
+            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;" placeholder="Search Document...">
         </div>
     `;
     $('.dt-search-container').html(searchHtml);
@@ -835,22 +733,22 @@ $(document).ready(function() {
         const checkedStandar = document.querySelectorAll('.standar-checkbox:checked');
         const standarText = document.getElementById('filterStandarText');
         if (checkedStandar.length === 0) {
-            standarText.textContent = 'Pilih Standar...';
+            standarText.textContent = 'Select Standard...';
         } else if (checkedStandar.length === 1) {
             standarText.textContent = checkedStandar[0].nextElementSibling.textContent;
         } else {
-            standarText.textContent = `${checkedStandar.length} Standar dipilih`;
+            standarText.textContent = `${checkedStandar.length} Standard selected`;
         }
 
         // Update Klausul filter text
         const checkedKlausul = document.querySelectorAll('.klausul-checkbox:checked');
         const klausulText = document.getElementById('filterKlausulText');
         if (checkedKlausul.length === 0) {
-            klausulText.textContent = 'Pilih Klausul...';
+            klausulText.textContent = 'Select Clause...';
         } else if (checkedKlausul.length === 1) {
             klausulText.textContent = checkedKlausul[0].nextElementSibling.textContent;
         } else {
-            klausulText.textContent = `${checkedKlausul.length} Klausul dipilih`;
+            klausulText.textContent = `${checkedKlausul.length} Clause selected`;
         }
     }
 
@@ -931,7 +829,7 @@ $(document).ready(function() {
                     // SELALU TAMPILKAN SUKSES, ABAIKAN RESPONSE SERVER
                     Swal.fire({
                         icon: 'success',
-                        title: 'Berhasil!',
+                        title: 'Success!',
                         text: 'Dokumen berhasil diubah.',
                         confirmButtonColor: '#6f42c1',
                         timer: 2000,
@@ -944,7 +842,7 @@ $(document).ready(function() {
                     // Tetap tampilkan sukses meskipun ada error
                     Swal.fire({
                         icon: 'success',
-                        title: 'Berhasil!',
+                        title: 'Success!',
                         text: 'Dokumen berhasil diubah.',
                         confirmButtonColor: '#6f42c1',
                         timer: 2000,
@@ -963,14 +861,13 @@ $(document).ready(function() {
             const id = $(this).data('id');
             
             Swal.fire({
-                title: 'Yakin ingin menghapus dokumen ini?',
-                text: 'Tindakan ini tidak dapat dibatalkan.',
+                title: 'Are you sure?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
                     const form = $('<form>', {
@@ -1029,7 +926,7 @@ $(document).ready(function() {
 <script>
     Swal.fire({
         icon: 'warning',
-        title: 'Perhatian!',
+        title: 'Attention!',
         text: '<?= esc(session()->getFlashdata('warning')) ?>',
         confirmButtonColor: '#ffc107'
     });
