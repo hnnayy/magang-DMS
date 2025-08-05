@@ -529,9 +529,9 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="modal-footer border-0 px-4 pb-3">
-                                                        <button type="submit" class="btn btn-primary btn-sm">Save</button>
-                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                    <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
                                                     </div>
                                                 </div>
                                             </form>
