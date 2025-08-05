@@ -567,6 +567,30 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 <!-- Custom JS -->
 <script>
 $(document).ready(function() {
+
+
+    // Remove backdrop when modal shows
+    $(document).on('show.bs.modal', '.modal', function() {
+        setTimeout(() => {
+            $('.modal-backdrop').remove();
+        }, 50);
+    });
+    
+    $(document).on('shown.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+        
+        // Apply aggressive styling
+        $(this).css({
+            'z-index': '999999',
+            'position': 'fixed',
+            'background-color': 'rgba(0, 0, 0, 0.5)'
+        });
+        
+        $(this).find('.modal-dialog').css({
+            'z-index': '1000000',
+            'position': 'relative'
+        });
+    });
     // Privilege check dari PHP
     const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
     const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
@@ -890,6 +914,160 @@ $(document).ready(function() {
     });
 });
 </script>
+
+
+<script>
+// Enhanced Modal Management for Split Screen and Responsive Layouts
+$(document).ready(function() {
+    
+    // === OPTIMIZED MODAL POSITIONING === //
+    
+    function optimizeModalDisplay($modal) {
+        const $dialog = $modal.find('.modal-dialog');
+        const $content = $modal.find('.modal-content');
+        const $body = $modal.find('.modal-body');
+        
+        // Get actual viewport dimensions
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Dynamic calculations based on viewport
+        let modalPadding = 20;
+        let maxModalHeight = Math.min(viewportHeight * 0.9, viewportHeight - 40);
+        
+        // Adjust for constrained heights (split mode detection)
+        if (viewportHeight <= 400) {
+            modalPadding = 5;
+            maxModalHeight = viewportHeight - 10;
+        } else if (viewportHeight <= 600) {
+            modalPadding = 10;
+            maxModalHeight = viewportHeight - 20;
+        }
+        
+        // Calculate optimal modal width
+        let maxModalWidth = Math.min(650, viewportWidth * 0.9);
+        if (viewportWidth <= 768) {
+            maxModalWidth = viewportWidth * 0.95;
+        }
+        
+        // Apply optimized styles
+        $modal.css({
+            'padding': modalPadding + 'px',
+            'z-index': '999999',
+            'position': 'fixed',
+            'top': '0',
+            'left': '0',
+            'width': '100vw',
+            'height': '100vh',
+            'background-color': 'rgba(0, 0, 0, 0.5)',
+            'display': 'flex',
+            'align-items': viewportHeight <= 600 ? 'flex-start' : 'center',
+            'justify-content': 'center',
+            'overflow-y': 'auto'
+        });
+        
+        $dialog.css({
+            'max-height': maxModalHeight + 'px',
+            'max-width': maxModalWidth + 'px',
+            'width': '100%',
+            'margin': '0 auto',
+            'z-index': '1000000',
+            'position': 'relative'
+        });
+        
+        $content.css({
+            'max-height': maxModalHeight + 'px',
+            'display': 'flex',
+            'flex-direction': 'column',
+            'z-index': '1000001'
+        });
+        
+        // Calculate body height dynamically
+        const headerHeight = $modal.find('.modal-header').outerHeight() || 60;
+        const footerHeight = $modal.find('.modal-footer').outerHeight() || 60;
+        const bodyMaxHeight = maxModalHeight - headerHeight - footerHeight - 20;
+        
+        $body.css({
+            'max-height': Math.max(200, bodyMaxHeight) + 'px',
+            'overflow-y': 'auto',
+            'flex': '1'
+        });
+        
+        // Optimize checkbox groups for available space
+        const checkboxGroups = $body.find('.checkbox-group');
+        checkboxGroups.each(function() {
+            const $group = $(this);
+            let groupMaxHeight = 180;
+            
+            if (viewportHeight <= 400) {
+                groupMaxHeight = 60;
+            } else if (viewportHeight <= 600) {
+                groupMaxHeight = 80;
+            } else if (viewportHeight <= 700) {
+                groupMaxHeight = 100;
+            }
+            
+            $group.css('max-height', groupMaxHeight + 'px');
+        });
+    }
+    
+    // Force all page elements behind modal
+    function forceElementsBehindModal(show = true) {
+        const elements = [
+            '.navbar', '.sidebar', '.main-content', '.container-fluid',
+            '.card', '.table-wrapper', '.pagination-container',
+            '.dt-length-container', '.dt-search-container', '.dt-buttons-container',
+            '.dataTables_wrapper'
+        ];
+        
+        elements.forEach(selector => {
+            $(selector).css('z-index', show ? '1' : '');
+        });
+        
+        if (show) {
+            $('body').addClass('modal-open').css('overflow', 'hidden');
+        } else {
+            $('body').removeClass('modal-open').css('overflow', '');
+        }
+    }
+    
+    // === ENHANCED EVENT HANDLERS === //
+    
+    // Before modal shows
+    $(document).on('show.bs.modal', '.modal', function(e) {
+        const $modal = $(this);
+        
+        // Clean up any existing backdrops
+        $('.modal-backdrop').remove();
+        
+        // Force page elements behind modal
+        forceElementsBehindModal(true);
+        
+        // Apply initial optimizations
+        setTimeout(() => {
+            optimizeModalDisplay($modal);
+        }, 10);
+    });
+    
+    // After modal is shown
+    $(document).on('shown.bs.modal', '.modal', function(e) {
+        const $modal = $(this);
+        
+        // Remove bootstrap backdrop
+        $('.modal-backdrop').remove();
+        
+        // Final optimization
+        optimizeModalDisplay($modal);
+        
+        // Focus management
+        const firstInput = $modal.find('input:visible, select:visible, textarea:visible').first();
+        if (firstInput.length) {
+            firstInput.focus();
+        }
+        
+        // Setup enhanced keyboar
+</script>
+
 
 <!-- Success/Error Flash Messages -->
 <?php if (session()->getFlashdata('success')): ?>
