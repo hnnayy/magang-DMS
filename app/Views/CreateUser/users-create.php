@@ -134,7 +134,7 @@
     });
 <?php endif; ?>
 
-<?php if (session()->getFlashdata('error')): ?>
+<?php if (session()->getFlashdata('error') && session()->getFlashdata('showPopupError')): ?>
     Swal.fire({
         icon: 'error',
         title: 'Failed!',
@@ -450,7 +450,7 @@
         
         if (fullnameValue && words.length < 2) {
             isValid = false;
-            fullnameInput.set	globalThisValidity('Full name must contain at least two words');
+            fullnameInput.setCustomValidity('Full name must contain at least two words');
         } else {
             fullnameInput.setCustomValidity('');
         }

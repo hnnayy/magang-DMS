@@ -192,15 +192,15 @@ $(document).ready(function () {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
       },
       {
         extend: 'pdfHtml5',
-        text: 'PDF',
+        text: 'PDF', 
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
         orientation: 'portrait', 
         pageSize: 'A4',
         customize: function (doc) {
@@ -250,7 +250,7 @@ $(document).ready(function () {
           doc.pageMargins = [40, 40, 40, 40];
 
           if (doc.content[1] && doc.content[1].table) {
-            doc.content[1].table.widths = ['6%', '12%', '28%', '18%', '21%', '15%'];
+            doc.content[1].table.widths = ['5%', '10%', '22%', '19%', '13%', '18%', '13%'];
             doc.content[1].margin = [0, 0, 0, 0];
           }
 
