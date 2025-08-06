@@ -53,6 +53,12 @@
                     <label><input type="checkbox" name="privileges[]" value="delete"> Delete</label>
                     <label><input type="checkbox" name="privileges[]" value="approve"> Approve</label>
                 </div>
+                <small class="form-text text-muted">
+    <em>* If none are selected, the default privilege will be "Read" access only.</em>
+</small>
+
+
+
             </div>
             <!-- Tombol -->
             <div class="form-actions text-center">
