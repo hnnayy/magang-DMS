@@ -12,6 +12,7 @@ use App\Models\DocumentApprovalModel;
 use App\Models\NotificationModel;
 use App\Models\NotificationRecipientsModel;
 use App\Models\UserModel;
+use App\Models\DocumentRevisionModel;
 use CodeIgniter\Files\File; 
 require_once ROOTPATH . 'vendor/autoload.php';
 
@@ -40,8 +41,8 @@ class PengajuanController extends BaseController
         $this->kodeDokumenModel = new DocumentCodeModel();
         $this->documentModel = new DocumentModel();
         $this->documentApprovalModel = new DocumentApprovalModel();
-        $this->documentCodeModel = new \App\Models\DocumentCodeModel(); 
-        $this->documentRevisionModel = new \App\Models\DocumentRevisionModel();
+        $this->documentCodeModel = new DocumentCodeModel();
+        $this->documentRevisionModel = new DocumentRevisionModel();
         $this->notificationModel = new NotificationModel();
         $this->notificationRecipientsModel = new NotificationRecipientsModel();
         $this->userModel = new UserModel();
@@ -115,20 +116,16 @@ class PengajuanController extends BaseController
             return redirect()->back()->with('error', 'All required fields must be filled.');
         }
 
-        // Handle document code berdasarkan tipe dokumen
+        // Handle document code based on document type
         $finalKodeDokumenId = null;
         if ($jenisId) {
-            // Check apakah document type menggunakan predefined codes
             $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
             if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
-                // Use predefined code
                 if ($kodeDokumenId) {
                     $finalKodeDokumenId = $kodeDokumenId;
                 }
             } else {
-                // Handle custom code
                 if ($kodeCustom && $namaCustom) {
-                    // Check if custom code already exists
                     $existingKode = $this->kodeDokumenModel
                         ->where('document_type_id', $jenisId)
                         ->where('kode', strtoupper($kodeCustom))
@@ -138,7 +135,6 @@ class PengajuanController extends BaseController
                     if ($existingKode) {
                         $finalKodeDokumenId = $existingKode['id'];
                     } else {
-                        // Create new custom code
                         $newKodeData = [
                             'document_type_id' => $jenisId,
                             'kode' => strtoupper($kodeCustom),
@@ -169,6 +165,7 @@ class PengajuanController extends BaseController
         ];
 
         try {
+            $this->db->transStart();
             $this->documentModel->insert($data);
             $newDocumentId = $this->documentModel->getInsertID();
 
@@ -193,8 +190,11 @@ class PengajuanController extends BaseController
                 ]);
             }
 
-            // NO NOTIFICATION FOR CREATE ACTION - REMOVED
-            // Document creation does not generate notifications
+            $this->db->transComplete();
+
+            if ($this->db->transStatus() === false) {
+                throw new \Exception('Transaction failed.');
+            }
 
             return redirect()->to('document-submission-list')->with('success', 'Document successfully created.');
         } catch (\Exception $e) {
@@ -235,157 +235,217 @@ class PengajuanController extends BaseController
         ]);
     }
 
-    // POST document-submission-list/update
-    public function update()
-    {
-        $documentId = $this->request->getPost('document_id');
+    // POST document-submission-list/update// POST document-submission-list/update
+public function update()
+{
+    $documentId = $this->request->getPost('document_id');
 
-        if (!$documentId) {
-            return redirect()->back()->with('error', 'Document ID not found.');
-        }
+    if (!$documentId) {
+        return redirect()->back()->with('error', 'Document ID not found.');
+    }
 
-        $jenisId = $this->request->getPost('type');
-        $kodeDokumenId = $this->request->getPost('kode_dokumen');
-        $kodeCustom = $this->request->getPost('kode_dokumen_custom');
-        $namaCustom = $this->request->getPost('nama_dokumen_custom');
-        $nomor = $this->request->getPost('nomor');
-        $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
-        $nama = $this->request->getPost('nama');
-        $keterangan = $this->request->getPost('keterangan');
-        $file = $this->request->getFile('file_dokumen');
+    $jenisId = $this->request->getPost('type');
+    $kodeDokumenId = $this->request->getPost('kode_dokumen');
+    $kodeCustom = $this->request->getPost('kode_dokumen_custom');
+    $namaCustom = $this->request->getPost('nama_dokumen_custom');
+    $nomor = $this->request->getPost('nomor');
+    $revisi = $this->request->getPost('revisi') ?: 'Rev. 0';
+    $nama = $this->request->getPost('nama');
+    $keterangan = $this->request->getPost('keterangan');
+    $file = $this->request->getFile('file_dokumen');
 
-        // Get original document
-        $originalDocument = $this->documentModel->find($documentId);
-        if (!$originalDocument) {
-            return redirect()->back()->with('error', 'Document not found in database.');
-        }
+    // Validasi field wajib
+    if (empty($jenisId) || empty($nomor) || empty($nama)) {
+        return redirect()->back()->with('error', 'All required fields must be filled.');
+    }
 
-        $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
-        $originalDocumentId = $originalDocument['original_document_id'] ?? $documentId;
+    // Get original document
+    $originalDocument = $this->documentModel->find($documentId);
+    if (!$originalDocument) {
+        return redirect()->back()->with('error', 'Document not found in database.');
+    }
 
-        // Handle document code dengan pengecekan tipe dokumen yang benar
-        $finalKodeDokumenId = null;
-        $documentType = null;
-        
-        if ($jenisId) {
-            // Check apakah document type menggunakan predefined codes
-            $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
-            if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
-                // Use predefined code
-                if ($kodeDokumenId) {
-                    $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
-                    if ($kodeDokumen) {
-                        $finalKodeDokumenId = $kodeDokumenId;
-                    }
-                }
-            } else {
-                // Handle custom code
-                if ($kodeCustom && $namaCustom) {
-                    // Check if custom code already exists for this document type
-                    $existingKode = $this->kodeDokumenModel
-                        ->where('document_type_id', $jenisId)
-                        ->where('kode', strtoupper($kodeCustom))
-                        ->where('nama', $namaCustom)
-                        ->first();
-                
-                    if ($existingKode) {
-                        $finalKodeDokumenId = $existingKode['id'];
-                    } else {
-                        // Create new custom code
-                        $newKodeData = [
-                            'document_type_id' => $jenisId,
-                            'kode' => strtoupper($kodeCustom),
-                            'nama' => $namaCustom,
-                            'status' => 1,
-                            'createddate' => date('Y-m-d H:i:s'),
-                            'createdby' => session('user_id')
-                        ];
-                        
-                        $this->kodeDokumenModel->insert($newKodeData);
-                        $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
-                    }
+    // Check if document is already approved
+    if ($originalDocument['status'] == 1) {
+        return redirect()->back()->with('error', 'Cannot edit approved document.');
+    }
+
+    $unitId = $originalDocument['unit_id'] ?? session()->get('unit_id') ?? 99;
+
+    // Handle document code
+    $finalKodeDokumenId = null;
+    $documentType = null;
+    
+    if ($jenisId) {
+        $documentType = $this->documentTypeModel->where('id', $jenisId)->where('status', 1)->first();
+        if ($documentType && str_contains($documentType['description'] ?? '', '[predefined]')) {
+            if ($kodeDokumenId) {
+                $kodeDokumen = $this->kodeDokumenModel->where('id', $kodeDokumenId)->where('status', 1)->first();
+                if ($kodeDokumen) {
+                    $finalKodeDokumenId = $kodeDokumenId;
                 }
             }
-        }
-
-        // Prepare document data
-        $data = [
-            'unit_id' => $unitId,
-            'status' => 0,
-            'createddate' => date('Y-m-d H:i:s'),
-            'createdby' => session('user_id'),
-            'original_document_id' => $originalDocumentId,
-        ];
-
-        // Add non-empty fields only
-        if ($jenisId) $data['type'] = $jenisId;
-        if ($finalKodeDokumenId) $data['kode_dokumen_id'] = $finalKodeDokumenId;
-        if ($nomor) $data['number'] = $nomor;
-        if ($revisi) $data['revision'] = $revisi;
-        if ($nama) $data['title'] = $nama;
-        if ($keterangan) $data['description'] = $keterangan;
-
-        try {
-            $this->documentModel->insert($data);
-            $newDocumentId = $this->documentModel->getInsertID();
-
-            // Handle file upload
-            if ($file && $file->isValid() && !$file->hasMoved()) {
-                $uploadPath = ROOTPATH . '../storage/uploads';
-                if (!is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
-
-                $newName = $file->getRandomName();
-                $file->move($uploadPath, $newName);
-
-                $this->documentRevisionModel->insert([
-                    'document_id' => $newDocumentId,
-                    'revision' => $revisi,
-                    'filename' => $file->getClientName(),
-                    'filepath' => 'storage/uploads/' . $newName,
-                    'filesize' => $file->getSize(),
-                    'remark' => $keterangan ?: '',
-                    'createddate' => date('Y-m-d H:i:s'),
-                    'createdby' => session('user_id'),
-                ]);
-            } else {
-                // Copy file from original document if no new file uploaded
-                $oldRevision = $this->documentRevisionModel
-                    ->where('document_id', $documentId)
-                    ->orderBy('id', 'DESC')
+        } else {
+            if ($kodeCustom && $namaCustom) {
+                $existingKode = $this->kodeDokumenModel
+                    ->where('document_type_id', $jenisId)
+                    ->where('kode', strtoupper($kodeCustom))
+                    ->where('nama', $namaCustom)
                     ->first();
-
-                if ($oldRevision) {
-                    $this->documentRevisionModel->insert([
-                        'document_id' => $newDocumentId,
-                        'revision' => $revisi,
-                        'filename' => $oldRevision['filename'],
-                        'filepath' => $oldRevision['filepath'],
-                        'filesize' => $oldRevision['filesize'],
-                        'remark' => $keterangan ?: $oldRevision['remark'],
+            
+                if ($existingKode) {
+                    $finalKodeDokumenId = $existingKode['id'];
+                } else {
+                    $newKodeData = [
+                        'document_type_id' => $jenisId,
+                        'kode' => strtoupper($kodeCustom),
+                        'nama' => $namaCustom,
+                        'status' => 1,
                         'createddate' => date('Y-m-d H:i:s'),
-                        'createdby' => session('user_id'),
-                    ]);
+                        'createdby' => session('user_id')
+                    ];
+                    
+                    $this->kodeDokumenModel->insert($newKodeData);
+                    $finalKodeDokumenId = $this->kodeDokumenModel->getInsertID();
                 }
             }
-
-            // Mark original document as superseded
-            $this->documentModel->update($documentId, [
-                'status' => 3,
-            ]);
-
-            // CREATE NOTIFICATION FOR UPDATE ACTION
-            $documentTypeName = $documentType['name'] ?? 'Unknown Type';
-            $documentTitle = $nama ?: $originalDocument['title'];
-            $this->createDocumentNotification($newDocumentId, $documentTitle, $documentTypeName);
-
-            return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
-        } catch (\Exception $e) {
-            log_message('error', 'Error updating document: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
         }
     }
+
+    // ✅ PERBAIKAN: Hanya update kolom yang ada di database
+    $data = [
+        'type' => $jenisId,
+        'kode_dokumen_id' => $finalKodeDokumenId,
+        'number' => $nomor,
+        'revision' => $revisi,
+        'title' => $nama,
+        'description' => $keterangan,
+        'unit_id' => $unitId,
+        'status' => 0 // Reset status to pending
+    ];
+
+    try {
+        $this->db->transStart();
+
+        // Log untuk debugging
+        log_message('debug', 'Updating document ID ' . $documentId . ' with data: ' . json_encode($data));
+
+        // Update the existing document
+        $updateResult = $this->documentModel->update($documentId, $data);
+        
+        if (!$updateResult) {
+            $errors = $this->documentModel->errors();
+            log_message('error', 'Document update failed. Errors: ' . json_encode($errors));
+            throw new \Exception('Failed to update document: ' . json_encode($errors));
+        }
+
+        log_message('debug', 'Document updated successfully');
+
+        // Handle file upload and revision
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            log_message('debug', 'Processing new file upload');
+            
+            $uploadPath = ROOTPATH . '../storage/uploads';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Validate file type
+            $allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+            $fileExtension = strtolower($file->getClientExtension());
+            
+            if (!in_array($fileExtension, $allowedTypes)) {
+                throw new \Exception('Invalid file type. Only PDF, DOC, DOCX, XLS, XLSX, PPT, and PPTX files are allowed.');
+            }
+
+            // Validate file size (max 10MB)
+            if ($file->getSize() > 10 * 1024 * 1024) {
+                throw new \Exception('File size too large. Maximum file size is 10MB.');
+            }
+
+            $newName = $file->getRandomName();
+            $file->move($uploadPath, $newName);
+
+            $revisionData = [
+                'document_id' => $documentId,
+                'revision' => $revisi,
+                'filename' => $file->getClientName(),
+                'filepath' => 'storage/uploads/' . $newName,
+                'filesize' => $file->getSize(),
+                'remark' => $keterangan ?: '',
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session('user_id'),
+            ];
+
+            log_message('debug', 'Inserting new revision: ' . json_encode($revisionData));
+            
+            $revisionResult = $this->documentRevisionModel->insert($revisionData);
+            
+            if (!$revisionResult) {
+                $revisionErrors = $this->documentRevisionModel->errors();
+                log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
+                throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
+            }
+            
+            log_message('debug', 'New revision created successfully');
+        } else {
+            log_message('debug', 'No new file uploaded, creating revision with existing file');
+            
+            // If no new file uploaded, create new revision with existing file
+            $oldRevision = $this->documentRevisionModel
+                ->where('document_id', $documentId)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            if ($oldRevision) {
+                $revisionData = [
+                    'document_id' => $documentId,
+                    'revision' => $revisi,
+                    'filename' => $oldRevision['filename'],
+                    'filepath' => $oldRevision['filepath'],
+                    'filesize' => $oldRevision['filesize'],
+                    'remark' => $keterangan ?: $oldRevision['remark'],
+                    'createddate' => date('Y-m-d H:i:s'),
+                    'createdby' => session('user_id'),
+                ];
+
+                log_message('debug', 'Inserting revision with existing file: ' . json_encode($revisionData));
+                
+                $revisionResult = $this->documentRevisionModel->insert($revisionData);
+                
+                if (!$revisionResult) {
+                    $revisionErrors = $this->documentRevisionModel->errors();
+                    log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
+                    throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
+                }
+                
+                log_message('debug', 'Revision with existing file created successfully');
+            } else {
+                log_message('warning', 'No previous revision found for document ID: ' . $documentId);
+            }
+        }
+
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            throw new \Exception('Database transaction failed.');
+        }
+
+        log_message('info', 'Document update transaction completed successfully');
+
+        // Create notification for update action
+        $documentTypeName = $documentType['name'] ?? 'Unknown Type';
+        $documentTitle = $nama;
+        $this->createDocumentNotification($documentId, $documentTitle, $documentTypeName);
+
+        return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error updating document ID ' . $documentId . ': ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
+    }
+}
 
     // POST document-submission-list/delete
     public function delete()
@@ -413,7 +473,6 @@ class PengajuanController extends BaseController
                 'createdby' => 0
             ]);
 
-            // NO NOTIFICATION FOR DELETE ACTION
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Document successfully deleted.'
@@ -451,7 +510,6 @@ class PengajuanController extends BaseController
 
         $status = strtolower($action) === 'approve' ? 1 : 2;
 
-        // Get document details for notification
         $document = $this->documentModel
             ->select('document.*, dt.name AS document_type_name')
             ->join('document_type dt', 'dt.id = document.type', 'left')
@@ -463,7 +521,6 @@ class PengajuanController extends BaseController
             return redirect()->back()->with('error', 'Document not found.');
         }
 
-        // Get approver details
         $approver = $this->userModel->find($approved_by);
         $approverName = $approver['fullname'] ?? $approver['username'] ?? 'Unknown User';
 
@@ -485,7 +542,6 @@ class PengajuanController extends BaseController
                 throw new \Exception('Transaction failed.');
             }
 
-            // CREATE NOTIFICATION FOR APPROVAL ACTION
             $actionText = strtolower($action) === 'approve' ? 'approved' : 'disapproved';
             $this->createApprovalNotification($document_id, $document['title'], $document['document_type_name'], $actionText, $approverName, $remarks);
 
@@ -526,12 +582,10 @@ class PengajuanController extends BaseController
         return $grouped;
     }
 
-    // FIXED: Updated showList method that matches your actual database structure
     private function showList()
     {
-        $unitParentModel = new \App\Models\UnitParentModel();
+        $unitParentModel = new UnitParentModel();
 
-        // Enhanced query to include creator information and hierarchical data
         $documents = $this->documentModel
             ->select('document.*, 
                       dt.name AS jenis_dokumen, 
@@ -647,43 +701,28 @@ class PengajuanController extends BaseController
             ], 404);
         }
 
-        $originalDocumentId = $document['original_document_id'] ?? $document_id;
-        log_message('debug', 'Original Document ID: ' . $originalDocumentId);
-
-        $historyDocuments = $this->documentModel
-            ->select('document.*, dt.name AS jenis_dokumen, kd.kode AS kode_dokumen_kode, kd.nama AS kode_dokumen_nama')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            ->where('document.original_document_id', $originalDocumentId)
-            ->where('document.createdby !=', 0)
-            ->orderBy('document.createddate', 'DESC')
+        $revisions = $this->documentRevisionModel
+            ->select('id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
+            ->where('document_id', $document_id)
+            ->orderBy('createddate', 'DESC')
             ->findAll();
 
-        log_message('debug', 'History documents count: ' . count($historyDocuments));
-
         $history = [];
-        foreach ($historyDocuments as $doc) {
-            $revisions = $this->documentRevisionModel
-                ->select('id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
-                ->where('document_id', $doc['id'])
-                ->orderBy('createddate', 'DESC')
-                ->findAll();
-            foreach ($revisions as $revision) {
-                $history[] = [
-                    'id' => $revision['id'],
-                    'document_id' => $revision['document_id'],
-                    'revision' => $revision['revision'] ?? 'Rev. 0',
-                    'filename' => $revision['filename'],
-                    'filepath' => $revision['filepath'],
-                    'filesize' => $revision['filesize'],
-                    'remark' => $revision['remark'],
-                    'updated_at' => $revision['createddate'],
-                    'updated_by' => $revision['createdby'],
-                    'document_title' => $doc['title'],
-                    'document_number' => $doc['number'],
-                    'status' => $doc['status'],
-                ];
-            }
+        foreach ($revisions as $revision) {
+            $history[] = [
+                'id' => $revision['id'],
+                'document_id' => $revision['document_id'],
+                'revision' => $revision['revision'] ?? 'Rev. 0',
+                'filename' => $revision['filename'],
+                'filepath' => $revision['filepath'],
+                'filesize' => $revision['filesize'],
+                'remark' => $revision['remark'],
+                'updated_at' => $revision['createddate'],
+                'updated_by' => $revision['createdby'],
+                'document_title' => $document['title'],
+                'document_number' => $document['number'],
+                'status' => $document['status'],
+            ];
         }
 
         log_message('debug', 'Formatted history count: ' . count($history));
@@ -770,7 +809,6 @@ class PengajuanController extends BaseController
 
         $document = $this->documentModel->find($documentId);
         
-        // Menggunakan role_id dari session untuk pengecekan akses
         $userRoleId = session('role_id');
         $allowedRoleIds = [1, 2];
         
@@ -793,10 +831,6 @@ class PengajuanController extends BaseController
             ->setBody(file_get_contents($filePath));
     }
 
-    /**
-     * Create notification for document updates - ENGLISH MESSAGES
-     * Only users with access_level=1, same unit_id, and same unit_parent_id receive notifications
-     */
     private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
     {
         try {
@@ -807,10 +841,8 @@ class PengajuanController extends BaseController
             
             log_message('debug', "Creating update notification - Document ID: $documentId, Updater ID: $updaterId, Updater Name: $updaterName, Unit ID: $updaterUnitId, Unit Parent ID: $updaterUnitParentId");
 
-            // Create notification message - ENGLISH ONLY
             $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$action} by {$updaterName}";
             
-            // Insert into notification table
             $notificationData = [
                 'message' => $message,
                 'reference_id' => $documentId,
@@ -827,7 +859,6 @@ class PengajuanController extends BaseController
 
             log_message('debug', "Update notification created with ID: $notificationId");
 
-            // Get users with access_level=1, same unit_id, and same unit_parent_id
             $recipients = $this->userModel
                 ->select('user.*')
                 ->join('user_role', 'user_role.user_id = user.id', 'left')
@@ -847,7 +878,6 @@ class PengajuanController extends BaseController
                 log_message('warning', 'No recipients found matching criteria: access_level=1, unit_id=' . $updaterUnitId . ', unit_parent_id=' . $updaterUnitParentId);
             }
             
-            // Insert into notification_recipients table for each user
             $successCount = 0;
             $errorCount = 0;
             
@@ -855,7 +885,7 @@ class PengajuanController extends BaseController
                 $recipientData = [
                     'notification_id' => $notificationId,
                     'user_id' => $user['id'],
-                    'status' => 0 // 0 = unread, 1 = read
+                    'status' => 0
                 ];
                 
                 $insertResult = $this->notificationRecipientsModel->insert($recipientData);
@@ -880,10 +910,6 @@ class PengajuanController extends BaseController
         }
     }
 
-    /**
-     * Create notification for document approval/disapproval - ENGLISH MESSAGES
-     * Only the document creator receives the notification
-     */
     private function createApprovalNotification($documentId, $documentTitle, $documentTypeName, $action, $approverName, $remarks = '')
     {
         try {
@@ -891,14 +917,12 @@ class PengajuanController extends BaseController
             
             log_message('debug', "Creating approval notification - Document ID: $documentId, Approver: $approverName, Action: $action");
             
-            // Create notification message - ENGLISH ONLY
             $actionText = $action === 'approved' ? 'approved' : 'disapproved';
             $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$actionText} by {$approverName}";
             if (!empty($remarks)) {
                 $message .= ". Remarks: {$remarks}";
             }
             
-            // Insert into notification table
             $notificationData = [
                 'message' => $message,
                 'reference_id' => $documentId,
@@ -915,7 +939,6 @@ class PengajuanController extends BaseController
 
             log_message('debug', "Approval notification created with ID: $notificationId");
 
-            // Get document creator
             $document = $this->documentModel->find($documentId);
             $documentCreatorId = $document['createdby'] ?? null;
             
@@ -924,7 +947,6 @@ class PengajuanController extends BaseController
                 return $notificationId;
             }
 
-            // Verify creator exists and is active
             $creator = $this->userModel
                 ->where('id', $documentCreatorId)
                 ->where('status', 1)
@@ -935,11 +957,10 @@ class PengajuanController extends BaseController
                 return $notificationId;
             }
             
-            // Insert into notification_recipients table for document creator
             $recipientData = [
                 'notification_id' => $notificationId,
                 'user_id' => $documentCreatorId,
-                'status' => 0 // 0 = unread, 1 = read
+                'status' => 0
             ];
             
             $insertResult = $this->notificationRecipientsModel->insert($recipientData);

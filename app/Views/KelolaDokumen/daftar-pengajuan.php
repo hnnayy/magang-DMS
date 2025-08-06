@@ -114,23 +114,18 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                     <?php if (!empty($documents)): ?>
                         <?php foreach ($documents as $doc): ?>
                             <?php 
-                            // Check if document should be visible based on hierarchical access
                             $documentCreatorId = $doc['createdby'] ?? 0;
                             $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
                             $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
                             $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
                             
                             $canViewDocument = false;
-                            $showCreatorName = false; // Control creator name visibility
+                            $showCreatorName = false;
                             
-                            // Rule 1: User can always see their own documents and see their own name
                             if ($documentCreatorId == $currentUserId) {
                                 $canViewDocument = true;
                                 $showCreatorName = true;
-                            }
-                            // Rule 2: Only Level 1 users can see Level 2 documents in same hierarchy
-                            elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2) {
-                                // Check if they are in the same unit or unit parent hierarchy
+                            } elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2) {
                                 $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
                                 $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
                                 $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
@@ -138,11 +133,10 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 
                                 if ($inSameHierarchy) {
                                     $canViewDocument = true;
-                                    $showCreatorName = true; // Level 1 users can see Level 2 creator names
+                                    $showCreatorName = true;
                                 }
                             }
                             
-                            // Skip if user cannot view this document
                             if (!$canViewDocument) continue;
                             ?>
                             
@@ -172,7 +166,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 </td>
                                 <td>
                                     <?php 
-                                    // Check if this document type uses predefined codes
                                     $usePredefined = false;
                                     foreach ($kategori_dokumen as $kategori) {
                                         if ($kategori['id'] == $doc['type']) {
@@ -181,8 +174,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                         }
                                     }
                                     ?>
-                                    
-                                    <!-- Display document code -->
                                     <?php if (!empty($doc['kode_dokumen_kode']) && !empty($doc['kode_dokumen_nama'])): ?>
                                         <div class="text-truncate" style="max-width: 150px;" title="<?= esc($doc['kode_dokumen_kode'] . ' - ' . $doc['kode_dokumen_nama']) ?>">
                                             <?= esc($doc['kode_dokumen_kode']) ?> - <?= esc($doc['kode_dokumen_nama']) ?>
@@ -222,7 +213,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <!-- View History Button - Always visible -->
                                         <button class="btn btn-sm btn-outline-info view-history-btn"
                                             data-bs-toggle="modal"
                                             data-bs-target="#historyModal"
@@ -231,7 +221,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                             <i class="bi bi-eye"></i>
                                         </button>
 
-                                        <!-- Edit Button - Only show if can_update privilege AND (own document OR Level 1 user can edit Level 2 documents) -->
                                         <?php if ($documentSubmissionPrivileges['can_update'] && 
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
@@ -256,7 +245,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                         </button>
                                         <?php endif; ?>
 
-                                        <!-- Approve Button - Only show if can_approve privilege AND Level 1 user approving Level 2 documents -->
                                         <?php if ($documentSubmissionPrivileges['can_approve'] && 
                                                  $currentUserAccessLevel == 1 && 
                                                  $documentCreatorAccessLevel == 2): ?>
@@ -267,7 +255,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                         </button>
                                         <?php endif; ?>
 
-                                        <!-- Delete Button - Only show if can_delete privilege AND (own document OR Level 1 user can delete Level 2 documents) -->
                                         <?php if ($documentSubmissionPrivileges['can_delete'] && 
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
@@ -296,7 +283,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
     </div>
 </div>
 
-<!-- Edit Modal - Only show if can_update privilege -->
+<!-- Edit Modal -->
 <?php if ($documentSubmissionPrivileges['can_update']): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -343,8 +330,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
-                        <!-- For predefined codes -->
                         <div class="col-md-12" id="editKodeGroup" style="display: none;">
                             <label for="editNamaKode" class="form-label">Code - Document Name</label>
                             <select name="kode_dokumen" id="editNamaKode" class="form-select">
@@ -352,8 +337,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                             </select>
                             <small class="text-muted">Please select document type first</small>
                         </div>
-                        
-                        <!-- For custom codes - 2 separate fields -->
                         <div id="editKodeCustomGroup" style="display: none;">
                             <div class="row g-3">
                                 <div class="col-md-4">
@@ -367,7 +350,6 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 </div>
                             </div>
                         </div>
-                        
                         <div class="col-12">
                             <label for="editKeterangan" class="form-label">Description</label>
                             <textarea class="form-control" name="keterangan" id="editKeterangan" rows="3"></textarea>
@@ -399,12 +381,12 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
 </div>
 <?php endif; ?>
 
-<!-- History Modal - Always visible -->
+<!-- History Modal -->
 <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-sm">
             <div class="modal-header border-bottom-0 pb-2">
-                <h5 class="modal-title fw-bold" id="historyModalLabel">Document Edit History</h5>
+                <h5 class="modal-title fw-bold" id="historyModalLabel">Document Revision History</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -425,7 +407,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                     <table class="table table-bordered table-hover align-middle" id="historyTable">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center" style="width: 5%;">No</th>
+                                <th class="text-center" style="width: 10%;">Document ID</th>
                                 <th style="width: 20%;">Document Name</th>
                                 <th style="width: 15%;">Document No</th>
                                 <th style="width: 15%;">File</th>
@@ -446,7 +428,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
     </div>
 </div>
 
-<!-- Approve Modal - Only show if can_approve privilege -->
+<!-- Approve Modal -->
 <?php if ($documentSubmissionPrivileges['can_approve']): ?>
 <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -510,9 +492,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-/* Highlight style for the selected document row */
 tr.document-highlight {
-    background-color: #d3d3d3 !important; /* Light gray background */
+    background-color: #d3d3d3 !important;
     transition: background-color 0.3s ease;
 }
 </style>
@@ -557,7 +538,6 @@ function loadEditKodeDokumen(jenisId) {
     kodeSelect.innerHTML = '<option value="">-- Loading... --</option>';
     kodeSelect.disabled = true;
 
-    // Use the global variable first if available
     if (kodeDokumenByType[jenisId]) {
         kodeSelect.innerHTML = '<option value="">-- Select Document Code --</option>';
         kodeDokumenByType[jenisId].forEach(item => {
@@ -570,7 +550,6 @@ function loadEditKodeDokumen(jenisId) {
         return;
     }
 
-    // Fallback to AJAX if not in global variable
     fetch('<?= base_url('document-submission-list') ?>', {
         method: 'POST',
         headers: {
@@ -621,17 +600,17 @@ $(document).ready(function() {
             }
         },
         columnDefs: [{
-            targets: 0, // Document ID column
-            searchable: true, // Allow searching by document_id
-            orderable: true // Allow sorting by document_id
+            targets: 0,
+            searchable: true,
+            orderable: true
         }, {
-            targets: [11], // Action column
+            targets: [11],
             orderable: false,
             searchable: false
         }],
         responsive: true,
         autoWidth: false,
-        order: [[0, 'asc']] // Default sort by Document ID
+        order: [[0, 'asc']]
     });
 
     $('.dataTables_filter').hide();
@@ -666,13 +645,12 @@ $(document).ready(function() {
         $.fn.dataTable.ext.search.pop(); 
     });
 
-    // Filter and highlight document from URL parameter
     function filterAndHighlightDocumentFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const documentId = urlParams.get('document_id');
         
         if (documentId) {
-            // Add custom filter to show only the row with the matching document_id
+            // First, try to find the document in the main table
             $.fn.dataTable.ext.search.push(
                 function(settings, data, dataIndex) {
                     const row = $('#documentsTable').DataTable().row(dataIndex);
@@ -682,61 +660,121 @@ $(document).ready(function() {
             );
             table.draw();
 
-            // Find the row with the matching document ID
             let targetRow = null;
             table.rows().every(function() {
                 const rowNode = this.node();
                 if ($(rowNode).data('document-id') == documentId) {
                     targetRow = rowNode;
-                    return false; // Break the loop
+                    return false;
                 }
             });
 
             if (targetRow) {
-                // Remove previous highlights
                 $('#documentsTable tbody tr').removeClass('document-highlight');
-                
-                // Apply highlight class
                 $(targetRow).addClass('document-highlight');
                 
-                // Ensure the row is visible and scroll to it
                 setTimeout(() => {
                     const $row = $(targetRow);
                     if ($row.length) {
                         $('html, body').animate({
                             scrollTop: $row.offset().top - 100
                         }, 500);
-                        
-                        // Fade out highlight after 5 seconds
                         setTimeout(() => {
                             $row.removeClass('document-highlight');
                         }, 5000);
                     }
-                }, 100); // Delay to ensure DataTables has rendered
+                }, 100);
+                $.fn.dataTable.ext.search.pop();
             } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Document Not Found',
-                    text: 'The document with ID ' + documentId + ' was not found or you do not have access to it.',
-                    confirmButtonColor: '#dc3545'
+                // If not found in main table, check history
+                $.ajax({
+                    url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + documentId,
+                    type: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success && response.data && response.data.history && response.data.history.length > 0) {
+                            // Document found in history, open history modal
+                            $('#historyNamaDokumen').text(response.data.document.title || '-');
+                            $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
+                            let html = '';
+                            response.data.history.forEach((item) => {
+                                const fileLink = item.filepath ? `
+                                    <div class="d-flex gap-2">
+                                        <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
+                                            <i class="bi bi-download text-success fs-5"></i>
+                                        </a>
+                                    </div>
+                                ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
+                                
+                                const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
+                                                   item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
+                                                   item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
+                                                   item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
+                                
+                                html += `
+                                    <tr data-document-id="${item.document_id}" ${item.document_id == documentId ? 'class="document-highlight"' : ''}>
+                                        <td class="text-center">${item.document_id}</td>
+                                        <td>${item.document_title || '-'}</td>
+                                        <td>${item.document_number || '-'}</td>
+                                        <td>${fileLink}</td>
+                                        <td class="text-center">${item.revision || 'Rev. 0'}</td>
+                                        <td>${formatDate(item.updated_at)}</td>
+                                        <td>${statusBadge}</td>
+                                    </tr>
+                                `;
+                            });
+                            $('#historyTableBody').html(html);
+                            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                            historyModal.show();
+
+                            // Highlight and scroll to row in history table
+                            setTimeout(() => {
+                                const $highlightedRow = $('#historyTableBody tr.document-highlight');
+                                if ($highlightedRow.length) {
+                                    $highlightedRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    setTimeout(() => {
+                                        $highlightedRow.removeClass('document-highlight');
+                                    }, 5000);
+                                }
+                            }, 500);
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Document Not Found',
+                                text: 'The document with ID ' + documentId + ' was not found or you do not have access to it.',
+                                confirmButtonColor: '#dc3545'
+                            });
+                        }
+                        $.fn.dataTable.ext.search.pop();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error checking document history:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to check document history. Please try again.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                        $.fn.dataTable.ext.search.pop();
+                    }
                 });
             }
         } else {
-            // If no document_id in URL, clear any existing filters
             $.fn.dataTable.ext.search.pop();
             table.draw();
         }
     }
 
-    // Call filter and highlight function after table is initialized
     filterAndHighlightDocumentFromUrl();
 
-    // Re-apply filter and highlight on page change
     table.on('draw', function() {
         filterAndHighlightDocumentFromUrl();
     });
 
-    // Check status for edit buttons - Only if user has update privilege
     if (documentPrivileges.can_update) {
         $('.edit-btn').each(function() {
             const status = parseInt($(this).data('status'));
@@ -766,14 +804,12 @@ $(document).ready(function() {
     }
 
     function resetFilters() {
-        // Clear DataTables search and custom filters
         table.search('').columns().search('');
         $.fn.dataTable.ext.search.pop();
         $('#searchInput').val('');
         $('#filterFakultas').val('');
         $('#filterJenis').val('');
         table.draw();
-        // Reload page to ensure clean state
         window.location.href = '<?= base_url('document-submission-list') ?>';
     }
 
@@ -784,7 +820,6 @@ $(document).ready(function() {
         $('#approval_date').val(today);
     }
 
-    // Enhanced Edit Button Handler with Confirmation Alert
     if (documentPrivileges.can_update) {
         $(document).on('click', '.edit-btn', function() {
             const editBtn = $(this);
@@ -800,7 +835,6 @@ $(document).ready(function() {
                 return false;
             }
 
-            // Show confirmation before opening edit modal
             Swal.fire({
                 title: 'Edit Document',
                 text: 'Are you sure you want to edit this document?',
@@ -812,7 +846,6 @@ $(document).ready(function() {
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Proceed with original edit logic
                     $('#editDocumentId').val(editBtn.data('id'));
                     $('#editFakultas').val(editBtn.data('fakultas'));
                     $('#editBagian').val(editBtn.data('unit'));
@@ -821,7 +854,6 @@ $(document).ready(function() {
                     $('#editRevisi').val(editBtn.data('revisi'));
                     $('#editKeterangan').val(editBtn.data('keterangan'));
 
-                    // Handle file info
                     const filepath = editBtn.data('filepath');
                     const filename = editBtn.data('filename');
                     if (filepath || filename) {
@@ -831,25 +863,18 @@ $(document).ready(function() {
                         $('#currentFileInfo').hide();
                     }
 
-                    // Reset form state
                     $('#editKodeGroup').hide();
                     $('#editKodeCustomGroup').hide();
 
-                    // Set document type
                     const jenisId = editBtn.data('jenis');
                     $('#editJenis').val(jenisId);
                     
-                    // Check if this type uses predefined codes
                     const usePredefined = editBtn.data('use-predefined') === true || editBtn.data('use-predefined') === 'true';
                     
                     if (usePredefined) {
                         $('#editKodeGroup').show();
                         $('#editKodeCustomGroup').hide();
-                        
-                        // Load document code options
                         loadEditKodeDokumen(jenisId);
-                        
-                        // Set selected document code after options are loaded
                         const kodeDokumenId = editBtn.data('kode-dokumen-id');
                         if (kodeDokumenId) {
                             setTimeout(function() {
@@ -859,23 +884,18 @@ $(document).ready(function() {
                     } else {
                         $('#editKodeGroup').hide();
                         $('#editKodeCustomGroup').show();
-                        
-                        // For non-predefined, set the custom code and name from kode_dokumen table
                         const kodeCustom = editBtn.data('kode-dokumen-kode');
                         const namaCustom = editBtn.data('kode-dokumen-nama');
-                        
                         $('#editKodeCustom').val(kodeCustom || '');
                         $('#editNamaCustom').val(namaCustom || '');
                     }
 
-                    // Show the edit modal
                     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
                     editModal.show();
                 }
             });
         });
 
-        // Enhanced Edit Form Submission with Confirmation Alert
         $('#editModal form').on('submit', function(e) {
             e.preventDefault();
             
@@ -890,7 +910,6 @@ $(document).ready(function() {
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading alert
                     Swal.fire({
                         title: 'Saving Changes...',
                         text: 'Please wait a moment',
@@ -901,15 +920,12 @@ $(document).ready(function() {
                             Swal.showLoading();
                         }
                     });
-
-                    // Submit the form
                     this.submit();
                 }
             });
         });
     }
 
-    // Enhanced Approve Button Handler with Confirmation Alert
     if (documentPrivileges.can_approve) {
         $(document).on('click', '.approve-btn', function() {
             const id = $(this).data('id');
@@ -918,7 +934,6 @@ $(document).ready(function() {
                 return;
             }
 
-            // Show confirmation before opening approve modal
             Swal.fire({
                 title: 'Document Approval',
                 text: 'Are you sure you want to proceed with document approval?',
@@ -937,7 +952,6 @@ $(document).ready(function() {
             });
         });
 
-        // Enhanced Approve Form Submission with Action-Specific Confirmation
         $('#approveForm').on('submit', function(e) {
             e.preventDefault();
             const formData = $(this).serialize();
@@ -955,7 +969,6 @@ $(document).ready(function() {
                 return;
             }
 
-            // Different confirmation messages based on action
             const isApprove = action === 'approve';
             const confirmationConfig = {
                 title: isApprove ? 'Approve Document' : 'Disapprove Document',
@@ -972,7 +985,6 @@ $(document).ready(function() {
 
             Swal.fire(confirmationConfig).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading alert
                     Swal.fire({
                         title: isApprove ? 'Approving Document...' : 'Disapproving Document...',
                         text: 'Please wait a moment',
@@ -983,8 +995,6 @@ $(document).ready(function() {
                             Swal.showLoading();
                         }
                     });
-
-                    // Add action to form and submit
                     $(this).append('<input type="hidden" name="action" value="' + action + '">');
                     $(this).unbind('submit').submit();
                 }
@@ -992,25 +1002,6 @@ $(document).ready(function() {
         });
     }
 
-    // Reset modal on hide - Only if user has update privilege
-    if (documentPrivileges.can_update) {
-        $('#editModal').on('hidden.bs.modal', function() {
-            $('#editKodeGroup').hide();
-            $('#editKodeCustomGroup').hide();
-            $('#currentFileInfo').hide();
-            $(this).find('form')[0].reset();
-        });
-    }
-
-    // Reset approve modal on hide - Only if user has approve privilege
-    if (documentPrivileges.can_approve) {
-        $('#approveModal').on('hidden.bs.modal', function() {
-            $(this).find('form')[0].reset();
-            $('#approval_date').val(today);
-        });
-    }
-
-    // Enhanced Delete Document Handler with Confirmation Alert
     if (documentPrivileges.can_delete) {
         $(document).on('click', '.delete-document', function(e) {
             e.preventDefault();
@@ -1027,7 +1018,6 @@ $(document).ready(function() {
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading alert
                     Swal.fire({
                         title: 'Deleting Document...',
                         text: 'Please wait a moment',
@@ -1080,7 +1070,6 @@ $(document).ready(function() {
         });
     }
 
-    // Event handler for view history button - Always available
     $(document).on('click', '.view-history-btn', function() {
         const id = $(this).data('id');
         
@@ -1092,13 +1081,17 @@ $(document).ready(function() {
             url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + id,
             type: 'GET',
             dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
             success: function(response) {
                 if (response.success && response.data) {
                     $('#historyNamaDokumen').text(response.data.document.title || '-');
                     $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
                     let html = '';
                     if (response.data.history && response.data.history.length > 0) {
-                        response.data.history.forEach((item, index) => {
+                        response.data.history.forEach((item) => {
                             const fileLink = item.filepath ? `
                                 <div class="d-flex gap-2">
                                     <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
@@ -1113,8 +1106,8 @@ $(document).ready(function() {
                                                item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
                             
                             html += `
-                                <tr>
-                                    <td class="text-center">${index + 1}</td>
+                                <tr data-document-id="${item.document_id}">
+                                    <td class="text-center">${item.document_id}</td>
                                     <td>${item.document_title || '-'}</td>
                                     <td>${item.document_number || '-'}</td>
                                     <td>${fileLink}</td>
@@ -1125,28 +1118,26 @@ $(document).ready(function() {
                             `;
                         });
                     } else {
-                        html = '<tr><td colspan="7" class="text-center text-muted">No edit history yet</td></tr>';
+                        html = '<tr><td colspan="7" class="text-center text-muted">No revision history yet</td></tr>';
                     }
                     $('#historyTableBody').html(html);
                 } else {
-                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Failed to load history data</td></tr>');
+                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Failed to load revision history</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
                 console.log('AJAX Error:', error, xhr.responseText);
-                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Error occurred while loading data</td></tr>');
+                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Error occurred while loading revision history</td></tr>');
             }
         });
     });
 
-    // Reset history modal on hide
     $('#historyModal').on('hidden.bs.modal', function() {
         $('#historyNamaDokumen').text('-');
         $('#historyJenisDokumen').text('-');
         $('#historyTableBody').html('');
     });
 
-    // Form validation
     $('form').on('submit', function(e) {
         const form = $(this);
         const submitBtn = form.find('button[type="submit"]');
@@ -1160,11 +1151,10 @@ $(document).ready(function() {
 
     $('[title]').tooltip();
 
-    // File input validation
     $('input[type="file"]').on('change', function() {
         const file = this.files[0];
         if (file) {
-            const fileSize = file.size / 1024 / 1024; 
+            const fileSize = file.size / 1024 / 1024;
             const allowedTypes = [
                 'application/pdf',
                 'application/msword',
@@ -1188,7 +1178,6 @@ $(document).ready(function() {
         }
     });
 
-    // Auto-resize textareas
     $('textarea').each(function() {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
@@ -1197,7 +1186,6 @@ $(document).ready(function() {
         this.style.height = this.scrollHeight + 'px';
     });
 
-    // Enhanced search with debounce
     let searchTimeout;
     $('#searchInput').on('input', function() {
         clearTimeout(searchTimeout);
@@ -1208,7 +1196,6 @@ $(document).ready(function() {
         }, 300);
     });
 
-    // Keyboard shortcuts
     $(document).keydown(function(e) {
         if (e.ctrlKey && e.keyCode === 70) {
             e.preventDefault();
@@ -1234,7 +1221,6 @@ $(document).ready(function() {
         }
     });
 
-    // Auto uppercase for custom code input - Only if user has update privilege
     if (documentPrivileges.can_update) {
         $('#editKodeCustom').on('input', function() {
             $(this).val($(this).val().toUpperCase());

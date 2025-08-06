@@ -87,162 +87,168 @@
     }
     
     .notification-item.read .unread-indicator {
-        display: none !important; /* Force hide unread indicator for read notifications */
+        display: none !important;
     }
     
     .notification-item.loading .unread-indicator {
         opacity: 0.5;
-        transition: opacity 0.3s;
+        animation: none;
     }
 </style>
 
 <script>
-// Flag to prevent auto-refresh during markAsRead
-let isMarkingNotification = false;
-
+// Simple notification system - hanya pakai JavaScript untuk mark as read
 document.addEventListener('DOMContentLoaded', function() {
-    // Attach click event to all notification items
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (this.classList.contains('read')) {
-                console.log('Notification already read, navigating to:', this.dataset.navigationUrl);
-                if (this.dataset.navigationUrl && this.dataset.navigationUrl !== '#') {
-                    window.location.href = this.dataset.navigationUrl;
-                }
-                return;
-            }
-
-            const notificationId = this.dataset.notificationId;
-            const navigationUrl = this.dataset.navigationUrl;
-
-            // Show loading state
-            this.classList.add('loading');
-            console.log('Marking notification ID:', notificationId);
-
-            // Mark notification as read
-            isMarkingNotification = true;
-            markNotificationAsRead(notificationId, () => {
-                // Success: Mark item as read visually
-                this.classList.remove('loading');
-                this.classList.add('read');
-                this.querySelector('.unread-indicator').style.display = 'none'; // Force hide
-                updateNotificationBadge();
-                console.log('Notification ID', notificationId, 'marked as read successfully');
-
-                // Navigate to the appropriate page
-                if (navigationUrl && navigationUrl !== '#') {
-                    window.location.href = navigationUrl;
-                }
-                isMarkingNotification = false;
-            }, () => {
-                // Error: Restore loading state and show error
-                this.classList.remove('loading');
-                isMarkingNotification = false;
-                console.error('Failed to mark notification ID', notificationId);
-            });
-        });
-    });
+    initNotificationSystem();
 });
 
-// Function to mark individual notification as read
-function markNotificationAsRead(notificationId, successCallback, errorCallback) {
+let isProcessing = false;
+
+function initNotificationSystem() {
+    // Attach click handlers
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', handleNotificationClick);
+    });
+    
+    // Auto refresh setiap 30 detik
+    setInterval(refreshNotifications, 30000);
+}
+
+function handleNotificationClick(e) {
+    e.preventDefault();
+    
+    if (this.classList.contains('read')) {
+        // Sudah dibaca, langsung navigate
+        if (this.dataset.navigationUrl && this.dataset.navigationUrl !== '#') {
+            window.location.href = this.dataset.navigationUrl;
+        }
+        return;
+    }
+    
+    const notificationId = this.dataset.notificationId;
+    const navigationUrl = this.dataset.navigationUrl;
+    
+    if (!notificationId) return;
+    
+    // Mark as read di frontend dulu (immediate feedback)
+    markAsReadVisually(this);
+    
+    // Kirim ke server
+    markNotificationAsRead(notificationId, () => {
+        // Success - navigate
+        if (navigationUrl && navigationUrl !== '#') {
+            setTimeout(() => {
+                window.location.href = navigationUrl;
+            }, 300);
+        }
+    });
+}
+
+function markAsReadVisually(element) {
+    element.classList.add('read');
+    element.classList.remove('loading');
+    
+    const indicator = element.querySelector('.unread-indicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+    
+    updateBadgeCount();
+}
+
+function markNotificationAsRead(notificationId, callback) {
+    if (isProcessing) return;
+    isProcessing = true;
+    
     fetch('<?= base_url('notification/markAsRead') ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            notification_id: notificationId,
-            <?= config('Security')->tokenName ?>: document.querySelector('meta[name="csrf-hash"]')?.getAttribute('content')
+            notification_id: notificationId
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
-            if (successCallback) successCallback();
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to mark notification as read',
-                confirmButtonColor: '#dc3545'
-            });
-            if (errorCallback) errorCallback();
-        }
+        console.log('Mark as read response:', data);
+        if (callback) callback();
     })
     .catch(error => {
         console.error('Error marking notification as read:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while marking the notification as read',
-            confirmButtonColor: '#dc3545'
-        });
-        if (errorCallback) errorCallback();
+    })
+    .finally(() => {
+        isProcessing = false;
     });
 }
 
-// Function to mark all notifications as read
 function markAllAsRead() {
-    isMarkingNotification = true;
+    if (isProcessing) return;
+    isProcessing = true;
+    
+    // Mark all visually first
+    document.querySelectorAll('.notification-item:not(.read)').forEach(item => {
+        markAsReadVisually(item);
+    });
+    
+    // Send to server
     fetch('<?= base_url('notification/markAsRead') ?>', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            <?= config('Security')->tokenName ?>: document.querySelector('meta[name="csrf-hash"]')?.getAttribute('content')
+            mark_all: true
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
-            document.getElementById('notif-list').innerHTML = `
-                <li class="dropdown-header py-2">Notifications</li>
-                <li class="text-center py-4">
-                    <div class="text-muted">
-                        <p class="mb-0">No new notifications</p>
-                    </div>
-                </li>
-            `;
+        console.log('Mark all as read response:', data);
+        
+        // Update display to show no notifications
+        setTimeout(() => {
+            const notifList = document.getElementById('notif-list');
+            if (notifList) {
+                notifList.innerHTML = `
+                    <li class="dropdown-header py-2">Notifications</li>
+                    <li class="text-center py-4">
+                        <div class="text-muted">
+                            <p class="mb-0">No new notifications</p>
+                        </div>
+                    </li>
+                `;
+            }
+            
             const badge = document.querySelector('.notif-badge');
             if (badge) badge.remove();
-            console.log('All notifications marked as read');
-        } else {
-            console.error('Failed to mark all notifications as read:', data.message);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: data.message || 'Failed to mark all notifications as read',
-                confirmButtonColor: '#dc3545'
-            });
-        }
-        isMarkingNotification = false;
+        }, 1000);
     })
     .catch(error => {
         console.error('Error marking all notifications as read:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while marking notifications as read',
-            confirmButtonColor: '#dc3545'
-        });
-        isMarkingNotification = false;
+    })
+    .finally(() => {
+        isProcessing = false;
     });
 }
 
-// Auto-refresh notifications every 5 seconds
-setInterval(function() {
-    if (isMarkingNotification) {
-        console.log('Auto-refresh skipped due to ongoing markAsRead');
-        return;
+function updateBadgeCount() {
+    const unreadCount = document.querySelectorAll('.notification-item:not(.read)').length;
+    const badge = document.querySelector('.notif-badge');
+    
+    if (unreadCount > 0) {
+        if (badge) {
+            badge.textContent = unreadCount;
+        }
+    } else {
+        if (badge) badge.remove();
     }
+}
 
+function refreshNotifications() {
+    if (isProcessing) return;
+    
     fetch('<?= base_url('notification/fetch') ?>', {
         headers: {
             'X-Requested-With': 'XMLHttpRequest'
@@ -250,20 +256,18 @@ setInterval(function() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
+        if (data.status === 'success' && data.notifikasi) {
             updateNotificationDisplay(data.notifikasi);
-        } else {
-            console.error('Error fetching notifications:', data.message);
         }
     })
     .catch(error => {
-        console.error('Error fetching notifications:', error);
+        console.error('Error refreshing notifications:', error);
     });
-}, 5000);
+}
 
-// Function to update notification display
 function updateNotificationDisplay(notifications) {
     const notifList = document.getElementById('notif-list');
+    if (!notifList) return;
     
     if (notifications.length > 0) {
         let html = '<li class="dropdown-header py-2">Notifications</li>';
@@ -271,10 +275,10 @@ function updateNotificationDisplay(notifications) {
         notifications.forEach(notif => {
             const date = new Date(notif.createddate);
             const formattedDate = date.toLocaleDateString('en-US', {
-                day: '2-digit',
-                month: 'short',
+                day: '2-digit', 
+                month: 'short', 
                 year: 'numeric',
-                hour: '2-digit',
+                hour: '2-digit', 
                 minute: '2-digit'
             });
             
@@ -289,12 +293,12 @@ function updateNotificationDisplay(notifications) {
                     <div class="notification-content">
                         <div class="mb-2">
                             <div class="text-dark" style="font-size: 0.9rem; line-height: 1.4;">
-                                ${notif.message}
+                                ${escapeHtml(notif.message)}
                             </div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                ${notif.creator_name || 'Unknown User'}
+                                ${escapeHtml(notif.creator_name || 'Unknown User')}
                             </small>
                             <small class="text-muted">
                                 <time datetime="${notif.createddate}">${formattedDate}</time>
@@ -314,7 +318,8 @@ function updateNotificationDisplay(notifications) {
         `;
         
         notifList.innerHTML = html;
-        updateNotificationBadge(notifications.length);
+        updateBadgeCount();
+        initNotificationSystem(); // Re-init handlers
     } else {
         notifList.innerHTML = `
             <li class="dropdown-header py-2">Notifications</li>
@@ -324,72 +329,15 @@ function updateNotificationDisplay(notifications) {
                 </div>
             </li>
         `;
+        
         const badge = document.querySelector('.notif-badge');
         if (badge) badge.remove();
     }
-
-    // Re-attach event listeners to new notification items
-    document.querySelectorAll('.notification-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (this.classList.contains('read')) {
-                console.log('Notification already read, navigating to:', this.dataset.navigationUrl);
-                if (this.dataset.navigationUrl && this.dataset.navigationUrl !== '#') {
-                    window.location.href = this.dataset.navigationUrl;
-                }
-                return;
-            }
-
-            const notificationId = this.dataset.notificationId;
-            const navigationUrl = this.dataset.navigationUrl;
-
-            this.classList.add('loading');
-            console.log('Marking notification ID:', notificationId);
-
-            isMarkingNotification = true;
-            markNotificationAsRead(notificationId, () => {
-                this.classList.remove('loading');
-                this.classList.add('read');
-                this.querySelector('.unread-indicator').style.display = 'none';
-                updateNotificationBadge();
-                console.log('Notification ID', notificationId, 'marked as read successfully');
-
-                if (navigationUrl && navigationUrl !== '#') {
-                    window.location.href = navigationUrl;
-                }
-                isMarkingNotification = false;
-            }, () => {
-                this.classList.remove('loading');
-                isMarkingNotification = false;
-                console.error('Failed to mark notification ID', notificationId);
-            });
-        });
-    });
 }
 
-// Function to update badge count
-function updateNotificationBadge(count = null) {
-    const badge = document.querySelector('.notif-badge');
-    const iconWrapper = document.querySelector('.notif-icon-wrapper');
-    
-    if (count === null) {
-        count = document.querySelectorAll('.notification-item:not(.read)').length;
-    }
-    
-    console.log('Updating badge count to:', count);
-    
-    if (count > 0) {
-        if (badge) {
-            badge.textContent = count;
-            badge.innerHTML = count + '<span class="visually-hidden">notifikasi belum dibaca</span>';
-        } else if (iconWrapper) {
-            const newBadge = document.createElement('span');
-            newBadge.className = 'notif-badge position-absolute translate-middle badge rounded-pill bg-danger';
-            newBadge.innerHTML = count + '<span class="visually-hidden">notifikasi belum dibaca</span>';
-            iconWrapper.appendChild(newBadge);
-        }
-    } else {
-        if (badge) badge.remove();
-    }
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 </script>
