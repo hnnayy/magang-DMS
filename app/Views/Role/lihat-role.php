@@ -57,16 +57,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     <?php if ($canUpdate || $canDelete): ?>
                         <td class="text-center">
                             <div class="d-flex align-items-center justify-content-center gap-2">
-                                <?php if ($canDelete): ?>
-                                    <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                        <?= csrf_field() ?>
-                                        <input type="hidden" name="id" value="<?= $role['id'] ?>">
-                                        <button type="submit" class="btn btn-link p-0 text-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                                
                                 <?php if ($canUpdate): ?>
                                     <button 
                                         class="btn btn-link p-0 text-primary" 
@@ -81,6 +71,15 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                         )">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
+                                <?php endif; ?>
+                                <?php if ($canDelete): ?>
+                                    <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $role['id'] ?>">
+                                        <button type="submit" class="btn btn-link p-0 text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                             </div>
                         </td>

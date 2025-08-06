@@ -40,6 +40,13 @@
                         <?php if ($canUpdate || $canDelete): ?>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
+                                
+                                <?php if ($canUpdate): ?>
+                                    <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                                        onclick="openEditModal(<?= $unit['id'] ?>, '<?= esc($unit['parent_id']) ?>', '<?= esc($unit['name']) ?>', '<?= esc($unit['status']) ?>')">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                <?php endif; ?>
                                 <?php if ($canDelete): ?>
                                     <form action="<?= site_url('create-unit/delete') ?>" method="post" class="d-inline">
                                         <?= csrf_field() ?>
@@ -48,13 +55,6 @@
                                             <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </form>
-                                <?php endif; ?>
-                                
-                                <?php if ($canUpdate): ?>
-                                    <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                                        onclick="openEditModal(<?= $unit['id'] ?>, '<?= esc($unit['parent_id']) ?>', '<?= esc($unit['name']) ?>', '<?= esc($unit['status']) ?>')">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </button>
                                 <?php endif; ?>
                             </div>
                         </td>
