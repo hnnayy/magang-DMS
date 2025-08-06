@@ -38,17 +38,6 @@
                             <?php if ($canUpdate || $canDelete): ?>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
-                                    <?php if ($canDelete): ?>
-                                        <!-- Tombol Hapus -->
-                                        <form action="<?= site_url('create-faculty/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="id" value="<?= $fakultas['id'] ?>">
-                                            <button type="submit" class="btn btn-link p-0 text-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                    
                                     <?php if ($canUpdate): ?>
                                         <!-- Tombol Edit -->
                                         <button 
@@ -63,6 +52,16 @@
                                             )">
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
+                                    <?php endif; ?>
+                                    <?php if ($canDelete): ?>
+                                        <!-- Tombol Hapus -->
+                                        <form action="<?= site_url('create-faculty/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="id" value="<?= $fakultas['id'] ?>">
+                                            <button type="submit" class="btn btn-link p-0 text-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </td>

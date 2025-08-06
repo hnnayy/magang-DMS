@@ -39,11 +39,6 @@
           
           <?php if ($canUpdate || $canDelete): ?>
           <td class="text-center">
-            <?php if ($canDelete): ?>
-              <a href="#" class="text-danger me-2 delete-user" data-id="<?= $user['id'] ?>" title="Delete">
-                <i class="bi bi-trash"></i>
-              </a>
-            <?php endif; ?>
             
             <?php if ($canUpdate): ?>
               <a href="#" class="text-primary edit-user"
@@ -57,6 +52,11 @@
                 data-fullname="<?= esc($user['fullname']) ?>"
                 data-role="<?= esc($user['role_name']) ?>">
                 <i class="bi bi-pencil-square"></i>
+              </a>
+            <?php endif; ?>
+            <?php if ($canDelete): ?>
+              <a href="#" class="text-danger me-2 delete-user" data-id="<?= $user['id'] ?>" title="Delete">
+                <i class="bi bi-trash"></i>
               </a>
             <?php endif; ?>
           </td>

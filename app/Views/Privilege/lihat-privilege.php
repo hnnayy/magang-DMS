@@ -52,15 +52,6 @@
 
                         <?php if ($canUpdate || $canDelete): ?>
                             <td class="text-center">
-                                
-                                
-                                <?php if ($canDelete): ?>
-                                    <button class="btn btn-sm btn-link text-danger p-0"
-                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                <?php endif; ?>
-
                                 <?php if ($canUpdate): ?>
                                     <button class="btn btn-sm btn-link text-primary p-0"
                                             data-bs-toggle="modal"
@@ -73,6 +64,12 @@
                                                 <?= json_encode($p['actions']) ?>
                                             )'>
                                         <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                <?php endif; ?>
+                                <?php if ($canDelete): ?>
+                                    <button class="btn btn-sm btn-link text-danger p-0"
+                                            onclick='confirmDelete(<?= json_encode($p['id']) ?>)'>
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 <?php endif; ?>
 
