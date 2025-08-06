@@ -1240,6 +1240,12 @@ input[type="date"]:valid {
     border: 2px solid #e2e8f0;
 }
 
+/* Solusi 1: Tingkatkan z-index dan pastikan positioning */
+.search-dropdown-container {
+    position: relative;
+    /* Pastikan container memiliki positioning context */
+}
+
 .search-dropdown-list {
     position: absolute;
     top: 100%;
@@ -1251,8 +1257,46 @@ input[type="date"]:valid {
     border-radius: 0 0 8px 8px;
     max-height: 200px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 9999; /* Tingkatkan z-index */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Solusi 2: Jika masih tenggelam, coba gunakan fixed positioning */
+.search-dropdown-list-fixed {
+    position: fixed;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    /* Width dan position akan diset via JavaScript */
+}
+
+/* Solusi 3: Pastikan parent containers tidak menghalangi */
+.form-group {
+    position: relative;
+    overflow: visible !important; /* Override overflow hidden jika ada */
+}
+
+/* Solusi 4: Untuk modal atau container khusus */
+.modal-body,
+.card-body,
+.container {
+    overflow: visible !important;
+}
+
+/* Solusi 5: CSS khusus untuk dropdown yang aktif */
+.search-dropdown-container.active {
+    z-index: 9999;
+    position: relative;
+}
+
+.search-dropdown-container.active .search-dropdown-list {
+    display: block;
+    z-index: 10000;
 }
 
 .search-dropdown-item {
@@ -1283,3 +1327,30 @@ input[type="date"]:valid {
     font-style: italic;
     cursor: default;
 }
+
+.submenu li a {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: #333;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: normal;
+}
+
+.submenu li a:not(.active-submenu):hover {
+    background-color: #c62828;
+    color: #fff;
+}
+
+.submenu li a.active-submenu,
+.submenu li a.active-submenu:hover {
+    background-color: #b41414;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+
+.submenu-toggle .arrow {
+    transition: transform 0.3s ease;
+}
+

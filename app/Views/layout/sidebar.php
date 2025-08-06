@@ -1,11 +1,21 @@
 <div class="sidebar" id="sidebar">
     <div class="menu-container">
+        <?php $currentSlug = uri_string(); ?>
         <ul class="menu">
             <?php
             $menuList = getSidebarMenuByRole(); // otomatis ambil dari session
             ?>
             <?php foreach ($menuList as $menuName => $menuData): ?>
-                <li class="has-submenu">
+                <?php
+                    $isMenuOpen = false;
+                    foreach ($menuData['submenus'] as $submenu) {
+                        if ($currentSlug === slugify($submenu['name'])) {
+                            $isMenuOpen = true;
+                            break;
+                        }
+                    }
+                ?>
+                <li class="has-submenu <?= $isMenuOpen ? 'open' : '' ?>">
                     <div class="submenu-toggle" onclick="toggleSubmenu(this)">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <i class="<?= esc($menuData['icon']) ?>"></i>
@@ -16,7 +26,11 @@
                     <ul class="submenu">
                         <?php foreach ($menuData['submenus'] as $submenu): ?>
                             <li>
-                                <a href="<?= base_url('/' . slugify($submenu['name'])) ?>" onclick="handleSubmenuClick(event)">
+                                <?php
+                                    $submenuSlug = slugify($submenu['name']);
+                                    $isActive = $currentSlug === $submenuSlug ? 'active-submenu' : '';
+                                ?>
+                                <a href="<?= base_url('/' . $submenuSlug) ?>" class="<?= $isActive ?>" onclick="handleSubmenuClick(event)">
                                     <?= esc($submenu['name']) ?>
                                 </a>
                             </li>
