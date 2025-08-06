@@ -96,7 +96,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
             <table class="table table-bordered table-hover align-middle" id="documentsTable">
                 <thead class="table-light">
                     <tr>
-                        <th class="text-center" style="width:5%;">Document ID</th>
+                        <th class="text-center" style="width:5%;">No</th>
+                        <th class="text-center d-none" style="width:5%;">Document ID</th> <!-- Sembunyikan kolom Document ID -->
                         <th style="width:12%;">Faculty</th>
                         <th style="width:10%;">Department</th>
                         <th style="width:15%;">Document Name</th>
@@ -112,6 +113,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                 </thead>
                 <tbody>
                     <?php if (!empty($documents)): ?>
+                        <?php $no = 1; ?>
                         <?php foreach ($documents as $doc): ?>
                             <?php 
                             $documentCreatorId = $doc['createdby'] ?? 0;
@@ -142,7 +144,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                             
                             <?php if ($documentCreatorId != 0): ?>
                             <tr data-document-id="<?= esc($doc['id']) ?>">
-                                <td class="text-center"><?= esc($doc['id']) ?></td>
+                                <td class="text-center"><?= $no++ ?></td>
+                                <td class="text-center d-none"><?= esc($doc['id']) ?></td> <!-- Sembunyikan kolom Document ID -->
                                 <td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
                                     <?= esc($doc['parent_name'] ?? '-') ?>
                                 </td>
@@ -271,7 +274,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="12" class="text-center text-muted py-5">
+                            <td colspan="12" class="text-center text-muted py-5"> <!-- Ubah colspan menjadi 12 -->
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No document submissions available for your access level.
                             </td>
@@ -280,125 +283,123 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
 
-<!-- Edit Modal -->
-<?php if ($documentSubmissionPrivileges['can_update']): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-sm">
-            <form action="<?= base_url('document-submission-list/update') ?>" method="post" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <input type="hidden" name="document_id" id="editDocumentId">
-                <div class="modal-header border-bottom-0 pb-2">
-                    <h5 class="modal-title fw-bold" id="editModalLabel">Edit Document</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="editFakultas" class="form-label">Faculty</label>
-                            <input type="text" class="form-control" id="editFakultas" name="fakultas" readonly>
+        <!-- Edit Modal -->
+        <?php if ($documentSubmissionPrivileges['can_update']): ?>
+        <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm">
+                    <form action="<?= base_url('document-submission-list/update') ?>" method="post" enctype="multipart/form-data">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="document_id" id="editDocumentId">
+                        <div class="modal-header border-bottom-0 pb-2">
+                            <h5 class="modal-title fw-bold" id="editModalLabel">Edit Document</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="col-md-6">
-                            <label for="editBagian" class="form-label">Department</label>
-                            <input type="text" class="form-control" id="editBagian" name="bagian" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="editNama" class="form-label">Document Name</label>
-                            <input type="text" class="form-control" name="nama" id="editNama">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="editNomor" class="form-label">Document No</label>
-                            <input type="text" class="form-control" name="nomor" id="editNomor">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="editRevisi" class="form-label">Revision</label>
-                            <input type="text" class="form-control" name="revisi" id="editRevisi">
-                        </div>
-                        <div class="col-md-12">
-                            <label for="editJenis" class="form-label">Document Type</label>
-                            <select name="type" class="form-select" id="editJenis" onchange="handleEditJenisChange()">
-                                <option value="">-- Select Document Type --</option>
-                                <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= esc($kategori['id']) ?>" 
-                                            data-kode="<?= esc($kategori['kode']) ?>" 
-                                            data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
-                                        <?= esc($kategori['nama']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-12" id="editKodeGroup" style="display: none;">
-                            <label for="editNamaKode" class="form-label">Code - Document Name</label>
-                            <select name="kode_dokumen" id="editNamaKode" class="form-select">
-                                <option value="">-- Select Document Code --</option>
-                            </select>
-                            <small class="text-muted">Please select document type first</small>
-                        </div>
-                        <div id="editKodeCustomGroup" style="display: none;">
+                        <div class="modal-body">
                             <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="editKodeCustom" class="form-label">Document Code</label>
-                                    <input type="text" id="editKodeCustom" name="kode_dokumen_custom" class="form-control" 
-                                           style="text-transform: uppercase;">
+                                <div class="col-md-6">
+                                    <label for="editFakultas" class="form-label">Faculty</label>
+                                    <input type="text" class="form-control" id="editFakultas" name="fakultas" readonly>
                                 </div>
-                                <div class="col-md-8">
-                                    <label for="editNamaCustom" class="form-label">Document Detail Name</label>
-                                    <input type="text" id="editNamaCustom" name="nama_dokumen_custom" class="form-control">
+                                <div class="col-md-6">
+                                    <label for="editBagian" class="form-label">Department</label>
+                                    <input type="text" class="form-control" id="editBagian" name="bagian" readonly>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <label for="editKeterangan" class="form-label">Description</label>
-                            <textarea class="form-control" name="keterangan" id="editKeterangan" rows="3"></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Document File</label>
-                            <input type="file" class="form-control" name="file_dokumen" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
-                            <div id="currentFileInfo" class="mt-2" style="display: none;">
-                                <div class="d-flex align-items-center text-muted">
-                                    <i class="bi bi-file-earmark-text me-2"></i>
-                                    <div>
-                                        <strong>Current file:</strong> <span id="currentFileName">-</span><br>
-                                        <small>Upload new file to replace existing file</small>
+                                <div class="col-md-6">
+                                    <label for="editNama" class="form-label">Document Name</label>
+                                    <input type="text" class="form-control" name="nama" id="editNama">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="editNomor" class="form-label">Document No</label>
+                                    <input type="text" class="form-control" name="nomor" id="editNomor">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="editRevisi" class="form-label">Revision</label>
+                                    <input type="text" class="form-control" name="revisi" id="editRevisi">
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="editJenis" class="form-label">Document Type</label>
+                                    <select name="type" class="form-select" id="editJenis" onchange="handleEditJenisChange()">
+                                        <option value="">-- Select Document Type --</option>
+                                        <?php foreach ($kategori_dokumen as $kategori): ?>
+                                            <option value="<?= esc($kategori['id']) ?>" 
+                                                    data-kode="<?= esc($kategori['kode']) ?>" 
+                                                    data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
+                                                <?= esc($kategori['nama']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-12" id="editKodeGroup" style="display: none;">
+                                    <label for="editNamaKode" class="form-label">Code - Document Name</label>
+                                    <select name="kode_dokumen" id="editNamaKode" class="form-select">
+                                        <option value="">-- Select Document Code --</option>
+                                    </select>
+                                    <small class="text-muted">Please select document type first</small>
+                                </div>
+                                <div id="editKodeCustomGroup" style="display: none;">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label for="editKodeCustom" class="form-label">Document Code</label>
+                                            <input type="text" id="editKodeCustom" name="kode_dokumen_custom" class="form-control" 
+                                                   style="text-transform: uppercase;">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label for="editNamaCustom" class="form-label">Document Detail Name</label>
+                                            <input type="text" id="editNamaCustom" name="nama_dokumen_custom" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="editKeterangan" class="form-label">Description</label>
+                                    <textarea class="form-control" name="keterangan" id="editKeterangan" rows="3"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Document File</label>
+                                    <input type="file" class="form-control" name="file_dokumen" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+                                    <div id="currentFileInfo" class="mt-2" style="display: none;">
+                                        <div class="d-flex align-items-center text-muted">
+                                            <i class="bi bi-file-earmark-text me-2"></i>
+                                            <div>
+                                                <strong>Current file:</strong> <span id="currentFileName">-</span><br>
+                                                <small>Upload new file to replace existing file</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="modal-footer border-top-0 pt-3">
+                            <div class="d-flex gap-2 w-100">
+                                <button type="button" class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="modal-footer border-top-0 pt-3">
-                    <div class="d-flex gap-2 w-100">
-                        <button type="button" class="btn btn-secondary flex-grow-1" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary flex-grow-1">Save Changes</button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
-<?php endif; ?>
+        <?php endif; ?>
 
-<!-- History Modal -->
+       <!-- History Modal -->
 <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-sm">
             <div class="modal-header border-bottom-0 pb-2">
-                <h5 class="modal-title fw-bold" id="historyModalLabel">Document Revision History</h5>
+                <h5 class="modal-title fw-bold" id="historyModalLabel">Riwayat Revisi Dokumen</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-4">
-                    <h6 class="fw-bold">Document Information</h6>
+                    <h6 class="fw-bold">Informasi Dokumen</h6>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Document Name</label>
+                            <label class="form-label fw-semibold">Nama Dokumen</label>
                             <p id="historyNamaDokumen" class="mb-0">-</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Document Type</label>
+                            <label class="form-label fw-semibold">Jenis Dokumen</label>
                             <p id="historyJenisDokumen" class="mb-0">-</p>
                         </div>
                     </div>
@@ -407,12 +408,13 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                     <table class="table table-bordered table-hover align-middle" id="historyTable">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center" style="width: 10%;">Document ID</th>
-                                <th style="width: 20%;">Document Name</th>
-                                <th style="width: 15%;">Document No</th>
+                                <th class="text-center" style="width: 5%;">No</th>
+                                <th class="text-center d-none" style="width: 10%;">Revision ID</th> <!-- Sembunyikan kolom Revision ID -->
+                                <th style="width: 20%;">Nama Dokumen</th>
+                                <th style="width: 15%;">Nomor Dokumen</th>
                                 <th style="width: 15%;">File</th>
-                                <th class="text-center" style="width: 15%;">Revision</th>
-                                <th style="width: 25%;">Date</th>
+                                <th class="text-center" style="width: 15%;">Revisi</th>
+                                <th style="width: 20%;">Tanggal</th>
                                 <th style="width: 10%;">Status</th>
                             </tr>
                         </thead>
@@ -422,66 +424,66 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                 </div>
             </div>
             <div class="modal-footer border-top-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Approve Modal -->
-<?php if ($documentSubmissionPrivileges['can_approve']): ?>
-<div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-sm">
-            <form action="<?= base_url('document-submission-list/approve') ?>" method="post" id="approveForm">
-                <?= csrf_field() ?>
-                <input type="hidden" name="document_id" id="approveDocumentId">
-                <div class="modal-header border-bottom-0 pb-2">
-                    <h5 class="modal-title fw-bold">Document Approval</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="approved_by_display" class="form-label">
-                            Approver Name <span class="text-danger">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            class="form-control" 
-                            id="approved_by_display" 
-                            value="<?= esc(session()->get('fullname')) ?>" 
-                            readonly
-                        >
-                        <input 
-                            type="hidden" 
-                            name="approved_by" 
-                            value="<?= esc(session()->get('user_id')) ?>"
-                        >
-                    </div>
-                    <div class="mb-3">
-                        <label for="approval_date" class="form-label">Approval Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" name="approval_date" id="approval_date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks</label>
-                        <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top-0 pt-0">
-                    <div class="row w-100 g-2">
-                        <div class="col-6">
-                            <button type="submit" name="action" value="disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
+        <!-- Approve Modal -->
+        <?php if ($documentSubmissionPrivileges['can_approve']): ?>
+        <div class="modal fade" id="approveModal" tabindex="-1" aria-labelledby="approveModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm">
+                    <form action="<?= base_url('document-submission-list/approve') ?>" method="post" id="approveForm">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="document_id" id="approveDocumentId">
+                        <div class="modal-header border-bottom-0 pb-2">
+                            <h5 class="modal-title fw-bold">Document Approval</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <div class="col-6">
-                            <button type="submit" name="action" value="approve" class="btn btn-success w-100">Approve</button>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="approved_by_display" class="form-label">
+                                    Approver Name <span class="text-danger">*</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="approved_by_display" 
+                                    value="<?= esc(session()->get('fullname')) ?>" 
+                                    readonly
+                                >
+                                <input 
+                                    type="hidden" 
+                                    name="approved_by" 
+                                    value="<?= esc(session()->get('user_id')) ?>"
+                                >
+                            </div>
+                            <div class="mb-3">
+                                <label for="approval_date" class="form-label">Approval Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="approval_date" id="approval_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="remarks" class="form-label">Remarks</label>
+                                <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
+                            </div>
                         </div>
-                    </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <div class="row w-100 g-2">
+                                <div class="col-6">
+                                    <button type="submit" name="action" value="disapprove" class="btn w-100 text-white" style="background-color: #dc3545;">Disapprove</button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="submit" name="action" value="approve" class="btn btn-success w-100">Approve</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
-</div>
-<?php endif; ?>
+        <?php endif; ?>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -585,6 +587,7 @@ $(document).ready(function() {
     const table = $('#documentsTable').DataTable({
         pageLength: 10,
         lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+        paging: true,
         language: {
             lengthMenu: "Show _MENU_ entries",
             zeroRecords: "No data found",
@@ -599,18 +602,35 @@ $(document).ready(function() {
                 previous: "Previous"
             }
         },
-        columnDefs: [{
-            targets: 0,
-            searchable: true,
-            orderable: true
-        }, {
-            targets: [11],
-            orderable: false,
-            searchable: false
-        }],
+        columnDefs: [
+            {
+                targets: 0, // Kolom No
+                searchable: false,
+                orderable: false
+            },
+            {
+                targets: 1, // Kolom Document ID
+                visible: false, // Sembunyikan kolom Document ID di DataTables
+                searchable: true,
+                orderable: true
+            },
+            {
+                targets: 12, // Kolom Action
+                orderable: false,
+                searchable: false
+            }
+        ],
         responsive: true,
         autoWidth: false,
-        order: [[0, 'asc']]
+        order: [[0, 'asc']],
+        drawCallback: function(settings) {
+            var api = this.api();
+            var pageInfo = api.page.info();
+            var startRow = pageInfo.start; // Starting row index for the current page
+            $('#documentsTable tbody tr').each(function(index) {
+                $(this).find('td:first').text(startRow + index + 1);
+            });
+        }
     });
 
     $('.dataTables_filter').hide();
@@ -621,44 +641,111 @@ $(document).ready(function() {
 
     $('#filterFakultas').on('change', function() {
         const val = this.value;
-        $.fn.dataTable.ext.search.push(
-            function(settings, data, dataIndex) {
-                const row = $('#documentsTable').DataTable().row(dataIndex);
-                const fakultasId = row.node().querySelector('td[data-fakultas]').getAttribute('data-fakultas') || '';
-                return val === '' || fakultasId === val;
-            }
-        );
-        $('#documentsTable').DataTable().draw();
-        $.fn.dataTable.ext.search.pop(); 
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const row = $('#documentsTable').DataTable().row(dataIndex);
+            const fakultasId = row.node().querySelector('td[data-fakultas]')?.getAttribute('data-fakultas') || '';
+            return val === '' || fakultasId === val;
+        });
+        table.draw();
+        $.fn.dataTable.ext.search.pop();
     });
 
     $('#filterJenis').on('change', function() {
         const val = this.value;
-        $.fn.dataTable.ext.search.push(
-            function(settings, data, dataIndex) {
-                const row = $('#documentsTable').DataTable().row(dataIndex);
-                const jenisId = row.node().querySelector('td[data-jenis]').getAttribute('data-jenis') || '';
-                return val === '' || jenisId === val;
-            }
-        );
-        $('#documentsTable').DataTable().draw();
-        $.fn.dataTable.ext.search.pop(); 
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            const row = $('#documentsTable').DataTable().row(dataIndex);
+            const jenisId = row.node().querySelector('td[data-jenis]')?.getAttribute('data-jenis') || '';
+            return val === '' || jenisId === val;
+        });
+        table.draw();
+        $.fn.dataTable.ext.search.pop();
     });
 
     function filterAndHighlightDocumentFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
+        const revisionId = urlParams.get('revision_id');
         const documentId = urlParams.get('document_id');
-        
-        if (documentId) {
-            // First, try to find the document in the main table
-            $.fn.dataTable.ext.search.push(
-                function(settings, data, dataIndex) {
-                    const row = $('#documentsTable').DataTable().row(dataIndex);
-                    const rowDocumentId = row.node().getAttribute('data-document-id') || '';
-                    return rowDocumentId === documentId;
+
+        if (revisionId) {
+            // Handle revision ID logic (e.g., show history modal)
+            $.ajax({
+                url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + (documentId || '0'),
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success && response.data && response.data.history && response.data.history.length > 0) {
+                        $('#historyNamaDokumen').text(response.data.document.title || '-');
+                        $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
+                        let html = '';
+                        response.data.history.forEach((item, index) => {
+                            const fileLink = item.filepath ? `
+                                <div class="d-flex gap-2">
+                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Unduh file">
+                                        <i class="bi bi-download text-success fs-5"></i>
+                                    </a>
+                                </div>
+                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
+                            const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
+                                               item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
+                                               item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
+                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Delete</span>' :
+                                               item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
+                            html += `
+                                <tr data-revision-id="${item.revision_id}" ${item.revision_id == revisionId ? 'class="document-highlight"' : ''}>
+                                    <td class="text-center">${index + 1}</td>
+                                    <td class="text-center d-none">${item.revision_id}</td>
+                                    <td>${item.document_title || '-'}</td>
+                                    <td>${item.document_number || '-'}</td>
+                                    <td>${fileLink}</td>
+                                    <td class="text-center">${item.revision || 'Rev. 0'}</td>
+                                    <td>${formatDate(item.updated_at)}</td>
+                                    <td>${statusBadge}</td>
+                                </tr>
+                            `;
+                        });
+                        $('#historyTableBody').html(html);
+                        const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                        historyModal.show();
+                        setTimeout(() => {
+                            const $highlightedRow = $('#historyTableBody tr.document-highlight');
+                            if ($highlightedRow.length) {
+                                $highlightedRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                setTimeout(() => {
+                                    $highlightedRow.removeClass('document-highlight');
+                                }, 5000);
+                            }
+                        }, 500);
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Dokumen Tidak Ditemukan',
+                            text: 'Revisi dengan ID ' + revisionId + ' tidak ditemukan atau Anda tidak memiliki akses.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Kesalahan memeriksa riwayat dokumen:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kesalahan',
+                        text: 'Gagal memeriksa riwayat dokumen. Silakan coba lagi.',
+                        confirmButtonColor: '#dc3545'
+                    });
                 }
-            );
+            });
+        } else if (documentId) {
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const row = table.row(dataIndex);
+                const rowDocumentId = row.node().getAttribute('data-document-id') || '';
+                return rowDocumentId === documentId;
+            });
             table.draw();
+            $.fn.dataTable.ext.search.pop();
 
             let targetRow = null;
             table.rows().every(function() {
@@ -672,7 +759,6 @@ $(document).ready(function() {
             if (targetRow) {
                 $('#documentsTable tbody tr').removeClass('document-highlight');
                 $(targetRow).addClass('document-highlight');
-                
                 setTimeout(() => {
                     const $row = $(targetRow);
                     if ($row.length) {
@@ -684,88 +770,7 @@ $(document).ready(function() {
                         }, 5000);
                     }
                 }, 100);
-                $.fn.dataTable.ext.search.pop();
-            } else {
-                // If not found in main table, check history
-                $.ajax({
-                    url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + documentId,
-                    type: 'GET',
-                    dataType: 'json',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.success && response.data && response.data.history && response.data.history.length > 0) {
-                            // Document found in history, open history modal
-                            $('#historyNamaDokumen').text(response.data.document.title || '-');
-                            $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
-                            let html = '';
-                            response.data.history.forEach((item) => {
-                                const fileLink = item.filepath ? `
-                                    <div class="d-flex gap-2">
-                                        <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
-                                            <i class="bi bi-download text-success fs-5"></i>
-                                        </a>
-                                    </div>
-                                ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
-                                
-                                const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
-                                                   item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
-                                                   item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
-                                                   item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
-                                
-                                html += `
-                                    <tr data-document-id="${item.document_id}" ${item.document_id == documentId ? 'class="document-highlight"' : ''}>
-                                        <td class="text-center">${item.document_id}</td>
-                                        <td>${item.document_title || '-'}</td>
-                                        <td>${item.document_number || '-'}</td>
-                                        <td>${fileLink}</td>
-                                        <td class="text-center">${item.revision || 'Rev. 0'}</td>
-                                        <td>${formatDate(item.updated_at)}</td>
-                                        <td>${statusBadge}</td>
-                                    </tr>
-                                `;
-                            });
-                            $('#historyTableBody').html(html);
-                            const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
-                            historyModal.show();
-
-                            // Highlight and scroll to row in history table
-                            setTimeout(() => {
-                                const $highlightedRow = $('#historyTableBody tr.document-highlight');
-                                if ($highlightedRow.length) {
-                                    $highlightedRow[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    setTimeout(() => {
-                                        $highlightedRow.removeClass('document-highlight');
-                                    }, 5000);
-                                }
-                            }, 500);
-                        } else {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Document Not Found',
-                                text: 'The document with ID ' + documentId + ' was not found or you do not have access to it.',
-                                confirmButtonColor: '#dc3545'
-                            });
-                        }
-                        $.fn.dataTable.ext.search.pop();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error checking document history:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Failed to check document history. Please try again.',
-                            confirmButtonColor: '#dc3545'
-                        });
-                        $.fn.dataTable.ext.search.pop();
-                    }
-                });
             }
-        } else {
-            $.fn.dataTable.ext.search.pop();
-            table.draw();
         }
     }
 
@@ -1075,7 +1080,7 @@ $(document).ready(function() {
         
         $('#historyNamaDokumen').text('-');
         $('#historyJenisDokumen').text('-');
-        $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Loading data...</td></tr>');
+        $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Memuat data...</td></tr>');
 
         $.ajax({
             url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + id,
@@ -1091,23 +1096,25 @@ $(document).ready(function() {
                     $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
                     let html = '';
                     if (response.data.history && response.data.history.length > 0) {
-                        response.data.history.forEach((item) => {
+                        response.data.history.forEach((item, index) => {
                             const fileLink = item.filepath ? `
                                 <div class="d-flex gap-2">
-                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
+                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Unduh file">
                                         <i class="bi bi-download text-success fs-5"></i>
                                     </a>
                                 </div>
-                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
+                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
                             
-                            const statusBadge = item.status == 0 ? '<span class="badge bg-warning">Waiting</span>' :
-                                               item.status == 1 ? '<span class="badge bg-success">Approved</span>' :
-                                               item.status == 2 ? '<span class="badge bg-danger">Disapproved</span>' :
-                                               item.status == 3 ? '<span class="badge bg-secondary">Superseded</span>' : '-';
+                            const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
+                                               item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
+                                               item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
+                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Delete</span>' :
+                                               item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
                             
                             html += `
-                                <tr data-document-id="${item.document_id}">
-                                    <td class="text-center">${item.document_id}</td>
+                                <tr data-revision-id="${item.revision_id}">
+                                    <td class="text-center">${index + 1}</td>
+                                    <td class="text-center d-none">${item.revision_id}</td>
                                     <td>${item.document_title || '-'}</td>
                                     <td>${item.document_number || '-'}</td>
                                     <td>${fileLink}</td>
@@ -1118,16 +1125,16 @@ $(document).ready(function() {
                             `;
                         });
                     } else {
-                        html = '<tr><td colspan="7" class="text-center text-muted">No revision history yet</td></tr>';
+                        html = '<tr><td colspan="7" class="text-center text-muted">Belum ada riwayat revisi</td></tr>';
                     }
                     $('#historyTableBody').html(html);
                 } else {
-                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Failed to load revision history</td></tr>');
+                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Gagal memuat riwayat revisi</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
-                console.log('AJAX Error:', error, xhr.responseText);
-                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Error occurred while loading revision history</td></tr>');
+                console.log('Kesalahan AJAX:', error, xhr.responseText);
+                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Terjadi kesalahan saat memuat riwayat revisi</td></tr>');
             }
         });
     });

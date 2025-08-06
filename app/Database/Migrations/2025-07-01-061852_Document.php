@@ -16,11 +16,6 @@ class Document extends Migration
                 'auto_increment' => true,
                 'null'           => false,
             ],
-            'original_document_id' => [
-                'type'       => 'INT',
-                'constraint' => 11,
-                'null'       => false,
-            ],
             'type' => [
                 'type'       => 'INT',
                 'constraint' => 10,
@@ -66,7 +61,7 @@ class Document extends Migration
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'null'       => false,
-                'comment'    => '0=Not Approved, 1=Approved, 2=Disapproved',
+                'comment'    => '0=Not Approved, 1=Approved, 2=Disapproved, 3=Delete, 4=Superseded',
             ],
             'createddate' => [
                 'type'    => 'DATETIME',

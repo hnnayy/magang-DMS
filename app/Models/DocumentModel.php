@@ -22,7 +22,6 @@ class DocumentModel extends Model
         'updated_at',
         'date_published',
         'updated_at',
-       'original_document_id',
        'standar_ids',
         'klausul_ids'
     ];
@@ -41,9 +40,6 @@ class DocumentModel extends Model
                 ->findAll();
     }
 
-    /**
-     * Ambil satu dokumen lengkap berdasarkan ID
-     */
     public function getByIdWithRelations($id)
     {
         return $this->select('

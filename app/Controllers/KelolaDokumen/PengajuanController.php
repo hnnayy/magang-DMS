@@ -236,6 +236,7 @@ class PengajuanController extends BaseController
     }
 
     // POST document-submission-list/update// POST document-submission-list/update
+// POST document-submission-list/update
 public function update()
 {
     $documentId = $this->request->getPost('document_id');
@@ -312,34 +313,41 @@ public function update()
         }
     }
 
-    // ✅ PERBAIKAN: Hanya update kolom yang ada di database
-    $data = [
-        'type' => $jenisId,
-        'kode_dokumen_id' => $finalKodeDokumenId,
-        'number' => $nomor,
-        'revision' => $revisi,
-        'title' => $nama,
-        'description' => $keterangan,
-        'unit_id' => $unitId,
-        'status' => 0 // Reset status to pending
-    ];
-
     try {
         $this->db->transStart();
 
-        // Log untuk debugging
-        log_message('debug', 'Updating document ID ' . $documentId . ' with data: ' . json_encode($data));
+        // Mark the original document as Superseded (status 4)
+        log_message('debug', 'Marking document ID ' . $documentId . ' as Superseded (status 4)');
+        $this->documentModel->update($documentId, ['status' => 4]);
 
-        // Update the existing document
-        $updateResult = $this->documentModel->update($documentId, $data);
-        
-        if (!$updateResult) {
+        // Create a new document record
+        $newDocumentData = [
+            'type' => $jenisId,
+            'kode_dokumen_id' => $finalKodeDokumenId,
+            'number' => $nomor,
+            'date_published' => date('Y-m-d'), // Set current date for new document
+            'revision' => $revisi,
+            'title' => $nama,
+            'description' => $keterangan,
+            'unit_id' => $unitId,
+            'status' => 0, // New document starts as pending
+            'createddate' => date('Y-m-d H:i:s'),
+            'createdby' => session('user_id'),
+            'standar_ids' => $originalDocument['standar_ids'] ?? '',
+            'klausul_ids' => $originalDocument['klausul_ids'] ?? ''
+        ];
+
+        log_message('debug', 'Creating new document with data: ' . json_encode($newDocumentData));
+        $this->documentModel->insert($newDocumentData);
+        $newDocumentId = $this->documentModel->getInsertID();
+
+        if (!$newDocumentId) {
             $errors = $this->documentModel->errors();
-            log_message('error', 'Document update failed. Errors: ' . json_encode($errors));
-            throw new \Exception('Failed to update document: ' . json_encode($errors));
+            log_message('error', 'New document creation failed. Errors: ' . json_encode($errors));
+            throw new \Exception('Failed to create new document: ' . json_encode($errors));
         }
 
-        log_message('debug', 'Document updated successfully');
+        log_message('debug', 'New document created with ID: ' . $newDocumentId);
 
         // Handle file upload and revision
         if ($file && $file->isValid() && !$file->hasMoved()) {
@@ -367,7 +375,7 @@ public function update()
             $file->move($uploadPath, $newName);
 
             $revisionData = [
-                'document_id' => $documentId,
+                'document_id' => $newDocumentId,
                 'revision' => $revisi,
                 'filename' => $file->getClientName(),
                 'filepath' => 'storage/uploads/' . $newName,
@@ -377,21 +385,22 @@ public function update()
                 'createdby' => session('user_id'),
             ];
 
-            log_message('debug', 'Inserting new revision: ' . json_encode($revisionData));
+            log_message('debug', 'Inserting new revision for new document: ' . json_encode($revisionData));
             
             $revisionResult = $this->documentRevisionModel->insert($revisionData);
             
-            if (!$revisionResult) {
-                $revisionErrors = $this->documentRevisionModel->errors();
-                log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
-                throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
-            }
+// In the update method, after the revision insert
+$revisionResult = $this->documentRevisionModel->insert($revisionData);
+if (!$revisionResult) {
+    $revisionErrors = $this->documentRevisionModel->errors();
+    log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
+    throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
+}
+log_message('debug', 'Revision inserted with ID: ' . $this->documentRevisionModel->getInsertID());
+ } else {
+            log_message('debug', 'No new file uploaded, copying existing revision');
             
-            log_message('debug', 'New revision created successfully');
-        } else {
-            log_message('debug', 'No new file uploaded, creating revision with existing file');
-            
-            // If no new file uploaded, create new revision with existing file
+            // Copy the latest revision from the old document
             $oldRevision = $this->documentRevisionModel
                 ->where('document_id', $documentId)
                 ->orderBy('id', 'DESC')
@@ -399,7 +408,7 @@ public function update()
 
             if ($oldRevision) {
                 $revisionData = [
-                    'document_id' => $documentId,
+                    'document_id' => $newDocumentId,
                     'revision' => $revisi,
                     'filename' => $oldRevision['filename'],
                     'filepath' => $oldRevision['filepath'],
@@ -409,7 +418,7 @@ public function update()
                     'createdby' => session('user_id'),
                 ];
 
-                log_message('debug', 'Inserting revision with existing file: ' . json_encode($revisionData));
+                log_message('debug', 'Inserting revision for new document with existing file: ' . json_encode($revisionData));
                 
                 $revisionResult = $this->documentRevisionModel->insert($revisionData);
                 
@@ -419,7 +428,7 @@ public function update()
                     throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
                 }
                 
-                log_message('debug', 'Revision with existing file created successfully');
+                log_message('debug', 'Revision with existing file created successfully for new document');
             } else {
                 log_message('warning', 'No previous revision found for document ID: ' . $documentId);
             }
@@ -436,7 +445,7 @@ public function update()
         // Create notification for update action
         $documentTypeName = $documentType['name'] ?? 'Unknown Type';
         $documentTitle = $nama;
-        $this->createDocumentNotification($documentId, $documentTitle, $documentTypeName);
+        $this->createDocumentNotification($newDocumentId, $documentTitle, $documentTypeName);
 
         return redirect()->to('document-submission-list')->with('success', 'Document successfully updated.');
         
@@ -446,7 +455,6 @@ public function update()
         return redirect()->back()->with('error', 'Failed to update document: ' . $e->getMessage());
     }
 }
-
     // POST document-submission-list/delete
     public function delete()
     {
@@ -582,62 +590,73 @@ public function update()
         return $grouped;
     }
 
-    private function showList()
-    {
-        $unitParentModel = new UnitParentModel();
+private function showList()
+{
+    $unitParentModel = new UnitParentModel();
 
-        $documents = $this->documentModel
-            ->select('document.*, 
-                      dt.name AS jenis_dokumen, 
-                      unit.name AS unit_name, 
-                      unit_parent.name AS parent_name,
-                      unit.parent_id AS unit_parent_id,
-                      kd.kode AS kode_dokumen_kode,
-                      kd.nama AS kode_dokumen_nama,
-                      dr.filename AS filename,
-                      dr.filepath AS filepath,
-                      creator.fullname AS creator_name,
-                      creator.unit_id AS creator_unit_id,
-                      creator_unit.parent_id AS creator_unit_parent_id,
-                      creator_unit_parent.name AS creator_unit_parent_name')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('unit', 'unit.id = document.unit_id', 'left')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            ->join('document_revision dr', 'dr.document_id = document.id', 'left')
-            ->join('user creator', 'creator.id = document.createdby', 'left')
-            ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left')
-            ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left')
-            ->where('document.createdby !=', 0)
-            ->whereIn('document.status', [0, 1, 2])
-            ->groupBy('document.id')
-            ->findAll();
+    $documents = $this->documentModel
+        ->select('document.*, 
+                  dt.name AS jenis_dokumen, 
+                  unit.name AS unit_name, 
+                  unit_parent.name AS parent_name,
+                  unit.parent_id AS unit_parent_id,
+                  kd.kode AS kode_dokumen_kode,
+                  kd.nama AS kode_dokumen_nama,
+                  dr.filename AS filename,
+                  dr.filepath AS filepath,
+                  creator.fullname AS creator_name,
+                  creator.unit_id AS creator_unit_id,
+                  creator_unit.parent_id AS creator_unit_parent_id,
+                  creator_unit_parent.name AS creator_unit_parent_name')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('unit', 'unit.id = document.unit_id', 'left')
+        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->join('document_revision dr', 'dr.document_id = document.id', 'left')
+        ->join('user creator', 'creator.id = document.createdby', 'left')
+        ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left')
+        ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left')
+        ->where('document.createdby !=', 0)
+        ->whereIn('document.status', [0, 1, 2]) // Exclude status 4 (Superseded)
+        ->groupBy('document.id')
+        ->orderBy('document.createddate', 'DESC') // Ensure latest documents first
+        ->findAll();
 
-        $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
-        $kategori_dokumen = $this->kategoriDokumen;
-        $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
-        $fakultas_list = $unitParentModel
-            ->where('status', 1)
-            ->orderBy('name', 'ASC')
-            ->findAll();
-
-        $kode_dokumen_by_type = $this->getKodeDokumenByType();
-
-        $data = [
-            'documents' => $documents,
-            'jenis_dokumen' => $jenis_dokumen,
-            'kategori_dokumen' => $kategori_dokumen,
-            'kode_nama_dokumen' => $kode_nama_dokumen,
-            'fakultas_list' => $fakultas_list,
-            'kode_dokumen_by_type' => $kode_dokumen_by_type,
-            'title' => 'Document Submission List'
-        ];
-
-        log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
-        log_message('debug', 'Kode dokumen by type keys: ' . implode(', ', array_keys($kode_dokumen_by_type)));
-        
-        return view('KelolaDokumen/daftar-pengajuan', $data);
+    // Filter out superseded documents with the same number and type
+    $uniqueDocuments = [];
+    foreach ($documents as $doc) {
+        $key = $doc['number'] . '-' . $doc['type'];
+        if (!isset($uniqueDocuments[$key]) || $doc['createddate'] > $uniqueDocuments[$key]['createddate']) {
+            $uniqueDocuments[$key] = $doc;
+        }
     }
+    $documents = array_values($uniqueDocuments);
+
+    $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
+    $kategori_dokumen = $this->kategoriDokumen;
+    $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
+    $fakultas_list = $unitParentModel
+        ->where('status', 1)
+        ->orderBy('name', 'ASC')
+        ->findAll();
+
+    $kode_dokumen_by_type = $this->getKodeDokumenByType();
+
+    $data = [
+        'documents' => $documents,
+        'jenis_dokumen' => $jenis_dokumen,
+        'kategori_dokumen' => $kategori_dokumen,
+        'kode_nama_dokumen' => $kode_nama_dokumen,
+        'fakultas_list' => $fakultas_list,
+        'kode_dokumen_by_type' => $kode_dokumen_by_type,
+        'title' => 'Document Submission List'
+    ];
+
+    log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
+    log_message('debug', 'Kode dokumen by type keys: ' . implode(', ', array_keys($kode_dokumen_by_type)));
+    
+    return view('KelolaDokumen/daftar-pengajuan', $data);
+}
 
     private function handleFileView()
     {
@@ -671,77 +690,105 @@ public function update()
         ], 404);
     }
 
-    private function handleGetHistory()
-    {
-        $document_id = $this->request->getGet('id');
-        
-        log_message('debug', 'get_history called with document_id: ' . $document_id);
-        
-        if (!$this->session->get('user_id')) {
-            log_message('debug', 'Unauthorized access to get_history');
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Unauthorized'
-            ], 401);
-        }
-
-        $document = $this->documentModel
-            ->select('document.*, dt.name AS jenis_dokumen, kd.kode AS kode_dokumen_kode, kd.nama AS kode_dokumen_nama')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-            ->where('document.id', $document_id)
-            ->where('document.createdby !=', 0)
-            ->first();
-
-        if (!$document) {
-            log_message('debug', 'Document not found for id: ' . $document_id);
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Document not found'
-            ], 404);
-        }
-
-        $revisions = $this->documentRevisionModel
-            ->select('id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
-            ->where('document_id', $document_id)
-            ->orderBy('createddate', 'DESC')
-            ->findAll();
-
-        $history = [];
-        foreach ($revisions as $revision) {
-            $history[] = [
-                'id' => $revision['id'],
-                'document_id' => $revision['document_id'],
-                'revision' => $revision['revision'] ?? 'Rev. 0',
-                'filename' => $revision['filename'],
-                'filepath' => $revision['filepath'],
-                'filesize' => $revision['filesize'],
-                'remark' => $revision['remark'],
-                'updated_at' => $revision['createddate'],
-                'updated_by' => $revision['createdby'],
-                'document_title' => $document['title'],
-                'document_number' => $document['number'],
-                'status' => $document['status'],
-            ];
-        }
-
-        log_message('debug', 'Formatted history count: ' . count($history));
+private function handleGetHistory()
+{
+    $document_id = $this->request->getGet('id');
+    
+    log_message('debug', 'get_history called with document_id: ' . $document_id);
+    
+    if (!$this->session->get('user_id')) {
+        log_message('debug', 'Unauthorized access to get_history');
         return $this->response->setJSON([
-            'success' => true,
-            'data' => [
-                'document' => [
-                    'id' => $document['id'],
-                    'title' => $document['title'],
-                    'jenis_dokumen' => $document['jenis_dokumen'],
-                    'kode_dokumen_kode' => $document['kode_dokumen_kode'],
-                    'kode_dokumen_nama' => $document['kode_dokumen_nama'],
-                ],
-                'history' => $history,
-            ],
-        ]);
+            'success' => false,
+            'message' => 'Tidak diizinkan'
+        ], 401);
     }
 
-    private function handleGetKodeDokumen()
+    // Fetch the current document
+    $document = $this->documentModel
+        ->select('document.*, dt.name AS jenis_dokumen, kd.kode AS kode_dokumen_kode, kd.nama AS kode_dokumen_nama')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
+        ->where('document.id', $document_id)
+        ->where('document.createdby !=', 0)
+        ->first();
+
+    if (!$document) {
+        log_message('debug', 'Dokumen tidak ditemukan untuk id: ' . $document_id);
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Dokumen tidak ditemukan'
+        ], 404);
+    }
+
+    // Fetch revisions for the current document
+    $revisions = $this->documentRevisionModel
+        ->select('id AS revision_id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
+        ->where('document_id', $document_id)
+        ->orderBy('createddate', 'DESC')
+        ->findAll();
+
+    // Fetch related superseded documents (based on number and type)
+    $relatedDocuments = $this->documentModel
+        ->select('id')
+        ->where('number', $document['number'])
+        ->where('type', $document['type'])
+        ->where('status', 4) // Superseded documents
+        ->where('createdby !=', 0)
+        ->findAll();
+
+    $relatedDocumentIds = array_column($relatedDocuments, 'id');
+
+    // Fetch revisions for superseded documents
+    if (!empty($relatedDocumentIds)) {
+        $relatedRevisions = $this->documentRevisionModel
+            ->select('id AS revision_id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
+            ->whereIn('document_id', $relatedDocumentIds)
+            ->orderBy('createddate', 'DESC')
+            ->findAll();
+        $revisions = array_merge($revisions, $relatedRevisions);
+    }
+
+    // Sort all revisions by createddate
+    usort($revisions, function ($a, $b) {
+        return strcmp($b['createddate'], $a['createddate']);
+    });
+
+    $history = [];
+    foreach ($revisions as $revision) {
+        $history[] = [
+            'revision_id' => $revision['revision_id'],
+            'document_id' => $revision['document_id'],
+            'revision' => $revision['revision'] ?? 'Rev. 0',
+            'filename' => $revision['filename'],
+            'filepath' => $revision['filepath'],
+            'filesize' => $revision['filesize'],
+            'remark' => $revision['remark'],
+            'updated_at' => $revision['createddate'],
+            'updated_by' => $revision['createdby'],
+            'document_title' => $document['title'], // Use current document title
+            'document_number' => $document['number'], // Use current document number
+            'status' => $this->documentModel->where('id', $revision['document_id'])->first()['status'] ?? 0,
+        ];
+    }
+
+    log_message('debug', 'Jumlah riwayat yang diformat: ' . count($history));
+    return $this->response->setJSON([
+        'success' => true,
+        'data' => [
+            'document' => [
+                'id' => $document['id'],
+                'title' => $document['title'],
+                'jenis_dokumen' => $document['jenis_dokumen'],
+                'kode_dokumen_kode' => $document['kode_dokumen_kode'],
+                'kode_dokumen_nama' => $document['kode_dokumen_nama'],
+            ],
+            'history' => $history,
+        ],
+    ]);
+}
+
+private function handleGetKodeDokumen()
     {
         $jenisId = $this->request->getPost('jenis');
         
@@ -791,45 +838,56 @@ public function update()
         }
     }
 
-    private function serveFile($documentId, $action = 'view')
-    {
-        $userId = session('user_id');
-        if (!$userId) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You must login to access files.');
-        }
-
-        $revision = $this->documentRevisionModel
-            ->where('document_id', $documentId)
-            ->orderBy('id', 'DESC')
-            ->first();
-
-        if (!$revision || empty($revision['filepath'])) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found.');
-        }
-
-        $document = $this->documentModel->find($documentId);
-        
-        $userRoleId = session('role_id');
-        $allowedRoleIds = [1, 2];
-        
-        if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have access to this file.');
-        }
-
-        $filePath = ROOTPATH . '../' . $revision['filepath'];
-        if (!file_exists($filePath)) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found on server.');
-        }
-
-        $file = new File($filePath);
-        $mimeType = $file->getMimeType() ?: 'application/octet-stream';
-        $disposition = ($action === 'download') ? 'attachment' : 'inline';
-
-        return $this->response
-            ->setHeader('Content-Type', $mimeType)
-            ->setHeader('Content-Disposition', $disposition . '; filename="' . $revision['filename'] . '"')
-            ->setBody(file_get_contents($filePath));
+private function serveFile($documentId, $action = 'view')
+{
+    $userId = session('user_id');
+    if (!$userId) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You must login to access files.');
     }
+
+    $document = $this->documentModel->find($documentId);
+    if (!$document) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Document not found.');
+    }
+
+    // Restrict access to superseded documents unless user is creator or has higher access
+    if ($document['status'] == 4) {
+        $userRoleId = session('role_id');
+        if ($document['createdby'] != $userId && !in_array($userRoleId, [1])) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have access to superseded documents.');
+        }
+    }
+
+    $revision = $this->documentRevisionModel
+        ->where('document_id', $documentId)
+        ->orderBy('id', 'DESC')
+        ->first();
+
+    if (!$revision || empty($revision['filepath'])) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found.');
+    }
+
+    $userRoleId = session('role_id');
+    $allowedRoleIds = [1, 2];
+    
+    if (!in_array($userRoleId, $allowedRoleIds) && $document['createdby'] != $userId) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have access to this file.');
+    }
+
+    $filePath = ROOTPATH . '../' . $revision['filepath'];
+    if (!file_exists($filePath)) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found on server.');
+    }
+
+    $file = new File($filePath);
+    $mimeType = $file->getMimeType() ?: 'application/octet-stream';
+    $disposition = ($action === 'download') ? 'attachment' : 'inline';
+
+    return $this->response
+        ->setHeader('Content-Type', $mimeType)
+        ->setHeader('Content-Disposition', $disposition . '; filename="' . $revision['filename'] . '"')
+        ->setBody(file_get_contents($filePath));
+}
 
     private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
     {
@@ -981,4 +1039,28 @@ public function update()
             return false;
         }
     }
+
+    public function get_history() {
+    $document_id = $this->request->getGet('id');
+    if (!$document_id) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid document ID']);
+    }
+
+    $revisionModel = new \App\Models\DocumentRevisionModel();
+    $documentModel = new \App\Models\DocumentModel();
+
+    $document = $documentModel->find($document_id);
+    if (!$document) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Document not found']);
+    }
+
+    $history = $revisionModel->where('document_id', $document_id)->findAll();
+    return $this->response->setJSON([
+        'success' => true,
+        'data' => [
+            'document' => $document,
+            'history' => $history
+        ]
+    ]);
+}
 }
