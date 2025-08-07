@@ -12,25 +12,23 @@
         <div class="form-section-divider">
             <h2>Create Document</h2>
         </div>
-    
+
         <form id="addDocumentForm" class="needs-validation" novalidate action="<?= base_url('create-document/store') ?>" method="post" enctype="multipart/form-data">
 
             <?= csrf_field() ?>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
-                    <input type="text" id="fakultas-direktorat" class="form-input" value="<?= $unit['parent_name'] ?? '' ?>" readonly>
-                    <input type="hidden" name="fakultas" value="<?= $unit['parent_name'] ?? '' ?>">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="bagian">Division/Unit/Study Program</label>
-                    <input type="text" id="bagian" class="form-input" value="<?= $unit['name'] ?? '-' ?>" readonly>
-                    <input type="hidden" name="unit_id" value="<?= $unit['id'] ?? '' ?>" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
+                <input type="text" id="fakultas-direktorat" class="form-input" value="<?= $unit['parent_name'] ?? '' ?>" readonly>
+                <input type="hidden" name="fakultas" value="<?= $unit['parent_name'] ?? '' ?>">
             </div>
-            
+
+            <div class="form-group">
+                <label class="form-label" for="bagian">Division/Unit/Study Program</label>
+                <input type="text" id="bagian" class="form-input" value="<?= $unit['name'] ?? '-' ?>" readonly>
+                <input type="hidden" name="unit_id" value="<?= $unit['id'] ?? '' ?>" required>
+            </div>
+
             <!-- Nama Dokumen -->
             <div class="form-group">
                 <label class="form-label" for="nama-dokumen">Document Name</label>
@@ -40,31 +38,30 @@
                     The document name may only contain letters, numbers, and spaces.
                 </div>
             </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="jenis-dokumen">Document Type</label>
-                    <select id="jenis-dokumen" name="jenis" class="form-input" onchange="handleJenisChange()" required>
-                        <option value="" disabled selected hidden>-- Select Type --</option>
-                        <?php foreach ($kategori_dokumen as $kategori): ?>
-                        <option value="<?= $kategori['id'] ?>" data-kode="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
-                            <?= $kategori['nama'] ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
 
-                <!-- Untuk predefined codes -->
-                <div class="form-group" id="kode-dokumen-group">
-                    <label class="form-label" for="kode-dokumen">Code-Document Name</label>
-                    <select id="kode-dokumen" name="kode_dokumen_id" class="form-input">
-                        <option value="">-- Select Document --</option>
-                    </select>
-                </div>
+            <!-- Document Type - Full Width -->
+            <div class="form-group">
+                <label class="form-label" for="jenis-dokumen">Document Type</label>
+                <select id="jenis-dokumen" name="jenis" class="form-input" onchange="handleJenisChange()" required>
+                    <option value="" disabled selected hidden>-- Select Type --</option>
+                    <?php foreach ($kategori_dokumen as $kategori): ?>
+                    <option value="<?= $kategori['id'] ?>" data-kode="<?= $kategori['kode'] ?>" data-use-predefined="<?= $kategori['use_predefined_codes'] ? 'true' : 'false' ?>">
+                        <?= $kategori['nama'] ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
-            <!-- Untuk non-predefined codes - pisah menjadi 2 input terpisah -->
-            <div class="form-row" id="kode-dokumen-custom-group" style="display: none;">
+            <!-- Untuk predefined codes - Full Width -->
+            <div class="form-group" id="kode-dokumen-group">
+                <label class="form-label" for="kode-dokumen">Code-Document Name</label>
+                <select id="kode-dokumen" name="kode_dokumen_id" class="form-input">
+                    <option value="">-- Select Document --</option>
+                </select>
+            </div>
+
+            <!-- Untuk non-predefined codes - Full Width, Stacked Vertically -->
+            <div id="kode-dokumen-custom-group" style="display: none;">
                 <div class="form-group">
                     <label class="form-label" for="kode-dokumen-custom">Document Code</label>
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" 
@@ -84,12 +81,12 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="date-published">Publication Date</label>
                 <input type="date" id="date-published" name="date_published" class="form-input" required>
             </div>
-            
+
             <!-- Nomor Dokumen -->
             <div class="form-group">
                 <label class="form-label" for="no-dokumen">Document Number</label>
@@ -101,7 +98,7 @@
                     Document number is required, must not contain spaces, and may include letters, numbers, or symbols.
                 </div>
             </div>
-            
+
             <!-- Revisi -->
             <div class="form-group">
                 <label class="form-label" for="revisi">Revision</label>
@@ -112,7 +109,7 @@
                     Revision is required and must contain numbers only.
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label" for="keterangan">Description</label>
                 <textarea id="keterangan" name="keterangan" class="form-input" rows="1" placeholder="Enter description here..." required></textarea>
@@ -162,9 +159,8 @@
 
 <!-- Pass data dari PHP ke JavaScript -->
 <script>
-    // Data kode dokumen berdasarkan type dari PHP
     const kodeDokumenByType = <?= json_encode($kode_dokumen_by_type ?? []) ?>;
-    
+
     // Bootstrap validation
     (() => {
         'use strict';
@@ -179,213 +175,179 @@
             }, false);
         });
     })();
-</script>
 
-<!-- Script Jenis & Kode Dokumen -->
-<script>
-function handleJenisChange() {
-    const jenisSelect = document.getElementById('jenis-dokumen');
-    const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
-    const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
-    const jenisId = selectedOption.value;
+    function handleJenisChange() {
+        const jenisSelect = document.getElementById('jenis-dokumen');
+        const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
+        const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
+        const jenisId = selectedOption.value;
 
-    const kodeGroup = document.getElementById('kode-dokumen-group');
-    const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
-    const kodeSelect = document.getElementById('kode-dokumen');
-    const kodeCustomInput = document.getElementById('kode-dokumen-custom');
-    const namaCustomInput = document.getElementById('nama-dokumen-custom');
+        const kodeGroup = document.getElementById('kode-dokumen-group');
+        const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
+        const kodeSelect = document.getElementById('kode-dokumen');
+        const kodeCustomInput = document.getElementById('kode-dokumen-custom');
+        const namaCustomInput = document.getElementById('nama-dokumen-custom');
 
-    if (usePredefined) {
-        // Show predefined dropdown, hide custom inputs
-        kodeGroup.style.display = 'block';
-        kodeCustomGroup.style.display = 'none';
-        
-        // Set required attributes
-        kodeSelect.required = true;
-        kodeCustomInput.required = false;
-        namaCustomInput.required = false;
-        
-        // Clear custom inputs
-        kodeCustomInput.value = '';
-        namaCustomInput.value = '';
-        
-        // Load predefined codes
-        loadKodeDokumen(jenisId);
-    } else {
-        // Hide predefined dropdown, show custom inputs
-        kodeGroup.style.display = 'none';
-        kodeCustomGroup.style.display = 'block';
-        
-        // Set required attributes
-        kodeSelect.required = false;
-        kodeCustomInput.required = true;
-        namaCustomInput.required = true;
-        
-        // Clear predefined dropdown
+        if (usePredefined) {
+            kodeGroup.style.display = 'block';
+            kodeCustomGroup.style.display = 'none';
+            kodeSelect.required = true;
+            kodeCustomInput.required = false;
+            namaCustomInput.required = false;
+            kodeCustomInput.value = '';
+            namaCustomInput.value = '';
+            loadKodeDokumen(jenisId);
+        } else {
+            kodeGroup.style.display = 'none';
+            kodeCustomGroup.style.display = 'block';
+            kodeSelect.required = false;
+            kodeCustomInput.required = true;
+            namaCustomInput.required = true;
+            kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+            kodeSelect.value = '';
+        }
+    }
+
+    function loadKodeDokumen(jenisId) {
+        const kodeSelect = document.getElementById('kode-dokumen');
         kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
-        kodeSelect.value = '';
-    }
-}
 
-function loadKodeDokumen(jenisId) {
-    const kodeSelect = document.getElementById('kode-dokumen');
-    kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
-
-    // Menggunakan data yang sudah disiapkan dari PHP
-    if (kodeDokumenByType[jenisId]) {
-        kodeDokumenByType[jenisId].forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = item.kode + ' - ' + item.nama;
-            kodeSelect.appendChild(option);
-        });
-    } else {
-        // Fallback jika tidak ada data di kodeDokumenByType
-        console.log('No kode dokumen found for jenisId:', jenisId);
-    }
-}
-
-// Validasi tipe file yang diizinkan
-function validateFileType(file) {
-    const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-    
-    const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
-    const fileName = file.name.toLowerCase();
-    const fileType = file.type;
-    
-    // Cek berdasarkan MIME type
-    if (allowedTypes.includes(fileType)) {
-        return true;
-    }
-    
-    // Cek berdasarkan ekstensi file sebagai fallback
-    return allowedExtensions.some(ext => fileName.endsWith(ext));
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Hide both groups initially
-    document.getElementById('kode-dokumen-group').style.display = 'none';
-    document.getElementById('kode-dokumen-custom-group').style.display = 'none';
-});
-
-// File upload handlers
-document.getElementById('chooseFileBtn').addEventListener('click', function () {
-    document.getElementById('fileInput').click();
-});
-
-document.getElementById('fileInput').addEventListener('change', function () {
-    const file = this.files[0];
-    if (file) {
-        // Validasi tipe file
-        if (!validateFileType(file)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'File Tidak Valid',
-                text: 'Hanya file PDF, Word (.doc, .docx), dan Excel (.xls, .xlsx) yang diizinkan!',
-                confirmButtonText: 'Okay'
+        if (kodeDokumenByType[jenisId]) {
+            kodeDokumenByType[jenisId].forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.kode + ' - ' + item.nama;
+                kodeSelect.appendChild(option);
             });
-            this.value = ''; // Reset input file
-            return;
+        } else {
+            console.log('No kode dokumen found for jenisId:', jenisId);
         }
-        
-        // Validasi ukuran file (maksimal 10MB)
-        const maxSize = 10 * 1024 * 1024; // 10MB dalam bytes
-        if (file.size > maxSize) {
-            Swal.fire({
-                icon: 'error',
-                title: 'File Terlalu Besar',
-                text: 'Ukuran file maksimal 10MB!',
-                confirmButtonText: 'Okay'
-            });
-            this.value = ''; // Reset input file
-            return;
-        }
-        
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
-        document.getElementById('fileInfo').classList.remove('d-none');
-        document.getElementById('uploadArea').classList.add('d-none');
     }
-});
 
-document.getElementById('removeBtn').addEventListener('click', function () {
-    const fileInput = document.getElementById('fileInput');
-    fileInput.value = '';
-    document.getElementById('fileName').textContent = '';
-    document.getElementById('fileSize').textContent = '';
-    document.getElementById('fileInfo').classList.add('d-none');
-    document.getElementById('uploadArea').classList.remove('d-none');
-});
+    function validateFileType(file) {
+        const allowedTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+        const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx'];
+        const fileName = file.name.toLowerCase();
+        const fileType = file.type;
 
-// Drag and drop functionality dengan validasi
-const uploadArea = document.getElementById('uploadArea');
-
-uploadArea.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.style.backgroundColor = '#f8f9fa';
-    this.style.borderColor = '#b41616';
-});
-
-uploadArea.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    this.style.backgroundColor = '';
-    this.style.borderColor = '#b41616';
-});
-
-uploadArea.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.style.backgroundColor = '';
-    this.style.borderColor = '#b41616';
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        const file = files[0];
-        
-        // Validasi tipe file
-        if (!validateFileType(file)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'File is Invalid',
-                text: 'Only PDF, Word (.doc, .docx), and Excel (.xls, .xlsx) files are allowed!',
-                confirmButtonText: 'Okay'
-            });
-            return;
+        if (allowedTypes.includes(fileType)) {
+            return true;
         }
-        
-        // Validasi ukuran file (maksimal 10MB)
-        const maxSize = 10 * 1024 * 1024; // 10MB dalam bytes
-        if (file.size > maxSize) {
+        return allowedExtensions.some(ext => fileName.endsWith(ext));
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Check for success message from controller and show SweetAlert
+        <?php if (session()->getFlashdata('added_message')): ?>
             Swal.fire({
-                icon: 'error',
-                title: 'File Too Large',
-                text: 'Maximum file size is 10MB',
-                confirmButtonText: 'Okay'
+                icon: 'success',
+                title: 'Success!',
+                text: '<?= session()->getFlashdata('added_message') ?>',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#600c8c',
+                showConfirmButton: true,
+                allowOutsideClick: false
             });
-            return;
+        <?php endif; ?>
+
+        // Hide form groups on initial load
+        document.getElementById('kode-dokumen-group').style.display = 'none';
+        document.getElementById('kode-dokumen-custom-group').style.display = 'none';
+
+        // Refresh notifikasi setelah dokumen berhasil dibuat
+        <?php if (session()->getFlashdata('refresh_notif')): ?>
+            fetch('<?= base_url('notification/fetch') ?>', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'success' && data.notifikasi) {
+                    console.log('Refreshed notifications:', data.notifikasi);
+                    // Anda bisa menambahkan logika tambahan untuk memperbarui UI di sini jika diperlukan
+                }
+            }).catch(error => console.error('Error refreshing notifications:', error));
+        <?php endif; ?>
+    });
+
+    document.getElementById('chooseFileBtn').addEventListener('click', function () {
+        document.getElementById('fileInput').click();
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (file) {
+            if (!validateFileType(file)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Tidak Valid',
+                    text: 'Hanya file PDF, Word (.doc, .docx), dan Excel (.xls, .xlsx) yang diizinkan!',
+                    confirmButtonText: 'Okay'
+                });
+                this.value = '';
+                return;
+            }
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
+            document.getElementById('fileInfo').classList.remove('d-none');
+            document.getElementById('uploadArea').classList.add('d-none');
         }
-        
-        // Set file ke input
+    });
+
+    document.getElementById('removeBtn').addEventListener('click', function () {
         const fileInput = document.getElementById('fileInput');
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-        
-        // Update UI
-        document.getElementById('fileName').textContent = file.name;
-        document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
-        document.getElementById('fileInfo').classList.remove('d-none');
-        document.getElementById('uploadArea').classList.add('d-none');
-    }
-});
+        fileInput.value = '';
+        document.getElementById('fileName').textContent = '';
+        document.getElementById('fileSize').textContent = '';
+        document.getElementById('fileInfo').classList.add('d-none');
+        document.getElementById('uploadArea').classList.remove('d-none');
+    });
+
+    const uploadArea = document.getElementById('uploadArea');
+
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '#f8f9fa';
+        this.style.borderColor = '#b41616';
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '';
+        this.style.borderColor = '#b41616';
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.style.backgroundColor = '';
+        this.style.borderColor = '#b41616';
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (!validateFileType(file)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File is Invalid',
+                    text: 'Only PDF, Word (.doc, .docx), and Excel (.xls, .xlsx) files are allowed!',
+                    confirmButtonText: 'Okay'
+                });
+                return;
+            }
+            const fileInput = document.getElementById('fileInput');
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = 'Ukuran: ' + (file.size / 1024).toFixed(1) + ' KB';
+            document.getElementById('fileInfo').classList.remove('d-none');
+            document.getElementById('uploadArea').classList.add('d-none');
+        }
+    });
 </script>
-
-<!-- SweetAlert2 untuk notifikasi -->
-
 
 <?= $this->endSection() ?>

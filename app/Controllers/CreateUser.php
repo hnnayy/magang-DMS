@@ -130,36 +130,37 @@ class CreateUser extends Controller
     }
     
     public function list()
-    {
-        $users = $this->userModel
-            ->select('
-                user.id,
-                user.username,
-                user.fullname,
-                unit.id           AS unit_id,
-                unit.parent_id    AS parent_id,
-                unit.name         AS unit_name,
-                unit_parent.name  AS parent_name,
-                role.name         AS role_name
-            ')
-            ->join('unit', 'unit.id = user.unit_id')
-            ->join('unit_parent', 'unit_parent.id = unit.parent_id')
-            ->join('user_role', 'user_role.user_id = user.id', 'left')
-            ->join('role', 'role.id = user_role.role_id', 'left')
-            ->where('user.status', 1) 
-            ->findAll();
+{
+    $users = $this->userModel
+        ->select('
+            user.id,
+            user.username,
+            user.fullname,
+            unit.id           AS unit_id,
+            unit.parent_id    AS parent_id,
+            unit.name         AS unit_name,
+            unit_parent.name  AS parent_name,
+            role.name         AS role_name
+        ')
+        ->join('unit', 'unit.id = user.unit_id', 'left') // Ubah ke LEFT JOIN
+        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+        ->join('user_role', 'user_role.user_id = user.id', 'left')
+        ->join('role', 'role.id = user_role.role_id', 'left')
+        ->where('user.status IS NOT NULL') // Sementara ganti kondisi
+        ->findAll();
 
-        $unitParents = $this->unitParentModel->findAll();
-        $units = $this->unitModel->findAll();
-        $roles = $this->roleModel->findAll();
-        return view('CreateUser/daftar-users', [
-            'users' => $users,
-            'unitParents' => $unitParents,
-            'units' => $units,
-            'roles' => $roles,
-        ]);
-    }
+    log_message('debug', 'Users retrieved: ' . json_encode($users)); // Debug
 
+    $unitParents = $this->unitParentModel->findAll();
+    $units = $this->unitModel->findAll();
+    $roles = $this->roleModel->findAll();
+    return view('CreateUser/daftar-users', [
+        'users' => $users,
+        'unitParents' => $unitParents,
+        'units' => $units,
+        'roles' => $roles,
+    ]);
+}
     public function index()
     {
         return redirect()->to('CreateUser/list');
@@ -248,53 +249,6 @@ class CreateUser extends Controller
 
         return $this->response->setJSON(['updated_message' => 'Successfully Updated']);
     }
-
-    public function privilege()
-    {
-        $data = [
-            'title'    => 'Tambah Privilege',
-            'roles'    => $this->roleModel
-                               ->where('status', 1)
-                               ->orderBy('name')
-                               ->findAll(),
-            'submenus' => $this->submenuModel
-                               ->select('submenu.id, submenu.name,
-                                         menu.name as menu_name')
-                               ->join('menu','menu.id = submenu.parent','left')
-                               ->where('submenu.status', 1)
-                               ->orderBy('menu.name, submenu.name')
-                               ->findAll(),
-        ];
-        return view('CreateUser/privilege', $data);
-    }
-
-    public function storePrivilege()
-    {
-        $roleId   = $this->request->getPost('role');
-        $submenu  = $this->request->getPost('submenu');   
-        $actions  = $this->request->getPost('privileges'); 
-
-        if (! $this->roleModel->find($roleId))
-            return $this->response->setJSON(['error'=>'Role is not found'])->setStatusCode(404);
-
-        if (empty($submenu))
-            return $this->response->setJSON(['error'=>'Select at least one submenu'])->setStatusCode(400);
-
-        foreach ($submenu as $sid) {
-            if (! $this->submenuModel->find($sid)) continue; 
-
-            $this->privilegeModel->insert([
-                'role_id'    => $roleId,
-                'submenu_id' => $sid,
-                'create'     => in_array('create',  $actions) ? 1 : 0,
-                'update'     => in_array('update',  $actions) ? 1 : 0,
-                'delete'     => in_array('delete',  $actions) ? 1 : 0,
-                'approve'    => in_array('read',    $actions) ? 1 : 0, 
-            ]);
-        }
-        return $this->response->setJSON(['message'=>'Privilege has been successfully saved']);
-    }
-
     public function softDelete($id)
     {
         if ($this->userModel->delete($id)) {

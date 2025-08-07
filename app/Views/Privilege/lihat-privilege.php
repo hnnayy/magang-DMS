@@ -201,27 +201,23 @@
             data: formData,
             dataType: 'json',
             success: function(res) {
-                const modal = $('#editModal');
+    const modal = $('#editModal');
 
-                // Pastikan hanya 1 kali event listener
-                modal.off('hidden.bs.modal').on('hidden.bs.modal', function () {
-                    $('body').removeClass('modal-open'); // clear paksa
-                    $('.modal-backdrop').remove();       // hapus backdrop
-                    $('#overlay').remove();              // hapus overlay total
+    // Hide the modal first
+    modal.modal('hide');
 
-                    // Reload setelah bersih
-                    location.reload();
-                });
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: res.message,
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    modal.modal('hide');
-                });
-            }
+    // Ensure the modal is fully closed before showing the alert
+    modal.one('hidden.bs.modal', function () {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: res.message,
+            confirmButtonText: 'OK'
+        }).then(() => {
+            location.reload(); // Reload after the alert is dismissed
+        });
+    });
+}
 
         });
     });
