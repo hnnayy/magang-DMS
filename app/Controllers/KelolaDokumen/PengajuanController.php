@@ -496,73 +496,78 @@ log_message('debug', 'Revision inserted with ID: ' . $this->documentRevisionMode
 
     // POST document-submission-list/approve
     public function approve()
-    {
-        date_default_timezone_set('Asia/Jakarta');
-        $document_id = $this->request->getPost('document_id');
-        $approved_by = $this->request->getPost('approved_by');
-        $remarks = $this->request->getPost('remarks');
-        $action = trim($this->request->getPost('action') ?? '');
+{
+    date_default_timezone_set('Asia/Jakarta');
+    $document_id = $this->request->getPost('document_id');
+    $approved_by = $this->request->getPost('approved_by');
+    $remarks = $this->request->getPost('remarks');
+    $action = trim($this->request->getPost('action') ?? '');
 
-        log_message('debug', 'Received data - document_id: ' . $document_id . ', approved_by: ' . $approved_by . ', remarks: ' . $remarks . ', action: ' . $action);
+    log_message('debug', 'Received data - document_id: ' . $document_id . ', approved_by: ' . $approved_by . ', remarks: ' . $remarks . ', action: ' . $action);
 
-        if (!$document_id || !$approved_by) {
-            log_message('error', 'Missing required fields: document_id or approved_by');
-            return redirect()->back()->with('error', 'Required data is incomplete.');
-        }
-
-        $validActions = ['approve', 'disapprove'];
-        if (!in_array(strtolower($action), $validActions)) {
-            log_message('error', 'Invalid action received: ' . $action);
-            return redirect()->back()->with('error', 'Invalid action. Action received: ' . $action);
-        }
-
-        $status = strtolower($action) === 'approve' ? 1 : 2;
-
-        $document = $this->documentModel
-            ->select('document.*, dt.name AS document_type_name')
-            ->join('document_type dt', 'dt.id = document.type', 'left')
-            ->where('document.id', $document_id)
-            ->first();
-
-        if (!$document) {
-            log_message('error', 'Document not found for ID: ' . $document_id);
-            return redirect()->back()->with('error', 'Document not found.');
-        }
-
-        $approver = $this->userModel->find($approved_by);
-        $approverName = $approver['fullname'] ?? $approver['username'] ?? 'Unknown User';
-
-        $data = [
-            'document_id' => $document_id,
-            'remark' => $remarks,
-            'status' => $status,
-            'approvedate' => date('Y-m-d H:i:s'),
-            'approveby' => $approved_by,
-        ];
-
-        try {
-            $this->db->transStart();
-            $this->documentApprovalModel->insert($data);
-            $this->documentModel->update($document_id, ['status' => $status]);
-            $this->db->transComplete();
-
-            if ($this->db->transStatus() === false) {
-                throw new \Exception('Transaction failed.');
-            }
-
-            $actionText = strtolower($action) === 'approve' ? 'approved' : 'disapproved';
-            $this->createApprovalNotification($document_id, $document['title'], $document['document_type_name'], $actionText, $approverName, $remarks);
-
-            $successMessage = strtolower($action) === 'approve' ? 'Document successfully approved.' : 'Document successfully disapproved.';
-            
-            log_message('info', 'Document ' . $document_id . ' processed with status: ' . $status);
-            return redirect()->back()->with('success', $successMessage);
-        } catch (\Exception $e) {
-            log_message('error', 'Error processing approval for document ' . $document_id . ': ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to process document: ' . $e->getMessage());
-        }
+    if (!$document_id || !$approved_by) {
+        log_message('error', 'Missing required fields: document_id or approved_by');
+        return redirect()->back()->with('error', 'Required data is incomplete.');
     }
 
+    $validActions = ['approve', 'disapprove'];
+    if (!in_array(strtolower($action), $validActions)) {
+        log_message('error', 'Invalid action received: ' . $action);
+        return redirect()->back()->with('error', 'Invalid action. Action received: ' . $action);
+    }
+
+    $document = $this->documentModel
+        ->select('document.*, dt.name AS document_type_name')
+        ->join('document_type dt', 'dt.id = document.type', 'left')
+        ->where('document.id', $document_id)
+        ->first();
+
+    if (!$document) {
+        log_message('error', 'Document not found for ID: ' . $document_id);
+        return redirect()->back()->with('error', 'Document not found.');
+    }
+
+    // Check if document is already approved
+    if ($document['status'] == 1) {
+        log_message('info', 'Attempt to approve already approved document ID: ' . $document_id);
+        return redirect()->back()->with('error', 'This document has already been approved.');
+    }
+
+    $status = strtolower($action) === 'approve' ? 1 : 2;
+
+    $approver = $this->userModel->find($approved_by);
+    $approverName = $approver['fullname'] ?? $approver['username'] ?? 'Unknown User';
+
+    $data = [
+        'document_id' => $document_id,
+        'remark' => $remarks,
+        'status' => $status,
+        'approvedate' => date('Y-m-d H:i:s'),
+        'approveby' => $approved_by,
+    ];
+
+    try {
+        $this->db->transStart();
+        $this->documentApprovalModel->insert($data);
+        $this->documentModel->update($document_id, ['status' => $status]);
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === false) {
+            throw new \Exception('Transaction failed.');
+        }
+
+        $actionText = strtolower($action) === 'approve' ? 'approved' : 'disapproved';
+        $this->createApprovalNotification($document_id, $document['title'], $document['document_type_name'], $actionText, $approverName, $remarks);
+
+        $successMessage = strtolower($action) === 'approve' ? 'Document successfully approved.' : 'Document successfully disapproved.';
+        
+        log_message('info', 'Document ' . $document_id . ' processed with status: ' . $status);
+        return redirect()->back()->with('success', $successMessage);
+    } catch (\Exception $e) {
+        log_message('error', 'Error processing approval for document ' . $document_id . ': ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to process document: ' . $e->getMessage());
+    }
+}
     // Method untuk mendapatkan kode dokumen berdasarkan type_id
     private function getKodeDokumenByType()
     {

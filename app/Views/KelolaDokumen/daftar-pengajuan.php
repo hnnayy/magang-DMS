@@ -21,6 +21,28 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
     'can_delete' => 0,
     'can_approve' => 0
 ];
+
+// Define a color palette for document types
+$badgeColors = [
+    'bg-primary',
+    'bg-success',
+    'bg-info',
+    'bg-warning',
+    'bg-danger',
+    'bg-secondary',
+    'bg-dark',
+    'bg-primary-subtle',
+    'bg-success-subtle',
+    'bg-info-subtle'
+];
+
+// Get unique document types, sort them, and assign colors
+$uniqueJenisDokumen = array_unique(array_column($documents, 'jenis_dokumen'));
+sort($uniqueJenisDokumen); // Sort to ensure consistent order
+$jenisColorMap = [];
+foreach ($uniqueJenisDokumen as $index => $jenis) {
+    $jenisColorMap[$jenis] = $badgeColors[$index % count($badgeColors)];
+}
 ?>
 
 <div class="container-fluid">
@@ -61,7 +83,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
             <div class="card-body">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <label for="searchInput" class="form-label">Search Documents</label>
+                        <label for="searchInput" class="form-label">Search Document</label>
                         <input type="text" class="form-control" placeholder="Search documents..." id="searchInput">
                     </div>
                     <div class="col-md-3">
@@ -97,18 +119,18 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width:5%;">No</th>
-                        <th class="text-center d-none" style="width:5%;">Document ID</th> <!-- Sembunyikan kolom Document ID -->
+                        <th class="text-center d-none" style="width:5%;">Document ID</th>
                         <th style="width:12%;">Faculty</th>
-                        <th style="width:10%;">Department</th>
+                        <th style="width:10%;">Unit</th>
                         <th style="width:15%;">Document Name</th>
-                        <th style="width:10%;">Document No</th>
+                        <th style="width:10%;">Document Number</th>
                         <th class="text-center" style="width:8%;">Revision</th>
                         <th style="width:10%;">Type</th>
                         <th style="width:12%;">Code & Name</th>
                         <th style="width:10%;">File</th>
                         <th style="width:10%;">Description</th>
                         <th style="width:8%;">Created By</th>
-                        <th class="text-center" style="width:8%;">Action</th>
+                        <th class="text-center" style="width:8%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -145,7 +167,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                             <?php if ($documentCreatorId != 0): ?>
                             <tr data-document-id="<?= esc($doc['id']) ?>">
                                 <td class="text-center"><?= $no++ ?></td>
-                                <td class="text-center d-none"><?= esc($doc['id']) ?></td> <!-- Sembunyikan kolom Document ID -->
+                                <td class="text-center d-none"><?= esc($doc['id']) ?></td>
                                 <td data-fakultas="<?= esc($doc['unit_parent_id'] ?? '') ?>">
                                     <?= esc($doc['parent_name'] ?? '-') ?>
                                 </td>
@@ -160,10 +182,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                 <td data-jenis="<?= esc($doc['type'] ?? '') ?>">
                                     <?php
                                         $jenis_dokumen = $doc['jenis_dokumen'] ?? '-';
-                                        $badgeClass = 'bg-secondary';
-                                        if (str_contains(strtolower($jenis_dokumen), 'internal')) $badgeClass = 'bg-primary';
-                                        elseif (str_contains(strtolower($jenis_dokumen), 'eksternal')) $badgeClass = 'bg-success';
-                                        elseif ($jenis_dokumen !== '-') $badgeClass = 'bg-info';
+                                        $badgeClass = isset($jenisColorMap[$jenis_dokumen]) ? $jenisColorMap[$jenis_dokumen] : 'bg-secondary';
                                     ?>
                                     <span class="badge <?= $badgeClass ?>"><?= esc($jenis_dokumen) ?></span>
                                 </td>
@@ -228,7 +247,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
                                         <button class="btn btn-sm btn-outline-primary edit-btn"
-                                            data-id="<?= $doc['id'] ?? '' ?>"
+                                            data-id="<?= esc($doc['id'] ?? '') ?>"
                                             data-fakultas="<?= esc($doc['parent_name'] ?? '-') ?>"
                                             data-unit="<?= esc($doc['unit_name'] ?? '-') ?>"
                                             data-nama="<?= esc($doc['title'] ?? '') ?>"
@@ -252,7 +271,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                  $currentUserAccessLevel == 1 && 
                                                  $documentCreatorAccessLevel == 2): ?>
                                         <button class="btn btn-sm btn-outline-success approve-btn"
-                                            data-id="<?= $doc['id'] ?? '' ?>"
+                                            data-id="<?= esc($doc['id'] ?? '') ?>"
+                                            data-status="<?= esc($doc['status'] ?? 0) ?>"
                                             title="Approve">
                                             <i class="bi bi-check-circle"></i>
                                         </button>
@@ -262,7 +282,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
                                         <button class="btn btn-sm btn-outline-danger delete-document" 
-                                            data-id="<?= $doc['id'] ?? '' ?>" 
+                                            data-id="<?= esc($doc['id'] ?? '') ?>" 
                                             title="Delete">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -274,7 +294,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="12" class="text-center text-muted py-5"> <!-- Ubah colspan menjadi 12 -->
+                            <td colspan="12" class="text-center text-muted py-5">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No document submissions available for your access level.
                             </td>
@@ -303,7 +323,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                     <input type="text" class="form-control" id="editFakultas" name="fakultas" readonly>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="editBagian" class="form-label">Department</label>
+                                    <label for="editBagian" class="form-label">Unit</label>
                                     <input type="text" class="form-control" id="editBagian" name="bagian" readonly>
                                 </div>
                                 <div class="col-md-6">
@@ -311,7 +331,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                     <input type="text" class="form-control" name="nama" id="editNama">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="editNomor" class="form-label">Document No</label>
+                                    <label for="editNomor" class="form-label">Document Number</label>
                                     <input type="text" class="form-control" name="nomor" id="editNomor">
                                 </div>
                                 <div class="col-md-3">
@@ -346,7 +366,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                                    style="text-transform: uppercase;">
                                         </div>
                                         <div class="col-md-8">
-                                            <label for="editNamaCustom" class="form-label">Document Detail Name</label>
+                                            <label for="editNamaCustom" class="form-label">Detailed Document Name</label>
                                             <input type="text" id="editNamaCustom" name="nama_dokumen_custom" class="form-control">
                                         </div>
                                     </div>
@@ -363,7 +383,7 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
                                             <i class="bi bi-file-earmark-text me-2"></i>
                                             <div>
                                                 <strong>Current file:</strong> <span id="currentFileName">-</span><br>
-                                                <small>Upload new file to replace existing file</small>
+                                                <small>Upload a new file to replace the existing one</small>
                                             </div>
                                         </div>
                                     </div>
@@ -382,53 +402,53 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
         </div>
         <?php endif; ?>
 
-       <!-- History Modal -->
-<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-sm">
-            <div class="modal-header border-bottom-0 pb-2">
-                <h5 class="modal-title fw-bold" id="historyModalLabel">Riwayat Revisi Dokumen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-4">
-                    <h6 class="fw-bold">Informasi Dokumen</h6>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Nama Dokumen</label>
-                            <p id="historyNamaDokumen" class="mb-0">-</p>
+        <!-- History Modal -->
+        <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-sm">
+                    <div class="modal-header border-bottom-0 pb-2">
+                        <h5 class="modal-title fw-bold" id="historyModalLabel">Document Revision History</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <h6 class="fw-bold">Document Information</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Document Name</label>
+                                    <p id="historyNamaDokumen" class="mb-0">-</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Document Type</label>
+                                    <p id="historyJenisDokumen" class="mb-0">-</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Jenis Dokumen</label>
-                            <p id="historyJenisDokumen" class="mb-0">-</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="historyTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 5%;">No</th>
+                                        <th class="text-center d-none" style="width: 10%;">Revision ID</th>
+                                        <th style="width: 20%;">Document Name</th>
+                                        <th style="width: 15%;">Document Number</th>
+                                        <th style="width: 15%;">File</th>
+                                        <th class="text-center" style="width: 15%;">Revision</th>
+                                        <th style="width: 20%;">Date</th>
+                                        <th style="width: 10%;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle" id="historyTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 5%;">No</th>
-                                <th class="text-center d-none" style="width: 10%;">Revision ID</th> <!-- Sembunyikan kolom Revision ID -->
-                                <th style="width: 20%;">Nama Dokumen</th>
-                                <th style="width: 15%;">Nomor Dokumen</th>
-                                <th style="width: 15%;">File</th>
-                                <th class="text-center" style="width: 15%;">Revisi</th>
-                                <th style="width: 20%;">Tanggal</th>
-                                <th style="width: 10%;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer border-top-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
-    </div>
-</div>
 
         <!-- Approve Modal -->
         <?php if ($documentSubmissionPrivileges['can_approve']): ?>
@@ -484,6 +504,8 @@ $documentSubmissionPrivileges = $privileges['document-submission-list'] ?? [
             </div>
         </div>
         <?php endif; ?>
+    </div>
+</div>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -577,8 +599,8 @@ function loadEditKodeDokumen(jenisId) {
         kodeSelect.disabled = false;
     })
     .catch(error => {
-        console.error('Error loading kode dokumen:', error);
-        kodeSelect.innerHTML = '<option value="">-- Error loading data --</option>';
+        console.error('Error loading document codes:', error);
+        kodeSelect.innerHTML = '<option value="">-- Failed to load data --</option>';
         kodeSelect.disabled = false;
     });
 }
@@ -604,29 +626,29 @@ $(document).ready(function() {
         },
         columnDefs: [
             {
-                targets: 0, // Kolom No
+                targets: 0, // No column
                 searchable: false,
                 orderable: false
             },
             {
-                targets: 1, // Kolom Document ID
-                visible: false, // Sembunyikan kolom Document ID di DataTables
+                targets: 1, // Document ID column
+                visible: false,
                 searchable: true,
                 orderable: true
             },
             {
-                targets: 12, // Kolom Action
+                targets: 12, // Actions column
                 orderable: false,
                 searchable: false
             }
         ],
         responsive: true,
         autoWidth: false,
-        order: [[0, 'asc']],
+        order: [[0, 'desc']],
         drawCallback: function(settings) {
             var api = this.api();
             var pageInfo = api.page.info();
-            var startRow = pageInfo.start; // Starting row index for the current page
+            var startRow = pageInfo.start;
             $('#documentsTable tbody tr').each(function(index) {
                 $(this).find('td:first').text(startRow + index + 1);
             });
@@ -667,7 +689,6 @@ $(document).ready(function() {
         const documentId = urlParams.get('document_id');
 
         if (revisionId) {
-            // Handle revision ID logic (e.g., show history modal)
             $.ajax({
                 url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + (documentId || '0'),
                 type: 'GET',
@@ -681,18 +702,19 @@ $(document).ready(function() {
                         $('#historyNamaDokumen').text(response.data.document.title || '-');
                         $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
                         let html = '';
-                        response.data.history.forEach((item, index) => {
+                        const reversedHistory = response.data.history.slice().reverse();
+                        reversedHistory.forEach((item, index) => {
                             const fileLink = item.filepath ? `
                                 <div class="d-flex gap-2">
-                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Unduh file">
+                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
                                         <i class="bi bi-download text-success fs-5"></i>
                                     </a>
                                 </div>
-                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
+                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
                             const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
                                                item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
                                                item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
-                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Delete</span>' :
+                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
                                                item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
                             html += `
                                 <tr data-revision-id="${item.revision_id}" ${item.revision_id == revisionId ? 'class="document-highlight"' : ''}>
@@ -722,18 +744,18 @@ $(document).ready(function() {
                     } else {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Dokumen Tidak Ditemukan',
-                            text: 'Revisi dengan ID ' + revisionId + ' tidak ditemukan atau Anda tidak memiliki akses.',
+                            title: 'Document Not Found',
+                            text: 'Revision with ID ' + revisionId + ' not found or you do not have access.',
                             confirmButtonColor: '#dc3545'
                         });
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('Kesalahan memeriksa riwayat dokumen:', error);
+                    console.error('Error checking document history:', error);
                     Swal.fire({
                         icon: 'error',
-                        title: 'Kesalahan',
-                        text: 'Gagal memeriksa riwayat dokumen. Silakan coba lagi.',
+                        title: 'Error',
+                        text: 'Failed to check document history. Please try again.',
                         confirmButtonColor: '#dc3545'
                     });
                 }
@@ -783,28 +805,8 @@ $(document).ready(function() {
     if (documentPrivileges.can_update) {
         $('.edit-btn').each(function() {
             const status = parseInt($(this).data('status'));
-            
-            if (status === 1) {
-                $(this).prop('disabled', true);
-                $(this).attr('title', 'Document is approved and cannot be edited');
-                $(this).tooltip('dispose').tooltip();
-
-                $(this).on('click', function(e) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Cannot Edit',
-                        text: 'This document is already approved and cannot be edited.',
-                        confirmButtonColor: '#dc3545'
-                    });
-                    return false;
-                });
-            } else {
-                $(this).prop('disabled', false);
-                $(this).off('click');
-                $(this).attr('title', 'Edit');
-                $(this).tooltip('dispose').tooltip();
-            }
+            $(this).attr('title', status === 1 ? 'Document is already approved and cannot be edited' : 'Edit');
+            $(this).tooltip('dispose').tooltip();
         });
     }
 
@@ -847,7 +849,7 @@ $(document).ready(function() {
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Edit It!',
+                confirmButtonText: 'Yes, Edit!',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -911,7 +913,7 @@ $(document).ready(function() {
                 showCancelButton: true,
                 confirmButtonColor: '#28a745',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Save Changes!',
+                confirmButtonText: 'Yes, Save!',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -932,10 +934,40 @@ $(document).ready(function() {
     }
 
     if (documentPrivileges.can_approve) {
-        $(document).on('click', '.approve-btn', function() {
-            const id = $(this).data('id');
+        $('.approve-btn').each(function() {
+            const status = parseInt($(this).data('status'));
+            $(this).attr('title', status === 1 ? 'Document is already approved' : 'Approve');
+            $(this).tooltip('dispose').tooltip();
+        });
+
+        $(document).on('click', '.approve-btn, .approve-btn i', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const $button = $(this).hasClass('approve-btn') ? $(this) : $(this).closest('.approve-btn');
+            const id = $button.data('id');
+            const status = parseInt($button.data('status'));
+
+            console.log(`Approve button clicked - ID: ${id}, Status: ${status}, Element: ${$(this).prop('tagName')}`);
+
             if (!id) {
                 console.error('No document ID found');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Document ID not found. Please try again.',
+                    confirmButtonColor: '#dc3545'
+                });
+                return;
+            }
+
+            if (status === 1) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Document Already Approved',
+                    text: 'This document is already approved and cannot be approved again.',
+                    confirmButtonColor: '#dc3545'
+                });
                 return;
             }
 
@@ -963,6 +995,8 @@ $(document).ready(function() {
             const action = $('button[type="submit"][name="action"]:focus').val() || 
                            $('input[name="action"]').val() || '';
 
+            console.log(`Approve form submitted - Action: ${action}, FormData: ${formData}`);
+
             if (!action) {
                 console.error('No action value detected. Check button focus or form structure.');
                 Swal.fire({
@@ -979,19 +1013,19 @@ $(document).ready(function() {
                 title: isApprove ? 'Approve Document' : 'Disapprove Document',
                 text: isApprove ? 
                     'Are you sure you want to approve this document?' : 
-                    'Are you sure you want to disapprove this document?',
+                    'Are you sure you want to reject this document?',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: isApprove ? '#28a745' : '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: isApprove ? 'Yes, Approve It!' : 'Yes, Disapprove It!',
+                confirmButtonText: isApprove ? 'Yes, Approve!' : 'Yes, Disapprove!',
                 cancelButtonText: 'Cancel'
             };
 
             Swal.fire(confirmationConfig).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
-                        title: isApprove ? 'Approving Document...' : 'Disapproving Document...',
+                        title: isApprove ? 'Approving Document...' : 'Rejecting Document...',
                         text: 'Please wait a moment',
                         allowOutsideClick: false,
                         allowEscapeKey: false,
@@ -1019,7 +1053,7 @@ $(document).ready(function() {
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Delete It!',
+                confirmButtonText: 'Yes, Delete!',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -1045,7 +1079,7 @@ $(document).ready(function() {
                             if (response.success) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Deleted Successfully!',
+                                    title: 'Successfully Deleted!',
                                     text: response.message || 'Document has been successfully deleted.',
                                     confirmButtonColor: '#28a745'
                                 }).then(() => {
@@ -1054,7 +1088,7 @@ $(document).ready(function() {
                             } else {
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Delete Failed!',
+                                    title: 'Failed to Delete!',
                                     text: response.message || 'An error occurred while deleting the document.',
                                     confirmButtonColor: '#dc3545'
                                 });
@@ -1080,7 +1114,7 @@ $(document).ready(function() {
         
         $('#historyNamaDokumen').text('-');
         $('#historyJenisDokumen').text('-');
-        $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Memuat data...</td></tr>');
+        $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Loading data...</td></tr>');
 
         $.ajax({
             url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + id,
@@ -1096,19 +1130,20 @@ $(document).ready(function() {
                     $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
                     let html = '';
                     if (response.data.history && response.data.history.length > 0) {
-                        response.data.history.forEach((item, index) => {
+                        const reversedHistory = response.data.history.slice().reverse();
+                        reversedHistory.forEach((item, index) => {
                             const fileLink = item.filepath ? `
                                 <div class="d-flex gap-2">
-                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Unduh file">
+                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
                                         <i class="bi bi-download text-success fs-5"></i>
                                     </a>
                                 </div>
-                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> Tidak ada file</span>';
+                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
                             
                             const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
                                                item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
                                                item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
-                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Delete</span>' :
+                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
                                                item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
                             
                             html += `
@@ -1125,16 +1160,16 @@ $(document).ready(function() {
                             `;
                         });
                     } else {
-                        html = '<tr><td colspan="7" class="text-center text-muted">Belum ada riwayat revisi</td></tr>';
+                        html = '<tr><td colspan="7" class="text-center text-muted">No revision history available</td></tr>';
                     }
                     $('#historyTableBody').html(html);
                 } else {
-                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Gagal memuat riwayat revisi</td></tr>');
+                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Failed to load revision history</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
-                console.log('Kesalahan AJAX:', error, xhr.responseText);
-                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Terjadi kesalahan saat memuat riwayat revisi</td></tr>');
+                console.log('AJAX error:', error, xhr.responseText);
+                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Error loading revision history</td></tr>');
             }
         });
     });
