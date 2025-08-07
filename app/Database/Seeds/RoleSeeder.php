@@ -10,9 +10,16 @@ class RoleSeeder extends Seeder
     {
         $data = [
             [
-                'id'            => 99,
+                'id'            => 1,
                 'name'          => 'admin_super',
                 'access_level'  => 1,
+                'description'   => null,
+                'status'        => 1
+            ],
+            [
+                'id'            => 2,
+                'name'          => 'staff',
+                'access_level'  => 2,
                 'description'   => null,
                 'status'        => 1
             ],

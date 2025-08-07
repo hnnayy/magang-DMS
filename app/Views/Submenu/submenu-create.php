@@ -1,15 +1,12 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
-
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
             <h2><?= $title ?? 'Add Submenu' ?></h2>
         </div>
-
         <form id="createSubmenuForm" method="post" action="<?= base_url('create-submenu/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
-
             <div class="form-group">
                 <label class="form-label" for="menu_search">Menu</label>
                 <div class="search-dropdown-container">
@@ -21,7 +18,7 @@
                         autocomplete="off"
                         required
                     >
-                    <input type="hidden" name="parent" id="selected_menu_id" value="<?= old('parent') ?>" required>
+                    <input type="hidden" name="parent" id="selected_menu_id" required>
                     <div class="search-dropdown-list" id="menu_dropdown" style="display: none;"></div>
                 </div>
                 <div class="invalid-feedback">Please select a menu.</div>
@@ -31,12 +28,10 @@
                     </div>
                 <?php endif; ?>
             </div>
-
             <div class="form-group <?php echo isset($validation) && isset($validation['submenu']) ? 'has-error' : ''; ?>">
                 <label for="editUnitName" class="form-label">Submenu</label>
                 <input type="text" name="submenu" id="editUnitName" class="form-input <?php echo isset($validation) && isset($validation['submenu']) ? 'is-invalid' : ''; ?>"
                        placeholder="Enter Submenu here..."
-                       value="<?php echo old('submenu'); ?>"
                        pattern="^\S+\s+\S+"
                        title="Submenu must contain at least two words"
                        required>
@@ -47,31 +42,27 @@
                     </div>
                 <?php endif; ?>
             </div>
-
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="active" value="1" 
-                           <?= (old('status') == '1' || !old('status')) ? 'checked' : '' ?> required>
+                    <input class="form-check-input" type="radio" name="status" id="active" value="1" required>
                     <label class="form-check-label" for="active">Active</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="inactive" value="2"
-                           <?= old('status') == '2' ? 'checked' : '' ?>>
+                    <input class="form-check-input" type="radio" name="status" id="inactive" value="2" required>
                     <label class="form-check-label" for="inactive">Inactive</label>
                 </div>
                 <div class="invalid-feedback">Please select a status.</div>
             </div>
-
             <button type="submit" class="submit-btn">Submit</button>
         </form>
     </div>
-
     <div class="illustration-section">
         <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="User Illustration" class="illustration-img">
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const menuData = [
     <?php foreach ($menus as $menu): ?>
@@ -95,17 +86,8 @@ class SearchableMenuDropdown {
     }
 
     init() {
-        // Pre-fill input if there's an old value
-        const oldValue = "<?= old('parent') ?>";
-        if (oldValue) {
-            const selectedMenu = menuData.find(menu => menu.id == oldValue);
-            if (selectedMenu) {
-                this.searchInput.value = selectedMenu.name;
-                this.searchInput.classList.add('has-selection');
-                this.hideValidationError();
-            }
-        }
-
+        // HAPUS pre-fill untuk old value - form akan selalu kosong setelah error
+        
         // Event listeners
         this.searchInput.addEventListener('input', (e) => this.handleInput(e));
         this.searchInput.addEventListener('focus', () => this.handleFocus());
@@ -125,7 +107,6 @@ class SearchableMenuDropdown {
     handleInput(e) {
         const value = e.target.value.trim();
         
-        // Debounce filtering to improve performance
         this.debounce(() => {
             if (value === '') {
                 this.dropdown.style.display = 'none';
@@ -152,7 +133,7 @@ class SearchableMenuDropdown {
     }
 
     handleFocus() {
-        this.searchInput.select(); // Select text on focus for easier editing
+        this.searchInput.select();
         this.filterMenus(this.searchInput.value.trim());
     }
 
@@ -243,7 +224,7 @@ class SearchableMenuDropdown {
                 item.textContent = menu.name;
                 item.dataset.id = menu.id;
                 item.dataset.index = index;
-                item.tabIndex = 0; // Make items focusable for accessibility
+                item.tabIndex = 0;
                 this.dropdown.appendChild(item);
             });
         }
@@ -268,7 +249,7 @@ class SearchableMenuDropdown {
         this.dropdown.style.display = 'none';
         this.selectedIndex = -1;
         this.hideValidationError();
-        this.searchInput.focus(); // Keep focus on input after selection
+        this.searchInput.focus();
     }
 
     showValidationError() {
@@ -293,11 +274,33 @@ class SearchableMenuDropdown {
 document.addEventListener('DOMContentLoaded', function() {
     const menuDropdown = new SearchableMenuDropdown();
     const form = document.getElementById('createSubmenuForm');
-    
+
+    // SweetAlert untuk error duplikasi
+    <?php if (session('swal')): ?>
+        const swalData = <?= json_encode(session('swal')) ?>;
+        Swal.fire({
+            icon: swalData.icon,
+            title: swalData.title,
+            text: swalData.text,
+            confirmButtonColor: '#6c5ce7'
+        });
+    <?php endif; ?>
+
+    // SweetAlert untuk success message
+    <?php if (session('added_message')): ?>
+        Swal.fire({
+            title: 'Success!',
+            text: '<?= session('added_message') ?>',
+            icon: 'success',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#10b981'
+        });
+    <?php endif; ?>
+
     form.addEventListener('submit', function(e) {
         let isValid = form.checkValidity();
-
         const menuId = document.getElementById('selected_menu_id').value;
+        
         if (!menuId) {
             isValid = false;
             menuDropdown.showValidationError();
@@ -319,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const statusInputs = form.querySelectorAll('input[name="status"]');
         const statusGroup = document.getElementById('status-group');
         const isStatusChecked = Array.from(statusInputs).some(input => input.checked);
-
+        
         if (!isStatusChecked) {
             isValid = false;
             let feedback = statusGroup.querySelector('.invalid-feedback');
@@ -353,5 +356,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 <?= $this->endSection() ?>

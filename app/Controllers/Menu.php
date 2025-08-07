@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Controllers;
-
 use App\Controllers\BaseController;
 use App\Models\MenuModel;
 
@@ -29,7 +27,6 @@ class Menu extends BaseController
             'title' => 'Menu List',
             'menus' => $this->menuModel->where('status !=', 0)->findAll()
         ];
-
         return view('Menu/lihat-menu', $data);
     }
 
@@ -37,7 +34,7 @@ class Menu extends BaseController
     public function store()
     {
         $validation = \Config\Services::validation();
-
+        
         $rules = [
             'menu_name' => [
                 'rules' => 'required|min_length[3]|max_length[50]|is_unique[menu.name]',
@@ -66,13 +63,12 @@ class Menu extends BaseController
 
         if (!$this->validate($rules)) {
             return redirect()->back()
-                ->withInput()
                 ->with('error', implode(' ', $validation->getErrors()));
         }
 
         $data = [
             'name'   => trim($this->request->getPost('menu_name')),
-            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
+            'icon'   => trim($this->request->getPost('icon')),
             'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
@@ -87,13 +83,13 @@ class Menu extends BaseController
     public function update()
     {
         $id = $this->request->getPost('id');
-
+        
         if (!$id) {
             return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
         }
 
         $validation = \Config\Services::validation();
-
+        
         $rules = [
             'menu_name' => [
                 'rules' => "required|min_length[3]|max_length[50]|is_unique[menu.name,id,{$id}]",
@@ -122,14 +118,13 @@ class Menu extends BaseController
 
         if (!$this->validate($rules)) {
             return redirect()->to(base_url('menu-list'))
-                ->withInput()
                 ->with('validation', $validation)
                 ->with('error', 'Validation failed. Please check your input again');
         }
 
         $updateData = [
             'name'   => trim($this->request->getPost('menu_name')),
-            'icon'   => trim($this->request->getPost('icon')), // tidak ubah spasi
+            'icon'   => trim($this->request->getPost('icon')),
             'status' => $this->request->getPost('status') == '1' ? 1 : 2,
         ];
 
@@ -144,7 +139,7 @@ class Menu extends BaseController
     public function delete()
     {
         $id = $this->request->getPost('id');
-
+        
         if (!$id) {
             return redirect()->to(base_url('menu-list'))->with('error', 'Menu ID is not found.');
         }

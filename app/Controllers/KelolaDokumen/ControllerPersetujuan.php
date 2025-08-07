@@ -7,6 +7,8 @@ use App\Models\DocumentModel;
 use App\Models\DocumentApprovalModel;
 use App\Models\UserModel;
 use App\Models\RoleModel;
+use App\Models\NotificationModel;
+use App\Models\NotificationRecipientsModel;
 use CodeIgniter\Files\File;
 
 class ControllerPersetujuan extends BaseController
@@ -15,6 +17,9 @@ class ControllerPersetujuan extends BaseController
     protected $approvalModel;
     protected $userModel;
     protected $roleModel;
+    protected $notificationModel;
+    protected $notificationRecipientsModel;
+    protected $db;
 
     public function __construct()
     {
@@ -22,11 +27,13 @@ class ControllerPersetujuan extends BaseController
         $this->approvalModel = new DocumentApprovalModel();
         $this->userModel = new UserModel();
         $this->roleModel = new RoleModel();
+        $this->notificationModel = new NotificationModel();
+        $this->notificationRecipientsModel = new NotificationRecipientsModel();
+        $this->db = \Config\Database::connect();
     }
 
     public function index()
     {
-        // Get current user information from session
         $currentUserId = session()->get('user_id');
         $currentUserUnitId = session()->get('unit_id');
         $currentUserUnitParentId = session()->get('unit_parent_id');
@@ -35,8 +42,9 @@ class ControllerPersetujuan extends BaseController
 
         log_message('debug', "Current User Access Control - ID: {$currentUserId}, Unit: {$currentUserUnitId}, Parent: {$currentUserUnitParentId}, Access Level: {$currentUserAccessLevel}");
 
-        // Fetch all documents with creator information and organizational data
-        $documents = $this->documentModel
+        $documentId = $this->request->getGet('document_id');
+
+        $query = $this->documentModel
             ->select('
                 document.id,
                 document.title,
@@ -68,57 +76,66 @@ class ControllerPersetujuan extends BaseController
             ->join('role AS creator_role', 'creator_role.id = creator_user_role.role_id', 'left')
             ->where('document_approval.status', 1)
             ->where('document.status !=', 0)
-            ->where('document.createddate >', 0) // Exclude soft deleted documents
-            ->orderBy('document.id', 'DESC')
-            ->findAll();
+            ->where('document.createddate >', 0)
+            ->orderBy('document.id', 'DESC');
 
-        // Log the raw query and results for debugging
+        if ($documentId) {
+            $query->where('document.id', $documentId);
+        }
+
+        $documents = $query->findAll();
+
         log_message('debug', 'Total documents fetched from database: ' . count($documents));
-        
-        // Filter documents based on hierarchical access control
+
         $filteredDocuments = [];
         foreach ($documents as $doc) {
             $documentCreatorId = $doc['createdby'] ?? 0;
             $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
             $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
             $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
-            
-            $canViewDocument = false;
-            
-            // Access Control Rules Implementation:
-            
-            // Rule 1: Users can always see their own documents
-            if ($documentCreatorId == $currentUserId) {
-                $canViewDocument = true;
-                log_message('debug', "Document {$doc['id']}: Own document - Access granted");
-            }
-            // Rule 2: Higher level users (level 1) can see lower level documents in same hierarchy
-            elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
-                // Check organizational hierarchy
-                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
-                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
-                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-                
-                if ($inSameHierarchy) {
-                    $canViewDocument = true;
-                    log_message('debug', "Document {$doc['id']}: Higher level access - Creator Level {$documentCreatorAccessLevel}, Current Level {$currentUserAccessLevel} - Access granted");
-                } else {
-                    log_message('debug', "Document {$doc['id']}: Different hierarchy - Access denied");
-                }
-            }
-            // Rule 3: Level 2 users can only see their own documents
-            elseif ($currentUserAccessLevel == 2) {
-                log_message('debug', "Document {$doc['id']}: Level 2 user can only see own documents - Access denied unless creator");
-            }
-            
+
             // Skip documents with invalid creator ID
             if ($documentCreatorId == 0) {
                 log_message('debug', "Document {$doc['id']}: Invalid creator ID - Skipped");
                 continue;
             }
-            
+
+            $canViewDocument = false;
+            $canEditDocument = false;
+            $canDeleteDocument = false;
+
+            // Rule 1: Users can always see and modify their own documents
+            if ($documentCreatorId == $currentUserId) {
+                $canViewDocument = true;
+                $canEditDocument = true;
+                $canDeleteDocument = true;
+                log_message('debug', "Document {$doc['id']}: Own document - Full access granted");
+            } 
+            // Rule 2: Higher level users can see and modify documents in same hierarchy
+            elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+
+                if ($inSameHierarchy) {
+                    $canViewDocument = true;
+                    $canEditDocument = true;
+                    $canDeleteDocument = true;
+                    log_message('debug', "Document {$doc['id']}: Higher level access - Full access granted");
+                } else {
+                    log_message('debug', "Document {$doc['id']}: Different hierarchy - Access denied");
+                }
+            } 
+            // Rule 3: Level 2 users can only see their own documents
+            elseif ($currentUserAccessLevel == 2) {
+                log_message('debug', "Document {$doc['id']}: Level 2 user - Access denied unless creator");
+            }
+
             if ($canViewDocument) {
+                // Add permission flags to document array
+                $doc['can_edit'] = $canEditDocument;
+                $doc['can_delete'] = $canDeleteDocument;
                 $filteredDocuments[] = $doc;
             }
         }
@@ -127,7 +144,7 @@ class ControllerPersetujuan extends BaseController
 
         return view('KelolaDokumen/dokumen_persetujuan', [
             'documents' => $filteredDocuments,
-            'title'     => 'Document Approval'
+            'title' => 'Document Approval'
         ]);
     }
 
@@ -138,42 +155,81 @@ class ControllerPersetujuan extends BaseController
         $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
         if (!$id || !$this->documentModel->find($id)) {
-            return redirect()->back()->with('error', 'Document not found.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Document not found.'
+            ]);
         }
 
-        // Check if user has permission to update this document
         $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
-            return redirect()->back()->with('error', 'Document not found.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Document not found.'
+            ]);
         }
 
         $canUpdate = $this->canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel);
         if (!$canUpdate) {
-            return redirect()->back()->with('error', 'You do not have permission to update this document.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'You do not have permission to update this document.'
+            ]);
         }
 
-        // Update document
+        // Validate input
+        $title = trim($this->request->getPost('title'));
+        $revision = trim($this->request->getPost('revision'));
+        $remark = trim($this->request->getPost('remark'));
+
+        if (empty($title) || empty($revision)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Title and Revision fields are required.'
+            ]);
+        }
+
         $updateData = [
-            'title'      => $this->request->getPost('title'),
-            'revision'   => $this->request->getPost('revision'),
-            'updatedby'  => $currentUserId,
-            'updateddate'=> time()
+            'title' => $title,
+            'revision' => $revision,
+            'updatedby' => $currentUserId,
+            'updateddate' => time()
         ];
 
-        $this->documentModel->update($id, $updateData);
+        $updated = $this->documentModel->update($id, $updateData);
+        
+        if (!$updated) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Failed to update document.'
+            ]);
+        }
 
-        // Update remark in approval table
-        $this->approvalModel
+        $approvalUpdated = $this->approvalModel
             ->where('document_id', $id)
             ->set([
-                'remark' => $this->request->getPost('remark'),
+                'remark' => $remark,
                 'updatedby' => $currentUserId,
                 'updateddate' => time()
             ])
             ->update();
 
+        if (!$approvalUpdated) {
+            log_message('warning', "Document {$id} updated but approval remark update failed");
+        }
+
+        $this->createNotification(
+            "Document '{$title}' has been updated by " . session()->get('fullname'),
+            $id,
+            $currentUserId,
+            [$document['createdby']]
+        );
+
         log_message('info', "Document {$id} updated by user {$currentUserId}");
-        return redirect()->back()->with('updated_message', 'Document updated successfully.');
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Document updated successfully.'
+        ]);
     }
 
     public function delete()
@@ -183,28 +239,34 @@ class ControllerPersetujuan extends BaseController
         $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
         if (!$id || !$this->documentModel->find($id)) {
-            return redirect()->back()->with('error', 'Document not found.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Document not found.'
+            ]);
         }
 
-        // Check if user has permission to delete this document
         $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
-            return redirect()->back()->with('error', 'Document not found.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'Document not found.'
+            ]);
         }
 
         $canDelete = $this->canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel);
         if (!$canDelete) {
-            return redirect()->back()->with('error', 'You do not have permission to delete this document.');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'error' => 'You do not have permission to delete this document.'
+            ]);
         }
 
-        // Soft delete: update createddate to 0 in document table
         $this->documentModel->update($id, [
             'createddate' => 0,
             'updatedby' => $currentUserId,
             'updateddate' => time()
         ]);
 
-        // Update status in document_approval to 0
         $this->approvalModel
             ->where('document_id', $id)
             ->set([
@@ -214,8 +276,18 @@ class ControllerPersetujuan extends BaseController
             ])
             ->update();
 
+        $this->createNotification(
+            "Document '{$document['title']}' has been deleted by " . session()->get('fullname'),
+            $id,
+            $currentUserId,
+            [$document['createdby']]
+        );
+
         log_message('info', "Document {$id} deleted by user {$currentUserId}");
-        return redirect()->back()->with('deleted_message', 'Document deleted successfully.');
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Document deleted successfully.'
+        ]);
     }
 
     public function approve()
@@ -231,7 +303,6 @@ class ControllerPersetujuan extends BaseController
             ]);
         }
 
-        // Check if document exists
         $document = $this->getDocumentWithCreatorInfo($documentId);
         if (!$document) {
             return $this->response->setJSON([
@@ -240,7 +311,6 @@ class ControllerPersetujuan extends BaseController
             ]);
         }
 
-        // Check if user can approve this document (only higher level users can approve lower level documents)
         $documentCreatorAccessLevel = $document['creator_access_level'] ?? 2;
         if ($currentUserAccessLevel >= $documentCreatorAccessLevel) {
             return $this->response->setJSON([
@@ -249,7 +319,6 @@ class ControllerPersetujuan extends BaseController
             ]);
         }
 
-        // Check organizational hierarchy
         $currentUserUnitId = session()->get('unit_id');
         $currentUserUnitParentId = session()->get('unit_parent_id');
         $documentCreatorUnitId = $document['creator_unit_id'] ?? 0;
@@ -267,9 +336,8 @@ class ControllerPersetujuan extends BaseController
             ]);
         }
 
-        // Update approval status
         $approveData = [
-            'status' => 2, // Approved status
+            'status' => 2,
             'approvedate' => time(),
             'approvedby' => $currentUserId,
             'updatedby' => $currentUserId,
@@ -282,6 +350,13 @@ class ControllerPersetujuan extends BaseController
             ->update();
 
         if ($updated) {
+            $this->createNotification(
+                "Document '{$document['title']}' has been approved by " . session()->get('fullname'),
+                $documentId,
+                $currentUserId,
+                [$document['createdby']]
+            );
+
             log_message('info', "Document {$documentId} approved by user {$currentUserId}");
             return $this->response->setJSON([
                 'status' => 'success',
@@ -312,14 +387,12 @@ class ControllerPersetujuan extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Document ID not found.');
         }
 
-        // Get document with creator information
         $document = $this->getDocumentWithCreatorInfo($documentId);
         if (!$document) {
             log_message('error', 'Document not found for ID: ' . $documentId);
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Document not found.');
         }
 
-        // Check access permissions
         $documentCreatorId = $document['createdby'] ?? 0;
         $documentCreatorUnitId = $document['creator_unit_id'] ?? 0;
         $documentCreatorUnitParentId = $document['creator_unit_parent_id'] ?? 0;
@@ -327,7 +400,6 @@ class ControllerPersetujuan extends BaseController
 
         $canAccessFile = false;
 
-        // Same access control rules as in index method
         if ($documentCreatorId == $userId) {
             $canAccessFile = true;
         } elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
@@ -335,13 +407,10 @@ class ControllerPersetujuan extends BaseController
             $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
             $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
             $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-            
+
             if ($inSameHierarchy) {
                 $canAccessFile = true;
             }
-        } elseif ($currentUserAccessLevel == 2) {
-            // Level 2 users can only access their own files
-            $canAccessFile = false;
         }
 
         if (!$canAccessFile) {
@@ -349,7 +418,6 @@ class ControllerPersetujuan extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have permission to access this file.');
         }
 
-        // Get file information
         $revision = $this->documentModel
             ->select('document_revision.filepath, document_revision.filename')
             ->join('document_revision', 'document_revision.document_id = document.id AND document_revision.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
@@ -362,7 +430,7 @@ class ControllerPersetujuan extends BaseController
         }
 
         $filePath = ROOTPATH . '..' . DIRECTORY_SEPARATOR . $revision['filepath'];
-        
+
         if (!file_exists($filePath)) {
             log_message('error', 'File not found at: ' . $filePath);
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found on server.');
@@ -387,9 +455,6 @@ class ControllerPersetujuan extends BaseController
             ->setBody(file_get_contents($filePath));
     }
 
-    /**
-     * Get document with creator information
-     */
     private function getDocumentWithCreatorInfo($documentId)
     {
         return $this->documentModel
@@ -408,34 +473,95 @@ class ControllerPersetujuan extends BaseController
             ->first();
     }
 
-    /**
-     * Check if current user can modify (update/delete) the document
-     */
     private function canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel)
     {
         $documentCreatorId = $document['createdby'] ?? 0;
         $documentCreatorAccessLevel = $document['creator_access_level'] ?? 2;
-        
-        // Users can always modify their own documents
+
+        // Can always modify own documents
         if ($documentCreatorId == $currentUserId) {
             return true;
         }
-        
-        // Higher level users can modify lower level documents in same hierarchy
+
+        // Higher level users can modify documents in same hierarchy
         if ($currentUserAccessLevel < $documentCreatorAccessLevel) {
             $currentUserUnitId = session()->get('unit_id');
             $currentUserUnitParentId = session()->get('unit_parent_id');
             $documentCreatorUnitId = $document['creator_unit_id'] ?? 0;
             $documentCreatorUnitParentId = $document['creator_unit_parent_id'] ?? 0;
-            
+
             $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
             $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
             $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
             $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-            
+
             return $inSameHierarchy;
         }
-        
+
         return false;
+    }
+
+    private function createNotification($message, $referenceId, $createdBy, $recipientIds)
+    {
+        try {
+            $notificationData = [
+                'message' => $message,
+                'reference_id' => $referenceId,
+                'createdby' => $createdBy,
+                'createddate' => date('Y-m-d H:i:s')
+            ];
+
+            $notificationId = $this->notificationModel->insert($notificationData);
+
+            if (!$notificationId) {
+                log_message('error', 'Failed to create notification: ' . json_encode($this->notificationModel->errors()));
+                return false;
+            }
+
+            log_message('debug', "Notification created with ID: $notificationId");
+
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($recipientIds as $recipientId) {
+                $recipientData = [
+                    'notification_id' => $notificationId,
+                    'user_id' => $recipientId,
+                    'status' => 1
+                ];
+
+                log_message('debug', "Inserting recipient: " . json_encode($recipientData));
+
+                $insertResult = $this->notificationRecipientsModel->insert($recipientData);
+
+                if ($insertResult) {
+                    $successCount++;
+                    log_message('debug', "Successfully inserted recipient for user_id: $recipientId");
+                } else {
+                    $errorCount++;
+                    log_message('error', "Failed to insert recipient for user_id: $recipientId - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+                }
+            }
+
+            log_message('info', "Notification created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
+            return $notificationId;
+        } catch (\Exception $e) {
+            log_message('error', 'Error creating notification: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getUnreadCount()
+    {
+        $currentUserId = session()->get('user_id');
+        $unreadCount = $this->notificationRecipientsModel
+            ->where('user_id', $currentUserId)
+            ->where('status', 1)
+            ->countAllResults();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'count' => $unreadCount
+        ]);
     }
 }

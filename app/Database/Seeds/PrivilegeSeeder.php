@@ -8,28 +8,36 @@ class PrivilegeSeeder extends Seeder
 {
     public function run()
     {
-        $data = [
-            ['id' => 1,  'role_id' => 99, 'submenu_id' => 1,   'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 2,  'role_id' => 99, 'submenu_id' => 101, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 3,  'role_id' => 99, 'submenu_id' => 201, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 4,  'role_id' => 99, 'submenu_id' => 202, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 5,  'role_id' => 99, 'submenu_id' => 301, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 6,  'role_id' => 99, 'submenu_id' => 302, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 7,  'role_id' => 99, 'submenu_id' => 303, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 8,  'role_id' => 99, 'submenu_id' => 401, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 9,  'role_id' => 99, 'submenu_id' => 402, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 10, 'role_id' => 99, 'submenu_id' => 403, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 11, 'role_id' => 99, 'submenu_id' => 501, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 12, 'role_id' => 99, 'submenu_id' => 601, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 13, 'role_id' => 99, 'submenu_id' => 602, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 14, 'role_id' => 99, 'submenu_id' => 701, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 15, 'role_id' => 99, 'submenu_id' => 702, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 16, 'role_id' => 99, 'submenu_id' => 801, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 17, 'role_id' => 99, 'submenu_id' => 802, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 18, 'role_id' => 99, 'submenu_id' => 901, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1],
-            ['id' => 19, 'role_id' => 99, 'submenu_id' => 902, 'can_create' => 1, 'can_update' => 1, 'can_delete' => 1, 'can_approve' => 1]
-        ];
+        // Ambil semua ID submenu dari tabel submenu
+        $submenuIds = range(1, 23); // sesuaikan dengan jumlah submenu yang kamu punya
 
+        $data = [];
+
+        // Role 1: semua akses = 1
+        foreach ($submenuIds as $id) {
+            $data[] = [
+                'role_id'     => 1,
+                'submenu_id'  => $id,
+                'can_create'  => 1,
+                'can_update'  => 1,
+                'can_delete'  => 1,
+                'can_approve' => 1,
+            ];
+        }
+
+        // Role 2: semua akses = 0
+        foreach ($submenuIds as $id) {
+            $data[] = [
+                'role_id'     => 2,
+                'submenu_id'  => $id,
+                'can_create'  => 0,
+                'can_update'  => 0,
+                'can_delete'  => 0,
+                'can_approve' => 0,
+            ];
+        }
+
+        // Insert batch
         $this->db->table('privilege')->insertBatch($data);
     }
 }

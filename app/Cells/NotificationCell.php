@@ -20,23 +20,19 @@ class NotificationCell extends Cell
         
         if ($userId) {
             try {
-                // Hanya ambil notification yang status = 0 (belum dibaca)
                 $notifikasi = $this->db->table('notification n')
-                    ->select('n.id, n.message, n.createddate, n.reference_id, n.createdby, u.username as creator_username, u.fullname as creator_fullname')
+                    ->select('n.id, n.message, n.createddate, n.reference_id, n.createdby, u.username as creator_username, u.fullname as creator_fullname, nr.status')
                     ->join('notification_recipients nr', 'nr.notification_id = n.id', 'inner')
                     ->join('user u', 'u.id = n.createdby', 'left')
                     ->where('nr.user_id', $userId)
-                    ->where('nr.status', 0) // hanya yang belum dibaca
                     ->orderBy('n.createddate', 'DESC')
                     ->get()
                     ->getResultArray();
 
-                // Process notifications
                 foreach ($notifikasi as &$notif) {
                     $notif['creator_name'] = $notif['creator_fullname'] ?: ($notif['creator_username'] ?: 'Unknown User');
                     $notif['navigation_url'] = $this->getNavigationUrl($notif);
                 }
-
             } catch (\Exception $e) {
                 log_message('error', 'NotificationCell error: ' . $e->getMessage());
                 $notifikasi = [];
@@ -51,7 +47,6 @@ class NotificationCell extends Cell
         $message = strtolower($notification['message'] ?? '');
         $referenceId = $notification['reference_id'] ?? null;
 
-        // Document approval
         if ($referenceId && (strpos($message, 'persetujuan') !== false || 
                              strpos($message, 'approve') !== false || 
                              strpos($message, 'disetujui') !== false || 
@@ -59,7 +54,6 @@ class NotificationCell extends Cell
             return base_url('document-approval?document_id=' . $referenceId);
         }
 
-        // Document-related
         if ($referenceId && strpos($message, 'dokumen') !== false) {
             return base_url('document-submission-list?document_id=' . $referenceId);
         }
@@ -68,7 +62,6 @@ class NotificationCell extends Cell
             return base_url('document-submission-list');
         }
 
-        // User-related
         if (strpos($message, 'user') !== false || strpos($message, 'pengguna') !== false) {
             return base_url('user-management');
         }
@@ -78,25 +71,24 @@ class NotificationCell extends Cell
 
     private function renderDropdown($notifikasi)
     {
-        $html = '<div class="dropdown me-3" id="notificationDropdown">
-            <a class="nav-link position-relative notif-icon-wrapper" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+        $html = '<div class="notification-container" id="notificationDropdown">
+            <a class="notif-icon-wrapper" href="javascript:void(0)">
                 <i class="fi fi-rr-bell"></i>';
         
         if (!empty($notifikasi)) {
-            $html .= '<span class="notif-badge position-absolute translate-middle badge rounded-pill bg-danger">
-                ' . count($notifikasi) . '
-                <span class="visually-hidden">notifikasi belum dibaca</span>
-            </span>';
+            $unreadCount = count(array_filter($notifikasi, fn($notif) => $notif['status'] == 1));
+            if ($unreadCount > 0) {
+                $html .= '<span class="notif-badge">' . $unreadCount . '</span>';
+            }
         }
         
         $html .= '</a>
-            <ul class="dropdown-menu dropdown-menu-end border" id="notif-list" style="max-height: 400px; overflow-y: auto; min-width: 320px;">
-                <li class="dropdown-header py-2">Notifications</li>';
+            <div class="notification-menu" id="notif-list">
+                <div class="notification-header">Notifications</div>';
         
-        // Include the notification partial
         $html .= view('layout/partials/notifikasi', ['notifikasi' => $notifikasi]);
         
-        $html .= '</ul></div>';
+        $html .= '</div></div>';
         
         return $html;
     }
