@@ -55,6 +55,14 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                     <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
                                         <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <?php if ($canUpdate): ?>
+                                                <button class="btn btn-link p-0 text-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#editModal<?= $kategori['id'] ?>"
+                                                        title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                            <?php endif; ?>
                                             <?php if ($canDelete): ?>
                                                 <form action="<?= base_url('document-type/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                                     <?= csrf_field() ?>
@@ -63,14 +71,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
-                                            <?php endif; ?>
-                                            <?php if ($canUpdate): ?>
-                                                <button class="btn btn-link p-0 text-primary" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#editModal<?= $kategori['id'] ?>"
-                                                        title="Edit">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
                                             <?php endif; ?>
                                         </div>
                                     </td>
