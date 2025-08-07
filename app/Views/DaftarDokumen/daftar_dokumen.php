@@ -360,6 +360,14 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                     <?php if ($hasAnyPrivilege): ?>
                                         <td class="aksi-column text-center">
                                             <div class="d-flex align-items-center justify-content-center gap-2">
+                                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
+                                                    <button class="btn btn-link p-0 text-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#editModal<?= $row['id'] ?>" 
+                                                            title="Edit">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                <?php endif; ?>
                                                 <?php if ($documentPrivilege['can_delete'] && $canDeleteDocument): ?>
                                                     <form action="<?= base_url('document-list/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                                         <?= csrf_field() ?>
@@ -368,14 +376,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
-                                                <?php endif; ?>
-                                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
-                                                    <button class="btn btn-link p-0 text-primary" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#editModal<?= $row['id'] ?>" 
-                                                            title="Edit">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </button>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -392,7 +392,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                                 <div class="modal-content">
                                                     <div class="modal-header border-0">
                                                         <h6 class="modal-title fw-semibold">Edit Document</h6>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                                                     </div>
                                                     <div class="modal-body px-4 py-3">
                                                         <div class="row g-3">

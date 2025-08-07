@@ -1,123 +1,105 @@
-/* === OPTIMIZED DAFTAR DOKUMEN STYLES === */
-
 /* === Choices.js styling === */
-input[readonly], select[disabled] {
-    background-color: #f1f1f1;
-    cursor: not-allowed;
-    opacity: 0.7;
-}
+    input[readonly], select[disabled] {
+        background-color: #f1f1f1;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    /* Styling untuk pesan "Tidak ada data" */
+    .no-data-message {
+        text-align: center;
+        padding: 20px;
+        color: #6c757d;
+        font-style: italic;
+    }
 
-/* Styling untuk pesan "Tidak ada data" */
-.no-data-message {
-    text-align: center;
-    padding: 20px;
-    color: #6c757d;
-    font-style: italic;
-}
+    /* Text truncation for long content */
+    .text-truncate-custom {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+    }
 
-/* Text truncation for long content */
-.text-truncate-custom {
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
-}
+    /* Checkbox styling for multi-select */
+    .checkbox-group {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        background-color: white;
+    }
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0;
+        margin: 0;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 0.5rem;
+        margin-top: 0;
+    }
+    
+    .checkbox-item label {
+        margin-bottom: 0;
+        font-weight: normal;
+        cursor: pointer;
+        flex: 1;
+    }
 
-/* === IMPROVED CHECKBOX STYLING === */
-.checkbox-group {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    padding: 0.5rem;
-    background-color: white;
-    scrollbar-width: thin;
-    scrollbar-color: #ced4da transparent;
-}
+    /* Filter dropdown styling */
+    .filter-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .filter-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 300px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+    
+    .filter-dropdown.show .filter-dropdown-content {
+        display: block;
+    }
+    
+    .filter-toggle {
+        background-color: white;
+        border: 1px solid #ced4da;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        min-width: 180px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .filter-toggle:after {
+        content: "▼";
+        font-size: 0.8em;
+    }
 
-.checkbox-group::-webkit-scrollbar {
-    width: 6px;
-}
+    /* Styling untuk kode dokumen format teks biasa */
+    .kode-dokumen-simple {
+        font-size: 0.9rem;
+        color: #333;
+        line-height: 1.4;
+    }
 
-.checkbox-group::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.checkbox-group::-webkit-scrollbar-thumb {
-    background-color: #ced4da;
-    border-radius: 3px;
-}
-
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    padding: 0.25rem 0;
-    margin: 0;
-}
-
-.checkbox-item input[type="checkbox"] {
-    margin-right: 0.5rem;
-    margin-top: 0;
-}
-
-.checkbox-item label {
-    margin-bottom: 0;
-    font-weight: normal;
-    cursor: pointer;
-    flex: 1;
-}
-
-/* === OPTIMIZED FILTER DROPDOWN === */
-.filter-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.filter-dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: white;
-    min-width: 300px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 100; /* Reduced from 1000 to prevent modal conflicts */
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    max-height: 250px;
-    overflow-y: auto;
-    padding: 0.5rem;
-}
-
-.filter-dropdown.show .filter-dropdown-content {
-    display: block;
-}
-
-.filter-toggle {
-    background-color: white;
-    border: 1px solid #ced4da;
-    padding: 0.375rem 0.75rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    min-width: 180px;
-    text-align: left;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.filter-toggle:after {
-    content: "▼";
-    font-size: 0.8em;
-}
-
-/* Styling untuk kode dokumen format teks biasa */
-.kode-dokumen-simple {
-    font-size: 0.9rem;
-    color: #333;
-    line-height: 1.4;
-}
-
-/* === OPTIMIZED CHOICES.JS === */
 .choices__inner,
 .choices__list--multiple .choices__item {
     font-size: 12px;
@@ -153,7 +135,7 @@ input[readonly], select[disabled] {
     transform: translateY(-50%);
 }
 
-/* === OPTIMIZED TABLE LAYOUT === */
+/* === Table styling === */
 .aksi-column,
 td.aksi-column {
     min-width: 90px;
@@ -165,37 +147,346 @@ td.aksi-column {
     font-size: 14px;
 }
 
-/* === IMPROVED TABLE WRAPPER - FIXED CONTAINER BALANCE === */
+/* === Table wrapper - FIXED VERSION === */
 .table-wrapper {
     position: relative;
-    overflow: visible; /* Changed from hidden to visible */
-    min-height: 400px; /* Ensure minimum height */
+    overflow: hidden;
 }
 
 .table-responsive {
     overflow-x: auto;
     position: relative;
-    margin-bottom: 20px; /* Add margin instead of 0 */
-    max-height: calc(100vh - 300px); /* Dynamic height based on viewport */
-    min-height: 300px; /* Minimum height */
+    margin-bottom: 0;
 }
 
-/* === BALANCED CONTROL LAYOUT === */
-.card-body {
-    padding: 1.5rem;
-    min-height: 500px; /* Ensure minimum card height */
-}
-
-/* Top control bar optimization */
-.card-body > .d-flex:first-child {
-    padding: 12px 0;
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 20px !important;
-    min-height: 60px; /* Ensure consistent height */
+/* === Bottom controls - FIXED POSITIONING === */
+.bottom-controls {
+    position: relative;
+    background: white;
+    padding: 15px 0;
+    border-top: 1px solid #dee2e6;
+    margin-top: 10px;
+    z-index: 10;
+    display: flex !important;
+    justify-content: space-between;
     align-items: center;
 }
 
-/* === OPTIMIZED CONTROL POSITIONING === */
+/* === Show entries styling === */
+.show-entries {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    position: relative;
+    background: white;
+    z-index: 11;
+}
+
+.show-entries label {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.show-entries select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    min-width: 60px;
+}
+
+/* === Pagination container - NORMAL FLOW === */
+.pagination-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 0;
+}
+
+/* === Table info === */
+.table-info {
+    position: relative;
+    background: white;
+    z-index: 11;
+    color: #6c757d;
+    font-size: 14px;
+    padding: 8px 0;
+    text-align: center;
+    flex-grow: 1;
+}
+
+/* === Hide ONLY original DataTables controls === */
+.dataTables_wrapper > .dataTables_paginate,
+.dataTables_wrapper > .dataTables_info,
+.dataTables_wrapper > .dataTables_length {
+    display: none !important;
+}
+
+/* === Keep the moved controls visible === */
+.bottom-controls .dataTables_length,
+.bottom-controls .dataTables_info,
+.pagination-container .dataTables_paginate {
+    display: block !important;
+}
+
+/* ====== PAGINATION IMPROVEMENTS ====== */
+/* Bootstrap pagination styling */
+.pagination .page-link {
+    color: #b41616;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 0 8px; /* Increased gap between pagination buttons */
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #b41616;
+    color: white;
+}
+
+.pagination .page-link:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Disabled state untuk Previous dan Next */
+.pagination .page-item.disabled .page-link {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #bec1c4 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.pagination .page-item.disabled .page-link:hover {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #bec1c4 !important;
+}
+
+/* Styling khusus untuk tombol Previous dan Next */
+.pagination .page-item.previous .page-link,
+.pagination .page-item.next .page-link {
+    background-color: #ffffff;
+    color: #000000;
+    font-weight: 600;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.previous .page-link:hover,
+.pagination .page-item.next .page-link:hover {
+    background-color: #000000;
+    color: white;
+}
+
+/* Disabled state untuk Previous dan Next - override hover */
+.pagination .page-item.previous.disabled .page-link,
+.pagination .page-item.next.disabled .page-link {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.pagination .page-item.previous.disabled .page-link:hover,
+.pagination .page-item.next.disabled .page-link:hover {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+}
+
+/* DataTables pagination styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 0 8px; /* Increased gap between pagination buttons */
+    background-color: #ffffff;
+    color: #000000;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #000000 !important;
+    color: white !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:focus,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background-color: #b41616 !important;
+    color: white !important;
+}
+
+/* Disabled state untuk DataTables pagination */
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:focus {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next:hover {
+    background-color: #000000 !important;
+    color: white !important;
+}
+
+/* Disabled state untuk Previous dan Next di DataTables */
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.previous.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.next.disabled:hover {
+    background-color: #f8f9fa !important;
+    color: #bec1c4 !important;
+    border-color: #dee2e6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* === Custom pagination styling (Enhanced with improved spacing) === */
+.pagination-container .dataTables_paginate {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 2px; /* Increased gap between pagination buttons */
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Tombol Pagination Umum */
+.pagination-container .dataTables_paginate .paginate_button {
+    padding: 10px 16px;
+    margin: 0; /* Remove margin since we're using gap */
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    min-width: 44px; /* Ensure consistent button width */
+    text-align: center;
+}
+
+/* Hover Tombol Biasa */
+.pagination-container .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Tombol Aktif */
+.pagination-container .dataTables_paginate .paginate_button.current {
+    background-color: #b41616 !important;
+    color: white !important;
+}
+
+/* Hover Aktif */
+.pagination-container .dataTables_paginate .paginate_button.current:hover {
+    background-color: #911111 !important;
+    color: white !important;
+}
+
+/* Tombol Prev/Next */
+.pagination-container .dataTables_paginate .paginate_button.previous,
+.pagination-container .dataTables_paginate .paginate_button.next {
+    background-color: #ffffff;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+    min-width: 80px; /* Make prev/next buttons slightly wider */
+}
+
+/* Hover Prev/Next */
+.pagination-container .dataTables_paginate .paginate_button.previous:hover,
+.pagination-container .dataTables_paginate .paginate_button.next:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Disabled State */
+.pagination-container .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+}
+
+/* Hover Disabled */
+.pagination-container .dataTables_paginate .paginate_button.disabled:hover {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    border-color: #dee2e6 !important;
+}
+
+/* Additional spacing for number-only pagination */
+.pagination-container .dataTables_paginate .paginate_button:not(.previous):not(.next) {
+    margin: 0 2px; /* Additional spacing specifically for number buttons */
+}
+
+/* === Responsive adjustments === */
+@media (max-width: 768px) {
+    .bottom-controls {
+        padding: 10px 0;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .pagination-container .dataTables_paginate {
+        gap: 4px; /* Reduced gap on mobile but still adequate */
+    }
+
+    .pagination-container .dataTables_paginate .paginate_button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 40px;
+    }
+
+    .pagination-container .dataTables_paginate .paginate_button.previous,
+    .pagination-container .dataTables_paginate .paginate_button.next {
+        min-width: 70px;
+    }
+
+    .show-entries {
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
+
+    .table-info {
+        text-align: center;
+        order: 2;
+    }
+
+    .pagination-container {
+        justify-content: flex-end;
+        order: 3;
+    }
+}
+
+/* === Additional CSS for Show Entries Above Table === */
 .dt-length-container {
     display: flex !important;
     align-items: center;
@@ -203,7 +494,7 @@ td.aksi-column {
     padding: 8px 0;
     position: relative;
     background: white;
-    z-index: 10; /* Reduced z-index */
+    z-index: 11;
 }
 
 .dt-length-container label {
@@ -215,629 +506,77 @@ td.aksi-column {
 }
 
 .dt-length-container select {
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 4px;
     border: 1px solid #252525;
     font-size: 14px;
     min-width: 70px;
-    z-index: 10;
 }
 
-.dt-search-container {
-    z-index: 10;
-}
-
-.dt-buttons-container {
-    z-index: 10;
-}
-
-/* === IMPROVED PAGINATION LAYOUT === */
-.pagination-container {
-    display: flex;
-    justify-content: flex-end; /* Center pagination */
-    align-items: center;
-    padding: 20px 0;
-    border-top: 1px solid #dee2e6;
-    margin-top: 20px;
-    background: white;
-    position: relative;
-    z-index: 5;
-}
-
-/* Table info positioning */
-.datatable-info-container {
-    text-align: right;
-    padding: 10px 0;
-    color: #6c757d;
-    font-size: 14px;
-    background: white;
-    border-top: 1px solid #f0f0f0;
-}
-
-/* Hide original DataTables controls */
-.dataTables_wrapper > .dataTables_paginate,
-.dataTables_wrapper > .dataTables_info,
-.dataTables_wrapper > .dataTables_length {
+/* Hide original DataTables length control */
+.dataTables_wrapper .dataTables_length {
     display: none !important;
 }
 
-/* === ENHANCED PAGINATION STYLING === */
-.pagination-container .dataTables_paginate {
-    display: flex !important;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
+/* Make sure the moved length control is visible */
+.dt-length-container .form-select {
+    display: block !important;
 }
 
-.pagination-container .dataTables_paginate .paginate_button {
-    padding: 10px 16px;
-    margin: 0;
-    background-color: #ffffff;
-    color: #000000;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 16px;
-    transition: all 0.2s ease-in-out;
-    cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    min-width: 44px;
-    text-align: center;
+/* Top control bar (first child of card-body) */
+.card-body > .d-flex:first-child {
+    padding: 8px 0;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 15px !important;
 }
 
-.pagination-container .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
-    background-color: #000000;
-    color: #ffffff;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.current {
-    background-color: #b41616 !important;
-    color: white !important;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.current:hover {
-    background-color: #911111 !important;
-    color: white !important;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.previous,
-.pagination-container .dataTables_paginate .paginate_button.next {
-    background-color: #ffffff;
-    font-weight: 500;
-    border: 1px solid #dee2e6;
-    min-width: 80px;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.previous:hover,
-.pagination-container .dataTables_paginate .paginate_button.next:hover {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background-color: #f8f9fa !important;
-    color: #6c757d !important;
-    border-color: #dee2e6 !important;
-}
-
-.pagination-container .dataTables_paginate .paginate_button.disabled:hover {
-    background-color: #f8f9fa !important;
-    color: #6c757d !important;
-    border-color: #dee2e6 !important;
-}
-
-/* === OPTIMIZED MODAL SYSTEM - SPLIT MODE READY === */
-
-/* CRITICAL: Enhanced modal positioning for all screen sizes */
-.modal.show {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 20px !important;
-    z-index: 999999 !important;
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
-    overflow-y: auto !important;
-}
-
-/* Optimized modal dialog - Flexible sizing */
-.modal-dialog {
-    margin: 0 auto !important;
-    max-width: min(650px, 90vw) !important;
-    width: 100% !important;
-    max-height: min(calc(100vh - 40px), 80vh) !important;
-    z-index: 1000000 !important;
-    position: relative !important;
-}
-
-/* Flexible modal content */
-.modal-content {
-    max-height: min(calc(100vh - 40px), 80vh) !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    z-index: 1000001 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-    border: none !important;
-}
-
-/* Optimized modal sections */
-.modal-header {
-    flex-shrink: 0 !important;
-    padding: 1rem 1.25rem !important;
-    border-bottom: 1px solid #e5e7eb !important;
-    background-color: #f9fafb !important;
-    border-radius: 8px 8px 0 0 !important;
-}
-
-.modal-body {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 1rem !important;
-    max-height: calc(80vh - 140px) !important;
-    background-color: white !important;
-    scrollbar-width: thin;
-    scrollbar-color: #d1d5db transparent;
-}
-
-.modal-body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 3px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 3px;
-}
-
-.modal-footer {
-    flex-shrink: 0 !important;
-    padding: 0.75rem 1.25rem !important;
-    border-top: 1px solid #e5e7eb !important;
-    background-color: #f9fafb !important;
-    border-radius: 0 0 8px 8px !important;
-}
-
-/* === RESPONSIVE BREAKPOINTS - IMPROVED === */
-
-/* Large screens (1200px+) */
-@media (min-width: 1200px) {
-    .modal.show {
-        padding: 40px !important;
-    }
-    
-    .modal-dialog {
-        max-width: 700px !important;
-        max-height: 85vh !important;
-    }
-    
-    .modal-content {
-        max-height: 85vh !important;
-    }
-    
-    .modal-body {
-        max-height: calc(85vh - 160px) !important;
-        padding: 1.5rem !important;
-    }
-}
-
-/* Medium screens (768px - 1199px) */
-@media (max-width: 1199px) and (min-width: 768px) {
-    .table-responsive {
-        max-height: calc(100vh - 250px);
-    }
-    
-    .modal.show {
-        padding: 15px !important;
-    }
-    
-    .modal-dialog {
-        max-width: 85vw !important;
-        max-height: 90vh !important;
-    }
-    
-    .modal-body {
-        max-height: calc(90vh - 140px) !important;
-    }
-    
-    .card-body > .d-flex:first-child {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-}
-
-/* Small screens (below 768px) */
-@media (max-width: 767px) {
-    .container-fluid {
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    
-    .table-responsive {
-        max-height: calc(100vh - 200px);
-        font-size: 0.875rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-        min-height: 400px;
-    }
-    
+/* === Responsive for control bar === */
+@media (max-width: 768px) {
     .card-body > .d-flex:first-child {
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
-        min-height: auto;
     }
-    
-    .pagination-container .dataTables_paginate {
-        gap: 4px;
-        justify-content: flex-end;
+
+    .dt-length-container {
+        justify-content: center;
     }
-    
-    .pagination-container .dataTables_paginate .paginate_button {
-        padding: 8px 12px;
-        font-size: 14px;
-        min-width: 40px;
+
+    .dt-search-container {
+        justify-content: center;
     }
-    
-    /* Mobile modal adjustments */
-    .modal.show {
-        padding: 10px !important;
-        align-items: flex-start !important;
-        padding-top: 40px !important;
-    }
-    
-    .modal-dialog {
-        max-width: 95vw !important;
-        width: 95vw !important;
-        max-height: calc(100vh - 80px) !important;
-    }
-    
-    .modal-content {
-        max-height: calc(100vh - 80px) !important;
-    }
-    
-    .modal-body {
-        padding: 1rem !important;
-        max-height: calc(100vh - 180px) !important;
-    }
-    
-    .modal-footer {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-    }
-    
-    .modal-footer .btn {
-        width: 100% !important;
-    }
-    
-    .modal .col-md-6,
-    .modal .col-md-3 {
-        width: 100% !important;
-        padding: 0.25rem !important;
-    }
-    
-    .modal .checkbox-group {
-        max-height: 120px !important;
+
+    .dt-buttons-container {
+        justify-content: center;
     }
 }
 
-/* === HEIGHT-CONSTRAINED LAYOUTS (Split Mode) === */
-
-/* Normal height constraints */
-@media (max-height: 700px) {
-    .table-responsive {
-        max-height: calc(100vh - 200px);
-    }
-    
-    .modal.show {
-        padding: 10px !important;
-    }
-    
-    .modal-dialog {
-        max-height: calc(100vh - 20px) !important;
-    }
-    
-    .modal-content {
-        max-height: calc(100vh - 20px) !important;
-    }
-    
-    .modal-body {
-        max-height: calc(100vh - 120px) !important;
-    }
-    
-    .modal .checkbox-group {
-        max-height: 100px !important;
-    }
-}
-
-/* Split mode detection */
-@media (max-height: 600px) {
-    .container-fluid {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    
-    .table-responsive {
-        max-height: calc(100vh - 150px);
-    }
-    
-    .card-body {
-        padding: 1rem;
-        min-height: 300px;
-    }
-    
-    .modal.show {
-        padding: 5px !important;
-        align-items: flex-start !important;
-        padding-top: 20px !important;
-    }
-    
-    .modal-dialog {
-        max-height: calc(100vh - 10px) !important;
-    }
-    
-    .modal-content {
-        max-height: calc(100vh - 10px) !important;
-    }
-    
-    .modal-header,
-    .modal-footer {
-        padding: 0.5rem 1rem !important;
-    }
-    
-    .modal-body {
-        padding: 0.75rem !important;
-        max-height: calc(100vh - 100px) !important;
-    }
-    
-    .modal .checkbox-group {
-        max-height: 80px !important;
-    }
-}
-
-/* Severe split mode */
-@media (max-height: 400px) {
-    .container-fluid {
-        padding: 5px;
-    }
-    
-    .table-responsive {
-        max-height: calc(100vh - 120px);
-    }
-    
-    .card-body {
-        padding: 0.5rem;
-        min-height: 250px;
-    }
-    
-    .modal.show {
-        padding: 2px !important;
-        padding-top: 10px !important;
-    }
-    
-    .modal-dialog {
-        max-height: calc(100vh - 4px) !important;
-    }
-    
-    .modal-content {
-        max-height: calc(100vh - 4px) !important;
-    }
-    
-    .modal-header,
-    .modal-footer {
-        padding: 0.25rem 0.5rem !important;
-    }
-    
-    .modal-body {
-        padding: 0.5rem !important;
-        max-height: calc(100vh - 80px) !important;
-    }
-    
-    .modal .checkbox-group {
-        max-height: 60px !important;
-    }
-    
-    .modal .form-control,
-    .modal .form-select {
-        padding: 0.25rem 0.5rem !important;
-        font-size: 0.8rem !important;
-    }
-}
-
-/* === MODAL FORM ENHANCEMENTS === */
-.modal .checkbox-group {
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    padding: 0.5rem;
-    background-color: #f9fafb;
-}
-
-.modal .checkbox-item {
+/* === MODAL STYLING FIX === */
+.modal-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* backdrop */
+    z-index: 9999; /* sangat tinggi agar selalu di atas */
     display: flex;
-    align-items: flex-start;
-    padding: 0.375rem 0;
-    border-bottom: 1px solid #f3f4f6;
+    justify-content: center;
+    align-items: center;
 }
 
-.modal .checkbox-item:last-child {
-    border-bottom: none;
+/* Konten modal */
+.modal-custom .modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-height: 90vh;
+    overflow-y: auto;
+    width: 90%;
+    max-width: 600px;
+    z-index: 10000;
 }
 
-.modal .checkbox-item input[type="checkbox"] {
-    margin-right: 0.5rem;
-    margin-top: 0.125rem;
-    flex-shrink: 0;
-}
 
-.modal .checkbox-item label {
-    margin-bottom: 0;
-    font-weight: 400;
-    cursor: pointer;
-    flex: 1;
-    font-size: 0.875rem;
-    line-height: 1.3;
-    color: #374151;
-}
 
-.modal .form-control,
-.modal .form-select {
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    transition: border-color 0.15s ease-in-out;
-}
 
-.modal .form-control:focus,
-.modal .form-select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    outline: none;
-}
-
-.modal .form-label {
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* === Z-INDEX MANAGEMENT === */
-.modal-backdrop {
-    display: none !important;
-}
-
-body.modal-open {
-    overflow: hidden !important;
-}
-
-body.modal-open .navbar,
-body.modal-open .sidebar, 
-body.modal-open .main-content,
-body.modal-open .container-fluid,
-body.modal-open .card,
-body.modal-open .table-wrapper,
-body.modal-open .pagination-container {
-    z-index: 1 !important;
-    position: relative !important;
-}
-
-/* === ACCESSIBILITY === */
-.modal:focus {
-    outline: none;
-}
-
-.modal-content {
-    outline: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .modal.fade .modal-dialog {
-        transition: none;
-    }
-    
-    .modal .form-control,
-    .modal .form-select {
-        transition: none;
-    }
-}
-
-/* === PRINT STYLES === */
-@media print {
-    .modal {
-        display: none !important;
-    }
-    
-    .card-body > .d-flex:first-child {
-        display: none !important;
-    }
-    
-    .pagination-container {
-        display: none !important;
-    }
-}
-
-/* === CONTAINER BALANCE FIXES === */
-
-/* Ensure consistent container heights */
-.container-fluid {
-    min-height: calc(100vh - 100px); /* Account for header/footer */
-    display: flex;
-    flex-direction: column;
-}
-
-.container-fluid > h4 {
-    flex-shrink: 0;
-}
-
-.bg-light {
-    flex-shrink: 0;
-}
-
-.card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0; /* Allow flexbox to work properly */
-}
-
-.card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.table-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.table-responsive {
-    flex: 1;
-    min-height: 0;
-}
-
-/* Fix for very wide tables */
-@media (max-width: 1200px) {
-    .table {
-        font-size: 0.875rem;
-    }
-    
-    .text-truncate-custom {
-        max-width: 150px;
-    }
-}
-
-@media (max-width: 768px) {
-    .table {
-        font-size: 0.8rem;
-    }
-    
-    .text-truncate-custom {
-        max-width: 100px;
-    }
-}
-
-/* Ensure pagination stays at bottom */
-.pagination-container {
-    margin-top: auto;
-    flex-shrink: 0;
-}
