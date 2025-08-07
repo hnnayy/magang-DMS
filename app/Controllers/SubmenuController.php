@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Controllers;
-
 use App\Controllers\BaseController;
 use App\Models\SubmenuModel;
 use App\Models\MenuModel;
@@ -19,7 +17,7 @@ class SubmenuController extends BaseController
 
     public function create()
     {
-        $data['menus'] = $this->menuModel->where('status', 1)->findAll();  // hanya menu aktif
+        $data['menus'] = $this->menuModel->where('status', 1)->findAll();
         return view('Submenu/submenu-create', $data);
     }
 
@@ -39,11 +37,12 @@ class SubmenuController extends BaseController
 
         if (! $this->validate($rules)) {
             $errors = $this->validator->getErrors();
-            return redirect()->back()->withInput()->with('validation', $errors);
+            // HAPUS withInput() agar form tidak menyimpan input
+            return redirect()->back()->with('validation', $errors);
         }
 
         $parentId = $this->request->getPost('parent');
-        $submenuName = trim(strtolower($this->request->getPost('submenu'))); // normalized lowercase & trimmed
+        $submenuName = trim(strtolower($this->request->getPost('submenu')));
 
         // Cek duplikat nama submenu dalam menu yang sama (ignore case & trim)
         $existing = $this->submenuModel
@@ -53,10 +52,11 @@ class SubmenuController extends BaseController
             ->first();
 
         if ($existing) {
-            return redirect()->back()->withInput()->with('swal', [
+            // HAPUS withInput() agar form kosong setelah error duplikasi
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Gagal!',
-                'text'  => 'Nama submenu sudah ada dalam menu yang sama.'
+                'title' => 'Failed!',
+                'text'  => 'Submenu name is already used by another menu.'
             ]);
         }
 
@@ -71,12 +71,35 @@ class SubmenuController extends BaseController
         return redirect()->to('create-submenu')->with('added_message', 'Successfully Added');
     }
 
+    // Method untuk check duplicate secara real-time (opsional)
+    public function checkDuplicate()
+    {
+        $parentId = $this->request->getPost('parent');
+        $submenuName = trim(strtolower($this->request->getPost('submenu')));
+
+        if (empty($parentId) || empty($submenuName)) {
+            return $this->response->setJSON([
+                'exists' => false
+            ]);
+        }
+
+        $existing = $this->submenuModel
+            ->where('parent', $parentId)
+            ->where('LOWER(TRIM(name))', $submenuName)
+            ->where('status !=', 0)
+            ->first();
+
+        return $this->response->setJSON([
+            'exists' => $existing ? true : false
+        ]);
+    }
+
     public function list()
     {
         $data['submenus'] = $this->submenuModel
             ->select('submenu.*, menu.name AS parent_name')
             ->join('menu', 'menu.id = submenu.parent')
-            ->where('submenu.status !=', 0) // Exclude soft-deleted items
+            ->where('submenu.status !=', 0)
             ->findAll();
 
         $data['menus'] = $this->menuModel->whereIn('status', [1, 2])->findAll();
@@ -124,7 +147,8 @@ class SubmenuController extends BaseController
         ];
 
         if (! $this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+            // HAPUS withInput() untuk update juga
+            return redirect()->back()->with('errors', $this->validator->getErrors());
         }
 
         $existing = $this->submenuModel->find($id);
@@ -135,7 +159,6 @@ class SubmenuController extends BaseController
         $parentId = $this->request->getPost('parent');
         $submenuName = trim(strtolower($this->request->getPost('submenu')));
 
-        // Cek duplikat (ignore case, trim, exclude current ID)
         $duplicate = $this->submenuModel
             ->where('parent', $parentId)
             ->where('LOWER(TRIM(name))', $submenuName)
@@ -144,10 +167,11 @@ class SubmenuController extends BaseController
             ->first();
 
         if ($duplicate) {
-            return redirect()->back()->withInput()->with('swal', [
+            // HAPUS withInput() agar form kosong setelah error duplikasi
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Gagal!',
-                'text'  => 'Nama submenu sudah digunakan pada menu yang sama.'
+                'title' => 'Failed!',
+                'text'  => 'Menu name is already used by another menu.'
             ]);
         }
 
@@ -159,7 +183,7 @@ class SubmenuController extends BaseController
 
         $this->submenuModel->update($id, $data);
 
-    return redirect()->back()->with('updated_message', 'Successfully Updated');
+        return redirect()->back()->with('updated_message', 'Successfully Updated');
     }
 
     public function delete()
@@ -174,10 +198,9 @@ class SubmenuController extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Submenu tidak ditemukan');
         }
 
-        // Soft delete by setting status to 0
         $this->submenuModel->update($id, ['status' => 0]);
+
         session()->setFlashdata('deleted_message', 'Successfully Deleted');
         return redirect()->back()->with('success', 'Submenu successfully deleted.');
-
     }
 }
