@@ -1,15 +1,23 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
-
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
             <h2><?= $title ?? 'Create Fakulty' ?></h2>
         </div>
-
+        
+        <?php if (session('swal')) : ?>
+            <script>
+                Swal.fire({
+                    icon: '<?= session('swal')['icon'] ?>',
+                    title: '<?= session('swal')['title'] ?>',
+                    text: '<?= session('swal')['text'] ?>'
+                });
+            </script>
+        <?php endif; ?>
+        
         <form id="createFakultasForm" method="post" action="<?= base_url('create-faculty/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
-
             <!-- Nama Fakultas -->
             <div class="form-group">
                 <label class="form-label" for="name">Fakulty/Directorate Name</label>
@@ -19,7 +27,6 @@
                        required>
                 <div class="invalid-feedback">Please enter faculty/directorate name.</div>
             </div>
-
             <!-- Type (Level) -->
             <div class="form-group" id="type-group">
                 <label class="form-label d-block">Level</label>
@@ -35,7 +42,6 @@
                 </div>
                 <div class="invalid-feedback">Please select a level.</div>
             </div>
-
             <!-- Status -->
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
@@ -51,11 +57,9 @@
                 </div>
                 <div class="invalid-feedback">Please select a status.</div>
             </div>
-
             <button type="submit" class="submit-btn">Submit</button>
         </form>
     </div>
-
     <div class="illustration-section">
         <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="Fakultas Illustration" class="illustration-img">
     </div>
@@ -63,7 +67,6 @@
 
 <!-- SweetAlert (Notifikasi) -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
     // Fungsi untuk kapitalisasi setiap kata
     function capitalizeWords(str) {
@@ -151,5 +154,4 @@
         });
     })();
 </script>
-
 <?= $this->endSection() ?>

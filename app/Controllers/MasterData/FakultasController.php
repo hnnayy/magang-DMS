@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers\MasterData;
 
 use App\Models\UnitParentModel;
@@ -28,11 +27,19 @@ class FakultasController extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($nama) || empty($type) || empty($status)) {
-            return redirect()->back()->withInput()->with('error', 'All fields must be filled in.');
+            return redirect()->back()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'All fields must be filled in.',
+            ]);
         }
 
         if ($this->unitParentModel->where('name', $nama)->first()) {
-            return redirect()->back()->withInput()->with('error', 'Faculty names are listed.');
+            return redirect()->back()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty name already exists.',
+            ]);
         }
 
         $result = $this->unitParentModel->insert([
@@ -43,9 +50,17 @@ class FakultasController extends Controller
         ]);
 
         if ($result) {
-            return redirect()->to('create-faculty')->with('added_message', 'Successfully Added');
+            return redirect()->to('create-faculty')->with('swal', [
+                'icon'  => 'success',
+                'title' => 'Success!',
+                'text'  => 'Faculty has been successfully created.',
+            ]);
         } else {
-            return redirect()->back()->withInput()->with('error', 'Failed to add faculty.');
+            return redirect()->back()->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Failed to add faculty.',
+            ]);
         }
     }
 
@@ -60,14 +75,20 @@ class FakultasController extends Controller
         $id = $this->request->getGet('id');
         
         if (empty($id)) {
-            session()->setFlashdata('error', 'Faculty ID is required.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty ID is required.',
+            ]);
         }
 
         $fakultas = $this->unitParentModel->find($id);
         if (!$fakultas) {
-            session()->setFlashdata('error', 'Faculty not found.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty not found.',
+            ]);
         }
 
         $data = [
@@ -86,21 +107,30 @@ class FakultasController extends Controller
         $status = $this->request->getPost('status');
 
         if (empty($id) || empty($nama) || empty($type) || empty($status)) {
-            session()->setFlashdata('error', 'All fields are required.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'All fields are required.',
+            ]);
         }
 
         $fakultas = $this->unitParentModel->find($id);
         if (!$fakultas) {
-            session()->setFlashdata('error', 'Faculty not found.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty not found.',
+            ]);
         }
 
         // Check if name already exists (exclude current record)
         $existingFakultas = $this->unitParentModel->where('name', $nama)->where('id !=', $id)->first();
         if ($existingFakultas) {
-            session()->setFlashdata('error', 'Faculty name already exists.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty name already exists.',
+            ]);
         }
 
         $updateData = [
@@ -112,12 +142,18 @@ class FakultasController extends Controller
         $result = $this->unitParentModel->update($id, $updateData);
 
         if ($result) {
-            session()->setFlashdata('updated_message', 'Successfully Updated.');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'success',
+                'title' => 'Success!',
+                'text'  => 'Faculty has been successfully updated.',
+            ]);
         } else {
-            session()->setFlashdata('error', 'Failed to update faculty.');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Failed to update faculty.',
+            ]);
         }
-
-        return redirect()->to('faculty-list');
     }
 
     public function delete()
@@ -125,24 +161,36 @@ class FakultasController extends Controller
         $id = $this->request->getPost('id');
         
         if (empty($id)) {
-            session()->setFlashdata('error', 'Faculty ID is required.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty ID is required.',
+            ]);
         }
 
         $fakultas = $this->unitParentModel->find($id);
         if (!$fakultas) {
-            session()->setFlashdata('error', 'Faculty not found.');
-            return redirect()->to('faculty-list');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Faculty not found.',
+            ]);
         }
 
         $result = $this->unitParentModel->update($id, ['status' => 0]);
         
         if ($result) {
-            session()->setFlashdata('deleted_message', 'Successfully Deleted.');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'success',
+                'title' => 'Success!',
+                'text'  => 'Faculty has been successfully deleted.',
+            ]);
         } else {
-            session()->setFlashdata('error', 'Failed to delete faculty.');
+            return redirect()->to('faculty-list')->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Error!',
+                'text'  => 'Failed to delete faculty.',
+            ]);
         }
-        
-        return redirect()->to('faculty-list');
     }
 }

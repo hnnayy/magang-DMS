@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Controllers\MasterData;
 
 use App\Controllers\BaseController;
@@ -50,7 +49,7 @@ class UnitController extends BaseController
     public function store()
     {
         if (!$this->validate($this->validationRules)) {
-            return redirect()->back()->withInput()->with('swal', [
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Validation failed!',
                 'text'  => implode("\n", $this->validator->getErrors()),
@@ -67,7 +66,7 @@ class UnitController extends BaseController
             ->first();
 
         if (!$parentExists) {
-            return redirect()->back()->withInput()->with('swal', [
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Failed!',
                 'text'  => 'The selected Faculty/Directorate is not valid.',
@@ -81,7 +80,7 @@ class UnitController extends BaseController
             ->first();
 
         if ($existingUnit) {
-            return redirect()->back()->withInput()->with('swal', [
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Failed!',
                 'text'  => 'Unit name with the same status is already registered.',
@@ -98,7 +97,11 @@ class UnitController extends BaseController
 
         $this->unitModel->insert($insertData);
 
-        return redirect()->to('create-unit')->with('added_message', 'Successfully Added');
+        return redirect()->to('create-unit')->with('swal', [
+            'icon'  => 'success',
+            'title' => 'Success!',
+            'text'  => 'Unit has been successfully created.',
+        ]);
     }
 
     public function list()
@@ -192,7 +195,7 @@ class UnitController extends BaseController
         }
 
         if (!$this->validate($this->validationRules)) {
-            return redirect()->back()->withInput()->with('swal', [
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Validation failed!',
                 'text'  => implode("\n", $this->validator->getErrors()),
@@ -211,7 +214,7 @@ class UnitController extends BaseController
             ->first();
 
         if ($existingUnit) {
-            return redirect()->back()->withInput()->with('swal', [
+            return redirect()->back()->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Failed!',
                 'text'  => 'Unit name with the same status is already registered.',
@@ -227,7 +230,11 @@ class UnitController extends BaseController
 
         $this->unitModel->update($id, $updateData);
 
-        return redirect()->to('unit-list')->with('updated_message', 'Successfully Updated');
+        return redirect()->to('unit-list')->with('swal', [
+            'icon'  => 'success',
+            'title' => 'Success!',
+            'text'  => 'Unit has been successfully updated.',
+        ]);
     }
 
     public function delete()
@@ -257,6 +264,10 @@ class UnitController extends BaseController
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
-        return redirect()->to('unit-list')->with('deleted_message', 'Successfully Deleted');
+        return redirect()->to('unit-list')->with('swal', [
+            'icon'  => 'success',
+            'title' => 'Success!',
+            'text'  => 'Unit has been successfully deleted.',
+        ]);
     }
 }
