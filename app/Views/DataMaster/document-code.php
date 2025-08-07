@@ -62,6 +62,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                 <?php if ($canUpdate || $canDelete): ?>
                                     <td class="text-center">
                                         <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <?php if ($canUpdate): ?>
+                                                <button class="btn btn-link p-0 text-primary" 
+                                                        onclick="editDocument(<?= $kode['id'] ?>, '<?= esc($kode['kategori_nama'], 'js') ?>', '<?= esc($kode['kode'], 'js') ?>', '<?= esc($kode['nama'], 'js') ?>', <?= $kode['document_type_id'] ?>)"
+                                                        title="Edit">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                            <?php endif; ?>
                                             <?php if ($canDelete): ?>
                                                 <form action="<?= base_url('document-code/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                                     <?= csrf_field() ?>
@@ -70,13 +77,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
-                                            <?php endif; ?>
-                                            <?php if ($canUpdate): ?>
-                                                <button class="btn btn-link p-0 text-primary" 
-                                                        onclick="editDocument(<?= $kode['id'] ?>, '<?= esc($kode['kategori_nama'], 'js') ?>', '<?= esc($kode['kode'], 'js') ?>', '<?= esc($kode['nama'], 'js') ?>', <?= $kode['document_type_id'] ?>)"
-                                                        title="Edit">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
                                             <?php endif; ?>
                                         </div>
                                     </td>
