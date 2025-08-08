@@ -1,5 +1,6 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
+
 <div class="container">
     <div class="form-section">
         <div class="form-section-divider">
@@ -86,9 +87,6 @@ class SearchableMenuDropdown {
     }
 
     init() {
-        // HAPUS pre-fill untuk old value - form akan selalu kosong setelah error
-        
-        // Event listeners
         this.searchInput.addEventListener('input', (e) => this.handleInput(e));
         this.searchInput.addEventListener('focus', () => this.handleFocus());
         this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
@@ -275,25 +273,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuDropdown = new SearchableMenuDropdown();
     const form = document.getElementById('createSubmenuForm');
 
-    // SweetAlert untuk error duplikasi
+    // SweetAlert untuk error duplikasi atau success
     <?php if (session('swal')): ?>
         const swalData = <?= json_encode(session('swal')) ?>;
         Swal.fire({
             icon: swalData.icon,
             title: swalData.title,
             text: swalData.text,
-            confirmButtonColor: '#6c5ce7'
-        });
-    <?php endif; ?>
-
-    // SweetAlert untuk success message
-    <?php if (session('added_message')): ?>
-        Swal.fire({
-            title: 'Success!',
-            text: '<?= session('added_message') ?>',
-            icon: 'success',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#10b981'
+            confirmButtonColor: '#6c5ce7',
+            customClass: {
+                popup: 'custom-swal',
+            }
         });
     <?php endif; ?>
 

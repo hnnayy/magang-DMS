@@ -54,7 +54,58 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('script') ?>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- SweetAlert untuk session messages dengan warna ungu seperti gambar -->
+<?php if (session()->has('swal')) : ?>
+<script>
+    Swal.fire({
+        icon: '<?= session('swal.icon') ?>',
+        title: '<?= session('swal.title') ?>',
+        text: '<?= session('swal.text') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<!-- Success messages dengan tombol OK warna ungu -->
+<?php if (session()->has('added_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('added_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('updated_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('updated_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('deleted_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('deleted_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<!-- Fallback untuk flashdata yang sudah ada dengan warna ungu -->
 <script>
     // SweetAlert untuk error duplikasi
     <?php if (session()->getFlashdata('duplicate_error')): ?>
@@ -63,29 +114,29 @@
             text: '<?= session()->getFlashdata('duplicate_error') ?>',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#6366f1'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 
-    // SweetAlert untuk pesan sukses
+    // SweetAlert untuk pesan sukses dengan warna ungu seperti gambar
     <?php if (session()->getFlashdata('added_message')): ?>
         Swal.fire({
             title: 'Success!',
             text: '<?= session()->getFlashdata('added_message') ?>',
             icon: 'success',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#10b981'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 
-    // SweetAlert untuk error lainnya
+    // SweetAlert untuk error lainnya dengan warna ungu
     <?php if (session()->getFlashdata('error')): ?>
         Swal.fire({
             title: 'Error!',
             text: '<?= session()->getFlashdata('error') ?>',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 
@@ -181,3 +232,4 @@
 </script>
 
 <?= $this->endSection() ?>
+

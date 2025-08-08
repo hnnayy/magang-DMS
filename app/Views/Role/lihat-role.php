@@ -20,13 +20,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <table class="table table-bordered table-hover align-middle" id="roleTable">
             <thead class="table-light">
                 <tr>
-                    <th class="text-center" style="width: 5%;">No</th>
+                    <th class="text-center">No</th>
                     <th>Role Name</th>
                     <th>Level</th>
                     <th>Description</th>
                     <th>Status</th>
                     <?php if ($canUpdate || $canDelete): ?>
-                        <th class="text-center" style="width: 20%;">Action</th>
+                        <th class="text-center">Action</th>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -73,11 +73,11 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                     </button>
                                 <?php endif; ?>
                                 <?php if ($canDelete): ?>
-                                    <form action="<?= site_url('create-role/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                    <form action="<?= site_url('create-role/delete') ?>" method="post" class="d-inline">
                                         <?= csrf_field() ?>
                                         <input type="hidden" name="id" value="<?= $role['id'] ?>">
-                                        <button type="submit" class="btn btn-link p-0 text-danger">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="submit" class="btn btn-link p-0" onclick="SwalConfirmDelete(this)">
+                                            <i class="bi bi-trash text-danger"></i>
                                         </button>
                                     </form>
                                 <?php endif; ?>
@@ -93,12 +93,11 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
 <!-- Modal Edit Role -->
 <?php if ($canUpdate): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Role</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="<?= site_url('create-role/update') ?>" id="editRoleForm">
                 <?= csrf_field() ?>
@@ -141,7 +140,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -151,13 +150,59 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 </div>
 <?php endif; ?>
 
-<!-- Scripts -->
+<?= $this->endSection() ?>
+
+<?= $this->section('script') ?>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<?php if (session()->has('swal')) : ?>
+<script>
+    Swal.fire({
+        icon: '<?= session('swal.icon') ?>',
+        title: '<?= session('swal.title') ?>',
+        text: '<?= session('swal.text') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('added_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('added_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('updated_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('updated_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
+
+<?php if (session()->has('deleted_message')) : ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session('deleted_message') ?>',
+        confirmButtonColor: '#7066E0'
+    });
+</script>
+<?php endif; ?>
 
 <script>
     $(document).ready(function () {
@@ -178,29 +223,27 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                 }
             }
         });
-
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
     });
 
+    const canUpdate = <?= json_encode($canUpdate) ?>;
+    const canDelete = <?= json_encode($canDelete) ?>;
+
     <?php if ($canDelete): ?>
-    function confirmDelete(event, form) {
+    function SwalConfirmDelete(elem) {
         event.preventDefault();
         Swal.fire({
             title: 'Are you sure?',
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
             confirmButtonColor: '#d33',
             cancelButtonColor: 'rgba(118, 125, 131, 1)',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                elem.closest('form').submit();
             }
         });
-        return false;
     }
     <?php endif; ?>
 
@@ -217,81 +260,28 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         
         document.getElementById('editRoleDescription').value = roleDescription;
 
-        let statusText = '';
         if (roleStatus == 1) {
-            statusText = 'active';
+            document.getElementById('statusActive').checked = true;
         } else if (roleStatus == 2) {
-            statusText = 'inactive';
+            document.getElementById('statusInactive').checked = true;
         }
-        document.getElementById('editRoleStatus').value = statusText;
-    }
-
-    $('#editRoleForm').on('submit', function() {
-        const submitBtn = $(this).find('button[type="submit"]');
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
-    });
-
-    const editForm = document.getElementById('editRoleForm');
-    if (editForm) {
-        editForm.addEventListener('submit', function (e) {
-            const inputName = document.getElementById('editRoleName').value.trim().toLowerCase();
-            const currentId = document.getElementById('editRoleId').value;
-
-            let isDuplicate = false;
-            <?php if (!empty($roles)): ?>
-                <?php foreach ($roles as $role): ?>
-                    if ('<?= strtolower(trim($role['name'])) ?>' === inputName && '<?= $role['id'] ?>' !== currentId) {
-                        isDuplicate = true;
-                    }
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            if (isDuplicate) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: 'Role name already exists. Please choose a different name.',
-                    confirmButtonColor: '#abb3baff'
-                });
-                return false;
-            }
-        });
     }
     <?php endif; ?>
 
-    <?php if ($canCreate): ?>
-    $('#addRoleForm').on('submit', function() {
-        const submitBtn = $(this).find('button[type="submit"]');
-        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> Saving...');
+    <?php if (session()->getFlashdata('success')): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: '<?= session()->getFlashdata('success') ?>',
+        confirmButtonColor: '#7066E0'
     });
-
-    const addForm = document.getElementById('addRoleForm');
-    if (addForm) {
-        addForm.addEventListener('submit', function (e) {
-            const inputName = document.getElementById('addRoleName').value.trim().toLowerCase();
-
-            let isDuplicate = false;
-            <?php if (!empty($roles)): ?>
-                <?php foreach ($roles as $role): ?>
-                    if ('<?= strtolower(trim($role['name'])) ?>' === inputName) {
-                        isDuplicate = true;
-                    }
-                <?php endforeach; ?>
-            <?php endif; ?>
-
-            if (isDuplicate) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: 'Role name already exists. Please choose a different name.',
-                    confirmButtonColor: '#abb3baff'
-                });
-                return false;
-            }
-        });
-    }
+    <?php elseif (session()->getFlashdata('error')): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Error!',
+        text: '<?= session()->getFlashdata('error') ?>',
+        confirmButtonColor: '#7066E0'
+    });
     <?php endif; ?>
 </script>
 
