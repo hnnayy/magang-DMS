@@ -1,3 +1,4 @@
+
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
@@ -59,10 +60,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                             </button>
                                         <?php endif; ?>
                                         <?php if ($canDelete): ?>
-                                            <form action="<?= site_url('create-menu/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                            <form id="deleteForm_<?= $menu['id'] ?>" action="<?= site_url('create-menu/delete') ?>" method="post">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="id" value="<?= $menu['id'] ?>">
-                                                <button type="submit" class="btn btn-link p-0 text-danger">
+                                                <button type="button" class="btn btn-link p-0 text-danger delete-btn" data-id="<?= $menu['id'] ?>">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -126,7 +127,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 </div>
 <?php endif; ?>
 
-<!-- Scripts -->z
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
@@ -156,27 +157,72 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);
-    });
 
-    <?php if ($canDelete): ?>
-    function confirmDelete(event, form) {
-        event.preventDefault();
-        Swal.fire({
-            title: 'Are you sure?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: 'rgba(118, 125, 131, 1)',
-            confirmButtonText: 'Yes, delete it',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
+        // Event delegation for delete buttons
+        $('#menuTable').on('click', '.delete-btn', function() {
+            const id = $(this).data('id');
+            const form = $('#deleteForm_' + id)[0];
+            Swal.fire({
+                title: 'Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: 'rgba(118, 125, 131, 1)',
+                confirmButtonText: 'Yes, delete it',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Menu deleted successfully',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'custom-swal',
+                                    confirmButton: 'swal-ok-btn'
+                                }
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: result.message || 'An error occurred.',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'custom-swal',
+                                    confirmButton: 'swal-ok-btn'
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An unexpected error occurred.',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'custom-swal',
+                                confirmButton: 'swal-ok-btn'
+                            }
+                        });
+                    });
+                }
+            });
         });
-        return false;
-    }
-    <?php endif; ?>
+    });
 
     <?php if ($canUpdate): ?>
     function openEditModal(id, name, icon, status) {
@@ -202,28 +248,57 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
     const editForm = document.getElementById('editMenuForm');
     editForm.addEventListener('submit', function (e) {
-        const inputName = document.getElementById('editMenuName').value.trim().toLowerCase();
-        const currentId = document.getElementById('editMenuId').value;
+        e.preventDefault();
+        const formData = new FormData(this);
 
-        let isDuplicate = false;
-        <?php if (!empty($menus)): ?>
-            <?php foreach ($menus as $menu): ?>
-                if ('<?= strtolower(trim($menu['name'])) ?>' === inputName && '<?= $menu['id'] ?>' !== currentId) {
-                    isDuplicate = true;
-                }
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        if (isDuplicate) {
-            e.preventDefault();
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Close the modal first
+                $('#editModal').modal('hide');
+                // Show success alert after modal is closed
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Menu updated successfully',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'custom-swal',
+                        confirmButton: 'swal-ok-btn'
+                    }
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message || 'An error occurred.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'custom-swal',
+                        confirmButton: 'swal-ok-btn'
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
             Swal.fire({
                 icon: 'error',
-                title: 'Validation Error',
-                text: 'Menu name already exists. Please choose a different name.',
-                confirmButtonColor: '#abb3baff'
+                title: 'Error',
+                text: 'An unexpected error occurred.',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'custom-swal',
+                    confirmButton: 'swal-ok-btn'
+                }
             });
-            return false;
-        }
+        });
     });
     <?php endif; ?>
 
@@ -267,5 +342,26 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     });
     <?php endif; ?>
 </script>
+
+<style>
+.custom-swal {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    width: 500px;
+}
+.swal-ok-btn {
+    background-color: #6b48ff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.swal-ok-btn:hover {
+    background-color: #5a3ce6;
+}
+</style>
 
 <?= $this->endSection() ?>

@@ -47,12 +47,13 @@
         <img src="<?= base_url('assets/images/profil/Logo_Telkom_University.png') ?>" alt="Menu Illustration" class="illustration-img">
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (() => {
     'use strict';
     const form = document.getElementById('createMenuForm');
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
         const statusInputs = form.querySelectorAll('input[name="status"]');
         let isStatusValid = false;
         statusInputs.forEach(input => {
@@ -78,6 +79,58 @@
                 }
                 feedback.style.display = 'block';
             }
+        } else {
+            e.preventDefault();
+            const formData = new FormData(form);
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Successfully Added',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'custom-swal',
+                            confirmButton: 'swal-ok-btn'
+                        }
+                    }).then(() => {
+                        form.reset();
+                        form.classList.remove('was-validated');
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message || 'An error occurred.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'custom-swal',
+                            confirmButton: 'swal-ok-btn'
+                        }
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'custom-swal',
+                        confirmButton: 'swal-ok-btn'
+                    }
+                }).then(() => {
+                    location.reload();
+                });
+            }
         }
         statusInputs.forEach(input => {
             input.classList.remove('is-valid', 'is-invalid');
@@ -86,4 +139,24 @@
     }, false);
 })();
 </script>
+<style>
+.custom-swal {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    width: 500px;
+}
+.swal-ok-btn {
+    background-color: #6b48ff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.swal-ok-btn:hover {
+    background-color: #5a3ce6;
+}
+</style>
 <?= $this->endSection() ?>

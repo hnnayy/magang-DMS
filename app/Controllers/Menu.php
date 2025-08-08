@@ -12,7 +12,6 @@ class Menu extends BaseController
         $this->menuModel = new MenuModel();
     }
 
-    // Tampilkan form tambah menu
     public function create()
     {
         return view('Menu/create-menu', [
@@ -20,7 +19,6 @@ class Menu extends BaseController
         ]);
     }
 
-    // Tampilkan daftar menu
     public function list()
     {
         $data = [
@@ -30,7 +28,6 @@ class Menu extends BaseController
         return view('Menu/lihat-menu', $data);
     }
 
-    // Proses simpan menu baru
     public function store()
     {
         $validation = \Config\Services::validation();
@@ -62,8 +59,10 @@ class Menu extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->back()
-                ->with('error', implode(' ', $validation->getErrors()));
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => implode(' ', $validation->getErrors())
+            ]);
         }
 
         $data = [
@@ -73,19 +72,21 @@ class Menu extends BaseController
         ];
 
         if ($this->menuModel->insert($data)) {
-            return redirect()->back()->with('added_message', 'Successfully Added');
+            return $this->response->setJSON(['success' => true]);
         }
 
-        return redirect()->back()->with('error', 'Failed to add menu.');
+        return $this->response->setJSON(['success' => false, 'message' => 'Failed to add menu.']);
     }
 
-    // Proses update menu
     public function update()
     {
         $id = $this->request->getPost('id');
         
         if (!$id) {
-            return redirect()->to(base_url('menu-list'))->with('error', 'ID menu tidak ditemukan.');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ID menu tidak ditemukan.'
+            ]);
         }
 
         $validation = \Config\Services::validation();
@@ -117,9 +118,10 @@ class Menu extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->to(base_url('menu-list'))
-                ->with('validation', $validation)
-                ->with('error', 'Validation failed. Please check your input again');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => implode(' ', $validation->getErrors())
+            ]);
         }
 
         $updateData = [
@@ -129,25 +131,27 @@ class Menu extends BaseController
         ];
 
         if ($this->menuModel->update($id, $updateData)) {
-            return redirect()->to(base_url('menu-list'))->with('updated_message', 'Successfully Updated');
+            return $this->response->setJSON(['success' => true]);
         }
 
-        return redirect()->to(base_url('menu-list'))->with('error', 'Failed to update menu.');
+        return $this->response->setJSON(['success' => false, 'message' => 'Failed to update menu.']);
     }
 
-    // Soft delete menu (ubah status jadi 0)
     public function delete()
     {
         $id = $this->request->getPost('id');
         
         if (!$id) {
-            return redirect()->to(base_url('menu-list'))->with('error', 'Menu ID is not found.');
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Menu ID is not found.'
+            ]);
         }
 
         if ($this->menuModel->update($id, ['status' => 0])) {
-            return redirect()->to(base_url('menu-list'))->with('deleted_message', 'Successfully Deleted');
+            return $this->response->setJSON(['success' => true]);
         }
 
-        return redirect()->to(base_url('menu-list'))->with('error', 'Failed to delete menu.');
+        return $this->response->setJSON(['success' => false, 'message' => 'Failed to delete menu.']);
     }
 }
