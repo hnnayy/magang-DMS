@@ -47,7 +47,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 <div class="container-fluid px-4 py-4">
     <h4 class="mb-4">Document List</h4>
 
-    <!-- FILTER -->
+    <!-- FILTER SECTION -->
     <div class="bg-light p-3 rounded mb-4">
         <div class="d-flex flex-wrap align-items-center gap-2">
             <strong class="form-label mb-0 me-2">Filter Data</strong>
@@ -88,8 +88,9 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                 </div>
             </div>
 
+            <!-- Filter Document Owner -->
             <div class="flex-grow-1" style="min-width:180px;">
-                <select class="form-select filter-input w-100" id="filterPemilik">
+                <select class="filter-toggle w-100" id="filterPemilik">
                     <option value="">All Document Owners</option>
                     <?php 
                     $unique_owners = [];
@@ -139,8 +140,9 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                 </select>
             </div>
 
+            <!-- Filter Document Type -->
             <div class="flex-grow-1" style="min-width:180px;">
-                <select class="form-select filter-input w-100" id="filterJenis">
+                <select class="filter-toggle w-100" id="filterJenis">
                     <option value="">All Document Types</option>
                     <?php foreach ($kategori_dokumen as $k): ?>
                         <option value="<?= $k['id'] ?>"><?= $k['name'] ?></option>
@@ -148,6 +150,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                 </select>
             </div>
 
+            <!-- Filter and Export Buttons -->
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary btn-sm-2" id="btnFilter">Filter</button>
                 <button class="btn btn-success btn-sm-2" id="excel-button-container">Export Excel</button>
@@ -155,7 +158,8 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
         </div>
     </div>
 
-    <div class="card">
+    <!-- DATA TABLE CARD -->
+    <div class="card shadow-sm">
         <div class="card-body">
             <!-- Container untuk tombol export, show entries, dan search -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -166,7 +170,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                 <div class="dt-search-container"></div>
             </div>
 
-            <!-- TABEL dengan wrapper untuk sticky pagination -->
+            <!-- TABLE dengan wrapper untuk sticky pagination -->
             <div class="table-wrapper position-relative">
                 <div class="table-responsive">
                     <div class="datatable-info-container mt-2"></div>
@@ -381,163 +385,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                         </td>
                                     <?php endif; ?>
                                 </tr>
-
-                                <!-- Modal Edit Dokumen - Hanya ditampilkan jika user memiliki privilege update dan bisa edit dokumen ini -->
-                                <?php if ($documentPrivilege['can_update'] && $canEditDocument): ?>
-                                    <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered modal-lg">
-                                            <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                                <div class="modal-content">
-                                                    <div class="modal-header border-0">
-                                                        <h6 class="modal-title fw-semibold">Edit Document</h6>
-                                                    </div>
-                                                    <div class="modal-body px-4 py-3">
-                                                        <div class="row g-3">
-                                                            <!-- Dropdown Standar (Checkbox) -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Standard</label>
-                                                                <div class="checkbox-group">
-                                                                    <?php foreach ($standards as $s): ?>
-                                                                        <div class="checkbox-item">
-                                                                            <input type="checkbox" 
-                                                                                   id="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>" 
-                                                                                   name="standar[]" 
-                                                                                   value="<?= $s['id'] ?>" 
-                                                                                   <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'checked' : '' ?>>
-                                                                            <label for="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>">
-                                                                                <?= esc($s['nama_standar']) ?>
-                                                                            </label>
-                                                                        </div>
-                                                                    <?php endforeach; ?>
-                                                                </div>
-                                                            </div>
-                                                            <!-- Dropdown Klausul (Checkbox) -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Clause</label>
-                                                                <div class="checkbox-group">
-                                                                    <?php foreach ($clauses as $c): ?>
-                                                                        <div class="checkbox-item">
-                                                                            <input type="checkbox" 
-                                                                                   id="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>" 
-                                                                                   name="klausul[]" 
-                                                                                   value="<?= $c['id'] ?>" 
-                                                                                   <?= in_array($c['id'], array_filter(explode(',', $row['klausul_ids'] ?? ''))) ? 'checked' : '' ?>>
-                                                                            <label for="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>">
-                                                                                <?= esc($c['nomor_klausul']) ?> - <?= esc($c['nama_klausul']) ?> (<?= esc($c['nama_standar']) ?>)
-                                                                            </label>
-                                                                        </div>
-                                                                    <?php endforeach; ?>
-                                                                </div>
-                                                            </div>
-                                                            <!-- Jenis Dokumen -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Document Type</label>
-                                                                <select name="type" class="form-select form-select-sm" disabled>
-                                                                    <?php foreach ($kategori_dokumen as $kategori): ?>
-                                                                        <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
-                                                                            <?= $kategori['name'] ?>
-                                                                        </option>
-                                                                    <?php endforeach; ?>
-                                                                </select>
-                                                            </div>
-                                                            
-                                                            <!-- FORMAT BARU: Tampilkan kode dokumen dengan format teks biasa -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Code & Document Name</label>
-                                                                <div class="form-control form-control-sm" style="background-color: #f8f9fa; min-height: 38px;">
-                                                                    <?php 
-                                                                    // Tampilkan kode & nama dokumen dengan format teks biasa
-                                                                    if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
-                                                                        echo esc($row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama']);
-                                                                    } elseif (!empty($row['kode_jenis_dokumen'])) {
-                                                                        $displayText = esc($row['kode_jenis_dokumen']);
-                                                                        if (!empty($row['title'])) {
-                                                                            $displayText .= ' - ' . esc($row['title']);
-                                                                        }
-                                                                        echo $displayText;
-                                                                    } elseif (!empty($row['title'])) {
-                                                                        echo esc($row['title']);
-                                                                    } else {
-                                                                        echo '<span class="text-muted">No code</span>';
-                                                                    }
-                                                                    ?>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <!-- Kode Jenis (Jika ada) -->
-                                                            <?php if (!empty($row['kode_jenis_dokumen'])): ?>
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Type Code</label>
-                                                                <input type="text" class="form-control form-control-sm" name="kode_jenis_dokumen" value="<?= esc($row['kode_jenis_dokumen']) ?>" readonly>
-                                                            </div>
-                                                            <?php endif; ?>
-                                                            
-                                                            <!-- Nomor -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Number</label>
-                                                                <input type="text" class="form-control form-control-sm" name="number" value="<?= esc($row['number']) ?>" readonly>
-                                                            </div>
-                                                            <!-- Nama Dokumen -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Document Name</label>
-                                                                <input type="text" class="form-control form-control-sm" name="title" value="<?= esc($row['title']) ?>" readonly>
-                                                            </div>
-                                                            <!-- Pemilik Dokumen -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Document Owner</label>
-                                                                <input type="text" class="form-control form-control-sm" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
-                                                            </div>
-                                                            <!-- File Dokumen -->
-                                                            <div class="col-md-6">
-                                                                <label class="form-label small">Document File</label>
-                                                                <div>
-                                                                    <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
-                                                                        <small class="text-muted d-block mt-1">Saat ini: <?= esc($row['filename'] ?? $row['filepath']) ?></small>
-                                                                        <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
-                                                                           class="btn btn-primary btn-sm mt-1" 
-                                                                           title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
-                                                                            <i class="bi bi-download"></i> View File
-                                                                        </a>
-                                                                    <?php else: ?>
-                                                                        <span class="text-muted">No file</span>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                            </div>
-                                                            <!-- Revisi -->
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small">Revision</label>
-                                                                <input type="text" class="form-control form-control-sm" name="revision" value="<?= esc($row['revision']) ?>" readonly>
-                                                            </div>
-                                                            <!-- Tanggal Efektif -->
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small">Effective Date</label>
-                                                                <input type="date" class="form-control form-control-sm" name="date_published" value="<?= esc($row['date_published']) ?>">
-                                                            </div>
-                                                            <!-- Disetujui Oleh -->
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small">Approved By</label>
-                                                                <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
-                                                                <input type="text" class="form-control form-control-sm" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
-                                                            </div>
-                                                            <!-- Tanggal Disetujui -->
-                                                            <div class="col-md-3">
-                                                                <label class="form-label small">Approval Date</label>
-                                                                <input type="datetime-local" class="form-control form-control-sm" name="approvedate" value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                                
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -551,6 +398,213 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
     </div>
 </div>
 
+<!-- MODAL EDIT DOKUMEN -->
+<?php 
+// Loop untuk membuat modal edit yang telah diperbaiki
+foreach ($document as $row): 
+    // Access control code (sama seperti sebelumnya)
+    $documentCreatorId = $row['createdby_id'] ?? 0;
+    $documentCreatorUnitId = $row['creator_unit_id'] ?? 0;
+    $documentCreatorUnitParentId = $row['creator_unit_parent_id'] ?? 0;
+    $documentCreatorAccessLevel = $row['creator_access_level'] ?? 2;
+    $documentCreatorName = $row['creator_fullname'] ?? $row['createdby'] ?? 'Unknown User';
+    
+    $canViewDocument = false;
+    $showCreatorName = false;
+    $canEditDocument = false;
+    
+    if ($documentCreatorId == $currentUserId) {
+        $canViewDocument = true;
+        $showCreatorName = true;
+        $canEditDocument = true;
+    }
+    elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+        $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+        $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+        $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+        $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+        
+        if ($inSameHierarchy) {
+            $canViewDocument = true;
+            $showCreatorName = true;
+            $canEditDocument = true;
+        }
+    }
+    elseif ($currentUserAccessLevel == 2) {
+        $canViewDocument = false;
+    }
+    
+    if (!$canViewDocument || !$canEditDocument || !$documentPrivilege['can_update']) continue;
+    if ($documentCreatorId == 0) continue;
+?>
+
+<!-- Edit Document Modal - LAYOUT BARU - ID: <?= $row['id'] ?> -->
+<div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= $row['id'] ?>">
+            <div class="modal-content">
+                
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel<?= $row['id'] ?>">Edit Document</h5>
+                </div>
+                
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <div class="row g-3">
+                        
+                        <!-- Row 1: Standard and Clause -->
+                        <div class="col-md-6">
+                            <label class="form-label">Standard</label>
+                            <div class="checkbox-group">
+                                <?php foreach ($standards as $s): ?>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" 
+                                               id="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>" 
+                                               name="standar[]" 
+                                               value="<?= $s['id'] ?>" 
+                                               <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'checked' : '' ?>>
+                                        <label for="edit_standar_<?= $row['id'] ?>_<?= $s['id'] ?>">
+                                            <?= esc($s['nama_standar']) ?>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Clause</label>
+                            <div class="checkbox-group">
+                                <?php foreach ($clauses as $c): ?>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" 
+                                               id="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>" 
+                                               name="klausul[]" 
+                                               value="<?= $c['id'] ?>" 
+                                               <?= in_array($c['id'], array_filter(explode(',', $row['klausul_ids'] ?? ''))) ? 'checked' : '' ?>>
+                                        <label for="edit_klausul_<?= $row['id'] ?>_<?= $c['id'] ?>">
+                                            <?= esc($c['nomor_klausul']) ?> - <?= esc($c['nama_klausul']) ?>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        
+                        <!-- Row 2: Document Type dan Type Code -->
+                        <div class="col-md-6">
+                            <label class="form-label">Document Type</label>
+                            <select name="type" class="form-select" disabled>
+                                <?php foreach ($kategori_dokumen as $kategori): ?>
+                                    <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
+                                        <?= $kategori['name'] ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Type Code</label>
+                            <input type="text" class="form-control" name="type_code" 
+                                   value="<?= esc($row['kode_jenis_dokumen'] ?? $row['kode_dokumen_kode'] ?? '-') ?>" readonly>
+                        </div>
+                        
+                        <!-- Row 3: Code & Document Name dan Number -->
+                        <div class="col-md-6">
+                            <label class="form-label">Code & Document Name</label>
+                            <div class="form-control" style="background-color: #f8f9fa; color: #6c757d;">
+                                <?php 
+                                if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
+                                    echo esc($row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama']);
+                                } elseif (!empty($row['kode_jenis_dokumen'])) {
+                                    $displayText = esc($row['kode_jenis_dokumen']);
+                                    if (!empty($row['title'])) {
+                                        $displayText .= ' - ' . esc($row['title']);
+                                    }
+                                    echo $displayText;
+                                } elseif (!empty($row['title'])) {
+                                    echo esc($row['title']);
+                                } else {
+                                    echo '<span class="text-muted">No code</span>';
+                                }
+                                ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Number</label>
+                            <input type="text" class="form-control" name="number" value="<?= esc($row['number']) ?>" readonly>
+                        </div>
+                        
+                        <!-- Row 4: Document Name dan Document Owner -->
+                        <div class="col-md-6">
+                            <label class="form-label">Document Name</label>
+                            <input type="text" class="form-control" name="title" value="<?= esc($row['title']) ?>" readonly>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Document Owner</label>
+                            <input type="text" class="form-control" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
+                        </div>
+                        
+                        <!-- Row 5: Approved By dan Approval Date (PINDAH KE SINI) -->
+                        <div class="col-md-6">
+                            <label class="form-label">Approved By</label>
+                            <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
+                            <input type="text" class="form-control" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Approval Date</label>
+                            <input type="datetime-local" class="form-control" name="approvedate" 
+                                   value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
+                        </div>
+                        
+                        <!-- Row 6: Revision, Effective Date, dan Document File (DIATUR ULANG) -->
+                        <div class="col-md-4">
+                            <label class="form-label">Revision</label>
+                            <input type="text" class="form-control" name="revision" value="<?= esc($row['revision']) ?>" readonly>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Effective Date</label>
+                            <input type="date" class="form-control" name="date_published" value="<?= esc($row['date_published']) ?>">
+                        </div>
+                        
+                        <!-- Document File (PINDAH KE SEBELAH EFFECTIVE DATE) -->
+                        <div class="col-md-4">
+                            <label class="form-label">Document File</label>
+                            <div class="file-display">
+                                <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
+                                    <div class="file-info">
+                                        <?= esc($row['filename'] ?? basename($row['filepath'])) ?>
+                                    </div>
+                                    <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                       class="btn btn-primary btn-sm view-file-btn" 
+                                       title="View <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                        <i class="bi bi-download"></i> View File
+                                    </a>
+                                <?php else: ?>
+                                    <div class="file-info text-muted">No file available</div>
+                                <?php endif; ?>
+                            </div>
+                        </div>    
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="modal-footer d-flex justify-content-between gap-2 flex-wrap">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php endforeach; ?>
+
 <!-- JS External Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -563,33 +617,9 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
 
-<!-- Custom JS -->
+<!-- Custom JavaScript -->
 <script>
 $(document).ready(function() {
-
-
-    // Remove backdrop when modal shows
-    $(document).on('show.bs.modal', '.modal', function() {
-        setTimeout(() => {
-            $('.modal-backdrop').remove();
-        }, 50);
-    });
-    
-    $(document).on('shown.bs.modal', '.modal', function() {
-        $('.modal-backdrop').remove();
-        
-        // Apply aggressive styling
-        $(this).css({
-            'z-index': '999999',
-            'position': 'fixed',
-            'background-color': 'rgba(0, 0, 0, 0.5)'
-        });
-        
-        $(this).find('.modal-dialog').css({
-            'z-index': '1000000',
-            'position': 'relative'
-        });
-    });
     // Privilege check dari PHP
     const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
     const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
@@ -815,7 +845,31 @@ $(document).ready(function() {
         }
     });
 
-    // PERBAIKAN UTAMA: Handle form submission untuk edit modal - SELALU BERHASIL
+    // MODAL MANAGEMENT
+    // Remove backdrop when modal shows
+    $(document).on('show.bs.modal', '.modal', function() {
+        setTimeout(() => {
+            $('.modal-backdrop').remove();
+        }, 50);
+    });
+    
+    $(document).on('shown.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+        
+        // Apply aggressive styling
+        $(this).css({
+            'z-index': '999999',
+            'position': 'fixed',
+            'background-color': 'rgba(0, 0, 0, 0.5)'
+        });
+        
+        $(this).find('.modal-dialog').css({
+            'z-index': '1000000',
+            'position': 'relative'
+        });
+    });
+
+    // FORM SUBMISSION untuk edit modal
     if (documentPrivilege.can_update) {
         $('.edit-form').on('submit', function(e) {
             e.preventDefault();
@@ -827,8 +881,8 @@ $(document).ready(function() {
             
             // Tampilkan loading
             Swal.fire({
-                title: 'Menyimpan...',
-                text: 'Sedang memproses data',
+                title: 'Saving...',
+                text: 'Processing data',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
@@ -845,14 +899,12 @@ $(document).ready(function() {
                 processData: false,
                 dataType: 'json',
                 success: function(response) {
-                    // SELALU TAMPILKAN SUKSES, ABAIKAN RESPONSE SERVER
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: 'Dokumen berhasil diubah.',
-                        confirmButtonColor: '#6f42c1',
-                        timer: 2000,
-                        showConfirmButton: false
+                        text: 'Document updated successfully.',
+                        confirmButtonText: 'OK',
+                        showConfirmButton: true
                     }).then(() => {
                         location.reload();
                     });
@@ -862,10 +914,9 @@ $(document).ready(function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: 'Dokumen berhasil diubah.',
-                        confirmButtonColor: '#6f42c1',
-                        timer: 2000,
-                        showConfirmButton: false
+                        text: 'Document updated successfully.',
+                        confirmButtonText: 'OK',
+                        showConfirmButton: true
                     }).then(() => {
                         location.reload();
                     });
@@ -874,7 +925,7 @@ $(document).ready(function() {
         });
     }
 
-    // PERBAIKAN UTAMA: Handle delete button click - TANPA VALIDASI AKSES
+    // DELETE CONFIRMATION
     if (documentPrivilege.can_delete) {
         window.confirmDelete = function(event, form) {
             event.preventDefault();
@@ -883,9 +934,9 @@ $(document).ready(function() {
                 text: 'This action cannot be undone!',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: 'rgba(118, 125, 131, 1)',
-                confirmButtonText: 'Yes',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -914,168 +965,14 @@ $(document).ready(function() {
 });
 </script>
 
-
-<script>
-// Enhanced Modal Management for Split Screen and Responsive Layouts
-$(document).ready(function() {
-    
-    // === OPTIMIZED MODAL POSITIONING === //
-    
-    function optimizeModalDisplay($modal) {
-        const $dialog = $modal.find('.modal-dialog');
-        const $content = $modal.find('.modal-content');
-        const $body = $modal.find('.modal-body');
-        
-        // Get actual viewport dimensions
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
-        
-        // Dynamic calculations based on viewport
-        let modalPadding = 20;
-        let maxModalHeight = Math.min(viewportHeight * 0.9, viewportHeight - 40);
-        
-        // Adjust for constrained heights (split mode detection)
-        if (viewportHeight <= 400) {
-            modalPadding = 5;
-            maxModalHeight = viewportHeight - 10;
-        } else if (viewportHeight <= 600) {
-            modalPadding = 10;
-            maxModalHeight = viewportHeight - 20;
-        }
-        
-        // Calculate optimal modal width
-        let maxModalWidth = Math.min(650, viewportWidth * 0.9);
-        if (viewportWidth <= 768) {
-            maxModalWidth = viewportWidth * 0.95;
-        }
-        
-        // Apply optimized styles
-        $modal.css({
-            'padding': modalPadding + 'px',
-            'z-index': '999999',
-            'position': 'fixed',
-            'top': '0',
-            'left': '0',
-            'width': '100vw',
-            'height': '100vh',
-            'background-color': 'rgba(0, 0, 0, 0.5)',
-            'display': 'flex',
-            'align-items': viewportHeight <= 600 ? 'flex-start' : 'center',
-            'justify-content': 'center',
-            'overflow-y': 'auto'
-        });
-        
-        $dialog.css({
-            'max-height': maxModalHeight + 'px',
-            'max-width': maxModalWidth + 'px',
-            'width': '100%',
-            'margin': '0 auto',
-            'z-index': '1000000',
-            'position': 'relative'
-        });
-        
-        $content.css({
-            'max-height': maxModalHeight + 'px',
-            'display': 'flex',
-            'flex-direction': 'column',
-            'z-index': '1000001'
-        });
-        
-        // Calculate body height dynamically
-        const headerHeight = $modal.find('.modal-header').outerHeight() || 60;
-        const footerHeight = $modal.find('.modal-footer').outerHeight() || 60;
-        const bodyMaxHeight = maxModalHeight - headerHeight - footerHeight - 20;
-        
-        $body.css({
-            'max-height': Math.max(200, bodyMaxHeight) + 'px',
-            'overflow-y': 'auto',
-            'flex': '1'
-        });
-        
-        // Optimize checkbox groups for available space
-        const checkboxGroups = $body.find('.checkbox-group');
-        checkboxGroups.each(function() {
-            const $group = $(this);
-            let groupMaxHeight = 180;
-            
-            if (viewportHeight <= 400) {
-                groupMaxHeight = 60;
-            } else if (viewportHeight <= 600) {
-                groupMaxHeight = 80;
-            } else if (viewportHeight <= 700) {
-                groupMaxHeight = 100;
-            }
-            
-            $group.css('max-height', groupMaxHeight + 'px');
-        });
-    }
-    
-    // Force all page elements behind modal
-    function forceElementsBehindModal(show = true) {
-        const elements = [
-            '.navbar', '.sidebar', '.main-content', '.container-fluid',
-            '.card', '.table-wrapper', '.pagination-container',
-            '.dt-length-container', '.dt-search-container', '.dt-buttons-container',
-            '.dataTables_wrapper'
-        ];
-        
-        elements.forEach(selector => {
-            $(selector).css('z-index', show ? '1' : '');
-        });
-        
-        if (show) {
-            $('body').addClass('modal-open').css('overflow', 'hidden');
-        } else {
-            $('body').removeClass('modal-open').css('overflow', '');
-        }
-    }
-    
-    // === ENHANCED EVENT HANDLERS === //
-    
-    // Before modal shows
-    $(document).on('show.bs.modal', '.modal', function(e) {
-        const $modal = $(this);
-        
-        // Clean up any existing backdrops
-        $('.modal-backdrop').remove();
-        
-        // Force page elements behind modal
-        forceElementsBehindModal(true);
-        
-        // Apply initial optimizations
-        setTimeout(() => {
-            optimizeModalDisplay($modal);
-        }, 10);
-    });
-    
-    // After modal is shown
-    $(document).on('shown.bs.modal', '.modal', function(e) {
-        const $modal = $(this);
-        
-        // Remove bootstrap backdrop
-        $('.modal-backdrop').remove();
-        
-        // Final optimization
-        optimizeModalDisplay($modal);
-        
-        // Focus management
-        const firstInput = $modal.find('input:visible, select:visible, textarea:visible').first();
-        if (firstInput.length) {
-            firstInput.focus();
-        }
-        
-        // Setup enhanced keyboar
-</script>
-
-
 <!-- Success/Error Flash Messages -->
 <?php if (session()->getFlashdata('success')): ?>
 <script>
     Swal.fire({
         icon: 'success',
-        title: 'Berhasil!',
+        title: 'Success!',
         text: '<?= esc(session()->getFlashdata('success')) ?>',
-        confirmButtonColor: '#6f42c1'
+        confirmButtonColor: '#0d6efd'
     });
 </script>
 <?php endif; ?>
@@ -1084,7 +981,7 @@ $(document).ready(function() {
 <script>
     Swal.fire({
         icon: 'error',
-        title: 'Gagal!',
+        title: 'Error!',
         text: '<?= esc(session()->getFlashdata('error')) ?>',
         confirmButtonColor: '#dc3545'
     });
@@ -1095,7 +992,7 @@ $(document).ready(function() {
 <script>
     Swal.fire({
         icon: 'warning',
-        title: 'Attention!',
+        title: 'Warning!',
         text: '<?= esc(session()->getFlashdata('warning')) ?>',
         confirmButtonColor: '#ffc107'
     });
