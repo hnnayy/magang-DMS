@@ -1,10 +1,12 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<!-- SweetAlert (Load di awal) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="px-4 py-3 w-100">
     <h4>Faculty list</h4>
     <hr>
-
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="fakultasTable">
             <thead class="table-light">
@@ -90,7 +92,6 @@
                 <label class="form-label">Faculty Name</label>
                 <input type="text" name="name" id="editFakultasName" class="form-control" required>
             </div>
-
             <div class="mb-3">
                 <label class="form-label d-block">Level</label>
                 <div class="form-check form-check-inline">
@@ -102,7 +103,6 @@
                     <label class="form-check-label" for="editType2">Faculty</label>
                 </div>
             </div>
-
             <div class="mb-3">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
@@ -115,7 +115,6 @@
                 </div>
             </div>
         </div>
-
         <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -125,7 +124,6 @@
   </div>
 </div>
 <?php endif; ?>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('script') ?>
@@ -133,94 +131,102 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Script -->
 <script>
     // Check privileges from PHP session
     const canUpdate = <?= json_encode($canUpdate) ?>;
     const canDelete = <?= json_encode($canDelete) ?>;
 
+    // SweetAlert notifications - Load setelah DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        <?php if (session('swal')): ?>
+            console.log('Session swal data:', <?= json_encode(session('swal')) ?>);
+            
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: '<?= session('swal')['icon'] ?>',
+                    title: '<?= session('swal')['title'] ?>',
+                    text: '<?= session('swal')['text'] ?>',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                console.error('SweetAlert is not loaded');
+                alert('<?= session('swal')['title'] ?>: <?= session('swal')['text'] ?>');
+            }
+        <?php endif; ?>
+
+        // Inisialisasi DataTable setelah DOM ready
+        $('#fakultasTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true
+        });
+    });
+
     // Only define confirmDelete function if user has delete privilege
     <?php if ($canDelete): ?>
     function confirmDelete(event, form) {
         event.preventDefault();
-        Swal.fire({
-            title: 'Are you sure?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: 'rgba(118, 125, 131, 1)',
-            confirmButtonText: 'Yes, delete it',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This faculty will be deleted permanently!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: 'rgba(118, 125, 131, 1)',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        } else {
+            // Fallback jika SweetAlert tidak tersedia
+            if (confirm('Are you sure you want to delete this faculty?')) {
                 form.submit();
             }
-        });
+        }
+        
+        return false;
     }
     <?php endif; ?>
-
-    // Inisialisasi DataTable
-    $(document).ready(function () {
-        $('#fakultasTable').DataTable();
-    });
 
     // Only define openEditModal function if user has update privilege
     <?php if ($canUpdate): ?>
     function openEditModal(id, name, type, status) {
+        console.log('Opening edit modal with data:', {id, name, type, status});
+        
         // Set ID di hidden input
         document.getElementById('editFakultasId').value = id;
         
         // Set nama fakultas
         document.getElementById('editFakultasName').value = name;
-
+        
+        // Reset semua radio button dulu
+        document.querySelectorAll('input[name="type"]').forEach(radio => radio.checked = false);
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.checked = false);
+        
         // Centang radio "type" (1 = Directorate, 2 = Faculty)
         const typeRadio = document.querySelector(`input[name="type"][value="${type}"]`);
-        if (typeRadio) typeRadio.checked = true;
-
+        if (typeRadio) {
+            typeRadio.checked = true;
+            console.log('Type radio set to:', type);
+        }
+        
         // Centang radio "status" (1 = Active, 2 = Inactive)
         const statusRadio = document.querySelector(`input[name="status"][value="${status}"]`);
-        if (statusRadio) statusRadio.checked = true;
+        if (statusRadio) {
+            statusRadio.checked = true;
+            console.log('Status radio set to:', status);
+        }
     }
     <?php endif; ?>
-
-    // Show messages
-    <?php if (session()->getFlashdata('added_message')): ?>
-        Swal.fire({
-            title: 'Success!',
-            text: '<?= session()->getFlashdata('added_message') ?>',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('updated_message')): ?>
-        Swal.fire({
-            title: 'Success!',
-            text: '<?= session()->getFlashdata('updated_message') ?>',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('deleted_message')): ?>
-        Swal.fire({
-            title: 'Success!',
-            text: '<?= session()->getFlashdata('deleted_message') ?>',
-            icon: 'success',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('error')): ?>
-        Swal.fire({
-            title: 'Error!',
-            text: '<?= session()->getFlashdata('error') ?>',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
-    <?php endif; ?>
 </script>
-
 <?= $this->endSection() ?>

@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class UserWcModel extends Model
 {
-    protected $table = 'userWC'; // Sesuaikan nama tabel
+    protected $table = 'userwc'; 
     protected $primaryKey = 'id';
     protected $allowedFields = ['username', 'fullname']; // Sesuaikan field-nya
 }

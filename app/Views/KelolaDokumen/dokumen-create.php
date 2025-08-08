@@ -63,7 +63,7 @@
             <!-- Untuk non-predefined codes - Full Width, Stacked Vertically -->
             <div id="kode-dokumen-custom-group" style="display: none;">
                 <div class="form-group">
-                    <label class="form-label" for="kode-dokumen-custom">Document Code</label>
+                    <label class="form-label" for="kode-dokumen-custom">Document Type Code</label>
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" 
                            placeholder="Masukkan kode dokumen..." 
                            oninput="this.value = this.value.toUpperCase()">
@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="nama-dokumen-custom">Document Name</label>
+                    <label class="form-label" for="nama-dokumen-custom">Document Type Name</label>
                     <input type="text" id="nama-dokumen-custom" name="nama-dokumen-custom" class="form-input" 
                            placeholder="Enter document name...">
                     <div class="invalid-feedback">
