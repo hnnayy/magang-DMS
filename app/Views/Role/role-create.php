@@ -66,7 +66,7 @@
         icon: '<?= session('swal.icon') ?>',
         title: '<?= session('swal.title') ?>',
         text: '<?= session('swal.text') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -78,7 +78,7 @@
         icon: 'success',
         title: 'Success!',
         text: '<?= session('added_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -89,7 +89,7 @@
         icon: 'success',
         title: 'Success!',
         text: '<?= session('updated_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -100,7 +100,7 @@
         icon: 'success',
         title: 'Success!',
         text: '<?= session('deleted_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -114,7 +114,7 @@
             text: '<?= session()->getFlashdata('duplicate_error') ?>',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#7c3aed'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 
@@ -125,7 +125,7 @@
             text: '<?= session()->getFlashdata('added_message') ?>',
             icon: 'success',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#7c3aed'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 
@@ -136,7 +136,7 @@
             text: '<?= session()->getFlashdata('error') ?>',
             icon: 'error',
             confirmButtonText: 'OK',
-            confirmButtonColor: '#7c3aed'
+            confirmButtonColor: '#7066E0'
         });
     <?php endif; ?>
 

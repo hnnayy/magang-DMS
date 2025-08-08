@@ -140,7 +140,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer d-grid gap-2">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -166,7 +166,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         icon: '<?= session('swal.icon') ?>',
         title: '<?= session('swal.title') ?>',
         text: '<?= session('swal.text') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -177,7 +177,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         icon: 'success',
         title: 'Success!',
         text: '<?= session('added_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -188,7 +188,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         icon: 'success',
         title: 'Success!',
         text: '<?= session('updated_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -199,7 +199,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         icon: 'success',
         title: 'Success!',
         text: '<?= session('deleted_message') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>
@@ -273,14 +273,14 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         icon: 'success',
         title: 'Success!',
         text: '<?= session()->getFlashdata('success') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
     <?php elseif (session()->getFlashdata('error')): ?>
     Swal.fire({
         icon: 'error',
         title: 'Error!',
         text: '<?= session()->getFlashdata('error') ?>',
-        confirmButtonColor: '#7c3aed'
+        confirmButtonColor: '#7066E0'
     });
     <?php endif; ?>
 </script>
