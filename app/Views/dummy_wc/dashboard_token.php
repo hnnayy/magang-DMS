@@ -49,8 +49,7 @@
   "iss": "<?= esc($decoded_payload->iss) ?>",
   "sub": "<?= esc($decoded_payload->sub) ?>",
   "iat": <?= $decoded_payload->iat ?>,
-  "exp": <?= $decoded_payload->exp ?>,
-  "role_id": "<?= esc($decoded_payload->role_id) ?>"
+  "exp": <?= $decoded_payload->exp ?>
 }
                         </pre>
                         <ul class="small text-muted">
@@ -58,7 +57,6 @@
                             <li><strong>sub</strong>: Subject/Username</li>
                             <li><strong>iat</strong>: Issued at timestamp</li>
                             <li><strong>exp</strong>: Expiration timestamp</li>
-                            <li><strong>role_id</strong>: User role identifier</li>
                         </ul>
                     </div>
                 </div>
@@ -88,8 +86,7 @@
             <div class="row row-cols-1 row-cols-md-2 small g-3">
                 <div>
                     <strong>Username:</strong> <?= esc($username) ?><br>
-                    <strong>Full Name:</strong> <?= esc($fullname) ?><br>
-                    <strong>Role ID:</strong> <?= esc($role_id) ?>
+                    <strong>Full Name:</strong> <?= esc($fullname) ?>
                 </div>
                 <div>
                     <strong>Expires:</strong> <?= esc($expiry_time) ?><br>
