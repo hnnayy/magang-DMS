@@ -82,6 +82,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     </div>
 </div>
 
+
 <!-- Modal Edit Menu -->
 <?php if ($canUpdate): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
