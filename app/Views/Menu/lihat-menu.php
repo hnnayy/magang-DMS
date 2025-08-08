@@ -344,25 +344,4 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php endif; ?>
 </script>
 
-<style>
-.custom-swal {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    width: 500px;
-}
-.swal-ok-btn {
-    background-color: #6b48ff;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.swal-ok-btn:hover {
-    background-color: #5a3ce6;
-}
-</style>
-
 <?= $this->endSection() ?>
