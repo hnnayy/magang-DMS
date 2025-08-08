@@ -52,23 +52,12 @@ class LoginController extends BaseController
             return redirect()->back()->with('error', 'Username not found in DMS system.');
         }
 
-        // Validate role
-        $userRole = $this->userRoleModel
-            ->where('user_id', $user['id'])
-            ->where('status', 1)
-            ->first();
-
-        if (!$userRole) {
-            return redirect()->back()->with('error', 'User does not have an active role.');
-        }
-
         // Prepare token
         $payload = [
             'iss' => 'dummy-login',
             'sub' => $username,
             'iat' => time(),
-            'exp' => time() + 300,
-            'role_id' => $userRole['role_id']
+            'exp' => time() + 300
         ];
 
         $secret = getenv('jwt.secret');
