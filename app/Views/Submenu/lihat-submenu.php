@@ -1,5 +1,5 @@
-<?= $this->extend('layout/main_layout') ?>
-<?= $this->section('content') ?>
+<?php $this->extend('layout/main_layout') ?>
+<?php $this->section('content') ?>
 
 <?php
 // Ambil privilege dari session untuk submenu ini
@@ -15,12 +15,21 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Submenu List</h4>
-    
+        <?php if ($canCreate): ?>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus-lg"></i> Add Submenu
+            </button>
+        <?php endif; ?>
     </div>
     <hr>
 
     <!-- Flash Messages -->
-
+    <?php if (session('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= session('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
     <div class="table-responsive shadow-sm rounded bg-white p-3">
         <table class="table table-bordered table-hover align-middle" id="submenuTable">
@@ -57,10 +66,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                             </button>
                                         <?php endif; ?>
                                         <?php if ($canDelete): ?>
-                                            <form action="<?= site_url('create-submenu/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
+                                            <form id="deleteForm_<?= $submenu['id'] ?>" action="<?= site_url('create-submenu/delete') ?>" method="post">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="id" value="<?= $submenu['id'] ?>">
-                                                <button type="submit" class="btn btn-link p-0 text-danger">
+                                                <button type="button" class="btn btn-link p-0 text-danger" onclick="confirmDelete(<?= $submenu['id'] ?>)">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -213,7 +222,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             this.searchInput.addEventListener('blur', (e) => this.handleBlur(e));
             this.searchInput.addEventListener('keydown', (e) => this.handleKeydown(e));
             
-            // Close dropdown when clicking outside
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('.search-dropdown-container')) {
                     this.hideDropdown();
@@ -230,7 +238,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             this.renderDropdown();
             this.showDropdown();
             
-            // Clear hidden input if text doesn't match any option
             const exactMatch = this.data.find(item => 
                 item[this.textKey].toLowerCase() === query.toLowerCase()
             );
@@ -241,7 +248,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         }
 
         handleBlur(e) {
-            // Delay hiding to allow clicking on dropdown items
             setTimeout(() => {
                 if (!this.dropdown.contains(document.activeElement)) {
                     this.hideDropdown();
@@ -250,9 +256,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         }
 
         handleKeydown(e) {
-            if (!this.dropdown.style.display || this.dropdown.style.display === 'none') {
-                return;
-            }
+            if (!this.dropdown.style.display || this.dropdown.style.display === 'none') return;
 
             switch (e.key) {
                 case 'ArrowDown':
@@ -267,9 +271,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     break;
                 case 'Enter':
                     e.preventDefault();
-                    if (this.selectedIndex >= 0) {
-                        this.selectItem(this.filteredData[this.selectedIndex]);
-                    }
+                    if (this.selectedIndex >= 0) this.selectItem(this.filteredData[this.selectedIndex]);
                     break;
                 case 'Escape':
                     this.hideDropdown();
@@ -279,9 +281,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
         updateSelection() {
             const items = this.dropdown.querySelectorAll('.search-dropdown-item:not(.no-results)');
-            items.forEach((item, index) => {
-                item.classList.toggle('selected', index === this.selectedIndex);
-            });
+            items.forEach((item, index) => item.classList.toggle('selected', index === this.selectedIndex));
         }
 
         selectItem(item) {
@@ -289,8 +289,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             this.hiddenInput.value = item[this.valueKey];
             this.searchInput.classList.add('has-selection');
             this.hideDropdown();
-            
-            // Trigger change event for other dependencies
             this.hiddenInput.dispatchEvent(new Event('change'));
         }
 
@@ -327,35 +325,83 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         setValue(value, text) {
             this.hiddenInput.value = value;
             this.searchInput.value = text;
-            if (value) {
-                this.searchInput.classList.add('has-selection');
-            }
+            if (value) this.searchInput.classList.add('has-selection');
         }
     }
 
-    // Initialize searchable dropdown for edit modal
     let editMenuDropdown;
     const menuData = <?= json_encode($menus) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Menu dropdown for edit modal
         editMenuDropdown = new SearchableDropdown(
             'editParentName-search', 
             'editParentName', 
             'editParentName-dropdown', 
             menuData
         );
+
+        <?php if (session('swal')): ?>
+            const swalData = <?= json_encode(session('swal')) ?>;
+            Swal.fire({
+                icon: swalData.icon,
+                title: swalData.title,
+                text: swalData.text,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#6c5ce7',
+                customClass: { popup: 'custom-swal' }
+            });
+        <?php endif; ?>
     });
-</script>
 
-<script>
+    <?php if ($canDelete): ?>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: $('#deleteForm_' + id).attr('action'),
+                    type: 'POST',
+                    data: $('#deleteForm_' + id).serialize(),
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: 'Successfully Deleted',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#6c5ce7',
+                                customClass: { popup: 'custom-swal' }
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $('#submenuTable').DataTable().row($('#deleteForm_' + id).closest('tr')).remove().draw();
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to delete submenu.',
+                            confirmButtonColor: '#abb3baff'
+                        });
+                    }
+                });
+            }
+        });
+    }
+    <?php endif; ?>
+
     $(document).ready(function () {
-        // Auto hide alerts after 5 seconds
-        setTimeout(function() {
-            $('.alert').fadeOut('slow');
-        }, 5000);
+        setTimeout(function() { $('.alert').fadeOut('slow'); }, 5000);
 
-        // Initialize DataTable
         const table = $('#submenuTable');
         const thCount = table.find('thead th').length;
         const tdCount = table.find('tbody tr:visible:first td').length;
@@ -369,12 +415,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     "search": "Search:",
                     "lengthMenu": "Show _MENU_ entries per page",
                     "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                    "paginate": {
-                        "first": "First",
-                        "last": "Last",
-                        "next": "Next",
-                        "previous": "Previous"
-                    }
+                    "paginate": { "first": "First", "last": "Last", "next": "Next", "previous": "Previous" }
                 }
             });
         } else {
@@ -382,52 +423,26 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         }
     });
 
-    <?php if ($canDelete): ?>
-    function confirmDelete(event, form) {
-        event.preventDefault();
-        Swal.fire({
-            title: 'Are you sure?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: 'rgba(118, 125, 131, 1)',
-            confirmButtonText: 'Yes, delete it',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-        return false;
-    }
-    <?php endif; ?>
-
     <?php if ($canUpdate): ?>
     function openEditModal(id, parentId, submenuName, status) {
         const form = document.getElementById('editUnitForm');
         if (!form) return;
         
-        // Set nilai ke form fields
         document.getElementById('editUnitId').value = id;
         document.getElementById('editUnitName').value = submenuName;
 
-        // Find menu text by parentId
         const selectedMenu = menuData.find(menu => menu.id == parentId);
-        if (selectedMenu && editMenuDropdown) {
-            editMenuDropdown.setValue(parentId, selectedMenu.name);
-        }
+        if (selectedMenu && editMenuDropdown) editMenuDropdown.setValue(parentId, selectedMenu.name);
 
-        // Set radio button status
-        if (status == 1) {
-            document.getElementById('editStatusActive').checked = true;
-        } else {
-            document.getElementById('editStatusInactive').checked = true;
-        }
+        if (status == 1) document.getElementById('editStatusActive').checked = true;
+        else document.getElementById('editStatusInactive').checked = true;
+
+        const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        modal.show();
     }
     <?php endif; ?>
 
     <?php if ($canCreate): ?>
-    // Client-side validation for duplicate submenu names on add
     const addForm = document.getElementById('addSubmenuForm');
     if (addForm) {
         addForm.addEventListener('submit', function (e) {
@@ -437,9 +452,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             let isDuplicate = false;
             <?php if (!empty($submenus)): ?>
                 <?php foreach ($submenus as $submenu): ?>
-                    if ('<?= strtolower(trim($submenu['name'])) ?>' === inputName && '<?= $submenu['parent'] ?>' === parentId) {
-                        isDuplicate = true;
-                    }
+                    if ('<?= strtolower(trim($submenu['name'])) ?>' === inputName && '<?= $submenu['parent'] ?>' === parentId) isDuplicate = true;
                 <?php endforeach; ?>
             <?php endif; ?>
 
@@ -458,7 +471,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php endif; ?>
 
     <?php if ($canUpdate): ?>
-    // Client-side validation for duplicate submenu names on edit
     const editForm = document.getElementById('editUnitForm');
     if (editForm) {
         editForm.addEventListener('submit', function (e) {
@@ -471,9 +483,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                 <?php foreach ($submenus as $submenu): ?>
                     if ('<?= strtolower(trim($submenu['name'])) ?>' === inputName && 
                         '<?= $submenu['parent'] ?>' === parentId && 
-                        '<?= $submenu['id'] ?>' !== currentId) {
-                        isDuplicate = true;
-                    }
+                        '<?= $submenu['id'] ?>' !== currentId) isDuplicate = true;
                 <?php endforeach; ?>
             <?php endif; ?>
 
@@ -491,5 +501,5 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     }
     <?php endif; ?>
 </script>
+<?php $this->endSection() ?>
 
-<?= $this->endSection() ?>

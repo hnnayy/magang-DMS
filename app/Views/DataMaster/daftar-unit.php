@@ -298,7 +298,7 @@
         icon: '<?= session('swal.icon') ?>',
         title: '<?= session('swal.title') ?>',
         text: '<?= session('swal.text') ?>',
-        confirmButtonColor: '#d33'
+        confirmButtonColor: '#7066E0'
     });
 </script>
 <?php endif; ?>

@@ -14,7 +14,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Predefined Document Code</h2>
+        <h4>Predefined Document Code</h4>
         <?php if ($canCreate): ?>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
                 <i class="fas fa-plus"></i> Add Document Code
@@ -233,6 +233,47 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
     $(document).ready(function() {
         $('[title]').tooltip();
+
+        // Display flash messages
+        <?php if (session()->has('added_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= esc(session()->getFlashdata('added_message')) ?>',
+                showConfirmButton: true,
+                timer: 3000
+            });
+        <?php endif; ?>
+
+        <?php if (session()->has('updated_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= esc(session()->getFlashdata('updated_message')) ?>',
+                showConfirmButton: true,
+                timer: 3000
+            });
+        <?php endif; ?>
+
+        <?php if (session()->has('deleted_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= esc(session()->getFlashdata('deleted_message')) ?>',
+                showConfirmButton: true,
+                timer: 3000
+            });
+        <?php endif; ?>
+
+        <?php if (session()->has('error')): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: '<?= esc(session()->getFlashdata('error')) ?>',
+                showConfirmButton: true,
+                timer: 5000
+            });
+        <?php endif; ?>
     });
 </script>
 

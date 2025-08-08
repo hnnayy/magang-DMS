@@ -9,7 +9,8 @@ $canUpdate = isset($privileges['document-type']['can_update']) && $privileges['d
 $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['document-type']['can_delete'] == 1;
 ?>
 
-<?= $this->include('partials/alerts') ?>
+<!-- SweetAlert CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container-fluid">
     <div class="bg-white rounded shadow-sm p-4">
@@ -23,7 +24,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                 </button>
             <?php endif; ?>
         </div>
-
         <div class="table-responsive">
             <div class="border rounded">
                 <?php if (!empty($kategori_dokumen)): ?>
@@ -76,7 +76,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                     </td>
                                     <?php endif; ?>
                                 </tr>
-
                                 <!-- Edit Modal - Only render if user has update privilege -->
                                 <?php if ($canUpdate): ?>
                                 <div class="modal fade" id="editModal<?= $kategori['id'] ?>" tabindex="-1">
@@ -90,7 +89,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                                 <div class="modal-body">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="id" value="<?= $kategori['id'] ?>">
-
                                                     <div class="row mb-3">
                                                         <div class="col-md-6">
                                                             <label for="editNama<?= $kategori['id'] ?>" class="form-label">Type Name</label>
@@ -105,7 +103,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                                                    value="<?= esc($kategori['kode']) ?>">
                                                         </div>
                                                     </div>
-
                                                     <div class="mb-3">
                                                         <div class="form-check">
                                                             <input class="form-check-input" type="checkbox"
@@ -158,7 +155,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
             <form method="post" action="<?= base_url('document-type/add') ?>">
                 <div class="modal-body">
                     <?= csrf_field() ?>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="addNama" class="form-label">Type Name</label>
@@ -169,7 +165,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                             <input type="text" class="form-control" name="kode" id="addKode">
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="addPredefined" name="use_predefined" value="1">
@@ -196,7 +191,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     // Check privileges from PHP session
@@ -204,34 +198,84 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
     const canUpdate = <?= json_encode($canUpdate) ?>;
     const canDelete = <?= json_encode($canDelete) ?>;
 
+    // SweetAlert notifications - Load setelah DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check for success messages
+        <?php if (session('added_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= session('added_message') ?>',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
+
+        <?php if (session('updated_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= session('updated_message') ?>',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
+
+        <?php if (session('deleted_message')): ?>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '<?= session('deleted_message') ?>',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
+
+        // Check for error messages
+        <?php if (session('error')): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '<?= session('error') ?>',
+                confirmButtonText: 'OK'
+            });
+        <?php endif; ?>
+    });
+
     // Only define confirmDelete function if user has delete privilege
     <?php if ($canDelete): ?>
     function confirmDelete(event, form) {
         event.preventDefault();
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'This action cannot be undone!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: 'rgba(118, 125, 131, 1)',
-            confirmButtonText: 'Yes, delete it',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Deleting...',
-                    text: 'Please wait a moment',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This action cannot be undone!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: 'rgba(118, 125, 131, 1)',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait a moment',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    form.submit();
+                }
+            });
+        } else {
+            // Fallback jika SweetAlert tidak tersedia
+            if (confirm('Are you sure you want to delete this document type?')) {
                 form.submit();
             }
-        });
+        }
+        
         return false;
     }
     <?php endif; ?>
@@ -264,5 +308,4 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
         $('[title]').tooltip();
     });
 </script>
-
 <?= $this->endSection() ?>

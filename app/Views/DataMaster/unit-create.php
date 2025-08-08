@@ -1,23 +1,29 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
+<!-- Move SweetAlert2 script to the top to ensure it's loaded before alert code -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container">
     <div class="form-section">
         <h1 class="form-title">Create Unit</h1>
         <hr>
 
-        <?php if (session('swal')) : ?>
+        <!-- Display SweetAlert2 for flash messages -->
+        <?php if (session('swal')): ?>
             <script>
-                Swal.fire({
-                    icon: '<?= session('swal')['icon'] ?>',
-                    title: '<?= session('swal')['title'] ?>',
-                    text: '<?= session('swal')['text'] ?>'
+                $(document).ready(function() {
+                    Swal.fire({
+                        icon: '<?= esc(session('swal')['icon']) ?>',
+                        title: '<?= esc(session('swal')['title']) ?>',
+                        text: '<?= esc(session('swal')['text']) ?>',
+                        showConfirmButton: true,
+                        timer: <?= session('swal')['icon'] === 'error' ? 5000 : 3000 ?>
+                    });
                 });
             </script>
         <?php endif; ?>
         
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
         <form id="addDocumentForm" action="<?= site_url('create-unit/store') ?>" method="post" class="needs-validation" novalidate>
             <?= csrf_field() ?>
 
@@ -26,10 +32,11 @@
                 <label class="form-label" for="fakultas-direktorat">Faculty/Directorate</label>
                 <div class="search-dropdown-container">
                     <input type="text" id="fakultas-search" class="form-input search-input" 
-                           placeholder="Search faculty/directorate..." autocomplete="off" required>
+                           placeholder="Search faculty/directorate..." autocomplete="off" required
+                           value="<?= set_value('parent_id') ? esc($fakultas[array_search(set_value('parent_id'), array_column($fakultas, 'id'))]['name']) : '' ?>">
                     <select id="fakultas-direktorat" name="parent_id" class="form-input" required style="display: none;">
                         <option value="">-- Select Faculty/Directorate --</option>
-                        <?php foreach ($fakultas as $f) : ?>
+                        <?php foreach ($fakultas as $f): ?>
                             <option value="<?= $f['id'] ?>" <?= set_select('parent_id', $f['id']) ?>>
                                 <?= esc($f['name']) ?>
                             </option>
@@ -88,7 +95,7 @@ $(document).ready(function() {
     const fakultasSearch = $('#fakultas-search');
     const fakultasSelect = $('#fakultas-direktorat');
     const fakultasDropdown = $('#fakultas-dropdown');
-    let selectedFakultasId = null;
+    let selectedFakultasId = '<?= set_value('parent_id') ?>';
 
     // Generic function to populate dropdown
     function populateDropdown(dropdown, data, nameField = 'name') {
@@ -152,12 +159,12 @@ $(document).ready(function() {
     });
 
     // Set initial value if set_select value exists
-    const selectedValue = fakultasSelect.val();
-    if (selectedValue) {
-        const selectedItem = fakultasData.find(item => item.id == selectedValue);
+    if (selectedFakultasId) {
+        const selectedItem = fakultasData.find(item => item.id == selectedFakultasId);
         if (selectedItem) {
-            selectedFakultasId = selectedItem.id;
             fakultasSearch.val(selectedItem.name).addClass('has-selection');
+            fakultasSelect.val(selectedFakultasId);
+            fakultasSearch.removeClass('is-invalid').addClass('is-valid');
         }
     }
 
@@ -196,7 +203,6 @@ $(document).ready(function() {
         if (fakultasSelect.prop('required') && !fakultasSelect.val()) {
             isValid = false;
             fakultasSearch.addClass('is-invalid').removeClass('is-valid');
-            // Manually show invalid feedback
             fakultasSearch.closest('.form-group').find('.invalid-feedback').show();
         } else {
             fakultasSearch.removeClass('is-invalid').addClass('is-valid');
@@ -253,13 +259,10 @@ $(document).ready(function() {
     $('#fakultas-search').on('blur', function() {
         const fakultasSelect = $('#fakultas-direktorat');
         
-        // Only validate if form was already validated (after first submit attempt)
         if ($('#addDocumentForm').hasClass('was-validated')) {
             if ($(this).val().trim() !== '' && !fakultasSelect.val()) {
-                // User typed something but didn't select from dropdown
                 $(this).addClass('is-invalid').removeClass('is-valid');
             } else if ($(this).val().trim() === '' && fakultasSelect.prop('required')) {
-                // Field is empty but required
                 $(this).addClass('is-invalid').removeClass('is-valid');
             }
         }

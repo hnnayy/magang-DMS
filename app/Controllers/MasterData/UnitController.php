@@ -99,8 +99,8 @@ class UnitController extends BaseController
 
         return redirect()->to('create-unit')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success!',
-            'text'  => 'Unit has been successfully created.',
+            'title' => 'Success',
+            'text'  => 'Successfully Updated.',
         ]);
     }
 
@@ -216,7 +216,7 @@ class UnitController extends BaseController
         if ($existingUnit) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Failed!',
+                'title' => 'Failed',
                 'text'  => 'Unit name with the same status is already registered.',
             ]);
         }
@@ -232,8 +232,8 @@ class UnitController extends BaseController
 
         return redirect()->to('unit-list')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success!',
-            'text'  => 'Unit has been successfully updated.',
+            'title' => 'Success',
+            'text'  => 'Successfully updated.',
         ]);
     }
 
@@ -254,7 +254,7 @@ class UnitController extends BaseController
         if (!$unit) {
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Error!',
+                'title' => 'Error',
                 'text'  => 'Unit not found.',
             ]);
         }
@@ -266,8 +266,8 @@ class UnitController extends BaseController
 
         return redirect()->to('unit-list')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success!',
-            'text'  => 'Unit has been successfully deleted.',
+            'title' => 'Success',
+            'text'  => 'Successfully deleted.',
         ]);
     }
 }
