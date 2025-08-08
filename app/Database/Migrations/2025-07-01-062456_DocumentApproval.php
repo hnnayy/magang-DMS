@@ -64,6 +64,8 @@ class DocumentApproval extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('document_approval');
+        if ($this->db->tableExists('document_approval')) {
+            $this->forge->dropTable('document_approval');
+        }
     }
 }

@@ -57,6 +57,8 @@ class UserWC extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('userwc');
+        if ($this->db->tableExists('userwc')) {
+            $this->forge->dropTable('userwc');
+        }
     }
 }

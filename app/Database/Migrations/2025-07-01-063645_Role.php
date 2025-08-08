@@ -46,6 +46,8 @@ class Role extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('role');
+        if ($this->db->tableExists('role')) {
+            $this->forge->dropTable('role');
+        }
     }
 }

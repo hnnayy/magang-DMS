@@ -23,6 +23,9 @@ class CreateClausesTable extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('clauses');
+        if ($this->db->tableExists('clauses')) {
+            $this->forge->dropTable('clauses');
+        }
     }
+    
 }

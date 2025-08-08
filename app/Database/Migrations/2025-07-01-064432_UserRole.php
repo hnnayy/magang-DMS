@@ -52,6 +52,8 @@ class UserRole extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('user_role');
+        if ($this->db->tableExists('user_role')) {
+            $this->forge->dropTable('user_role');
+        }
     }
 }

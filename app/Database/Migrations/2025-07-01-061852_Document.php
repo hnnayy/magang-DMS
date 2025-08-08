@@ -94,6 +94,8 @@ class Document extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('document');
+        if ($this->db->tableExists('document')) {
+            $this->forge->dropTable('document');
+        }
     }
 }

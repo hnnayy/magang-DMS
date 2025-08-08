@@ -57,6 +57,8 @@ class User extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('user');
+        if ($this->db->tableExists('user')) {
+            $this->forge->dropTable('user');
+        }
     }
 }

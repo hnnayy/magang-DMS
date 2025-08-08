@@ -63,6 +63,8 @@ class Privilege extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('privilege');
+        if ($this->db->tableExists('privilege')) {
+            $this->forge->dropTable('privilege');
+        }
     }
 }
