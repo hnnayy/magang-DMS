@@ -40,6 +40,8 @@ class Menu extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('menu');
+        if ($this->db->tableExists('menu')) {
+            $this->forge->dropTable('menu');
+        }
     }
 }

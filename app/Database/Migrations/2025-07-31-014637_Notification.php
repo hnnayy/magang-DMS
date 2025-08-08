@@ -50,6 +50,8 @@ public function up()
 
     public function down()
     {
-        $this->forge->dropTable('notification');
+        if ($this->db->tableExists('notification')) {
+            $this->forge->dropTable('notification');
+        }
     }
 }

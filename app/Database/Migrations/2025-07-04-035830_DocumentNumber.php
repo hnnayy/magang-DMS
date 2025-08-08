@@ -51,6 +51,8 @@ class DocumentNumber extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('document_number');
+        if ($this->db->tableExists('document_number')) {
+            $this->forge->dropTable('document_number');
+        }
     }
 }

@@ -41,6 +41,8 @@ class Submenu extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('submenu', true);
+        if ($this->db->tableExists('submenu')) {
+            $this->forge->dropTable('submenu');
+        }
     }
 }

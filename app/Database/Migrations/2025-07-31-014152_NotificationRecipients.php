@@ -41,6 +41,8 @@ public function up()
 
     public function down()
     {
-        $this->forge->dropTable('notification_recipients');
+        if ($this->db->tableExists('notification_recipients')) {
+            $this->forge->dropTable('notification_recipients');
+        }
     }
 }

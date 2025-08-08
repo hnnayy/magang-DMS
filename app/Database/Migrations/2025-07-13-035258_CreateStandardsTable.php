@@ -20,6 +20,8 @@ class CreateStandardsTable extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('standards');
+        if ($this->db->tableExists('standards')) {
+            $this->forge->dropTable('standards');
+        }
     }
 }

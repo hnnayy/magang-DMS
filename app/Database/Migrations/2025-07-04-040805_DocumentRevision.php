@@ -66,6 +66,8 @@ class DocumentRevision extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('document_revision');
+        if ($this->db->tableExists('document_revision')) {
+            $this->forge->dropTable('document_revision');
+        }
     }
 }

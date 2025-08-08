@@ -20,7 +20,6 @@ class DocumentType extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 40,
                 'null'       => false,
-                'comment'    => 'alphanumeric + spasi',
             ],
             'description' => [
                 'type'       => 'VARCHAR',
@@ -47,6 +46,8 @@ class DocumentType extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('document_type');
+        if ($this->db->tableExists('document_type')) {
+            $this->forge->dropTable('document_type');
+        }
     }
 }

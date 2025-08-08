@@ -24,7 +24,7 @@ class UnitParent extends Migration
             ],
             'name' => [
                 'type' => 'VARCHAR',
-                'constraint' => 100, // Menambah panjang menjadi 100 karakter
+                'constraint' => 100, 
                 'null' => false,
             ],
             'status' => [
@@ -50,6 +50,8 @@ class UnitParent extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('unit_parent');
+        if ($this->db->tableExists('unit_parent')) {
+            $this->forge->dropTable('unit_parent');
+        }
     }
 }

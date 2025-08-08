@@ -39,6 +39,8 @@ class Unit extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('unit');
+        if ($this->db->tableExists('unit')) {
+            $this->forge->dropTable('unit');
+        }
     }
 }

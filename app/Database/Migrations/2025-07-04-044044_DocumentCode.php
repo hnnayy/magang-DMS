@@ -51,6 +51,8 @@ class DocumentCode extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('kode_dokumen');
+        if ($this->db->tableExists('kode_dokumen')) {
+            $this->forge->dropTable('kode_dokumen');
+        }
     }
 }
