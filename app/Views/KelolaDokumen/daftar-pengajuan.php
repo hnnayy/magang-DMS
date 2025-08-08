@@ -1288,6 +1288,127 @@ function formatDate(dateString) {
     };
     return new Date(dateString).toLocaleDateString('en-US', options);
 }
+
+// notif
+$(document).ready(function() {
+    // Fungsi existing buat cek URL dan sorot
+    function filterAndHighlightDocumentFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const documentId = urlParams.get('document_id');
+        const revisionId = urlParams.get('revision_id');
+        const openHistory = urlParams.get('open_history'); // Tambahin cek open_history
+
+        if (documentId) {
+            // Sorot baris dokumen di tabel (logika lama)
+            const $row = $(`tr[data-document-id="${documentId}"]`);
+            if ($row.length) {
+                $row.addClass('document-highlight');
+                setTimeout(() => $row.removeClass('document-highlight'), 5000);
+                $row[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Tambahin logika baru: kalo open_history=true, buka modal history
+        if (openHistory === 'true' && documentId) {
+            $.ajax({
+                url: '<?= base_url("document-submission-list") ?>?action=get-history&id=' + documentId,
+                type: 'GET',
+                dataType: 'json',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success && response.data && response.data.history) {
+                        $('#historyNamaDokumen').text(response.data.document.title || '-');
+                        $('#historyJenisDokumen').text(response.data.document.jenis_dokumen || '-');
+                        let html = '';
+                        const reversedHistory = response.data.history.slice().reverse();
+                        reversedHistory.forEach((item, index) => {
+                            const fileLink = item.filepath ? `
+                                <div class="d-flex gap-2">
+                                    <a href="<?= base_url('document-submission-list') ?>?action=download-file&id=${item.document_id}" class="text-decoration-none" title="Download file">
+                                        <i class="bi bi-download text-success fs-5"></i>
+                                    </a>
+                                </div>
+                            ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
+                            const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
+                                           item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
+                                           item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
+                                           item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
+                                           item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
+                            html += `
+                                <tr data-revision-id="${item.revision_id}">
+                                    <td class="text-center">${index + 1}</td>
+                                    <td class="text-center d-none">${item.revision_id}</td>
+                                    <td>${item.document_title || '-'}</td>
+                                    <td>${item.document_number || '-'}</td>
+                                    <td>${fileLink}</td>
+                                    <td class="text-center">${item.revision || 'Rev. 0'}</td>
+                                    <td>${formatDate(item.updated_at)}</td>
+                                    <td>${statusBadge}</td>
+                                </tr>
+                            `;
+                        });
+                        $('#historyTableBody').html(html);
+                        const historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                        historyModal.show(); // Otomatis buka modal
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Document Not Found',
+                            text: 'Document with ID ' + documentId + ' not found or you do not have access.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error checking document history:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to check document history. Please try again.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                }
+            });
+        }
+    }
+
+    // Trigger cek URL pas halaman dimuat
+    filterAndHighlightDocumentFromUrl();
+
+    // Handle klik notif (asumsi dari dropdown notifikasi)
+    $(document).on('click', '.notif-item', function(e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        const notificationId = $(this).data('notification-id');
+
+        // Tandai notif sebagai dibaca
+        $.ajax({
+            url: '<?= base_url('notification/markAsRead') ?>',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ notification_id: notificationId }),
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    console.log('Notification marked as read:', notificationId);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error marking notification as read:', error);
+            }
+        });
+
+        // Navigasi ke URL (biar konsisten)
+        window.location.href = url;
+    });
+});
+
 </script>
 
 <?= $this->endSection() ?>

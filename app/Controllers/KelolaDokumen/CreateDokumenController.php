@@ -265,83 +265,91 @@ class CreateDokumenController extends BaseController
     }
 
     private function createDocumentNotification($documentId, $documentTitle, $documentTypeName)
-    {
-        try {
-            $creatorId = session('user_id');
-            $creatorName = session('fullname') ?? session('username') ?? 'User';
-            $creatorUnitId = session('unit_id');
-            $creatorUnitParentId = session('unit_parent_id');
+{
+    try {
+        $creatorId = session('user_id');
+        $creatorName = session('fullname') ?? session('username') ?? 'User';
+        $creatorUnitId = session('unit_id');
+        $creatorUnitParentId = session('unit_parent_id');
 
-            log_message('debug', "Creating notification - Creator ID: $creatorId, Creator Name: $creatorName, Unit ID: $creatorUnitId, Unit Parent ID: $creatorUnitParentId");
+        log_message('debug', "Creating notification - Creator ID: $creatorId, Creator Name: $creatorName, Unit ID: $creatorUnitId, Unit Parent ID: $creatorUnitParentId");
 
-            $message = "New document '{$documentTitle}' has been added by {$creatorName}";
+        $message = "New document '{$documentTitle}' has been added by {$creatorName}";
 
-            $notificationData = [
-                'message' => $message,
-                'reference_id' => $documentId,
-                'createdby' => $creatorId,
-                'createddate' => date('Y-m-d H:i:s')
-            ];
+        $notificationData = [
+            'message' => $message,
+            'reference_id' => $documentId,
+            'createdby' => $creatorId,
+            'createddate' => date('Y-m-d H:i:s')
+        ];
 
-            $notificationId = $this->notificationModel->insert($notificationData);
+        $notificationId = $this->notificationModel->insert($notificationData);
 
-            if (!$notificationId) {
-                log_message('error', 'Gagal membuat notifikasi: ' . json_encode($this->notificationModel->errors()));
-                return false;
-            }
-
-            log_message('debug', "Notification created with ID: $notificationId");
-
-            // Kirim ke semua pengguna aktif kecuali pembuat
-            $recipients = $this->userModel
-                ->where('id !=', $creatorId)
-                ->where('status', 1)
-                ->findAll();
-
-            log_message('debug', "Recipients found: " . count($recipients));
-            log_message('debug', "Recipients data: " . json_encode($recipients));
-
-            if (empty($recipients)) {
-                log_message('warning', 'No recipients found.');
-            }
-
-            $successCount = 0;
-            $errorCount = 0;
-
-            foreach ($recipients as $user) {
-                $recipientData = [
-                    'notification_id' => $notificationId,
-                    'user_id' => $user['id'],
-                    'status' => 1 // Unread, disesuaikan dengan frontend
-                ];
-
-                log_message('debug', "Inserting recipient: " . json_encode($recipientData));
-
-                $insertResult = $this->notificationRecipientsModel->insert($recipientData);
-
-                if ($insertResult) {
-                    $successCount++;
-                    log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
-                } else {
-                    $errorCount++;
-                    log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
-                }
-            }
-
-            log_message('info', "Notifikasi dokumen berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
-
-            $savedRecipients = $this->notificationRecipientsModel
-                ->where('notification_id', $notificationId)
-                ->findAll();
-            log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
-
-            return $notificationId;
-
-        } catch (\Exception $e) {
-            log_message('error', 'Error creating document notification: ' . $e->getMessage());
-            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        if (!$notificationId) {
+            log_message('error', 'Gagal membuat notifikasi: ' . json_encode($this->notificationModel->errors()));
             return false;
         }
+
+        log_message('debug', "Notification created with ID: $notificationId");
+
+        // Fetch users with access_level 1, same unit_id, and same unit_parent_id, excluding the creator
+        $recipients = $this->userModel
+            ->select('user.*')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->join('unit', 'unit.id = user.unit_id', 'left')
+            ->where('user.id !=', $creatorId)
+            ->where('user.status', 1)
+            ->where('user_role.status', 1)
+            ->where('role.access_level', 1)
+            ->where('user.unit_id', $creatorUnitId)
+            ->where('unit.parent_id', $creatorUnitParentId)
+            ->findAll();
+
+        log_message('debug', "Recipients found: " . count($recipients));
+        log_message('debug', "Recipients data: " . json_encode($recipients));
+
+        if (empty($recipients)) {
+            log_message('warning', 'No recipients found.');
+        }
+
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($recipients as $user) {
+            $recipientData = [
+                'notification_id' => $notificationId,
+                'user_id' => $user['id'],
+                'status' => 1 // Unread, disesuaikan dengan frontend
+            ];
+
+            log_message('debug', "Inserting recipient: " . json_encode($recipientData));
+
+            $insertResult = $this->notificationRecipientsModel->insert($recipientData);
+
+            if ($insertResult) {
+                $successCount++;
+                log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
+            } else {
+                $errorCount++;
+                log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+            }
+        }
+
+        log_message('info', "Notifikasi dokumen berhasil dibuat dengan ID: $notificationId. Success: $successCount, Errors: $errorCount");
+
+        $savedRecipients = $this->notificationRecipientsModel
+            ->where('notification_id', $notificationId)
+            ->findAll();
+        log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
+
+        return $notificationId;
+
+    } catch (\Exception $e) {
+        log_message('error', 'Error creating document notification: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return false;
     }
+}
     
 }

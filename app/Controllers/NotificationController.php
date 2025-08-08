@@ -131,7 +131,7 @@ class NotificationController extends Controller
             return base_url('document-approval?document_id=' . $referenceId);
         }
 
-        if ($referenceId && strpos($message, 'dokumen') !== false) {
+        if ($referenceId && (strpos($message, 'dokumen') !== false || strpos($message, 'document') !== false)) {
             return base_url('document-submission-list?document_id=' . $referenceId);
         }
 

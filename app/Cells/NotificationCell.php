@@ -43,31 +43,31 @@ class NotificationCell extends Cell
     }
 
     private function getNavigationUrl($notification)
-    {
-        $message = strtolower($notification['message'] ?? '');
-        $referenceId = $notification['reference_id'] ?? null;
+{
+    $message = strtolower($notification['message'] ?? '');
+    $referenceId = $notification['reference_id'] ?? null;
 
-        if ($referenceId && (strpos($message, 'persetujuan') !== false || 
-                             strpos($message, 'approve') !== false || 
-                             strpos($message, 'disetujui') !== false || 
-                             strpos($message, 'ditolak') !== false)) {
-            return base_url('document-approval?document_id=' . $referenceId);
-        }
-
-        if ($referenceId && strpos($message, 'dokumen') !== false) {
-            return base_url('document-submission-list?document_id=' . $referenceId);
-        }
-
-        if (strpos($message, 'dokumen') !== false || strpos($message, 'document') !== false) {
-            return base_url('document-submission-list');
-        }
-
-        if (strpos($message, 'user') !== false || strpos($message, 'pengguna') !== false) {
-            return base_url('user-management');
-        }
-
-        return base_url('dashboard');
+    if ($referenceId && (strpos($message, 'persetujuan') !== false || 
+                        strpos($message, 'approve') !== false || 
+                        strpos($message, 'disetujui') !== false || 
+                        strpos($message, 'ditolak') !== false)) {
+        return base_url('document-approval?document_id=' . $referenceId);
     }
+
+    if ($referenceId && (strpos($message, 'dokumen') !== false || strpos($message, 'document') !== false)) {
+        return base_url('document-submission-list?document_id=' . $referenceId . '&open_history=true');
+    }
+
+    if (strpos($message, 'dokumen') !== false || strpos($message, 'document') !== false) {
+        return base_url('document-submission-list?open_history=true');
+    }
+
+    if (strpos($message, 'user') !== false || strpos($message, 'pengguna') !== false) {
+        return base_url('user-management');
+    }
+
+    return base_url('dashboard');
+}
 
     private function renderDropdown($notifikasi)
     {

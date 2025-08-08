@@ -894,34 +894,59 @@ private function serveFile($documentId, $action = 'view')
         ->setBody(file_get_contents($filePath));
 }
 
-    private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
-    {
-        try {
-            $updaterId = session('user_id');
-            $updaterName = session('fullname') ?? session('username') ?? 'User';
-            $updaterUnitId = session('unit_id');
-            $updaterUnitParentId = session('unit_parent_id');
-            
-            log_message('debug', "Creating update notification - Document ID: $documentId, Updater ID: $updaterId, Updater Name: $updaterName, Unit ID: $updaterUnitId, Unit Parent ID: $updaterUnitParentId");
+private function createDocumentNotification($documentId, $documentTitle, $documentTypeName, $action = 'updated')
+{
+    try {
+        $updaterId = session('user_id');
+        $updaterName = session('fullname') ?? session('username') ?? 'User';
+        $updaterUnitId = session('unit_id');
+        $updaterUnitParentId = session('unit_parent_id');
+        $updaterRole = $this->userModel
+            ->select('role.access_level')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->where('user.id', $updaterId)
+            ->where('user.status', 1)
+            ->first();
 
-            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$action} by {$updaterName}";
-            
-            $notificationData = [
-                'message' => $message,
-                'reference_id' => $documentId,
-                'createdby' => $updaterId,
-                'createddate' => date('Y-m-d H:i:s')
-            ];
-            
-            $notificationId = $this->notificationModel->insert($notificationData);
-            
-            if (!$notificationId) {
-                log_message('error', 'Failed to create update notification: ' . json_encode($this->notificationModel->errors()));
-                return false;
-            }
+        $updaterAccessLevel = $updaterRole['access_level'] ?? 0;
 
-            log_message('debug', "Update notification created with ID: $notificationId");
+        log_message('debug', "Creating update notification - Document ID: $documentId, Updater ID: $updaterId, Updater Name: $updaterName, Unit ID: $updaterUnitId, Unit Parent ID: $updaterUnitParentId, Access Level: $updaterAccessLevel");
 
+        $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$action} by {$updaterName}";
+        
+        $notificationData = [
+            'message' => $message,
+            'reference_id' => $documentId,
+            'createdby' => $updaterId,
+            'createddate' => date('Y-m-d H:i:s')
+        ];
+        
+        $notificationId = $this->notificationModel->insert($notificationData);
+        
+        if (!$notificationId) {
+            log_message('error', 'Failed to create update notification: ' . json_encode($this->notificationModel->errors()));
+            return false;
+        }
+
+        log_message('debug', "Update notification created with ID: $notificationId");
+
+        // Define recipients based on updater's access level
+        $recipients = [];
+        if ($updaterAccessLevel == 1) {
+            // For access_level 1, include the updater themselves
+            $recipients = $this->userModel
+                ->select('user.*')
+                ->join('user_role', 'user_role.user_id = user.id', 'left')
+                ->join('role', 'role.id = user_role.role_id', 'left')
+                ->join('unit', 'unit.id = user.unit_id', 'left')
+                ->where('user.status', 1)
+                ->where('role.access_level', 1)
+                ->where('user.unit_id', $updaterUnitId)
+                ->where('unit.parent_id', $updaterUnitParentId)
+                ->findAll();
+        } elseif ($updaterAccessLevel == 2) {
+            // For access_level 2, only notify users with access_level 1 in the same unit and parent
             $recipients = $this->userModel
                 ->select('user.*')
                 ->join('user_role', 'user_role.user_id = user.id', 'left')
@@ -933,117 +958,131 @@ private function serveFile($documentId, $action = 'view')
                 ->where('user.unit_id', $updaterUnitId)
                 ->where('unit.parent_id', $updaterUnitParentId)
                 ->findAll();
-            
-            log_message('debug', "Recipients found: " . count($recipients));
-            log_message('debug', "Recipients data: " . json_encode($recipients));
-            
-            if (empty($recipients)) {
-                log_message('warning', 'No recipients found matching criteria: access_level=1, unit_id=' . $updaterUnitId . ', unit_parent_id=' . $updaterUnitParentId);
-            }
-            
-            $successCount = 0;
-            $errorCount = 0;
-            
-            foreach ($recipients as $user) {
-                $recipientData = [
-                    'notification_id' => $notificationId,
-                    'user_id' => $user['id'],
-                    'status' => 0
-                ];
-                
-                $insertResult = $this->notificationRecipientsModel->insert($recipientData);
-                
-                if ($insertResult) {
-                    $successCount++;
-                    log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
-                } else {
-                    $errorCount++;
-                    log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
-                }
-            }
-
-            log_message('info', "Update notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
-            
-            return $notificationId;
-
-        } catch (\Exception $e) {
-            log_message('error', 'Error creating update notification: ' . $e->getMessage());
-            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-            return false;
         }
-    }
 
-    private function createApprovalNotification($documentId, $documentTitle, $documentTypeName, $action, $approverName, $remarks = '')
-    {
-        try {
-            $approverId = session('user_id');
-            
-            log_message('debug', "Creating approval notification - Document ID: $documentId, Approver: $approverName, Action: $action");
-            
-            $actionText = $action === 'approved' ? 'approved' : 'disapproved';
-            $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$actionText} by {$approverName}";
-            if (!empty($remarks)) {
-                $message .= ". Remarks: {$remarks}";
-            }
-            
-            $notificationData = [
-                'message' => $message,
-                'reference_id' => $documentId,
-                'createdby' => $approverId,
-                'createddate' => date('Y-m-d H:i:s')
-            ];
-            
-            $notificationId = $this->notificationModel->insert($notificationData);
-            
-            if (!$notificationId) {
-                log_message('error', 'Failed to create approval notification: ' . json_encode($this->notificationModel->errors()));
-                return false;
-            }
-
-            log_message('debug', "Approval notification created with ID: $notificationId");
-
-            $document = $this->documentModel->find($documentId);
-            $documentCreatorId = $document['createdby'] ?? null;
-            
-            if (!$documentCreatorId) {
-                log_message('warning', 'No creator found for document ID: ' . $documentId);
-                return $notificationId;
-            }
-
-            $creator = $this->userModel
-                ->where('id', $documentCreatorId)
-                ->where('status', 1)
-                ->first();
-                
-            if (!$creator) {
-                log_message('warning', 'Creator not found or inactive for user_id: ' . $documentCreatorId);
-                return $notificationId;
-            }
-            
+        log_message('debug', "Recipients found: " . count($recipients));
+        log_message('debug', "Recipients data: " . json_encode($recipients));
+        
+        if (empty($recipients)) {
+            log_message('warning', 'No recipients found matching criteria: access_level=1, unit_id=' . $updaterUnitId . ', unit_parent_id=' . $updaterUnitParentId);
+        }
+        
+        $successCount = 0;
+        $errorCount = 0;
+        
+        foreach ($recipients as $user) {
             $recipientData = [
                 'notification_id' => $notificationId,
-                'user_id' => $documentCreatorId,
-                'status' => 0
+                'user_id' => $user['id'],
+                'status' => 1 // Unread, aligned with CreateDokumenController
             ];
             
             $insertResult = $this->notificationRecipientsModel->insert($recipientData);
             
             if ($insertResult) {
-                log_message('debug', "Successfully inserted approval notification recipient for creator_id: " . $documentCreatorId);
+                $successCount++;
+                log_message('debug', "Successfully inserted recipient for user_id: " . $user['id']);
             } else {
-                log_message('error', "Failed to insert approval notification recipient for creator_id: " . $documentCreatorId . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+                $errorCount++;
+                log_message('error', "Failed to insert recipient for user_id: " . $user['id'] . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
             }
+        }
 
-            log_message('info', "Approval notification successfully created with ID: $notificationId for creator_id: $documentCreatorId");
-            
-            return $notificationId;
+        log_message('info', "Update notification successfully created with ID: $notificationId. Success: $successCount, Errors: $errorCount");
+        
+        $savedRecipients = $this->notificationRecipientsModel
+            ->where('notification_id', $notificationId)
+            ->findAll();
+        log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
 
-        } catch (\Exception $e) {
-            log_message('error', 'Error creating approval notification: ' . $e->getMessage());
-            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return $notificationId;
+
+    } catch (\Exception $e) {
+        log_message('error', 'Error creating update notification: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return false;
+    }
+}
+
+
+    
+private function createApprovalNotification($documentId, $documentTitle, $documentTypeName, $action, $approverName, $remarks = '')
+{
+    try {
+        $approverId = session('user_id');
+        
+        log_message('debug', "Creating approval notification - Document ID: $documentId, Approver: $approverName, Action: $action");
+        
+        $actionText = $action === 'approved' ? 'approved' : 'disapproved';
+        $message = "Document '{$documentTitle}' ({$documentTypeName}) has been {$actionText} by {$approverName}";
+        if (!empty($remarks)) {
+            $message .= ". Remarks: {$remarks}";
+        }
+        
+        $notificationData = [
+            'message' => $message,
+            'reference_id' => $documentId,
+            'createdby' => $approverId,
+            'createddate' => date('Y-m-d H:i:s')
+        ];
+        
+        $notificationId = $this->notificationModel->insert($notificationData);
+        
+        if (!$notificationId) {
+            log_message('error', 'Failed to create approval notification: ' . json_encode($this->notificationModel->errors()));
             return false;
         }
+
+        log_message('debug', "Approval notification created with ID: $notificationId");
+
+        $document = $this->documentModel->find($documentId);
+        $documentCreatorId = $document['createdby'] ?? null;
+        
+        if (!$documentCreatorId) {
+            log_message('warning', 'No creator found for document ID: ' . $documentId);
+            return $notificationId;
+        }
+
+        $creator = $this->userModel
+            ->where('id', $documentCreatorId)
+            ->where('status', 1)
+            ->first();
+            
+        if (!$creator) {
+            log_message('warning', 'Creator not found or inactive for user_id: ' . $documentCreatorId);
+            return $notificationId;
+        }
+        
+        $recipientData = [
+            'notification_id' => $notificationId,
+            'user_id' => $documentCreatorId,
+            'status' => 1 // Unread, aligned with CreateDokumenController
+        ];
+        
+        $insertResult = $this->notificationRecipientsModel->insert($recipientData);
+        
+        if ($insertResult) {
+            log_message('debug', "Successfully inserted approval notification recipient for creator_id: " . $documentCreatorId);
+        } else {
+            log_message('error', "Failed to insert approval notification recipient for creator_id: " . $documentCreatorId . " - Errors: " . json_encode($this->notificationRecipientsModel->errors()));
+        }
+
+        log_message('info', "Approval notification successfully created with ID: $notificationId for creator_id: $documentCreatorId");
+        
+        $savedRecipients = $this->notificationRecipientsModel
+            ->where('notification_id', $notificationId)
+            ->findAll();
+        log_message('debug', "Saved recipients in database: " . json_encode($savedRecipients));
+
+        return $notificationId;
+
+    } catch (\Exception $e) {
+        log_message('error', 'Error creating approval notification: ' . $e->getMessage());
+        log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        return false;
     }
+}
+
 
     public function get_history() {
     $document_id = $this->request->getGet('id');
