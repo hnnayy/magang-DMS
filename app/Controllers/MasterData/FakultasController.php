@@ -68,7 +68,7 @@ class FakultasController extends Controller
             if ($result) {
                 session()->setFlashdata('swal', [
                     'icon'  => 'success',
-                    'title' => 'Success!',
+                    'title' => 'Success',
                     'text'  => 'Successfully Added.',
                 ]);
                 
@@ -193,7 +193,7 @@ class FakultasController extends Controller
             if ($result) {
                 session()->setFlashdata('swal', [
                     'icon'  => 'success',
-                    'title' => 'Success!',
+                    'title' => 'Success',
                     'text'  => 'Successfully Updated.',
                 ]);
                 
@@ -249,7 +249,7 @@ class FakultasController extends Controller
             if ($result) {
                 session()->setFlashdata('swal', [
                     'icon'  => 'success',
-                    'title' => 'Success!',
+                    'title' => 'Success',
                     'text'  => 'Successfully deleted.',
                 ]);
                 
