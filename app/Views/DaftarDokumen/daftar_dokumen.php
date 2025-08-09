@@ -95,7 +95,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                     <?php 
                     $unique_owners = [];
                     foreach ($document as $doc) {
-                        // Apply same access control for filter options
                         $documentCreatorId = $doc['createdby_id'] ?? 0;
                         $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
                         $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
@@ -161,7 +160,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
     <!-- DATA TABLE CARD -->
     <div class="card shadow-sm">
         <div class="card-body">
-            <!-- Container untuk tombol export, show entries, dan search -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex align-items-center gap-3">
                     <div class="dt-buttons-container"></div>
@@ -170,7 +168,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                 <div class="dt-search-container"></div>
             </div>
 
-            <!-- TABLE dengan wrapper untuk sticky pagination -->
             <div class="table-wrapper position-relative">
                 <div class="table-responsive">
                     <div class="datatable-info-container mt-2"></div>
@@ -296,7 +293,6 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                     </td>
                                     <td><?= esc($row['jenis_dokumen'] ?? '-') ?></td>
                                     <td>
-                                        <!-- FORMAT BARU: Tampilkan kode & nama dokumen dengan format teks biasa dipisah strip -->
                                         <div class="kode-dokumen-simple">
                                             <?php 
                                             $kodeDokumenText = '';
@@ -359,8 +355,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                                     <td><?= esc($row['date_published'] ?? '-') ?></td>
                                     <td><?= esc($row['approved_by_name'] ?? '-') ?></td>
                                     <td><?= esc($row['approvedate'] ?? '-') ?></td>
-                                    
-                                    <!-- Kolom Aksi dengan privilege check - HANYA tampilkan jika bisa edit/delete -->
+
                                     <?php if ($hasAnyPrivilege): ?>
                                         <td class="aksi-column text-center">
                                             <div class="d-flex align-items-center justify-content-center gap-2">
@@ -388,10 +383,8 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <!-- Container untuk pesan "Tidak ada data" -->
                     <div class="no-data-message" style="display: none;">No data</div>
                 </div>
-                <!-- Pagination container yang akan di-sticky -->
                 <div class="pagination-container"></div>
             </div>
         </div>
@@ -400,9 +393,7 @@ $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_d
 
 <!-- MODAL EDIT DOKUMEN -->
 <?php 
-// Loop untuk membuat modal edit yang telah diperbaiki
 foreach ($document as $row): 
-    // Access control code (sama seperti sebelumnya)
     $documentCreatorId = $row['createdby_id'] ?? 0;
     $documentCreatorUnitId = $row['creator_unit_id'] ?? 0;
     $documentCreatorUnitParentId = $row['creator_unit_parent_id'] ?? 0;
@@ -438,24 +429,20 @@ foreach ($document as $row):
     if ($documentCreatorId == 0) continue;
 ?>
 
-<!-- Edit Document Modal - LAYOUT BARU - ID: <?= $row['id'] ?> -->
 <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $row['id'] ?>">
             <div class="modal-content">
-                
-                <!-- Modal Header -->
+
                 <div class="modal-header">
                     <h5 class="modal-title" id="editModalLabel<?= $row['id'] ?>">Edit Document</h5>
                 </div>
-                
-                <!-- Modal Body -->
+
                 <div class="modal-body">
                     <div class="row g-3">
-                        
-                        <!-- Row 1: Standard and Clause -->
+
                         <div class="col-md-6">
                             <label class="form-label">Standard</label>
                             <div class="checkbox-group">
@@ -491,8 +478,7 @@ foreach ($document as $row):
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        
-                        <!-- Row 2: Document Type dan Type Code -->
+
                         <div class="col-md-6">
                             <label class="form-label">Document Type</label>
                             <select name="type" class="form-select" disabled>
@@ -509,8 +495,7 @@ foreach ($document as $row):
                             <input type="text" class="form-control" name="type_code" 
                                    value="<?= esc($row['kode_jenis_dokumen'] ?? $row['kode_dokumen_kode'] ?? '-') ?>" readonly>
                         </div>
-                        
-                        <!-- Row 3: Code & Document Name dan Number -->
+
                         <div class="col-md-6">
                             <label class="form-label">Code & Document Name</label>
                             <div class="form-control" style="background-color: #f8f9fa; color: #6c757d;">
@@ -536,8 +521,7 @@ foreach ($document as $row):
                             <label class="form-label">Number</label>
                             <input type="text" class="form-control" name="number" value="<?= esc($row['number']) ?>" readonly>
                         </div>
-                        
-                        <!-- Row 4: Document Name dan Document Owner -->
+
                         <div class="col-md-6">
                             <label class="form-label">Document Name</label>
                             <input type="text" class="form-control" name="title" value="<?= esc($row['title']) ?>" readonly>
@@ -547,8 +531,7 @@ foreach ($document as $row):
                             <label class="form-label">Document Owner</label>
                             <input type="text" class="form-control" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
                         </div>
-                        
-                        <!-- Row 5: Approved By dan Approval Date (PINDAH KE SINI) -->
+
                         <div class="col-md-6">
                             <label class="form-label">Approved By</label>
                             <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
@@ -560,8 +543,7 @@ foreach ($document as $row):
                             <input type="datetime-local" class="form-control" name="approvedate" 
                                    value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
                         </div>
-                        
-                        <!-- Row 6: Revision, Effective Date, dan Document File (DIATUR ULANG) -->
+
                         <div class="col-md-4">
                             <label class="form-label">Revision</label>
                             <input type="text" class="form-control" name="revision" value="<?= esc($row['revision']) ?>" readonly>
@@ -571,8 +553,7 @@ foreach ($document as $row):
                             <label class="form-label">Effective Date</label>
                             <input type="date" class="form-control" name="date_published" value="<?= esc($row['date_published']) ?>">
                         </div>
-                        
-                        <!-- Document File (PINDAH KE SEBELAH EFFECTIVE DATE) -->
+
                         <div class="col-md-4">
                             <label class="form-label">Document File</label>
                             <div class="file-display">
@@ -592,9 +573,8 @@ foreach ($document as $row):
                         </div>    
                     </div>
                 </div>
-                
-                <!-- Modal Footer -->
-                <div class="modal-footer d-flex justify-content-between gap-2 flex-wrap">
+
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
@@ -708,7 +688,6 @@ $(document).ready(function() {
         </div>
     `);
     
-    // Create custom search box
     const searchHtml = `
         <div class="d-flex align-items-center">
             <label class="me-2 mb-0">Search:</label>
@@ -722,7 +701,6 @@ $(document).ready(function() {
         const searchTerm = this.value.trim();
         table.search(searchTerm).draw();
 
-        // Tampilkan pesan "Tidak ada data" jika tidak ada hasil pencarian
         const visibleRows = table.rows({ filter: 'applied' }).data().length;
         if (visibleRows === 0) {
             $('.no-data-message').show();
@@ -751,23 +729,19 @@ $(document).ready(function() {
         }
     });
 
-    // FUNGSI DROPDOWN FILTER DENGAN CHECKBOX
     window.toggleDropdown = function(filterId) {
         const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
         const isCurrentlyShown = dropdown.classList.contains('show');
-        
-        // Tutup semua dropdown lain
+
         document.querySelectorAll('.filter-dropdown').forEach(d => {
             d.classList.remove('show');
         });
-        
-        // Toggle dropdown yang diklik
+
         if (!isCurrentlyShown) {
             dropdown.classList.add('show');
         }
     };
 
-    // Tutup dropdown jika klik di luar
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.filter-dropdown')) {
             document.querySelectorAll('.filter-dropdown').forEach(d => {
@@ -776,9 +750,7 @@ $(document).ready(function() {
         }
     });
 
-    // Update display text untuk dropdown filter
     function updateFilterText() {
-        // Update Standar filter text
         const checkedStandar = document.querySelectorAll('.standar-checkbox:checked');
         const standarText = document.getElementById('filterStandarText');
         if (checkedStandar.length === 0) {
@@ -789,7 +761,6 @@ $(document).ready(function() {
             standarText.textContent = `${checkedStandar.length} Standard selected`;
         }
 
-        // Update Klausul filter text
         const checkedKlausul = document.querySelectorAll('.klausul-checkbox:checked');
         const klausulText = document.getElementById('filterKlausulText');
         if (checkedKlausul.length === 0) {
@@ -801,7 +772,6 @@ $(document).ready(function() {
         }
     }
 
-    // Event listener untuk checkbox changes
     document.addEventListener('change', function(event) {
         if (event.target.classList.contains('standar-checkbox') || 
             event.target.classList.contains('klausul-checkbox')) {
@@ -809,7 +779,6 @@ $(document).ready(function() {
         }
     });
 
-    // Updated Multi-Select Filter Logic dengan Checkbox
     $('#btnFilter').on('click', function() {
         const selectedStandar = Array.from(document.querySelectorAll('.standar-checkbox:checked')).map(cb => cb.value);
         const selectedKlausul = Array.from(document.querySelectorAll('.klausul-checkbox:checked')).map(cb => cb.value);
@@ -834,7 +803,6 @@ $(document).ready(function() {
         table.draw();
         $.fn.dataTable.ext.search.pop();
 
-        // Tampilkan pesan "Tidak ada data" jika tidak ada baris yang sesuai
         const visibleRows = table.rows({ filter: 'applied' }).data().length;
         if (visibleRows === 0) {
             $('.no-data-message').show();
@@ -845,8 +813,6 @@ $(document).ready(function() {
         }
     });
 
-    // MODAL MANAGEMENT
-    // Remove backdrop when modal shows
     $(document).on('show.bs.modal', '.modal', function() {
         setTimeout(() => {
             $('.modal-backdrop').remove();
@@ -855,8 +821,7 @@ $(document).ready(function() {
     
     $(document).on('shown.bs.modal', '.modal', function() {
         $('.modal-backdrop').remove();
-        
-        // Apply aggressive styling
+
         $(this).css({
             'z-index': '999999',
             'position': 'fixed',
@@ -869,17 +834,14 @@ $(document).ready(function() {
         });
     });
 
-    // FORM SUBMISSION untuk edit modal
     if (documentPrivilege.can_update) {
         $('.edit-form').on('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             const modalId = '#editModal' + formData.get('id');
-            
-            // Tutup modal terlebih dahulu
+
             $(modalId).modal('hide');
-            
-            // Tampilkan loading
+
             Swal.fire({
                 title: 'Saving...',
                 text: 'Processing data',
@@ -910,7 +872,6 @@ $(document).ready(function() {
                     });
                 },
                 error: function(xhr, status, error) {
-                    // Tetap tampilkan sukses meskipun ada error
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
@@ -925,7 +886,6 @@ $(document).ready(function() {
         });
     }
 
-    // DELETE CONFIRMATION
     if (documentPrivilege.can_delete) {
         window.confirmDelete = function(event, form) {
             event.preventDefault();
