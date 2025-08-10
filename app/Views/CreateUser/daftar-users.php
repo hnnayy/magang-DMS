@@ -481,6 +481,7 @@ $(document).ready(function () {
 
       Swal.fire({
         title: 'Are you sure?',
+        text: 'This action cannot be undone.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes, delete it',
@@ -489,22 +490,37 @@ $(document).ready(function () {
         cancelButtonColor: 'rgba(118, 125, 131, 1)',
       }).then((result) => {
         if (result.isConfirmed) {
-          $.post('<?= base_url('create-user/delete') ?>', {
-            <?= csrf_token() ?>: '<?= csrf_hash() ?>',
-            id: id
-          })
-          .done(function (res) {
-            Swal.fire({
-              title: 'Success',
-              text: 'Successfully Deleted',
-              icon: 'success'
-            }).then(() => {
-              location.reload();
-            });
-          })
-          .fail(function (xhr) {
-            const err = xhr.responseJSON?.error || 'Failed to delete user.';
-            Swal.fire('Failed', err, 'error');
+          $.ajax({
+            url: '<?= base_url('create-user/delete') ?>',
+            method: 'POST',
+            data: {
+              <?= csrf_token() ?>: '<?= csrf_hash() ?>',
+              id: id
+            },
+            success: function (res) {
+              if (res.deleted_message) {
+                Swal.fire({
+                  title: 'Success',
+                  text: res.deleted_message,
+                  icon: 'success'
+                }).then(() => {
+                  location.reload();
+                });
+              } else {
+                Swal.fire('Failed', 'Unexpected response from server.', 'error');
+              }
+            },
+            error: function (xhr) {
+              let err = 'Failed to delete user.';
+              if (xhr.status === 404) {
+                err = 'User not found.';
+              } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                err = xhr.responseJSON.error;
+              } else if (xhr.status === 403) {
+                err = 'Invalid or expired CSRF token. Please refresh the page and try again.';
+              }
+              Swal.fire('Failed', err, 'error');
+            }
           });
         }
       });

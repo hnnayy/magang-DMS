@@ -25,9 +25,7 @@
         </div>
     <?php endforeach; ?>
     
-    <div class="notification-footer">
-        <button class="mark-all-btn" onclick="markAllAsRead()">Mark All as Read</button>
-    </div>
+    
 <?php else : ?>
     <div class="notification-empty">No new notifications</div>
 <?php endif; ?>

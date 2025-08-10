@@ -50,6 +50,9 @@
                     </option>
                     <?php endforeach; ?>
                 </select>
+                <div class="invalid-feedback">
+                    Please select a document type.
+                </div>
             </div>
 
             <!-- Untuk predefined codes - Full Width -->
@@ -58,6 +61,9 @@
                 <select id="kode-dokumen" name="kode_dokumen_id" class="form-input">
                     <option value="">-- Select Document --</option>
                 </select>
+                <div class="invalid-feedback">
+                    Please select a document code.
+                </div>
             </div>
 
             <!-- Untuk non-predefined codes - Full Width, Stacked Vertically -->
@@ -65,7 +71,7 @@
                 <div class="form-group">
                     <label class="form-label" for="kode-dokumen-custom">Document Type Code</label>
                     <input type="text" id="kode-dokumen-custom" name="kode-dokumen-custom" class="form-input" 
-                           placeholder="Masukkan kode dokumen..." 
+                           placeholder="Enter document code..." 
                            oninput="this.value = this.value.toUpperCase()">
                     <div class="invalid-feedback">
                         Document code is required.
@@ -75,7 +81,8 @@
                 <div class="form-group">
                     <label class="form-label" for="nama-dokumen-custom">Document Type Name</label>
                     <input type="text" id="nama-dokumen-custom" name="nama-dokumen-custom" class="form-input" 
-                           placeholder="Enter document name...">
+                           placeholder="Enter document name..."
+                           oninput="this.value = this.value.toUpperCase()">
                     <div class="invalid-feedback">
                         Document name is required.
                     </div>
@@ -85,6 +92,9 @@
             <div class="form-group">
                 <label class="form-label" for="date-published">Publication Date</label>
                 <input type="date" id="date-published" name="date_published" class="form-input" required>
+                <div class="invalid-feedback">
+                    Publication date is required.
+                </div>
             </div>
 
             <!-- Nomor Dokumen -->
@@ -139,6 +149,10 @@
                         <small class="text-muted" id="fileSize">Size: 123 KB</small>
                     </div>
                     <button type="button" class="btn-close" id="removeBtn"></button>
+                </div>
+
+                <div class="invalid-feedback">
+                    Please select a file to upload.
                 </div>
 
                 <div class="file-requirements mt-1">
@@ -203,14 +217,14 @@
             kodeSelect.required = false;
             kodeCustomInput.required = true;
             namaCustomInput.required = true;
-            kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+            kodeSelect.innerHTML = '<option value="">-- Select Document --</option>';
             kodeSelect.value = '';
         }
     }
 
     function loadKodeDokumen(jenisId) {
         const kodeSelect = document.getElementById('kode-dokumen');
-        kodeSelect.innerHTML = '<option value="">-- Pilih Dokumen --</option>';
+        kodeSelect.innerHTML = '<option value="">-- Select Document --</option>';
 
         if (kodeDokumenByType[jenisId]) {
             kodeDokumenByType[jenisId].forEach(item => {

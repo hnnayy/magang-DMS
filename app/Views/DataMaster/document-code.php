@@ -116,20 +116,22 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="addDocumentType" class="form-label">Document Type</label>
-                        <select class="form-select" id="addDocumentType" name="jenis" required>
+                        <select class="form-select text-uppercase-auto" id="addDocumentType" name="jenis" required>
                             <option value="">Select Document Type</option>
                             <?php foreach ($kategori_dokumen as $kategori): ?>
-                                <option value="<?= $kategori['id'] ?>"><?= esc($kategori['nama']) ?></option>
+                                <?php if (isset($kategori['use_predefined_codes']) && $kategori['use_predefined_codes'] == 1): ?>
+                                    <option value="<?= $kategori['id'] ?>"><?= esc(strtoupper($kategori['nama'])) ?></option>
+                                <?php endif; ?>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="addCode" class="form-label">Code</label>
-                        <input type="text" class="form-control" id="addCode" name="kode" required>
+                        <input type="text" class="form-control text-uppercase-auto" id="addCode" name="kode" required>
                     </div>
                     <div class="mb-3">
                         <label for="addDocumentName" class="form-label">Document Name</label>
-                        <input type="text" class="form-control" id="addDocumentName" name="nama" required>
+                        <input type="text" class="form-control text-uppercase-auto" id="addDocumentName" name="nama" required>
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
@@ -158,15 +160,15 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     <input type="hidden" id="editDocumentTypeId" name="document_type_id">
                     <div class="mb-3">
                         <label for="editDocumentType" class="form-label">Document Type</label>
-                        <input type="text" class="form-control" id="editDocumentType" readonly>
+                        <input type="text" class="form-control text-uppercase-auto" id="editDocumentType" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="editCode" class="form-label">Code</label>
-                        <input type="text" class="form-control" id="editCode" name="kode" required>
+                        <input type="text" class="form-control text-uppercase-auto" id="editCode" name="kode" required>
                     </div>
                     <div class="mb-3">
                         <label for="editDocumentName" class="form-label">Document Name</label>
-                        <input type="text" class="form-control" id="editDocumentName" name="nama" required>
+                        <input type="text" class="form-control text-uppercase-auto" id="editDocumentName" name="nama" required>
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
@@ -183,6 +185,21 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+<!-- Custom CSS for uppercase input -->
+<style>
+    .text-uppercase-auto {
+        text-transform: uppercase;
+    }
+    
+    .text-uppercase-auto::placeholder {
+        text-transform: none;
+    }
+    
+    .text-uppercase-auto option {
+        text-transform: uppercase;
+    }
+</style>
+
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -192,10 +209,10 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php if ($canUpdate): ?>
     function editDocument(id, type, code, name, typeId) {
         $('#editId').val(id);
-        $('#editDocumentType').val(type);
+        $('#editDocumentType').val(type.toUpperCase());
         $('#editDocumentTypeId').val(typeId);
-        $('#editCode').val(code);
-        $('#editDocumentName').val(name);
+        $('#editCode').val(code.toUpperCase());
+        $('#editDocumentName').val(name.toUpperCase());
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
     <?php endif; ?>
@@ -233,6 +250,25 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 
     $(document).ready(function() {
         $('[title]').tooltip();
+        
+        // Auto uppercase function for inputs with class 'text-uppercase-auto'
+        $(document).on('input', '.text-uppercase-auto', function() {
+            const cursorPosition = this.selectionStart;
+            const oldLength = this.value.length;
+            this.value = this.value.toUpperCase();
+            const newLength = this.value.length;
+            
+            // Restore cursor position
+            this.setSelectionRange(cursorPosition + (newLength - oldLength), cursorPosition + (newLength - oldLength));
+        });
+        
+        // Also handle paste events
+        $(document).on('paste', '.text-uppercase-auto', function(e) {
+            const element = this;
+            setTimeout(function() {
+                element.value = element.value.toUpperCase();
+            }, 1);
+        });
 
         // Display flash messages
         <?php if (session()->has('added_message')): ?>

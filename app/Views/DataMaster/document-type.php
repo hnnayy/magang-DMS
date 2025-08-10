@@ -92,13 +92,13 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                                     <div class="row mb-3">
                                                         <div class="col-md-6">
                                                             <label for="editNama<?= $kategori['id'] ?>" class="form-label">Type Name</label>
-                                                            <input type="text" class="form-control" name="nama"
+                                                            <input type="text" class="form-control text-uppercase-auto" name="nama"
                                                                    id="editNama<?= $kategori['id'] ?>" 
                                                                    value="<?= esc($kategori['nama']) ?>" required>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label for="editKode<?= $kategori['id'] ?>" class="form-label">Code</label>
-                                                            <input type="text" class="form-control" name="kode"
+                                                            <input type="text" class="form-control text-uppercase-auto" name="kode"
                                                                    id="editKode<?= $kategori['id'] ?>" 
                                                                    value="<?= esc($kategori['kode']) ?>">
                                                         </div>
@@ -158,11 +158,11 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="addNama" class="form-label">Type Name</label>
-                            <input type="text" class="form-control" name="nama" id="addNama" required>
+                            <input type="text" class="form-control text-uppercase-auto" name="nama" id="addNama" required>
                         </div>
                         <div class="col-md-6">
                             <label for="addKode" class="form-label">Code</label>
-                            <input type="text" class="form-control" name="kode" id="addKode">
+                            <input type="text" class="form-control text-uppercase-auto" name="kode" id="addKode">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -187,6 +187,17 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 <!-- Bootstrap CSS & Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- Custom CSS for uppercase input -->
+<style>
+    .text-uppercase-auto {
+        text-transform: uppercase;
+    }
+    
+    .text-uppercase-auto::placeholder {
+        text-transform: none;
+    }
+</style>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -306,6 +317,25 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 
     $(document).ready(function() {
         $('[title]').tooltip();
+        
+        // Auto uppercase function for inputs with class 'text-uppercase-auto'
+        $(document).on('input', '.text-uppercase-auto', function() {
+            const cursorPosition = this.selectionStart;
+            const oldLength = this.value.length;
+            this.value = this.value.toUpperCase();
+            const newLength = this.value.length;
+            
+            // Restore cursor position
+            this.setSelectionRange(cursorPosition + (newLength - oldLength), cursorPosition + (newLength - oldLength));
+        });
+        
+        // Also handle paste events
+        $(document).on('paste', '.text-uppercase-auto', function(e) {
+            const element = this;
+            setTimeout(function() {
+                element.value = element.value.toUpperCase();
+            }, 1);
+        });
     });
 </script>
 <?= $this->endSection() ?>

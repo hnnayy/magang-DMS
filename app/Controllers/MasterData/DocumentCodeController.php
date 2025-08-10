@@ -19,7 +19,10 @@ class DocumentCodeController extends Controller
 
     public function index()
     {
-        $kategori = $this->documentTypeModel->where('status', 1)->findAll();
+        $kategori = $this->documentTypeModel
+            ->select('id, name, kode, description, status')
+            ->where('status', 1)
+            ->findAll();
         
         // Mapping data kategori untuk konsistensi dengan view
         $data['kategori_dokumen'] = array_map(function ($item) {
@@ -27,6 +30,7 @@ class DocumentCodeController extends Controller
                 'id' => $item['id'],
                 'nama' => $item['name'], // mapping dari 'name' ke 'nama'
                 'kode' => $item['kode'],
+                'use_predefined_codes' => str_contains($item['description'] ?? '', '[predefined]'), // logika yang sama dengan DocumentTypeController
             ];
         }, $kategori);
 

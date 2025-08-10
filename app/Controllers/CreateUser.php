@@ -130,37 +130,39 @@ class CreateUser extends Controller
     }
     
     public function list()
-{
-    $users = $this->userModel
-        ->select('
-            user.id,
-            user.username,
-            user.fullname,
-            unit.id           AS unit_id,
-            unit.parent_id    AS parent_id,
-            unit.name         AS unit_name,
-            unit_parent.name  AS parent_name,
-            role.name         AS role_name
-        ')
-        ->join('unit', 'unit.id = user.unit_id', 'left') // Ubah ke LEFT JOIN
-        ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
-        ->join('user_role', 'user_role.user_id = user.id', 'left')
-        ->join('role', 'role.id = user_role.role_id', 'left')
-        ->where('user.status IS NOT NULL') // Sementara ganti kondisi
-        ->findAll();
+    {
+        $users = $this->userModel
+            ->select('
+                user.id,
+                user.username,
+                user.fullname,
+                user.status,
+                unit.id           AS unit_id,
+                unit.parent_id    AS parent_id,
+                unit.name         AS unit_name,
+                unit_parent.name  AS parent_name,
+                role.name         AS role_name
+            ')
+            ->join('unit', 'unit.id = user.unit_id', 'left')
+            ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
+            ->join('user_role', 'user_role.user_id = user.id', 'left')
+            ->join('role', 'role.id = user_role.role_id', 'left')
+            ->where('user.status', 1) // Hanya tampilkan user yang aktif (status = 1)
+            ->findAll();
 
-    log_message('debug', 'Users retrieved: ' . json_encode($users)); // Debug
+        log_message('debug', 'Users retrieved: ' . json_encode($users));
 
-    $unitParents = $this->unitParentModel->findAll();
-    $units = $this->unitModel->findAll();
-    $roles = $this->roleModel->findAll();
-    return view('CreateUser/daftar-users', [
-        'users' => $users,
-        'unitParents' => $unitParents,
-        'units' => $units,
-        'roles' => $roles,
-    ]);
-}
+        $unitParents = $this->unitParentModel->findAll();
+        $units = $this->unitModel->findAll();
+        $roles = $this->roleModel->findAll();
+        
+        return view('CreateUser/daftar-users', [
+            'users' => $users,
+            'unitParents' => $unitParents,
+            'units' => $units,
+            'roles' => $roles,
+        ]);
+    }
     public function index()
     {
         return redirect()->to('CreateUser/list');
@@ -168,19 +170,39 @@ class CreateUser extends Controller
 
     public function delete()
     {
+        // Set response type to JSON
+        $this->response->setContentType('application/json');
+        
         $id = $this->request->getPost('id');
 
-        if (! $id || ! $this->userModel->find($id)) {
+        // Validasi ID
+        if (! $id) {
+            return $this->response->setStatusCode(400)
+                                  ->setJSON(['error' => 'User ID is required']);
+        }
+
+        // Cek apakah user exists
+        $user = $this->userModel->find($id);
+        if (! $user) {
             return $this->response->setStatusCode(404)
                                   ->setJSON(['error' => 'User not found']);
         }
 
-        if ($this->userModel->softDeleteById($id)) {
-            return $this->response->setJSON(['deleted_message' => 'Successfully Deleted']);
+        try {
+            // Soft delete user (set status = 0)
+            $result = $this->userModel->softDeleteById($id);
+            
+            if ($result) {
+                return $this->response->setJSON(['deleted_message' => 'Successfully Deleted']);
+            } else {
+                return $this->response->setStatusCode(500)
+                                      ->setJSON(['error' => 'Failed to delete user']);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Delete user error: ' . $e->getMessage());
+            return $this->response->setStatusCode(500)
+                                  ->setJSON(['error' => 'An error occurred while deleting user']);
         }
-
-        return $this->response->setStatusCode(500)
-                              ->setJSON(['error' => 'Failed Deleted User']);
     }
 
     public function update()

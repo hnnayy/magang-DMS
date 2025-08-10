@@ -3,6 +3,7 @@
 
 <?php
 // Get current user information from session
+
 $currentUserId = session()->get('user_id');
 $currentUserUnitId = session()->get('unit_id');
 $currentUserUnitParentId = session()->get('unit_parent_id');
@@ -11,7 +12,7 @@ $currentUserRoleId = session()->get('role_id');
 // Get user's role information to determine access level
 $roleModel = new \App\Models\RoleModel();
 $currentUserRole = $roleModel->find($currentUserRoleId);
-$currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2 (lower access)
+$currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2
 
 // Get privileges from session
 $privileges = session()->get('privileges') ?? [];
@@ -38,7 +39,7 @@ $badgeColors = [
 
 // Get unique document types, sort them, and assign colors
 $uniqueJenisDokumen = array_unique(array_column($documents, 'jenis_dokumen'));
-sort($uniqueJenisDokumen); // Sort to ensure consistent order
+sort($uniqueJenisDokumen);
 $jenisColorMap = [];
 foreach ($uniqueJenisDokumen as $index => $jenis) {
     $jenisColorMap[$jenis] = $badgeColors[$index % count($badgeColors)];
@@ -142,28 +143,28 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                             $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
                             $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
                             $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
-                            
+
                             $canViewDocument = false;
                             $showCreatorName = false;
-                            
+
+                            // Always allow viewing own documents
                             if ($documentCreatorId == $currentUserId) {
                                 $canViewDocument = true;
                                 $showCreatorName = true;
-                            } elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2) {
+                            }
+                            // Level 1 can view level 2 documents with same unit or unit parent
+                            elseif ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2) {
                                 $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
                                 $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
-                                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
-                                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-                                
-                                if ($inSameHierarchy) {
+                                if ($sameUnit || $sameUnitParent) {
                                     $canViewDocument = true;
                                     $showCreatorName = true;
                                 }
                             }
-                            
+
                             if (!$canViewDocument) continue;
                             ?>
-                            
+
                             <?php if ($documentCreatorId != 0): ?>
                             <tr data-document-id="<?= esc($doc['id']) ?>">
                                 <td class="text-center"><?= $no++ ?></td>
@@ -246,6 +247,14 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                                         <?php if ($documentSubmissionPrivileges['can_update'] && 
                                                  ($documentCreatorId == $currentUserId || 
                                                   ($currentUserAccessLevel == 1 && $documentCreatorAccessLevel == 2))): ?>
+                                        <?php if (in_array($doc['status'], [1, 2])): // 1=approved, 2=disapproved ?>
+                                        <button class="btn btn-sm btn-outline-secondary disabled-edit-btn"
+                                            data-status="<?= esc($doc['status'] ?? 0) ?>"
+                                            title="Cannot edit - Document is <?= $doc['status'] == 1 ? 'approved' : 'disapproved' ?>"
+                                            disabled>
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <?php else: ?>
                                         <button class="btn btn-sm btn-outline-primary edit-btn"
                                             data-id="<?= esc($doc['id'] ?? '') ?>"
                                             data-fakultas="<?= esc($doc['parent_name'] ?? '-') ?>"
@@ -266,16 +275,26 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                                             <i class="bi bi-pencil-square"></i>
                                         </button>
                                         <?php endif; ?>
+                                        <?php endif; ?>
 
                                         <?php if ($documentSubmissionPrivileges['can_approve'] && 
                                                  $currentUserAccessLevel == 1 && 
                                                  $documentCreatorAccessLevel == 2): ?>
+                                        <?php if (in_array($doc['status'], [1, 2])): // 1=approved, 2=disapproved ?>
+                                        <button class="btn btn-sm btn-outline-secondary disabled-approve-btn"
+                                            data-status="<?= esc($doc['status'] ?? 0) ?>"
+                                            title="Cannot approve - Document is <?= $doc['status'] == 1 ? 'already approved' : 'disapproved' ?>"
+                                            disabled>
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <?php else: ?>
                                         <button class="btn btn-sm btn-outline-success approve-btn"
                                             data-id="<?= esc($doc['id'] ?? '') ?>"
                                             data-status="<?= esc($doc['status'] ?? 0) ?>"
                                             title="Approve">
                                             <i class="bi bi-check-circle"></i>
                                         </button>
+                                        <?php endif; ?>
                                         <?php endif; ?>
 
                                         <?php if ($documentSubmissionPrivileges['can_delete'] && 
@@ -332,7 +351,7 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                                 </div>
                                 <div class="col-md-3">
                                     <label for="editNomor" class="form-label">Document Number</label>
-                                    <input type="text" class="form-control" name="nomor" id="editNomor">
+                                    <input type="text" class="form-control" name="nomor" id="editNomor" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="editRevisi" class="form-label">Revision</label>
@@ -610,6 +629,9 @@ $(document).ready(function() {
         pageLength: 10,
         lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
         paging: true,
+        dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-6"i><"col-sm-6 text-end"p>>',
         language: {
             lengthMenu: "Show _MENU_ entries",
             zeroRecords: "No data found",
@@ -625,22 +647,9 @@ $(document).ready(function() {
             }
         },
         columnDefs: [
-            {
-                targets: 0, // No column
-                searchable: false,
-                orderable: false
-            },
-            {
-                targets: 1, // Document ID column
-                visible: false,
-                searchable: true,
-                orderable: true
-            },
-            {
-                targets: 12, // Actions column
-                orderable: false,
-                searchable: false
-            }
+            { targets: 0, searchable: false, orderable: false },
+            { targets: 1, visible: false, searchable: true, orderable: true },
+            { targets: 12, orderable: false, searchable: false }
         ],
         responsive: true,
         autoWidth: false,
@@ -648,10 +657,17 @@ $(document).ready(function() {
         drawCallback: function(settings) {
             var api = this.api();
             var pageInfo = api.page.info();
-            var startRow = pageInfo.start;
-            $('#documentsTable tbody tr').each(function(index) {
-                $(this).find('td:first').text(startRow + index + 1);
-            });
+            
+            // Only add row numbers if there is data
+            if (pageInfo.recordsDisplay > 0) {
+                var startRow = pageInfo.start;
+                $('#documentsTable tbody tr').each(function(index) {
+                    // Check if this row is not the "No data available" row
+                    if (!$(this).hasClass('odd') || $(this).find('td').length > 1) {
+                        $(this).find('td:first').text(startRow + index + 1);
+                    }
+                });
+            }
         }
     });
 
@@ -685,8 +701,43 @@ $(document).ready(function() {
 
     function filterAndHighlightDocumentFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
-        const revisionId = urlParams.get('revision_id');
         const documentId = urlParams.get('document_id');
+        const revisionId = urlParams.get('revision_id');
+
+        if (documentId) {
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const row = table.row(dataIndex);
+                const rowDocumentId = row.node().getAttribute('data-document-id') || '';
+                return rowDocumentId === documentId;
+            });
+            table.draw();
+            $.fn.dataTable.ext.search.pop();
+
+            let targetRow = null;
+            table.rows().every(function() {
+                const rowNode = this.node();
+                if ($(rowNode).data('document-id') == documentId) {
+                    targetRow = rowNode;
+                    return false;
+                }
+            });
+
+            if (targetRow) {
+                $('#documentsTable tbody tr').removeClass('document-highlight');
+                $(targetRow).addClass('document-highlight');
+                setTimeout(() => {
+                    const $row = $(targetRow);
+                    if ($row.length) {
+                        $('html, body').animate({
+                            scrollTop: $row.offset().top - 100
+                        }, 500);
+                        setTimeout(() => {
+                            $row.removeClass('document-highlight');
+                        }, 5000);
+                    }
+                }, 100);
+            }
+        }
 
         if (revisionId) {
             $.ajax({
@@ -712,10 +763,10 @@ $(document).ready(function() {
                                 </div>
                             ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
                             const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
-                                               item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
-                                               item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
-                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
-                                               item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
+                                           item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
+                                           item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
+                                           item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
+                                           item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
                             html += `
                                 <tr data-revision-id="${item.revision_id}" ${item.revision_id == revisionId ? 'class="document-highlight"' : ''}>
                                     <td class="text-center">${index + 1}</td>
@@ -760,39 +811,6 @@ $(document).ready(function() {
                     });
                 }
             });
-        } else if (documentId) {
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                const row = table.row(dataIndex);
-                const rowDocumentId = row.node().getAttribute('data-document-id') || '';
-                return rowDocumentId === documentId;
-            });
-            table.draw();
-            $.fn.dataTable.ext.search.pop();
-
-            let targetRow = null;
-            table.rows().every(function() {
-                const rowNode = this.node();
-                if ($(rowNode).data('document-id') == documentId) {
-                    targetRow = rowNode;
-                    return false;
-                }
-            });
-
-            if (targetRow) {
-                $('#documentsTable tbody tr').removeClass('document-highlight');
-                $(targetRow).addClass('document-highlight');
-                setTimeout(() => {
-                    const $row = $(targetRow);
-                    if ($row.length) {
-                        $('html, body').animate({
-                            scrollTop: $row.offset().top - 100
-                        }, 500);
-                        setTimeout(() => {
-                            $row.removeClass('document-highlight');
-                        }, 5000);
-                    }
-                }, 100);
-            }
         }
     }
 
@@ -835,8 +853,18 @@ $(document).ready(function() {
             if (status === 1) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Cannot Edit',
-                    text: 'This document is already approved and cannot be edited.',
+                    title: 'Document Cannot Be Edited',
+                    text: 'This document has been approved and can no longer be edited.',
+                    confirmButtonColor: '#dc3545'
+                });
+                return false;
+            }
+
+            if (status === 2) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Document Cannot Be Edited',
+                    text: 'This document has been disapproved and can no longer be edited.',
                     confirmButtonColor: '#dc3545'
                 });
                 return false;
@@ -903,6 +931,50 @@ $(document).ready(function() {
             });
         });
 
+        // Handle clicks on disabled edit buttons
+        $(document).on('click', '.disabled-edit-btn', function(e) {
+            e.preventDefault();
+            const status = parseInt($(this).data('status'));
+            
+            if (status === 1) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Document Cannot Be Edited',
+                    text: 'This document has been approved and can no longer be edited.',
+                    confirmButtonColor: '#0d6efd'
+                });
+            } else if (status === 2) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Document Cannot Be Edited',
+                    text: 'This document has been disapproved and can no longer be edited.',
+                    confirmButtonColor: '#0d6efd'
+                });
+            }
+        });
+
+        // Handle clicks on disabled approve buttons
+        $(document).on('click', '.disabled-approve-btn', function(e) {
+            e.preventDefault();
+            const status = parseInt($(this).data('status'));
+            
+            if (status === 1) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Document Cannot Be Approved',
+                    text: 'This document has already been approved.',
+                    confirmButtonColor: '#0d6efd'
+                });
+            } else if (status === 2) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Document Cannot Be Approved',
+                    text: 'This document has been disapproved and cannot be approved.',
+                    confirmButtonColor: '#0d6efd'
+                });
+            }
+        });
+
         $('#editModal form').on('submit', function(e) {
             e.preventDefault();
             
@@ -948,10 +1020,7 @@ $(document).ready(function() {
             const id = $button.data('id');
             const status = parseInt($button.data('status'));
 
-            console.log(`Approve button clicked - ID: ${id}, Status: ${status}, Element: ${$(this).prop('tagName')}`);
-
             if (!id) {
-                console.error('No document ID found');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -963,10 +1032,20 @@ $(document).ready(function() {
 
             if (status === 1) {
                 Swal.fire({
-                    icon: 'warning',
-                    title: 'Document Already Approved',
-                    text: 'This document is already approved and cannot be approved again.',
-                    confirmButtonColor: '#dc3545'
+                    icon: 'info',
+                    title: 'Document Cannot Be Approved',
+                    text: 'This document has already been approved.',
+                    confirmButtonColor: '#0d6efd'
+                });
+                return;
+            }
+
+            if (status === 2) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Document Cannot Be Approved',
+                    text: 'This document has been disapproved and cannot be approved.',
+                    confirmButtonColor: '#0d6efd'
                 });
                 return;
             }
@@ -995,10 +1074,7 @@ $(document).ready(function() {
             const action = $('button[type="submit"][name="action"]:focus').val() || 
                            $('input[name="action"]').val() || '';
 
-            console.log(`Approve form submitted - Action: ${action}, FormData: ${formData}`);
-
             if (!action) {
-                console.error('No action value detected. Check button focus or form structure.');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -1095,7 +1171,6 @@ $(document).ready(function() {
                             }
                         },
                         error: function(xhr, status, error) {
-                            console.error('Delete error:', error);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Server Error!',
@@ -1141,11 +1216,10 @@ $(document).ready(function() {
                             ` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
                             
                             const statusBadge = item.status == 0 ? '<span class="badge bg-warning text-white">Waiting</span>' :
-                                               item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
-                                               item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
-                                               item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
-                                               item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
-                            
+                       item.status == 1 ? '<span class="badge bg-success text-white">Approved</span>' :
+                       item.status == 2 ? '<span class="badge bg-danger text-white">Disapproved</span>' :
+                       item.status == 3 ? '<span class="badge bg-secondary text-white">Deleted</span>' :
+                       item.status == 4 ? '<span class="badge bg-secondary text-white">Superseded</span>' : '-';
                             html += `
                                 <tr data-revision-id="${item.revision_id}">
                                     <td class="text-center">${index + 1}</td>

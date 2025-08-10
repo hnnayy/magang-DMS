@@ -63,7 +63,7 @@
                         <span><?= session()->get('username') ?? 'Admin' ?></span> - 
                         <span><?= session()->get('role_name') ?? 'Admin' ?></span>
                     </a>
-                    <a href="<?= base_url('wc-dummy') ?>"><i class="fi fi-rr-sign-out-alt"></i> Log Out</a>
+                    <a href="<?= base_url('logout') ?>"><i class="fi fi-rr-sign-out-alt"></i> Log Out</a>
                 </div>
             </div>
         </div>

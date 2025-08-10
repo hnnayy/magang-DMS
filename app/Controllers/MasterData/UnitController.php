@@ -90,9 +90,7 @@ class UnitController extends BaseController
         $insertData = [
             'parent_id'  => $parentId,
             'name'       => $unitName,
-            'status'     => $status,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
+            'status'     => $status
         ];
 
         $this->unitModel->insert($insertData);
@@ -110,8 +108,7 @@ class UnitController extends BaseController
             ->select('unit.*, unit_parent.name as parent_name, unit_parent.type as parent_type')
             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
             ->where('unit.status !=', 0)
-            ->orderBy('unit_parent.name', 'ASC')
-            ->orderBy('unit.name', 'ASC')
+            ->orderBy('unit.id', 'ASC')
             ->findAll();
 
         $fakultas = $this->parentModel

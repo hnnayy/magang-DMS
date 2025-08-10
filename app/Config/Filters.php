@@ -86,6 +86,8 @@ class Filters extends BaseFilters
                 'notification/markAsRead',
                 'notification/fetch',
                 'notification/test',
+                'logout',
+                '/logout'
             ],
         ],
     ],

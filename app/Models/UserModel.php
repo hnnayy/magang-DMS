@@ -38,7 +38,16 @@ class UserModel extends Model
 
     public function softDeleteById($id): bool
     {
-        return $this->update($id, ['status' => 0]);
+        // Set status ke 0 untuk soft delete
+        $result = $this->update($id, ['status' => 0]);
+        
+        if ($result) {
+            log_message('info', "User with ID {$id} has been soft deleted");
+            return true;
+        }
+        
+        log_message('error', "Failed to soft delete user with ID {$id}");
+        return false;
     }
 
      public function findAllActive()

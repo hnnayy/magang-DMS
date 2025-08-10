@@ -389,15 +389,13 @@ public function update()
             
             $revisionResult = $this->documentRevisionModel->insert($revisionData);
             
-// In the update method, after the revision insert
-$revisionResult = $this->documentRevisionModel->insert($revisionData);
-if (!$revisionResult) {
-    $revisionErrors = $this->documentRevisionModel->errors();
-    log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
-    throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
-}
-log_message('debug', 'Revision inserted with ID: ' . $this->documentRevisionModel->getInsertID());
- } else {
+            if (!$revisionResult) {
+                $revisionErrors = $this->documentRevisionModel->errors();
+                log_message('error', 'Document revision insert failed. Errors: ' . json_encode($revisionErrors));
+                throw new \Exception('Failed to create document revision: ' . json_encode($revisionErrors));
+            }
+            log_message('debug', 'Revision inserted with ID: ' . $this->documentRevisionModel->getInsertID());
+        } else {
             log_message('debug', 'No new file uploaded, copying existing revision');
             
             // Copy the latest revision from the old document
@@ -599,6 +597,15 @@ private function showList()
 {
     $unitParentModel = new UnitParentModel();
 
+    // Ambil data user saat ini untuk filter akses
+    $currentUserId = session()->get('user_id');
+    $currentUnitId = session()->get('unit_id');
+    $currentUnitParentId = session()->get('unit_parent_id');
+    $currentRoleId = session()->get('role_id');
+    $roleModel = new \App\Models\RoleModel();
+    $currentUserRole = $roleModel->find($currentRoleId);
+    $currentAccessLevel = $currentUserRole['access_level'] ?? 2;
+
     $documents = $this->documentModel
         ->select('document.*, 
                   dt.name AS jenis_dokumen, 
@@ -617,26 +624,45 @@ private function showList()
         ->join('unit', 'unit.id = document.unit_id', 'left')
         ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
         ->join('kode_dokumen kd', 'kd.id = document.kode_dokumen_id', 'left')
-        ->join('document_revision dr', 'dr.document_id = document.id', 'left')
+        ->join('document_revision dr', 'dr.document_id = document.id AND dr.id = (SELECT MAX(id) FROM document_revision WHERE document_id = document.id)', 'left')
         ->join('user creator', 'creator.id = document.createdby', 'left')
         ->join('unit creator_unit', 'creator_unit.id = creator.unit_id', 'left')
         ->join('unit_parent creator_unit_parent', 'creator_unit_parent.id = creator_unit.parent_id', 'left')
         ->where('document.createdby !=', 0)
-        ->whereIn('document.status', [0, 1, 2]) // Exclude status 4 (Superseded)
         ->groupBy('document.id')
-        ->orderBy('document.createddate', 'DESC') // Ensure latest documents first
+        ->where('document.status !=', 4)
+        ->orderBy('document.createddate', 'DESC')
         ->findAll();
 
-    // Filter out superseded documents with the same number and type
-    $uniqueDocuments = [];
+    // Filter dokumen berdasarkan akses pengguna
+    $filteredDocuments = [];
     foreach ($documents as $doc) {
-        $key = $doc['number'] . '-' . $doc['type'];
-        if (!isset($uniqueDocuments[$key]) || $doc['createddate'] > $uniqueDocuments[$key]['createddate']) {
-            $uniqueDocuments[$key] = $doc;
+        $creatorUnitId = $doc['creator_unit_id'] ?? 0;
+        $creatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
+        $creatorAccessLevel = $this->userModel->select('role.access_level')
+            ->join('user_role', 'user_role.user_id = user.id')
+            ->join('role', 'role.id = user_role.role_id')
+            ->where('user.id', $doc['createdby'])
+            ->first()['access_level'] ?? 2;
+
+        $canView = false;
+        // Selalu izinkan melihat dokumen sendiri
+        if ($doc['createdby'] == $currentUserId) {
+            $canView = true;
+        }
+        // Level 1 bisa melihat dokumen Level 2 dengan unit atau parent unit yang sama
+        elseif ($currentAccessLevel == 1 && $creatorAccessLevel == 2) {
+            if ($creatorUnitId == $currentUnitId || $creatorUnitParentId == $currentUnitParentId) {
+                $canView = true;
+            }
+        }
+
+        if ($canView) {
+            $filteredDocuments[] = $doc;
         }
     }
-    $documents = array_values($uniqueDocuments);
 
+    // Ambil data pendukung
     $jenis_dokumen = $this->documentTypeModel->where('status', 1)->findAll();
     $kategori_dokumen = $this->kategoriDokumen;
     $kode_nama_dokumen = $this->documentCodeModel->where('status', 1)->findAll();
@@ -648,7 +674,7 @@ private function showList()
     $kode_dokumen_by_type = $this->getKodeDokumenByType();
 
     $data = [
-        'documents' => $documents,
+        'documents' => $filteredDocuments,
         'jenis_dokumen' => $jenis_dokumen,
         'kategori_dokumen' => $kategori_dokumen,
         'kode_nama_dokumen' => $kode_nama_dokumen,
@@ -657,9 +683,7 @@ private function showList()
         'title' => 'Document Submission List'
     ];
 
-    log_message('debug', 'Documents retrieved: ' . count($documents) . ' documents');
-    log_message('debug', 'Kode dokumen by type keys: ' . implode(', ', array_keys($kode_dokumen_by_type)));
-    
+    log_message('debug', 'Filtered documents count: ' . count($filteredDocuments));
     return view('KelolaDokumen/daftar-pengajuan', $data);
 }
 
@@ -733,7 +757,7 @@ private function handleGetHistory()
         ->orderBy('createddate', 'DESC')
         ->findAll();
 
-    // Fetch related superseded documents (based on number and type)
+    // Fetch related superseded documents
     $relatedDocuments = $this->documentModel
         ->select('id')
         ->where('number', $document['number'])
@@ -744,7 +768,6 @@ private function handleGetHistory()
 
     $relatedDocumentIds = array_column($relatedDocuments, 'id');
 
-    // Fetch revisions for superseded documents
     if (!empty($relatedDocumentIds)) {
         $relatedRevisions = $this->documentRevisionModel
             ->select('id AS revision_id, document_id, revision, filename, filepath, filesize, remark, createddate, createdby')
@@ -761,20 +784,28 @@ private function handleGetHistory()
 
     $history = [];
     foreach ($revisions as $revision) {
-        $history[] = [
-            'revision_id' => $revision['revision_id'],
-            'document_id' => $revision['document_id'],
-            'revision' => $revision['revision'] ?? 'Rev. 0',
-            'filename' => $revision['filename'],
-            'filepath' => $revision['filepath'],
-            'filesize' => $revision['filesize'],
-            'remark' => $revision['remark'],
-            'updated_at' => $revision['createddate'],
-            'updated_by' => $revision['createdby'],
-            'document_title' => $document['title'], // Use current document title
-            'document_number' => $document['number'], // Use current document number
-            'status' => $this->documentModel->where('id', $revision['document_id'])->first()['status'] ?? 0,
-        ];
+        // Ambil dokumen terkait berdasarkan document_id dari revisi
+        $relatedDocument = $this->documentModel
+            ->select('title, number, status')
+            ->where('id', $revision['document_id'])
+            ->first();
+
+        if ($relatedDocument) {
+            $history[] = [
+                'revision_id' => $revision['revision_id'],
+                'document_id' => $revision['document_id'],
+                'revision' => $revision['revision'] ?? 'Rev. 0',
+                'filename' => $revision['filename'],
+                'filepath' => $revision['filepath'],
+                'filesize' => $revision['filesize'],
+                'remark' => $revision['remark'],
+                'updated_at' => $revision['createddate'],
+                'updated_by' => $revision['createdby'],
+                'document_title' => $relatedDocument['title'], // Ambil title dari dokumen terkait
+                'document_number' => $relatedDocument['number'], // Ambil number dari dokumen terkait
+                'status' => $relatedDocument['status'],
+            ];
+        }
     }
 
     log_message('debug', 'Jumlah riwayat yang diformat: ' . count($history));
