@@ -10,10 +10,10 @@ use CodeIgniter\Router\RouteCollection;
 // Alur dummy untuk login
 $routes->get('/', 'Dummy\LoginController::index'); // Root menampilkan halaman login
 $routes->get('/wc-dummy', 'Dummy\LoginController::index'); // Alternatif untuk halaman login
-$routes->post('/login', 'Dummy\LoginController::login'); // Proses login
-$routes->post('/wc-dummy/login', 'Dummy\LoginController::login'); // Kompatibilitas dengan rute sebelumnya
+$routes->post('/login', 'Dummy\GenerateTokenController::login'); // Proses login
+$routes->post('/wc-dummy/login', 'Dummy\GenerateTokenController::login'); // Kompatibilitas dengan rute sebelumnya
 $routes->get('/parse-token', 'Dummy\GenerateTokenController::parseToken'); // Parsing token JWT
-$routes->get('/logout', 'Dummy\LoginController::logout'); // Logout
+$routes->get('/logout', 'Dummy\GenerateTokenController::logout'); // Logout
 
 
 // $routes->get('/', 'Home::index');

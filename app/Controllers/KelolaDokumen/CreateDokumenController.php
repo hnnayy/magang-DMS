@@ -144,126 +144,124 @@ class CreateDokumenController extends BaseController
     }
 
     public function tambah()
-    {
-        $file = $this->request->getFile('file');
-        if (!$file->isValid() || $file->hasMoved()) {
-            return redirect()->back()->with('error', 'Upload file gagal.');
-        }
-
-        $jenisId = $this->request->getPost('jenis');
-        if (!$jenisId || $jenisId == "0" || $jenisId == "") {
-            return redirect()->back()->with('error', 'Jenis dokumen belum dipilih.');
-        }
-
-        $documentType = $this->documentTypeModel->find($jenisId);
-        $usePredefined = str_contains($documentType['description'] ?? '', '[predefined]');
-
-        $kodeDokumenId = null;
-
-        if ($usePredefined) {
-            $kodeDokumenId = $this->request->getPost('kode_dokumen_id');
-            if (!$kodeDokumenId) {
-                return redirect()->back()->with('error', 'Kode dokumen belum dipilih.');
-            }
-        } else {
-            $kodeCustom = $this->request->getPost('kode-dokumen-custom');
-            $namaCustom = $this->request->getPost('nama-dokumen-custom');
-
-            if (!$kodeCustom || !$namaCustom) {
-                return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom wajib diisi.');
-            }
-
-            $existingKode = $this->kodeDokumenModel
-                ->where('document_type_id', $jenisId)
-                ->where('kode', $kodeCustom)
-                ->where('status', 1)
-                ->first();
-
-            if ($existingKode) {
-                return redirect()->back()->with('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini.');
-            }
-
-            $kodeDokumenData = [
-                'document_type_id' => $jenisId,
-                'kode' => $kodeCustom,
-                'nama' => $namaCustom,
-                'status' => 1,
-                'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => session('user_id')
-            ];
-
-            $this->kodeDokumenModel->insert($kodeDokumenData);
-            $kodeDokumenId = $this->kodeDokumenModel->getInsertID();
-        }
-
-        $uploadPath = ROOTPATH . '../storage/uploads';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0755, true);
-        }
-
-        $newName = $file->getRandomName();
-        $file->move($uploadPath, $newName);
-
-        $unitId = $this->request->getPost('unit_id') ?? 99;
-        $unitModel = new \App\Models\UnitModel();
-        $unitData = $unitModel->select('parent_id')->where('id', $unitId)->first();
-        $unitParentId = $unitData['parent_id'] ?? null;
-
-        $this->documentModel->db->transStart();
-
-        try {
-            $result = $this->documentModel->db->query('SHOW TABLE STATUS LIKE "document"')->getRow();
-            $nextId = $result->Auto_increment;
-
-            $namaDokumen = $usePredefined ? 
-                $this->request->getPost('nama-dokumen') : 
-                $this->request->getPost('nama-dokumen-custom');
-
-            $this->documentModel->insert([
-                'type' => $jenisId,
-                'kode_dokumen_id' => $kodeDokumenId,
-                'number' => $this->request->getPost('no-dokumen'),
-                'date_published' => $this->request->getPost('date_published'),
-                'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
-                'title' => $namaDokumen,
-                'description' => $this->request->getPost('keterangan'),
-                'unit_id' => $unitId,
-                'status' => 0,
-                'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => session('user_id'),
-                'original_document_id' => $nextId,
-            ]);
-
-            $documentId = $this->documentModel->getInsertID();
-
-            $this->documentRevisionModel->insert([
-                'document_id' => $documentId,
-                'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
-                'filename' => $file->getClientName(),
-                'filepath' => 'storage/uploads/' . $newName,
-                'filesize' => $file->getSize(),
-                'remark' => $this->request->getPost('keterangan'),
-                'createddate' => date('Y-m-d H:i:s'),
-                'createdby' => session('user_id'),
-            ]);
-
-            $this->documentModel->db->transComplete();
-
-            if ($this->documentModel->db->transStatus() === false) {
-                throw new \Exception('Transaction failed');
-            }
-
-            $this->createDocumentNotification($documentId, $namaDokumen, $documentType['name']);
-
-            return redirect()->to('/create-document')->with('added_message', 'Successfully Added.')->with('refresh_notif', true);
-
-        } catch (\Exception $e) {
-            $this->documentModel->db->transRollback();
-            log_message('error', 'Error in tambah method: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to save document: ' . $e->getMessage());
-        }
+{
+    $file = $this->request->getFile('file');
+    if (!$file->isValid() || $file->hasMoved()) {
+        return redirect()->back()->with('error', 'Upload file gagal.');
     }
 
+    $jenisId = $this->request->getPost('jenis');
+    if (!$jenisId || $jenisId == "0" || $jenisId == "") {
+        return redirect()->back()->with('error', 'Jenis dokumen belum dipilih.');
+    }
+
+    $documentType = $this->documentTypeModel->find($jenisId);
+    $usePredefined = str_contains($documentType['description'] ?? '', '[predefined]');
+
+    $kodeDokumenId = null;
+
+    if ($usePredefined) {
+        $kodeDokumenId = $this->request->getPost('kode_dokumen_id');
+        if (!$kodeDokumenId) {
+            return redirect()->back()->with('error', 'Kode dokumen belum dipilih.');
+        }
+    } else {
+        $kodeCustom = $this->request->getPost('kode-dokumen-custom');
+        $namaCustom = $this->request->getPost('nama-dokumen-custom');
+
+        if (!$kodeCustom || !$namaCustom) {
+            return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom wajib diisi.');
+        }
+
+        $existingKode = $this->kodeDokumenModel
+            ->where('document_type_id', $jenisId)
+            ->where('kode', $kodeCustom)
+            ->where('status', 1)
+            ->first();
+
+        if ($existingKode) {
+            return redirect()->back()->with('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini.');
+        }
+
+        $kodeDokumenData = [
+            'document_type_id' => $jenisId,
+            'kode' => $kodeCustom,
+            'nama' => $namaCustom,
+            'status' => 1,
+            'createddate' => date('Y-m-d H:i:s'),
+            'createdby' => session('user_id')
+        ];
+
+        $this->kodeDokumenModel->insert($kodeDokumenData);
+        $kodeDokumenId = $this->kodeDokumenModel->getInsertID();
+    }
+
+    $uploadPath = ROOTPATH . '../storage/uploads';
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0755, true);
+    }
+
+    $newName = $file->getRandomName();
+    $file->move($uploadPath, $newName);
+
+    $unitId = $this->request->getPost('unit_id') ?? 99;
+    $unitModel = new \App\Models\UnitModel();
+    $unitData = $unitModel->select('parent_id')->where('id', $unitId)->first();
+    $unitParentId = $unitData['parent_id'] ?? null;
+
+    $this->documentModel->db->transStart();
+
+    try {
+        $result = $this->documentModel->db->query('SHOW TABLE STATUS LIKE "document"')->getRow();
+        $nextId = $result->Auto_increment;
+
+        // Always use nama-dokumen for the title
+        $namaDokumen = $this->request->getPost('nama-dokumen');
+
+        $this->documentModel->insert([
+            'type' => $jenisId,
+            'kode_dokumen_id' => $kodeDokumenId,
+            'number' => $this->request->getPost('no-dokumen'),
+            'date_published' => $this->request->getPost('date_published'),
+            'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
+            'title' => $namaDokumen,
+            'description' => $this->request->getPost('keterangan'),
+            'unit_id' => $unitId,
+            'status' => 0,
+            'createddate' => date('Y-m-d H:i:s'),
+            'createdby' => session('user_id'),
+            'original_document_id' => $nextId,
+        ]);
+
+        $documentId = $this->documentModel->getInsertID();
+
+        $this->documentRevisionModel->insert([
+            'document_id' => $documentId,
+            'revision' => $this->request->getPost('revisi') ?? 'Rev. 0',
+            'filename' => $file->getClientName(),
+            'filepath' => 'storage/uploads/' . $newName,
+            'filesize' => $file->getSize(),
+            'remark' => $this->request->getPost('keterangan'),
+            'createddate' => date('Y-m-d H:i:s'),
+            'createdby' => session('user_id'),
+        ]);
+
+        $this->documentModel->db->transComplete();
+
+        if ($this->documentModel->db->transStatus() === false) {
+            throw new \Exception('Transaction failed');
+        }
+
+        $this->createDocumentNotification($documentId, $namaDokumen, $documentType['name']);
+
+        return redirect()->to('/create-document')->with('added_message', 'Successfully Added.')->with('refresh_notif', true);
+
+    } catch (\Exception $e) {
+        $this->documentModel->db->transRollback();
+        log_message('error', 'Error in tambah method: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to save document: ' . $e->getMessage());
+    }
+}
     private function createDocumentNotification($documentId, $documentTitle, $documentTypeName)
 {
     try {
