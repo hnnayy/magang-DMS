@@ -14,7 +14,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered">
+                        <table id="standardsTable" class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-center" style="width: 80px;">No</th>
@@ -119,10 +119,47 @@
     </div>
 </div>
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#standardsTable').DataTable({
+        "pageLength": 10,
+        "lengthMenu": [10, 25, 50, 100],
+        "pagingType": "simple_numbers",
+        "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+               '<"row"<"col-sm-12"tr>>' +
+               '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"<"d-flex justify-content-end"p>>>',
+        "language": {
+            "search": "Search:",
+            "lengthMenu": "Show _MENU_ entries",
+            "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+            "paginate": {
+                "previous": "Previous",
+                "next": "Next"
+            }
+        },
+        "columnDefs": [
+            { "orderable": false, "targets": 3 } // Disable sorting on Action column
+        ],
+        "drawCallback": function(settings) {
+            // Remove outer container from pagination
+            $('.dataTables_paginate .pagination').unwrap();
+            
+            // Fix active state for pagination buttons
+            $('.dataTables_paginate .paginate_button').each(function() {
+                if ($(this).hasClass('current')) {
+                    $(this).addClass('active');
+                }
+            });
+        }
+    });
+
     // Add Form Submit
     document.getElementById('addForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -153,21 +190,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else {
                 if (data.errors) {
+                    let errorMessage = 'Validation failed:';
                     if (data.errors.nama_standar) {
                         const input = document.getElementById('add_nama_standar');
                         input.classList.add('is-invalid');
                         input.nextElementSibling.textContent = data.errors.nama_standar;
+                        errorMessage += `\n- ${data.errors.nama_standar}`;
                     }
                     if (data.errors.description) {
                         const input = document.getElementById('add_description');
                         input.classList.add('is-invalid');
                         input.nextElementSibling.textContent = data.errors.description;
+                        errorMessage += `\n- ${data.errors.description}`;
                     }
+                    // Show SweetAlert for validation errors
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: errorMessage,
+                        confirmButtonColor: '#d33'
+                    });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error!',
-                        text: data.message || 'An error occurred'
+                        text: data.message || 'An error occurred',
+                        confirmButtonColor: '#d33'
                     });
                 }
             }
@@ -177,7 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'Network error occurred'
+                text: 'Network error occurred',
+                confirmButtonColor: '#d33'
             });
         });
     });
@@ -222,11 +271,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.classList.add('is-invalid');
                         input.nextElementSibling.textContent = data.errors.description;
                     }
+                    // Show SweetAlert for validation errors
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Validation failed: ' + (data.errors.nama_standar || data.errors.description || 'Please check the form'),
+                        confirmButtonColor: '#d33'
+                    });
                 } else {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error!',
-                        text: data.message || 'An error occurred'
+                        text: data.message || 'An error occurred',
+                        confirmButtonColor: '#d33'
                     });
                 }
             }
@@ -236,7 +293,8 @@ document.addEventListener('DOMContentLoaded', function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: 'Network error occurred'
+                text: 'Network error occurred',
+                confirmButtonColor: '#d33'
             });
         });
     });
@@ -303,7 +361,8 @@ function deleteStandard(id) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error!',
-                        text: data.message || 'Failed to delete'
+                        text: data.message || 'Failed to delete',
+                        confirmButtonColor: '#d33'
                     });
                 }
             })
@@ -312,7 +371,8 @@ function deleteStandard(id) {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error!',
-                    text: 'Network error occurred'
+                    text: 'Network error occurred',
+                    confirmButtonColor: '#d33'
                 });
             });
         }

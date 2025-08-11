@@ -26,10 +26,26 @@ class StandarController extends BaseController
 
     public function store()
     {
-        if (!$this->validate([
-            'nama_standar' => 'required|max_length[255]',
-            'description' => 'permit_empty|max_length[65535]' // TEXT field can hold up to 65,535 characters
-        ])) {
+        // Validation rules
+        $validationRules = [
+            'nama_standar' => [
+                'rules' => 'required|max_length[255]|is_unique[standards.nama_standar,status=1]',
+                'errors' => [
+                    'required' => 'Standard Name is required.',
+                    'max_length' => 'Standard Name cannot exceed 255 characters.',
+                    'is_unique' => 'The Standard Name already exists.'
+                ]
+            ],
+            'description' => [
+                'rules' => 'permit_empty|max_length[65535]',
+                'errors' => [
+                    'max_length' => 'Description cannot exceed 65,535 characters.'
+                ]
+            ]
+        ];
+
+        // Validate the input
+        if (!$this->validate($validationRules)) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -37,12 +53,14 @@ class StandarController extends BaseController
             ]);
         }
 
+        // Prepare data for insertion
         $data = [
             'nama_standar' => $this->request->getPost('nama_standar'),
             'description' => $this->request->getPost('description') ?: null,
             'status' => 1
         ];
 
+        // Insert data into the database
         if ($this->standardModel->insert($data)) {
             return $this->response->setJSON([
                 'success' => true,
@@ -90,10 +108,26 @@ class StandarController extends BaseController
             ]);
         }
 
-        if (!$this->validate([
-            'nama_standar' => 'required|max_length[255]',
-            'description' => 'permit_empty|max_length[65535]'
-        ])) {
+        // Validation rules
+        $validationRules = [
+            'nama_standar' => [
+                'rules' => "required|max_length[255]|is_unique[standards.nama_standar,id,{$id},status=1]",
+                'errors' => [
+                    'required' => 'Standard Name is required.',
+                    'max_length' => 'Standard Name cannot exceed 255 characters.',
+                    'is_unique' => 'The Standard Name already exists.'
+                ]
+            ],
+            'description' => [
+                'rules' => 'permit_empty|max_length[65535]',
+                'errors' => [
+                    'max_length' => 'Description cannot exceed 65,535 characters.'
+                ]
+            ]
+        ];
+
+        // Validate the input
+        if (!$this->validate($validationRules)) {
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -101,11 +135,13 @@ class StandarController extends BaseController
             ]);
         }
 
+        // Prepare data for update
         $data = [
             'nama_standar' => $this->request->getPost('nama_standar'),
             'description' => $this->request->getPost('description') ?: null
         ];
 
+        // Update data in the database
         if ($this->standardModel->update($id, $data)) {
             return $this->response->setJSON([
                 'success' => true,
@@ -131,6 +167,7 @@ class StandarController extends BaseController
             ]);
         }
 
+        // Soft delete by setting status to 0
         $data = [
             'status' => 0
         ];
