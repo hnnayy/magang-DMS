@@ -23,18 +23,16 @@ class FakultasController extends Controller
     public function store()
     {
         $nama   = $this->request->getPost('name');
-        $type   = $this->request->getPost('type');
         $status = $this->request->getPost('status');
         
         // Debug untuk memastikan data diterima
         log_message('debug', 'Store method called with data: ' . json_encode([
             'nama' => $nama,
-            'type' => $type,
             'status' => $status
         ]));
         
         // Validasi input kosong
-        if (empty($nama) || empty($type) || empty($status)) {
+        if (empty($nama) || empty($status)) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
@@ -60,7 +58,6 @@ class FakultasController extends Controller
         try {
             $result = $this->unitParentModel->insert([
                 'name'        => $nama,
-                'type'        => $type,
                 'description' => null,
                 'status'      => (int)$status,
             ]);
@@ -137,18 +134,16 @@ class FakultasController extends Controller
     {
         $id     = $this->request->getPost('id');
         $nama   = $this->request->getPost('name');
-        $type   = $this->request->getPost('type');
         $status = $this->request->getPost('status');
         
         // Debug log
         log_message('debug', 'Update method called with data: ' . json_encode([
             'id' => $id,
             'nama' => $nama,
-            'type' => $type,
             'status' => $status
         ]));
         
-        if (empty($id) || empty($nama) || empty($type) || empty($status)) {
+        if (empty($id) || empty($nama) || empty($status)) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
@@ -184,7 +179,6 @@ class FakultasController extends Controller
         try {
             $updateData = [
                 'name'   => $nama,
-                'type'   => $type,
                 'status' => (int)$status
             ];
             

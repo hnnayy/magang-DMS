@@ -13,7 +13,6 @@
                 <tr>
                     <th class="text-center">No</th>
                     <th>Name Faculty</th>
-                    <th>Level</th>
                     <th>Status</th>
                     <?php 
                     // Check if user has any action privileges for this page
@@ -32,7 +31,6 @@
                         <tr>
                             <td class="text-center"><?= $i++ ?></td>
                             <td><?= esc($fakultas['name']) ?></td>
-                            <td><?= $fakultas['type'] == 1 ? 'Directorate' : 'Faculty' ?></td>
                             <td>
                                 <?= $fakultas['status'] == 1 ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>' ?>
                             </td>
@@ -49,7 +47,6 @@
                                             onclick="openEditModal(
                                                 <?= $fakultas['id'] ?>, 
                                                 '<?= esc($fakultas['name']) ?>', 
-                                                '<?= esc($fakultas['type']) ?>', 
                                                 '<?= esc($fakultas['status']) ?>'
                                             )">
                                             <i class="bi bi-pencil-square"></i>
@@ -91,17 +88,6 @@
             <div class="mb-3">
                 <label class="form-label">Faculty Name</label>
                 <input type="text" name="name" id="editFakultasName" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label d-block">Level</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="editType1" value="1">
-                    <label class="form-check-label" for="editType1">Directorate</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="editType2" value="2">
-                    <label class="form-check-label" for="editType2">Faculty</label>
-                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label d-block">Status</label>
@@ -200,8 +186,8 @@
 
     // Only define openEditModal function if user has update privilege
     <?php if ($canUpdate): ?>
-    function openEditModal(id, name, type, status) {
-        console.log('Opening edit modal with data:', {id, name, type, status});
+    function openEditModal(id, name, status) {
+        console.log('Opening edit modal with data:', {id, name, status});
         
         // Set ID di hidden input
         document.getElementById('editFakultasId').value = id;
@@ -210,15 +196,7 @@
         document.getElementById('editFakultasName').value = name;
         
         // Reset semua radio button dulu
-        document.querySelectorAll('input[name="type"]').forEach(radio => radio.checked = false);
         document.querySelectorAll('input[name="status"]').forEach(radio => radio.checked = false);
-        
-        // Centang radio "type" (1 = Directorate, 2 = Faculty)
-        const typeRadio = document.querySelector(`input[name="type"][value="${type}"]`);
-        if (typeRadio) {
-            typeRadio.checked = true;
-            console.log('Type radio set to:', type);
-        }
         
         // Centang radio "status" (1 = Active, 2 = Inactive)
         const statusRadio = document.querySelector(`input[name="status"][value="${status}"]`);

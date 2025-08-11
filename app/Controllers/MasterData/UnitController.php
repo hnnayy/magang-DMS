@@ -6,6 +6,9 @@ use App\Models\UnitParentModel;
 use App\Models\UnitModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 
+/**
+ * Controller untuk mengelola data unit.
+ */
 class UnitController extends BaseController
 {
     protected $parentModel;
@@ -25,16 +28,25 @@ class UnitController extends BaseController
         ];
     }
 
+    /**
+     * Redirect ke halaman daftar unit.
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
     public function index()
     {
         return redirect()->to('unit-list');
     }
 
+    /**
+     * Menampilkan form untuk membuat unit baru.
+     *
+     * @return string
+     */
     public function create()
     {
         $fakultas = $this->parentModel
             ->where('status !=', 0)
-            ->whereIn('type', [1, 2])
             ->orderBy('name', 'ASC')
             ->findAll();
 
@@ -46,20 +58,26 @@ class UnitController extends BaseController
         return view('DataMaster/unit-create', $data);
     }
 
+    /**
+     * Menyimpan data unit baru.
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
     public function store()
     {
         if (!$this->validate($this->validationRules)) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Validation failed!',
+                'title' => 'Validasi Gagal!',
                 'text'  => implode("\n", $this->validator->getErrors()),
-            ]);
+            ])->withInput();
         }
 
         $unitName = trim($this->request->getPost('unit_name'));
         $parentId = $this->request->getPost('parent_id');
         $status   = $this->request->getPost('status');
 
+        // Validasi keberadaan parent_id
         $parentExists = $this->parentModel
             ->where('id', $parentId)
             ->where('status !=', 0)
@@ -68,11 +86,12 @@ class UnitController extends BaseController
         if (!$parentExists) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Failed!',
-                'text'  => 'The selected Faculty/Directorate is not valid.',
-            ]);
+                'title' => 'Gagal!',
+                'text'  => 'Fakultas/Direktorat yang dipilih tidak valid.',
+            ])->withInput();
         }
 
+        // Cek duplikasi unit
         $existingUnit = $this->unitModel
             ->where('LOWER(name)', strtolower($unitName))
             ->where('parent_id', $parentId)
@@ -82,30 +101,36 @@ class UnitController extends BaseController
         if ($existingUnit) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Failed!',
-                'text'  => 'Unit name with the same status is already registered.',
-            ]);
+                'title' => 'Gagal!',
+                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
+            ])->withInput();
         }
 
         $insertData = [
             'parent_id'  => $parentId,
             'name'       => $unitName,
-            'status'     => $status
+            'status'     => $status,
+            'created_at' => date('Y-m-d H:i:s'),
         ];
 
         $this->unitModel->insert($insertData);
 
-        return redirect()->to('create-unit')->with('swal', [
+        return redirect()->to('unit-list')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success',
-            'text'  => 'Successfully Updated.',
+            'title' => 'Sukses',
+            'text'  => 'Unit berhasil ditambahkan.',
         ]);
     }
 
+    /**
+     * Menampilkan daftar unit.
+     *
+     * @return string
+     */
     public function list()
     {
         $units = $this->unitModel
-            ->select('unit.*, unit_parent.name as parent_name, unit_parent.type as parent_type')
+            ->select('unit.*, unit_parent.name as parent_name')
             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
             ->where('unit.status !=', 0)
             ->orderBy('unit.id', 'ASC')
@@ -113,7 +138,6 @@ class UnitController extends BaseController
 
         $fakultas = $this->parentModel
             ->where('status !=', 0)
-            ->whereIn('type', [1, 2])
             ->orderBy('name', 'ASC')
             ->findAll();
 
@@ -126,6 +150,11 @@ class UnitController extends BaseController
         return view('DataMaster/daftar-unit', $data);
     }
 
+    /**
+     * Menampilkan form untuk mengedit unit.
+     *
+     * @return string|\CodeIgniter\HTTP\RedirectResponse
+     */
     public function edit()
     {
         $id = $this->request->getGet('id');
@@ -134,7 +163,7 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Invalid Unit ID.',
+                'text'  => 'ID Unit tidak valid.',
             ]);
         }
 
@@ -147,13 +176,12 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Unit not found.',
+                'text'  => 'Unit tidak ditemukan.',
             ]);
         }
 
         $fakultas = $this->parentModel
             ->where('status !=', 0)
-            ->whereIn('type', [1, 2])
             ->orderBy('name', 'ASC')
             ->findAll();
 
@@ -166,6 +194,11 @@ class UnitController extends BaseController
         return view('DataMaster/unit-edit', $data);
     }
 
+    /**
+     * Memperbarui data unit.
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
     public function update()
     {
         $id = $this->request->getPost('id');
@@ -174,7 +207,7 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Invalid Unit ID.',
+                'text'  => 'ID Unit tidak valid.',
             ]);
         }
 
@@ -187,22 +220,23 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Unit not found.',
+                'text'  => 'Unit tidak ditemukan.',
             ]);
         }
 
         if (!$this->validate($this->validationRules)) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Validation failed!',
+                'title' => 'Validasi Gagal!',
                 'text'  => implode("\n", $this->validator->getErrors()),
-            ]);
+            ])->withInput();
         }
 
         $unitName = trim($this->request->getPost('unit_name'));
         $parentId = $this->request->getPost('parent_id');
         $status   = $this->request->getPost('status');
 
+        // Cek duplikasi unit
         $existingUnit = $this->unitModel
             ->where('LOWER(name)', strtolower($unitName))
             ->where('parent_id', $parentId)
@@ -213,9 +247,9 @@ class UnitController extends BaseController
         if ($existingUnit) {
             return redirect()->back()->with('swal', [
                 'icon'  => 'error',
-                'title' => 'Failed',
-                'text'  => 'Unit name with the same status is already registered.',
-            ]);
+                'title' => 'Gagal',
+                'text'  => 'Nama unit dengan status yang sama sudah terdaftar.',
+            ])->withInput();
         }
 
         $updateData = [
@@ -229,11 +263,16 @@ class UnitController extends BaseController
 
         return redirect()->to('unit-list')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success',
-            'text'  => 'Successfully updated.',
+            'title' => 'Sukses',
+            'text'  => 'Unit berhasil diperbarui.',
         ]);
     }
 
+    /**
+     * Menghapus unit (soft delete).
+     *
+     * @return \CodeIgniter\HTTP\RedirectResponse
+     */
     public function delete()
     {
         $id = $this->request->getPost('id');
@@ -242,7 +281,7 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'Unit ID not valid.',
+                'text'  => 'ID Unit tidak valid.',
             ]);
         }
 
@@ -252,7 +291,7 @@ class UnitController extends BaseController
             return redirect()->to('unit-list')->with('swal', [
                 'icon'  => 'error',
                 'title' => 'Error',
-                'text'  => 'Unit not found.',
+                'text'  => 'Unit tidak ditemukan.',
             ]);
         }
 
@@ -263,8 +302,8 @@ class UnitController extends BaseController
 
         return redirect()->to('unit-list')->with('swal', [
             'icon'  => 'success',
-            'title' => 'Success',
-            'text'  => 'Successfully deleted.',
+            'title' => 'Sukses',
+            'text'  => 'Unit berhasil dihapus.',
         ]);
     }
 }

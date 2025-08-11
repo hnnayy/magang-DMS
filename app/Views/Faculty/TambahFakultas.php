@@ -21,19 +21,6 @@
                        required>
                 <div class="invalid-feedback">Please enter faculty/directorate name.</div>
             </div>
-            <!-- Type (Level) -->
-            <div class="form-group" id="type-group">
-                <label class="form-label d-block">Level</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="type1" value="1" required>
-                    <label class="form-check-label" for="type1">Directorate</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="type" id="type2" value="2" required>
-                    <label class="form-check-label" for="type2">Faculty</label>
-                </div>
-                <div class="invalid-feedback">Please select a level.</div>
-            </div>
             <!-- Status -->
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>

@@ -9,6 +9,6 @@ class UnitParentModel extends Model
  
     protected $table = 'unit_parent';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['type', 'name', 'status'];
+    protected $allowedFields = [ 'name', 'status'];
     protected $returnType = 'array';
 }
