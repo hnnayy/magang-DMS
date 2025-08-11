@@ -35,10 +35,12 @@ class CreateUser extends Controller
         $unitParents = $this->unitParentModel->findAll();
         $units = $this->unitModel->findAll();
 
+        // ✅ PERBAIKAN: Hanya ambil role yang status = 1 (Active)
         $roles = $this->roleModel
-                    ->select('MIN(id) as id, name') 
-                    ->groupBy('name')
+                    ->select('id, name') 
+                    ->where('status', 1)  // Filter hanya role aktif (1 = Active)
                     ->findAll();
+                    
         $data = [
             'unitParents' => $unitParents,
             'roles'       => $roles,
@@ -100,11 +102,14 @@ class CreateUser extends Controller
                             ->with('showPopupError', true);
         }
 
-        // Validasi role tidak ditemukan - gunakan popup karena ini kesalahan data
-        $role = $this->roleModel->where('name', $roleName)->first();
+        // ✅ PERBAIKAN: Validasi role tidak ditemukan dan harus aktif
+        $role = $this->roleModel
+                    ->where('name', $roleName)
+                    ->where('status', 1)  // Pastikan role masih aktif (1 = Active)
+                    ->first();
         if (! $role) {
             return redirect()->back()->withInput()
-                            ->with('error', 'Role is invalid.')
+                            ->with('error', 'Role is invalid or inactive.')
                             ->with('showPopupError', true);
         }
 
@@ -154,7 +159,11 @@ class CreateUser extends Controller
 
         $unitParents = $this->unitParentModel->findAll();
         $units = $this->unitModel->findAll();
-        $roles = $this->roleModel->findAll();
+        
+        // ✅ PERBAIKAN: Untuk list juga filter role aktif saja
+        $roles = $this->roleModel
+                    ->where('status', 1)  // Filter hanya role aktif (1 = Active)
+                    ->findAll();
         
         return view('CreateUser/daftar-users', [
             'users' => $users,
@@ -163,6 +172,7 @@ class CreateUser extends Controller
             'roles' => $roles,
         ]);
     }
+    
     public function index()
     {
         return redirect()->to('CreateUser/list');
@@ -233,9 +243,13 @@ class CreateUser extends Controller
             return $this->response->setJSON(['error' => 'Unit does not match the faculty.']);
         }
 
-        $role = $this->roleModel->where('name', $roleName)->first();
+        // ✅ PERBAIKAN: Validasi role harus aktif saat update
+        $role = $this->roleModel
+                    ->where('name', $roleName)
+                    ->where('status', 1)  // Pastikan role masih aktif (1 = Active)
+                    ->first();
         if (! $role) {
-            return $this->response->setJSON(['error' => 'Role note valid']);
+            return $this->response->setJSON(['error' => 'Role not valid or inactive']);
         }
 
         $existingUser = $this->userModel
@@ -271,6 +285,7 @@ class CreateUser extends Controller
 
         return $this->response->setJSON(['updated_message' => 'Successfully Updated']);
     }
+    
     public function softDelete($id)
     {
         if ($this->userModel->delete($id)) {
