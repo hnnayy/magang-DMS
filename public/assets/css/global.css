@@ -1422,3 +1422,148 @@ input[type="date"]:valid {
 .submenu-toggle .arrow {
     transition: transform 0.3s ease;
 }
+
+/* clause */
+    .clause-body {
+        background-color: #f8f9fa;
+    }
+    
+    .clause-container-fluid {
+        max-width: 1200px;
+    }
+    
+    .clause-table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .clause-btn-link {
+        text-decoration: none;
+    }
+    
+    .clause-btn-link:hover {
+        text-decoration: none;
+    }
+
+    .clause-search-container {
+        position: relative;
+        max-width: 400px;
+    }
+
+    .clause-search-container .clause-search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 1;
+    }
+
+    .clause-search-container input {
+        padding-left: 40px;
+    }
+
+    .clause-no-results {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .clause-code {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .clause-standard-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .clause-standard-title {
+        color: #0d6efd;
+        margin-bottom: 1rem;
+    }
+
+    .clause-action-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .clause-edit-btn {
+        padding: 0;
+        border: none;
+        background: none;
+        color: #0d6efd;
+        cursor: pointer;
+    }
+
+    .clause-delete-btn {
+        padding: 0;
+        border: none;
+        background: none;
+        color: #dc3545;
+        cursor: pointer;
+    }
+
+    .clause-edit-btn:hover {
+        color: #0a58ca;
+    }
+
+    .clause-delete-btn:hover {
+        color: #b02a37;
+    }
+
+    .clause-modal-footer-grid {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* Tambahan CSS untuk searchable dropdown */
+.clause-position-relative {
+    position: relative;
+}
+
+.clause-searchable-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.clause-dropdown-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.clause-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.clause-dropdown-item:hover,
+.clause-dropdown-item.highlighted {
+    background-color: #f8f9fa;
+    color: #0d6efd;
+}
+
+.clause-dropdown-item.selected {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.clause-dropdown-item.hidden {
+    display: none;
+}
