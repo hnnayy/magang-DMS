@@ -123,3 +123,9 @@ $routes->get('notification/fetch', 'NotificationController::fetch');
 $routes->post('notification/fetch', 'NotificationController::fetch'); // Support POST juga
 $routes->get('notification/test', 'NotificationController::testNotification'); // Temporary untuk testing
 
+// Document Standards 
+$routes->get('document-standards', 'MasterData\StandarController::index');
+$routes->post('document-standards/store', 'MasterData\StandarController::store');
+$routes->post('document-standards/edit', 'MasterData\StandarController::edit');
+$routes->post('document-standards/update', 'MasterData\StandarController::update');
+$routes->post('document-standards/delete', 'MasterData\StandarController::delete');
