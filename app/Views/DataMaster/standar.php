@@ -36,7 +36,7 @@
                                                 <i class="bi bi-trash text-danger" 
                                                    style="cursor: pointer; font-size: 16px;" 
                                                    onclick="deleteStandard(<?= $standard['id'] ?>)"
-                                                   title="Deactivate"></i>
+                                                   title="Delete"></i>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -245,8 +245,8 @@ function deleteStandard(id) {
         text: 'This action cannot be undone.',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, deactivate it!'
+        cancelButtonColor: '#767d83',
+        confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
         if (result.isConfirmed) {
             const formData = new FormData();
@@ -266,7 +266,7 @@ function deleteStandard(id) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success',
-                        text: 'Standard deactivated successfully',
+                        text: 'Standard deleted successfully',
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
@@ -276,7 +276,7 @@ function deleteStandard(id) {
                     Swal.fire({
                         icon: 'error',
                         title: 'Error!',
-                        text: data.message || 'Failed to deactivate'
+                        text: data.message || 'Failed to delete'
                     });
                 }
             })
