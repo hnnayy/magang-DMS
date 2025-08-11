@@ -19,10 +19,17 @@ class CreateStandardsTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
+            'description' => [
+                'type' => 'TEXT',
+                'null' => true,
+                'comment' => 'Deskripsi standar'
+            ],
             'status' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,
-                'default'    => 1, // 0 = nonaktif, 1 = aktif
+                'default'    => 1,
+                'null'       => false,
+                'comment'    => '0 = nonaktif, 1 = aktif',
             ],
         ]);
         $this->forge->addKey('id', true);

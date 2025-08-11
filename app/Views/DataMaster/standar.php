@@ -19,6 +19,7 @@
                                 <tr>
                                     <th class="text-center" style="width: 80px;">No</th>
                                     <th>Standard Name</th>
+                                    <th>Description</th>
                                     <th class="text-center" style="width: 120px;">Action</th>
                                 </tr>
                             </thead>
@@ -28,10 +29,11 @@
                                         <tr>
                                             <td class="text-center"><?= $index + 1 ?></td>
                                             <td><?= esc($standard['nama_standar']) ?></td>
+                                            <td><?= esc($standard['description'] ?? '-') ?></td>
                                             <td class="text-center">
                                                 <i class="bi bi-pencil-square text-primary me-2" 
                                                    style="cursor: pointer; font-size: 16px;" 
-                                                   onclick="editStandard(<?= $standard['id'] ?>, '<?= esc($standard['nama_standar']) ?>')"
+                                                   onclick="editStandard(<?= $standard['id'] ?>, '<?= esc($standard['nama_standar'], 'js') ?>', '<?= esc($standard['description'] ?? '', 'js') ?>')"
                                                    title="Edit"></i>
                                                 <i class="bi bi-trash text-danger" 
                                                    style="cursor: pointer; font-size: 16px;" 
@@ -42,7 +44,7 @@
                                     <?php endforeach; ?>
                                 <?php else : ?>
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">No data available</td>
+                                        <td colspan="4" class="text-center text-muted">No data available</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -70,6 +72,11 @@
                         <input type="text" class="form-control" id="add_nama_standar" name="nama_standar" required>
                         <div class="invalid-feedback"></div>
                     </div>
+                    <div class="mb-3">
+                        <label for="add_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="add_description" name="description" rows="4"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -95,6 +102,11 @@
                     <div class="mb-3">
                         <label for="edit_nama_standar" class="form-label">Standard Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="edit_nama_standar" name="nama_standar" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="4"></textarea>
                         <div class="invalid-feedback"></div>
                     </div>
                 </div>
@@ -140,10 +152,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.reload();
                 });
             } else {
-                if (data.errors && data.errors.nama_standar) {
-                    const input = document.getElementById('add_nama_standar');
-                    input.classList.add('is-invalid');
-                    input.nextElementSibling.textContent = data.errors.nama_standar;
+                if (data.errors) {
+                    if (data.errors.nama_standar) {
+                        const input = document.getElementById('add_nama_standar');
+                        input.classList.add('is-invalid');
+                        input.nextElementSibling.textContent = data.errors.nama_standar;
+                    }
+                    if (data.errors.description) {
+                        const input = document.getElementById('add_description');
+                        input.classList.add('is-invalid');
+                        input.nextElementSibling.textContent = data.errors.description;
+                    }
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -192,10 +211,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     location.reload();
                 });
             } else {
-                if (data.errors && data.errors.nama_standar) {
-                    const input = document.getElementById('edit_nama_standar');
-                    input.classList.add('is-invalid');
-                    input.nextElementSibling.textContent = data.errors.nama_standar;
+                if (data.errors) {
+                    if (data.errors.nama_standar) {
+                        const input = document.getElementById('edit_nama_standar');
+                        input.classList.add('is-invalid');
+                        input.nextElementSibling.textContent = data.errors.nama_standar;
+                    }
+                    if (data.errors.description) {
+                        const input = document.getElementById('edit_description');
+                        input.classList.add('is-invalid');
+                        input.nextElementSibling.textContent = data.errors.description;
+                    }
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -229,9 +255,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Edit Standard Function
-function editStandard(id, nama) {
+function editStandard(id, nama, description) {
     document.getElementById('edit_id').value = id;
     document.getElementById('edit_nama_standar').value = nama;
+    document.getElementById('edit_description').value = description || '';
     
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
     editModal.show();

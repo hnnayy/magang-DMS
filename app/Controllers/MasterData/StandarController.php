@@ -27,7 +27,8 @@ class StandarController extends BaseController
     public function store()
     {
         if (!$this->validate([
-            'nama_standar' => 'required|max_length[255]'
+            'nama_standar' => 'required|max_length[255]',
+            'description' => 'permit_empty|max_length[65535]' // TEXT field can hold up to 65,535 characters
         ])) {
             return $this->response->setJSON([
                 'success' => false,
@@ -38,6 +39,7 @@ class StandarController extends BaseController
 
         $data = [
             'nama_standar' => $this->request->getPost('nama_standar'),
+            'description' => $this->request->getPost('description') ?: null,
             'status' => 1
         ];
 
@@ -68,7 +70,11 @@ class StandarController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'data' => $standard
+            'data' => [
+                'id' => $standard['id'],
+                'nama_standar' => $standard['nama_standar'],
+                'description' => $standard['description']
+            ]
         ]);
     }
 
@@ -85,7 +91,8 @@ class StandarController extends BaseController
         }
 
         if (!$this->validate([
-            'nama_standar' => 'required|max_length[255]'
+            'nama_standar' => 'required|max_length[255]',
+            'description' => 'permit_empty|max_length[65535]'
         ])) {
             return $this->response->setJSON([
                 'success' => false,
@@ -95,7 +102,8 @@ class StandarController extends BaseController
         }
 
         $data = [
-            'nama_standar' => $this->request->getPost('nama_standar')
+            'nama_standar' => $this->request->getPost('nama_standar'),
+            'description' => $this->request->getPost('description') ?: null
         ];
 
         if ($this->standardModel->update($id, $data)) {
