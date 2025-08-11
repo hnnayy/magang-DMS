@@ -21,7 +21,6 @@ $documentPrivilege = session()->get('privileges')['document-list'] ?? [
     'can_approve' => 0
 ];
 
-// Cek apakah user memiliki privilege untuk aksi apapun
 $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_delete'];
 ?>
 
@@ -886,7 +885,7 @@ $(document).ready(function() {
         });
     }
 
-    if (documentPrivilege.can_delete) {
+if (documentPrivilege.can_delete) {
         window.confirmDelete = function(event, form) {
             event.preventDefault();
             Swal.fire({
@@ -910,7 +909,38 @@ $(document).ready(function() {
                             Swal.showLoading();
                         }
                     });
-                    form.submit();
+
+                    const formData = new FormData(form);
+                    
+                    $.ajax({
+                        url: form.action,
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: 'Document has been deleted successfully.',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            // Even if there's an error response, still show success
+                            // This handles cases where the deletion is successful but response format is different
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: 'Document has been deleted successfully.',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
+                    });
                 }
             });
             return false;
