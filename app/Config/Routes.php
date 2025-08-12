@@ -128,3 +128,14 @@ $routes->post('document-standards/store', 'MasterData\StandarController::store')
 $routes->post('document-standards/edit', 'MasterData\StandarController::edit');
 $routes->post('document-standards/update', 'MasterData\StandarController::update');
 $routes->post('document-standards/delete', 'MasterData\StandarController::delete');
+
+
+
+// Document Clauses Routes
+$routes->get('document-clauses', 'MasterData\ClauseController::index');
+$routes->post('document-clauses/store', 'MasterData\ClauseController::store');
+$routes->post('document-clauses/edit', 'MasterData\ClauseController::update');
+$routes->post('document-clauses/delete', 'MasterData\ClauseController::delete');
+
+// API route to get standards for dropdown
+$routes->get('api/standards', 'MasterData\ClauseController::getStandards');

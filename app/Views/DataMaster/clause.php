@@ -1,7 +1,5 @@
 <?= $this->extend('layout/main_layout') ?>
-
 <?= $this->section('content') ?>
-
 <div class="container-fluid clause-container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">Clause Management</h4>
@@ -16,9 +14,10 @@
         </div>
     </div>
 
-    <!-- ISO/IEC 20000-1:2011 Category -->
-    <div class="clause-standard-section" data-standard="ISO/IEC 20000-1:2011">
-        <h5 class="clause-standard-title">ISO/IEC 20000-1:2011</h5>
+    <!-- Dynamic Standard Sections -->
+    <?php foreach ($groupedClauses as $standardName => $clauses): ?>
+    <div class="clause-standard-section" data-standard="<?= esc($standardName) ?>">
+        <h5 class="clause-standard-title"><?= esc($standardName) ?></h5>
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle clause-table">
                 <thead class="table-light">
@@ -30,155 +29,34 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
+                    <?php foreach ($clauses as $index => $clause): ?>
+                    <tr data-clause-id="<?= $clause['id'] ?>">
+                        <td class="text-center"><?= $index + 1 ?></td>
                         <td>
-                            <span class="clause-code">4.1 Management responsibility</span>
+                            <span class="clause-code"><?= esc($clause['nomor_klausul']) ?></span>
                         </td>
-                        <td>Understanding the organization and its context</td>
+                        <td><?= esc($clause['nama_klausul']) ?></td>
                         <td class="text-center">
                             <div class="clause-action-buttons">
                                 <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(1, 'ISO/IEC 20000-1:2011', '4.1 Management responsibility', 'Understanding the organization and its context', 1)"
+                                        onclick="editClause(<?= $clause['id'] ?>, '<?= esc($clause['nama_standar']) ?>', '<?= esc($clause['nomor_klausul']) ?>', '<?= esc($clause['nama_klausul']) ?>', <?= $clause['standar_id'] ?>)"
                                         title="Edit">
                                     <i class="bi bi-pencil-square fs-5"></i>
                                 </button>
                                 <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
+                                        onclick="confirmClauseDelete(<?= $clause['id'] ?>)"
                                         title="Delete">
                                     <i class="bi bi-trash fs-5"></i>
                                 </button>
                             </div>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>
-                            <span class="clause-code">4.1.1 Management commitment</span>
-                        </td>
-                        <td>Understanding the needs and expectations of interested parties</td>
-                        <td class="text-center">
-                            <div class="clause-action-buttons">
-                                <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(2, 'ISO/IEC 20000-1:2011', '4.1.1 Management commitment', 'Understanding the needs and expectations of interested parties', 1)"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                                <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
-                                        title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">3</td>
-                        <td>
-                            <span class="clause-code">4.1.2 Service management policy</span>
-                        </td>
-                        <td>Determining the scope of the quality management system</td>
-                        <td class="text-center">
-                            <div class="clause-action-buttons">
-                                <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(3, 'ISO/IEC 20000-1:2011', '4.1.2 Service management policy', 'Determining the scope of the quality management system', 1)"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                                <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
-                                        title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">4</td>
-                        <td>
-                            <span class="clause-code">4.1.3 Authority, responsibility and communication</span>
-                        </td>
-                        <td>Leadership and commitment</td>
-                        <td class="text-center">
-                            <div class="clause-action-buttons">
-                                <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(4, 'ISO/IEC 20000-1:2011', '4.1.3 Authority, responsibility and communication', 'Leadership and commitment', 1)"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                                <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
-                                        title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
-
-    <!-- ISO/IEC 20000-1:2018 Category -->
-    <div class="clause-standard-section" data-standard="ISO/IEC 20000-1:2018">
-        <h5 class="clause-standard-title">ISO/IEC 20000-1:2018</h5>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle clause-table">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 80px;">No</th>
-                        <th>Clause</th>
-                        <th>Description</th>
-                        <th style="width: 130px;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="text-center">1</td>
-                        <td>
-                            <span class="clause-code">5 Leadership</span>
-                        </td>
-                        <td>Understanding the organization and its context</td>
-                        <td class="text-center">
-                            <div class="clause-action-buttons">
-                                <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(5, 'ISO/IEC 20000-1:2018', '5 Leadership', 'Understanding the organization and its context', 2)"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                                <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
-                                        title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="text-center">2</td>
-                        <td>
-                            <span class="clause-code">4.4 Service management system</span>
-                        </td>
-                        <td>Actions to address risks and opportunities</td>
-                        <td class="text-center">
-                            <div class="clause-action-buttons">
-                                <button class="clause-edit-btn" 
-                                        onclick="editClauseDocument(6, 'ISO/IEC 20000-1:2018', '4.4 Service management system', 'Actions to address risks and opportunities', 2)"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
-                                </button>
-                                <button class="clause-delete-btn" 
-                                        onclick="confirmClauseDelete(this)"
-                                        title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <?php endforeach; ?>
 
     <!-- No Results Message -->
     <div id="clauseNoResults" class="clause-no-results" style="display: none;">
@@ -187,7 +65,7 @@
     </div>
 </div>
 
-<!-- Add Modal with Searchable Dropdown -->
+<!-- Add Modal -->
 <div class="modal fade" id="clauseAddModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -196,35 +74,24 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="clauseAddForm">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="clauseAddDocumentType" class="form-label">Standard <span class="text-danger">*</span></label>
-                        <div class="clause-position-relative">
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="clauseAddDocumentType" 
-                                   name="standard_name"
-                                   placeholder="Search for standard..."
-                                   autocomplete="off"
-                                   required>
-                            <input type="hidden" id="clauseAddDocumentTypeId" name="document_type_id">
-                            <div id="clauseAddDropdown" class="clause-searchable-dropdown-menu">
-                                <div class="clause-dropdown-item" data-value="1" data-text="ISO/IEC 20000-1:2011">
-                                    ISO/IEC 20000-1:2011
-                                </div>
-                                <div class="clause-dropdown-item" data-value="2" data-text="ISO/IEC 20000-1:2018">
-                                    ISO/IEC 20000-1:2018
-                                </div>
-                            </div>
-                        </div>
+                        <label for="clauseAddStandard" class="form-label">Standard <span class="text-danger">*</span></label>
+                        <select class="form-select" id="clauseAddStandard" name="standar_id" required>
+                            <option value="">Select a standard...</option>
+                            <?php foreach ($standards as $standard): ?>
+                                <option value="<?= $standard['id'] ?>"><?= esc($standard['nama_standar']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="clauseAddCode" class="form-label">Clause <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseAddCode" name="kode" placeholder="e.g., 4.1 Management responsibility" required>
+                        <input type="text" class="form-control" id="clauseAddCode" name="nomor_klausul" required>
                     </div>
                     <div class="mb-3">
-                        <label for="clauseAddDocumentName" class="form-label">Description <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseAddDocumentName" name="name" placeholder="Enter clause description" required>
+                        <label for="clauseAddDescription" class="form-label">Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="clauseAddDescription" name="nama_klausul" placeholder="Enter clause description" required>
                     </div>
                 </div>
                 <div class="modal-footer clause-modal-footer-grid">
@@ -236,7 +103,7 @@
     </div>
 </div>
 
-<!-- Edit Modal with Searchable Dropdown -->
+<!-- Edit Modal -->
 <div class="modal fade" id="clauseEditModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -245,36 +112,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="clauseEditForm">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <input type="hidden" id="clauseEditId" name="id">
                     <div class="mb-3">
-                        <label for="clauseEditDocumentType" class="form-label">Standard <span class="text-danger">*</span></label>
-                        <div class="clause-position-relative">
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="clauseEditDocumentType" 
-                                   name="standard_name"
-                                   placeholder="Search for standard..."
-                                   autocomplete="off"
-                                   required>
-                            <input type="hidden" id="clauseEditDocumentTypeId" name="document_type_id">
-                            <div id="clauseEditDropdown" class="clause-searchable-dropdown-menu">
-                                <div class="clause-dropdown-item" data-value="1" data-text="ISO/IEC 20000-1:2011">
-                                    ISO/IEC 20000-1:2011
-                                </div>
-                                <div class="clause-dropdown-item" data-value="2" data-text="ISO/IEC 20000-1:2018">
-                                    ISO/IEC 20000-1:2018
-                                </div>
-                            </div>
-                        </div>
+                        <label for="clauseEditStandard" class="form-label">Standard <span class="text-danger">*</span></label>
+                        <select class="form-select" id="clauseEditStandard" name="standar_id" required>
+                            <option value="">Select a standard...</option>
+                            <?php foreach ($standards as $standard): ?>
+                                <option value="<?= $standard['id'] ?>"><?= esc($standard['nama_standar']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="clauseEditCode" class="form-label">Clause <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseEditCode" name="kode" required>
+                        <input type="text" class="form-control" id="clauseEditCode" name="nomor_klausul" required>
                     </div>
                     <div class="mb-3">
                         <label for="clauseEditDescription" class="form-label">Description <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseEditDescription" name="description" placeholder="Enter clause description" required>
+                        <input type="text" class="form-control" id="clauseEditDescription" name="nama_klausul" placeholder="Enter clause description" required>
                     </div>
                 </div>
                 <div class="modal-footer clause-modal-footer-grid">
@@ -287,113 +143,6 @@
 </div>
 
 <script>
-    // Data storage (simulating backend)
-    let clauseNextId = 7;
-    const clauseDocumentTypes = {
-        1: 'ISO/IEC 20000-1:2011',
-        2: 'ISO/IEC 20000-1:2018', 
-    };
-    
-    // Searchable Dropdown functionality - Generalized function
-    function initializeSearchableDropdown(inputSelector, dropdownSelector, hiddenInputSelector) {
-        const input = $(inputSelector);
-        const dropdown = $(dropdownSelector);
-        const hiddenInput = $(hiddenInputSelector);
-        let selectedIndex = -1;
-        
-        // Show dropdown when input is focused
-        input.on('focus', function() {
-            dropdown.show();
-            filterDropdownItems('', dropdown);
-        });
-        
-        // Hide dropdown when clicking outside
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest(input.parent()).length) {
-                dropdown.hide();
-                selectedIndex = -1;
-            }
-        });
-        
-        // Filter dropdown items based on input
-        input.on('input', function() {
-            const searchTerm = $(this).val().toLowerCase();
-            filterDropdownItems(searchTerm, dropdown);
-            selectedIndex = -1;
-        });
-        
-        // Handle keyboard navigation
-        input.on('keydown', function(e) {
-            const visibleItems = dropdown.find('.clause-dropdown-item:not(.hidden)');
-            
-            switch(e.keyCode) {
-                case 38: // Up arrow
-                    e.preventDefault();
-                    selectedIndex = Math.max(0, selectedIndex - 1);
-                    highlightItem(visibleItems, selectedIndex);
-                    break;
-                    
-                case 40: // Down arrow
-                    e.preventDefault();
-                    selectedIndex = Math.min(visibleItems.length - 1, selectedIndex + 1);
-                    highlightItem(visibleItems, selectedIndex);
-                    break;
-                    
-                case 13: // Enter
-                    e.preventDefault();
-                    if (selectedIndex >= 0 && visibleItems.eq(selectedIndex).length) {
-                        selectItem(visibleItems.eq(selectedIndex), input, dropdown, hiddenInput);
-                    }
-                    break;
-                    
-                case 27: // Escape
-                    dropdown.hide();
-                    selectedIndex = -1;
-                    break;
-            }
-        });
-        
-        // Handle item clicks
-        dropdown.on('click', '.clause-dropdown-item', function(e) {
-            e.preventDefault();
-            selectItem($(this), input, dropdown, hiddenInput);
-        });
-        
-        function highlightItem(visibleItems, index) {
-            visibleItems.removeClass('highlighted');
-            if (index >= 0 && index < visibleItems.length) {
-                visibleItems.eq(index).addClass('highlighted');
-            }
-        }
-    }
-    
-    function filterDropdownItems(searchTerm, dropdown) {
-        dropdown.find('.clause-dropdown-item').each(function() {
-            const text = $(this).data('text').toLowerCase();
-            if (text.includes(searchTerm)) {
-                $(this).removeClass('hidden');
-            } else {
-                $(this).addClass('hidden');
-            }
-        });
-        
-        // Reset selection highlighting
-        dropdown.find('.clause-dropdown-item').removeClass('highlighted selected');
-    }
-    
-    function selectItem(item, input, dropdown, hiddenInput) {
-        const value = item.data('value');
-        const text = item.data('text');
-        
-        input.val(text);
-        hiddenInput.val(value);
-        dropdown.hide();
-        
-        // Remove all selection classes and add to selected item
-        dropdown.find('.clause-dropdown-item').removeClass('selected highlighted');
-        item.addClass('selected');
-    }
-    
     // Search functionality
     function performClauseSearch() {
         const searchTerm = $('#clauseSearchInput').val().toLowerCase().trim();
@@ -423,14 +172,12 @@
                 }
             });
             
-            // Show/hide section based on whether it has visible rows
             if (sectionHasResults || searchTerm === '') {
                 section.show();
             } else {
                 section.hide();
             }
             
-            // Update row numbers for visible rows
             if (sectionHasResults) {
                 let visibleIndex = 1;
                 section.find('tbody tr:visible').each(function() {
@@ -439,7 +186,6 @@
             }
         });
         
-        // Show/hide no results message
         if (hasVisibleResults || searchTerm === '') {
             $('#clauseNoResults').hide();
         } else {
@@ -448,214 +194,220 @@
     }
     
     // Edit function
-    function editClauseDocument(id, type, code, name, typeId) {
+    function editClause(id, standardName, clauseNumber, description, standardId) {
         $('#clauseEditId').val(id);
-        $('#clauseEditDocumentType').val(type);
-        $('#clauseEditDocumentTypeId').val(typeId);
-        $('#clauseEditCode').val(code);
-        $('#clauseEditDescription').val(name);
-        
-        // Set the selected state for the dropdown
-        $('#clauseEditDropdown .clause-dropdown-item').removeClass('selected');
-        $('#clauseEditDropdown .clause-dropdown-item[data-value="' + typeId + '"]').addClass('selected');
+        $('#clauseEditStandard').val(standardId);
+        $('#clauseEditCode').val(clauseNumber);
+        $('#clauseEditDescription').val(description);
         
         new bootstrap.Modal(document.getElementById('clauseEditModal')).show();
     }
+    
+    // Delete function
+    function confirmClauseDelete(clauseId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            deleteClause(clauseId);
+        }
+    });
+}
 
-    // Delete confirmation
-    function confirmClauseDelete(button) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'This action cannot be undone!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Remove the table row
-                const row = button.closest('tr');
-                const table = button.closest('table');
-                row.remove();
-                
-                // Renumber remaining visible rows in the same table
-                const rows = table.querySelectorAll('tbody tr:visible');
-                rows.forEach((row, index) => {
-                    row.cells[0].textContent = index + 1;
-                });
-                
-                // Perform search to update display
-                performClauseSearch();
-                
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Deleted!',
-                    text: 'Clause has been deleted successfully.',
-                    confirmButtonText: 'OK'
-                });
+async function deleteClause(clauseId) {
+    try {
+        const formData = new FormData();
+        formData.append('id', clauseId);
+        // Tambahkan token CSRF
+        formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+        const response = await fetch('<?= base_url('document-clauses/delete') ?>', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
         });
-    }
 
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            $(`tr[data-clause-id="${clauseId}"]`).remove();
+            performClauseSearch();
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: result.message,
+                confirmButtonText: 'OK'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to delete clause.',
+                confirmButtonText: 'OK'
+            });
+        }
+    } catch (error) {
+        console.error('Error deleting clause:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while deleting the clause.',
+            confirmButtonText: 'OK'
+        });
+    }
+}
+    
     $(document).ready(function() {
         // Initialize tooltips
         $('[title]').tooltip();
         
-        // Initialize searchable dropdowns for both add and edit modals
-        initializeSearchableDropdown('#clauseAddDocumentType', '#clauseAddDropdown', '#clauseAddDocumentTypeId');
-        initializeSearchableDropdown('#clauseEditDocumentType', '#clauseEditDropdown', '#clauseEditDocumentTypeId');
-        
         // Search functionality
         $('#clauseSearchInput').on('input', performClauseSearch);
-
+        
         // Handle add form submission
-        $('#clauseAddForm').on('submit', function(e) {
+        $('#clauseAddForm').on('submit', async function(e) {
             e.preventDefault();
             
-            const typeId = $('#clauseAddDocumentTypeId').val();
-            const typeName = $('#clauseAddDocumentType').val();
-            const code = $('#clauseAddCode').val().trim();
-            const name = $('#clauseAddDocumentName').val().trim();
+            const formData = new FormData(this);
             
-            if (!typeId || !code || !name) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please fill in all required fields.',
-                    confirmButtonText: 'OK'
+            try {
+                const response = await fetch('<?= base_url('document-clauses/store') ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
-                return;
-            }
-            
-            // Find the appropriate table section
-            let targetSection = null;
-            $('.clause-standard-section').each(function() {
-                const standardAttr = $(this).attr('data-standard');
-                if (standardAttr === typeName) {
-                    targetSection = $(this);
-                    return false;
-                }
-            });
-            
-            if (!targetSection) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Invalid standard selected.',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-            
-            // Add new row
-            const tbody = targetSection.find('tbody');
-            const rowCount = tbody.find('tr').length + 1;
-            
-            const newRow = `
-                <tr>
-                    <td class="text-center">${rowCount}</td>
-                    <td>
-                        <span class="clause-code">${code}</span>
-                    </td>
-                    <td>${name}</td>
-                    <td class="text-center">
-                        <div class="clause-action-buttons">
-                            <button class="clause-edit-btn" 
-                                    onclick="editClauseDocument(${clauseNextId}, '${typeName}', '${code}', '${name.replace(/'/g, "\\'")}', ${typeId})"
-                                    title="Edit">
-                                <i class="bi bi-pencil-square fs-5"></i>
-                            </button>
-                            <button class="clause-delete-btn" 
-                                    onclick="confirmClauseDelete(this)"
-                                    title="Delete">
-                                <i class="bi bi-trash fs-5"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            
-            tbody.append(newRow);
-            clauseNextId++;
-            
-            // Clear form and close modal
-            $('#clauseAddForm')[0].reset();
-            $('#clauseAddDocumentTypeId').val(''); // Clear hidden input
-            $('#clauseAddDropdown .clause-dropdown-item').removeClass('selected');
-            bootstrap.Modal.getInstance(document.getElementById('clauseAddModal')).hide();
-            
-            // Refresh search results
-            performClauseSearch();
-            
-            // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Clause has been added successfully.',
-                confirmButtonText: 'OK'
-            });
-        });
-
-        // Handle edit form submission
-        $('#clauseEditForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            const id = $('#clauseEditId').val();
-            const code = $('#clauseEditCode').val().trim();
-            const typeName = $('#clauseEditDocumentType').val();
-            const typeId = $('#clauseEditDocumentTypeId').val();
-            const description = $('#clauseEditDescription').val().trim();
-            
-            if (!code || !typeName || !typeId || !description) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Please fill in all required fields.',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-            
-            // Find and update the row
-            $('button[onclick*="editClauseDocument(' + id + ',"]').each(function() {
-                const row = $(this).closest('tr');
-                row.find('.clause-code').text(code);
-                row.find('td:nth-child(3)').text(description); // Update description
                 
-                // Update onclick attributes for edit button in this row
-                const editBtn = row.find('button[onclick*="editClauseDocument"]');
-                const newOnclick = `editClauseDocument(${id}, '${typeName}', '${code}', '${description.replace(/'/g, "\\'")}', ${typeId})`;
-                editBtn.attr('onclick', newOnclick);
-            });
-            
-            // Close modal
-            bootstrap.Modal.getInstance(document.getElementById('clauseEditModal')).hide();
-            
-            // Refresh search results
-            performClauseSearch();
-            
-            // Show success message
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Clause has been updated successfully.',
-                confirmButtonText: 'OK'
-            });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Close modal and reset form
+                    bootstrap.Modal.getInstance(document.getElementById('clauseAddModal')).hide();
+                    $('#clauseAddForm')[0].reset();
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Reload page to show updated data
+                        location.reload();
+                    });
+                } else {
+                    // Show validation errors
+                    if (result.errors) {
+                        let errorMessages = [];
+                        for (let field in result.errors) {
+                            errorMessages.push(result.errors[field]);
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: errorMessages.join('<br>'),
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to add clause.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error adding clause:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while adding the clause.',
+                    confirmButtonText: 'OK'
+                });
+            }
         });
-
+        
+        // Handle edit form submission
+        $('#clauseEditForm').on('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('<?= base_url('document-clauses/edit') ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('clauseEditModal')).hide();
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Reload page to show updated data
+                        location.reload();
+                    });
+                } else {
+                    // Show validation errors
+                    if (result.errors) {
+                        let errorMessages = [];
+                        for (let field in result.errors) {
+                            errorMessages.push(result.errors[field]);
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            html: errorMessages.join('<br>'),
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Failed to update clause.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating clause:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while updating the clause.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+        
         // Reset form when modal is hidden
         $('#clauseAddModal, #clauseEditModal').on('hidden.bs.modal', function() {
             $(this).find('form')[0].reset();
-            // Reset dropdown selection and hidden inputs
-            $(this).find('.clause-searchable-dropdown-menu .clause-dropdown-item').removeClass('selected highlighted');
-            $(this).find('.clause-searchable-dropdown-menu').hide();
-            $(this).find('input[type="hidden"]').val('');
         });
     });
 </script>
-
 <?= $this->endSection() ?>
 
 <?= $this->section('additional_scripts') ?>
