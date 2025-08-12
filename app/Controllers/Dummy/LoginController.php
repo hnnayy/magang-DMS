@@ -12,9 +12,22 @@ use Firebase\JWT\Key;
 
 class LoginController extends BaseController
 {
+    protected $userModel;
+    protected $userRoleModel;
+    protected $privilegeModel;
+    protected $userWcModel;
+
+    public function __construct()
+    {
+        $this->userModel = new UserModel();
+        $this->userRoleModel = new UserRoleModel();
+        $this->privilegeModel = new PrivilegeModel();
+        $this->userWcModel = new UserWcModel();
+    }
+
     public function index()
     {
-        // Cek apakah user sudah login
+        // Check if user is already logged in
         if (session()->get('is_logged_in')) {
             return redirect()->to('/dashboard');
         }

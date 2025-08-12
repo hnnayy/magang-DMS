@@ -34,7 +34,7 @@ class CreateUser extends Controller
     {
         // Filter hanya unit parent dan role yang aktif
         $unitParents = $this->unitParentModel->where('status', 1)->findAll();
-        $units = $this->unitModel->findAll();
+        $units = $this->unitModel->where('status', 1)->findAll();
         $roles = $this->roleModel
                     ->select('id, name') 
                     ->where('status', 1)
@@ -156,9 +156,9 @@ class CreateUser extends Controller
 
         log_message('debug', 'Users retrieved: ' . json_encode($users));
 
-        // Filter hanya data yang aktif untuk dropdown
+        // Filter hanya data yang aktif untuk dropdown modal edit
         $unitParents = $this->unitParentModel->where('status', 1)->findAll();
-        $units = $this->unitModel->findAll();
+        $units = $this->unitModel->where('status', 1)->findAll();
         $roles = $this->roleModel->where('status', 1)->findAll();
         
         return view('CreateUser/daftar-users', [
@@ -223,16 +223,23 @@ class CreateUser extends Controller
                                 ->setJSON(['error' => 'All fields are required..']);
         }
 
-        $parent = $this->unitParentModel->find($parentId);
+        // Validasi fakultas harus aktif
+        $parent = $this->unitParentModel
+                    ->where('id', $parentId)
+                    ->where('status', 1)
+                    ->first();
         if (! $parent) {
-            return $this->response->setJSON(['error' => 'Fakultas not valid.']);
+            return $this->response->setJSON(['error' => 'Faculty/Directorate not valid or inactive.']);
         }
 
-        $unit = $this->unitModel->where('id', $unitId)
-                                ->where('parent_id', $parentId)
-                                ->first();
+        // Validasi unit harus aktif dan sesuai fakultas
+        $unit = $this->unitModel
+                    ->where('id', $unitId)
+                    ->where('parent_id', $parentId)
+                    ->where('status', 1)
+                    ->first();
         if (! $unit) {
-            return $this->response->setJSON(['error' => 'Unit does not match the faculty.']);
+            return $this->response->setJSON(['error' => 'Unit does not match the faculty or is inactive.']);
         }
 
         // Validasi role harus aktif saat update

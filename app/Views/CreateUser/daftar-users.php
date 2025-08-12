@@ -10,7 +10,6 @@
       <thead class="table-light">
         <tr>
           <th>No</th>
-          <th>Employee ID</th>
           <th>Faculty/Directorate</th>
           <th>Division/Unit/Study Program</th>
           <th>Username</th>
@@ -30,7 +29,6 @@
         <?php $i = 1; foreach ($users as $user): ?>
         <tr>
           <td><?= $i++ ?></td>
-          <td><?= esc($user['id']) ?></td>
           <td><?= esc($user['parent_name']) ?></td>
           <td><?= esc($user['unit_name']) ?></td>
           <td><?= esc($user['username']) ?></td>
@@ -79,11 +77,6 @@
       <form id="editUserForm">
         <div class="modal-body">
           <input type="hidden" id="editUserId"> <!-- Hidden field untuk user ID -->
-          
-          <div class="mb-3">
-            <label for="editEmployeeId" class="form-label">Employee ID</label>
-            <input type="text" class="form-control" id="editEmployeeId" readonly>
-          </div>
           
           <!-- Fakultas/Direktorat -->
           <div class="mb-3">
@@ -184,15 +177,15 @@ $(document).ready(function () {
     pageLength: 10,
     order: [],
     columnDefs: [
-      { orderable: false, targets: 6 },
-      { className: 'text-center', targets: 6 }
+      { orderable: false, targets: 5 },
+      { className: 'text-center', targets: 5 }
     ],
     buttons: [
       {
         extend: 'excel',
         className: 'btn btn-outline-success btn-sm',
         title: 'Data_Users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
       },
       {
         extend: 'pdfHtml5',
@@ -200,7 +193,7 @@ $(document).ready(function () {
         className: 'btn',
         title: 'Data Users',
         filename: 'data_users',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
+        exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
         orientation: 'portrait', 
         pageSize: 'A4',
         customize: function (doc) {
@@ -250,7 +243,7 @@ $(document).ready(function () {
           doc.pageMargins = [40, 40, 40, 40];
 
           if (doc.content[1] && doc.content[1].table) {
-            doc.content[1].table.widths = ['5%', '10%', '22%', '19%', '13%', '18%', '13%'];
+            doc.content[1].table.widths = ['8%', '24%', '22%', '15%', '20%', '11%'];
             doc.content[1].margin = [0, 0, 0, 0];
           }
 
@@ -409,7 +402,6 @@ $(document).ready(function () {
       const roleName = $(this).data('role');
 
       $('#editUserId').val(userId);
-      $('#editEmployeeId').val(employeeId);
       $('#editUsername').val($(this).data('username'));
       $('#editFullname').val(fullname);
 
