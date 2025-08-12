@@ -135,7 +135,9 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($documents)): ?>
+                    <?php 
+                    $hasVisibleDocuments = false;
+                    if (!empty($documents)): ?>
                         <?php $no = 1; ?>
                         <?php foreach ($documents as $doc): ?>
                             <?php 
@@ -163,6 +165,7 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                             }
 
                             if (!$canViewDocument) continue;
+                            $hasVisibleDocuments = true;
                             ?>
 
                             <?php if ($documentCreatorId != 0): ?>
@@ -311,12 +314,22 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                             </tr>
                             <?php endif; ?>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="12" class="text-center text-muted py-5">
-                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                No document submissions available for your access level.
-                            </td>
+                    <?php endif; ?>
+                    <?php if (!$hasVisibleDocuments): ?>
+                        <tr class="empty-row">
+                            <td class="text-center"></td>
+                            <td class="text-center d-none"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
+                            <td class="text-center"></td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -662,10 +675,11 @@ $(document).ready(function() {
             if (pageInfo.recordsDisplay > 0) {
                 var startRow = pageInfo.start;
                 $('#documentsTable tbody tr').each(function(index) {
-                    // Check if this row is not the "No data available" row
-                    if (!$(this).hasClass('odd') || $(this).find('td').length > 1) {
-                        $(this).find('td:first').text(startRow + index + 1);
+                    // Skip empty row or no data row
+                    if ($(this).hasClass('empty-row') || ($(this).hasClass('odd') && $(this).find('td').length === 1)) {
+                        return;
                     }
+                    $(this).find('td:first').text(startRow + index + 1);
                 });
             }
         }
