@@ -14,9 +14,8 @@ class Role extends Controller
         helper(['form', 'url']); // form helper & url helper
     }
 
-    /**
-     * List role aktif
-     */
+    
+    //List role aktif
     public function index()
     {
         $roles = $this->roleModel
@@ -27,17 +26,15 @@ class Role extends Controller
         return view('Role/lihat-role', ['roles' => $roles]);
     }
 
-    /**
-     * Alias untuk route role-list
-     */
+    
+    //Alias untuk route role-list
+     
     public function list()
     {
         return $this->index();
     }
 
-    /**
-     * Form create role
-     */
+    //Form create role
     public function create()
     {
         return view('Role/role-create', [
@@ -45,9 +42,8 @@ class Role extends Controller
         ]);
     }
 
-    /**
-     * Simpan role baru (versi utama)
-     */
+
+     //Simpan role baru (versi utama)
     public function store()
     {
         $nama   = trim($this->request->getPost('nama'));
@@ -83,17 +79,15 @@ class Role extends Controller
         }
     }
 
-    /**
-     * Alias untuk route create-role/store
-     */
+    
+    //Alias untuk route create-role/store
     public function storeRole()
     {
         return $this->store();
     }
 
-    /**
-     * Update role
-     */
+    
+    // Update role
     public function update()
     {
         $id       = $this->request->getPost('id');
@@ -136,9 +130,8 @@ class Role extends Controller
         }
     }
 
-    /**
-     * Soft delete role
-     */
+    
+    // Soft delete role
     public function delete()
     {
         $id = $this->request->getPost('id');
