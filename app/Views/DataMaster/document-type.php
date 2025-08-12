@@ -83,24 +83,29 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Edit Document Type</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
-                                            <form method="post" action="<?= base_url('document-type/edit') ?>">
+                                            <form method="post" action="<?= base_url('document-type/edit') ?>" novalidate>
                                                 <div class="modal-body">
                                                     <?= csrf_field() ?>
                                                     <input type="hidden" name="id" value="<?= $kategori['id'] ?>">
                                                     <div class="row mb-3">
                                                         <div class="col-md-6">
                                                             <label for="editNama<?= $kategori['id'] ?>" class="form-label">Type Name</label>
-                                                            <input type="text" class="form-control text-uppercase-auto" name="nama"
+                                                            <input type="text" class="form-control doctype-text-uppercase-auto" name="nama"
                                                                    id="editNama<?= $kategori['id'] ?>" 
                                                                    value="<?= esc($kategori['nama']) ?>" required>
+                                                            <div class="doctype-invalid-feedback">
+                                                                Type Name is required.
+                                                            </div>
                                                         </div>
                                                         <div class="col-md-6">
                                                             <label for="editKode<?= $kategori['id'] ?>" class="form-label">Code</label>
-                                                            <input type="text" class="form-control text-uppercase-auto" name="kode"
+                                                            <input type="text" class="form-control doctype-text-uppercase-auto" name="kode"
                                                                    id="editKode<?= $kategori['id'] ?>" 
                                                                    value="<?= esc($kategori['kode']) ?>">
+                                                            <div class="doctype-invalid-feedback">
+                                                                Code is required.
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
@@ -150,19 +155,24 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Document Type</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="<?= base_url('document-type/add') ?>">
+            <form method="post" action="<?= base_url('document-type/add') ?>" id="addDocumentTypeForm" novalidate>
                 <div class="modal-body">
                     <?= csrf_field() ?>
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="addNama" class="form-label">Type Name</label>
-                            <input type="text" class="form-control text-uppercase-auto" name="nama" id="addNama" required>
+                            <input type="text" class="form-control doctype-text-uppercase-auto" name="nama" id="addNama" required>
+                            <div class="doctype-invalid-feedback">
+                                Type Name is required.
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label for="addKode" class="form-label">Code</label>
-                            <input type="text" class="form-control text-uppercase-auto" name="kode" id="addKode">
+                            <input type="text" class="form-control doctype-text-uppercase-auto" name="kode" id="addKode" required>
+                            <div class="doctype-invalid-feedback">
+                                Code is required.
+                            </div>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -176,7 +186,7 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -187,17 +197,6 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 <!-- Bootstrap CSS & Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-<!-- Custom CSS for uppercase input -->
-<style>
-    .text-uppercase-auto {
-        text-transform: uppercase;
-    }
-    
-    .text-uppercase-auto::placeholder {
-        text-transform: none;
-    }
-</style>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -250,6 +249,23 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
         <?php endif; ?>
     });
 
+    // Custom form validation function
+    function validateForm(form) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('input[required]');
+        
+        requiredFields.forEach(function(field) {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        return isValid;
+    }
+
     // Only define confirmDelete function if user has delete privilege
     <?php if ($canDelete): ?>
     function confirmDelete(event, form) {
@@ -293,24 +309,74 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
 
     // Only add event listeners if user has create privilege
     <?php if ($canCreate): ?>
+    // Add Document Type Form Validation
+    document.getElementById('addDocumentTypeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm(this)) {
+            this.submit();
+        }
+    });
+
     // Reset form when modal is closed
     document.getElementById('addDocumentTypeModal').addEventListener('hidden.bs.modal', function () {
         const form = this.querySelector('form');
         form.reset();
         document.getElementById('addPredefined').checked = false;
+        
+        // Remove validation classes
+        const inputs = form.querySelectorAll('.form-control');
+        inputs.forEach(function(input) {
+            input.classList.remove('is-invalid');
+        });
     });
 
     // Autofocus on open modals
     document.getElementById('addDocumentTypeModal').addEventListener('shown.bs.modal', function () {
         document.getElementById('addNama').focus();
     });
+
+    // Real-time validation - remove invalid class when user starts typing
+    document.getElementById('addNama').addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    document.getElementById('addKode').addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
+    });
     <?php endif; ?>
 
     // Only add event listeners for edit modals if user has update privilege
     <?php if ($canUpdate && !empty($kategori_dokumen)): ?>
     <?php foreach ($kategori_dokumen as $kategori): ?>
+    // Edit Modal Form Validation
+    document.getElementById('editModal<?= $kategori['id'] ?>').querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm(this)) {
+            this.submit();
+        }
+    });
+
     document.getElementById('editModal<?= $kategori['id'] ?>').addEventListener('shown.bs.modal', function () {
         document.getElementById('editNama<?= $kategori['id'] ?>').focus();
+    });
+
+    // Real-time validation for edit forms
+    document.getElementById('editNama<?= $kategori['id'] ?>').addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
+    });
+
+    document.getElementById('editKode<?= $kategori['id'] ?>').addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('is-invalid');
+        }
     });
     <?php endforeach ?>
     <?php endif; ?>
@@ -318,8 +384,8 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
     $(document).ready(function() {
         $('[title]').tooltip();
         
-        // Auto uppercase function for inputs with class 'text-uppercase-auto'
-        $(document).on('input', '.text-uppercase-auto', function() {
+        // Auto uppercase function for inputs with class 'doctype-text-uppercase-auto'
+        $(document).on('input', '.doctype-text-uppercase-auto', function() {
             const cursorPosition = this.selectionStart;
             const oldLength = this.value.length;
             this.value = this.value.toUpperCase();
@@ -330,7 +396,7 @@ $canDelete = isset($privileges['document-type']['can_delete']) && $privileges['d
         });
         
         // Also handle paste events
-        $(document).on('paste', '.text-uppercase-auto', function(e) {
+        $(document).on('paste', '.doctype-text-uppercase-auto', function(e) {
             const element = this;
             setTimeout(function() {
                 element.value = element.value.toUpperCase();

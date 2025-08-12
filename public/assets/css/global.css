@@ -1567,3 +1567,53 @@ input[type="date"]:valid {
 .clause-dropdown-item.hidden {
     display: none;
 }
+
+/* doc type */
+    .doctype-text-uppercase-auto {
+        text-transform: uppercase;
+    }
+    
+    .doctype-text-uppercase-auto::placeholder {
+        text-transform: none;
+    }
+    
+    .doctype-invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .was-validated .form-control:invalid ~ .doctype-invalid-feedback,
+    .form-control.is-invalid ~ .doctype-invalid-feedback {
+        display: block;
+    }
+
+    /* doc code */
+    .doccode-text-uppercase-auto {
+        text-transform: uppercase;
+    }
+    
+    .doccode-text-uppercase-auto::placeholder {
+        text-transform: none;
+    }
+    
+    .doccode-text-uppercase-auto option {
+        text-transform: uppercase;
+    }
+    
+    .doccode-invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .was-validated .form-control:invalid ~ .doccode-invalid-feedback,
+    .form-control.is-invalid ~ .doccode-invalid-feedback,
+    .was-validated .form-select:invalid ~ .doccode-invalid-feedback,
+    .form-select.is-invalid ~ .doccode-invalid-feedback {
+        display: block;
+    }

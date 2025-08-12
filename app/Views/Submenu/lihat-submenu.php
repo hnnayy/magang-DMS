@@ -15,11 +15,6 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <div class="px-4 py-3 w-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4>Submenu List</h4>
-        <?php if ($canCreate): ?>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-                <i class="bi bi-plus-lg"></i> Add Submenu
-            </button>
-        <?php endif; ?>
     </div>
     <hr>
 
@@ -89,61 +84,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     </div>
 </div>
 
-<!-- Modal Add Submenu -->
-<?php if ($canCreate): ?>
-<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow border-0">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Submenu</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" id="addSubmenuForm" action="<?= site_url('create-submenu/store') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Menu <span class="text-danger">*</span></label>
-                        <select name="parent" id="addParentName" class="form-select" required>
-                            <option value="">-- Choose Menu --</option>
-                            <?php foreach ($menus as $menu) : ?>
-                                <option value="<?= $menu['id'] ?>"><?= esc($menu['name']) ?></option>
-                            <?php endforeach ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Submenu <span class="text-danger">*</span></label>
-                        <input type="text" name="submenu" id="addSubmenuName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label d-block">Status <span class="text-danger">*</span></label>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="addStatusActive" value="1" required checked>
-                            <label class="form-check-label" for="addStatusActive">Active</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="status" id="addStatusInactive" value="2" required>
-                            <label class="form-check-label" for="addStatusInactive">Inactive</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Submenu</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- Modal Edit Submenu -->
+<!-- Modal Edit Submenu - FIXED VERSION -->
 <?php if ($canUpdate): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content shadow border-0">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Submenu</h5>
-                <!-- Close button removed -->
             </div>
             <form method="post" id="editUnitForm" action="<?= site_url('create-submenu/update') ?>">
                 <?= csrf_field() ?>
@@ -182,7 +129,7 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
@@ -327,9 +274,18 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             this.searchInput.value = text;
             if (value) this.searchInput.classList.add('has-selection');
         }
+
+        // Method to reset form
+        reset() {
+            this.hiddenInput.value = '';
+            this.searchInput.value = '';
+            this.searchInput.classList.remove('has-selection');
+            this.hideDropdown();
+        }
     }
 
     let editMenuDropdown;
+    let editModalInstance;
     const menuData = <?= json_encode($menus) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -339,6 +295,28 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             'editParentName-dropdown', 
             menuData
         );
+
+        // Initialize modal instance
+        const editModalElement = document.getElementById('editModal');
+        if (editModalElement) {
+            editModalInstance = new bootstrap.Modal(editModalElement);
+        }
+
+        // Handle cancel button click
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                closeEditModal();
+            });
+        }
+
+        // Handle modal close events
+        const editModal = document.getElementById('editModal');
+        if (editModal) {
+            editModal.addEventListener('hidden.bs.modal', function () {
+                resetEditForm();
+            });
+        }
 
         <?php if (session('swal')): ?>
             const swalData = <?= json_encode(session('swal')) ?>;
@@ -352,6 +330,42 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
             });
         <?php endif; ?>
     });
+
+    // Function to close edit modal properly
+    function closeEditModal() {
+        if (editModalInstance) {
+            editModalInstance.hide();
+        }
+        
+        // Fallback - force remove backdrop if still exists
+        setTimeout(() => {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }, 300);
+    }
+
+    // Function to reset edit form
+    function resetEditForm() {
+        const form = document.getElementById('editUnitForm');
+        if (form) {
+            form.reset();
+        }
+        
+        if (editMenuDropdown) {
+            editMenuDropdown.reset();
+        }
+        
+        // Clear all input values
+        document.getElementById('editUnitId').value = '';
+        document.getElementById('editUnitName').value = '';
+        document.getElementById('editParentName').value = '';
+        document.getElementById('editParentName-search').value = '';
+    }
 
     <?php if ($canDelete): ?>
     function confirmDelete(id) {
@@ -428,17 +442,28 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         const form = document.getElementById('editUnitForm');
         if (!form) return;
         
+        // Reset form first
+        resetEditForm();
+        
+        // Set form values
         document.getElementById('editUnitId').value = id;
         document.getElementById('editUnitName').value = submenuName;
 
         const selectedMenu = menuData.find(menu => menu.id == parentId);
-        if (selectedMenu && editMenuDropdown) editMenuDropdown.setValue(parentId, selectedMenu.name);
+        if (selectedMenu && editMenuDropdown) {
+            editMenuDropdown.setValue(parentId, selectedMenu.name);
+        }
 
-        if (status == 1) document.getElementById('editStatusActive').checked = true;
-        else document.getElementById('editStatusInactive').checked = true;
+        if (status == 1) {
+            document.getElementById('editStatusActive').checked = true;
+        } else {
+            document.getElementById('editStatusInactive').checked = true;
+        }
 
-        const modal = new bootstrap.Modal(document.getElementById('editModal'));
-        modal.show();
+        // Show modal
+        if (editModalInstance) {
+            editModalInstance.show();
+        }
     }
     <?php endif; ?>
 
@@ -502,4 +527,3 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     <?php endif; ?>
 </script>
 <?php $this->endSection() ?>
-

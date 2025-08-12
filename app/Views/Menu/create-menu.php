@@ -30,7 +30,8 @@
                 <label class="form-label d-block">Status</label>
                 <div style="display: flex; gap: 30px;">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="status" id="statusActive" value="1" required>
+                        <input class="form-check-input" type="radio" name="status" id="statusActive" value="1"
+                            <?= set_radio('status', '1', true) ?> required>
                         <label class="form-check-label" for="statusActive">Active</label>
                     </div>
                     <div class="form-check">
@@ -139,24 +140,4 @@
     }, false);
 })();
 </script>
-<style>
-.custom-swal {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    width: 500px;
-}
-.swal-ok-btn {
-    background-color: #6b48ff;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.swal-ok-btn:hover {
-    background-color: #5a3ce6;
-}
-</style>
 <?= $this->endSection() ?>

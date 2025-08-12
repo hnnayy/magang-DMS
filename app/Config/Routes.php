@@ -7,14 +7,13 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 
-// Alur dummy untuk login
-$routes->get('/', 'Dummy\LoginController::index'); // Root menampilkan halaman login
-$routes->get('/wc-dummy', 'Dummy\LoginController::index'); // Alternatif untuk halaman login
-$routes->post('/login', 'Dummy\GenerateTokenController::login'); // Proses login
-$routes->post('/wc-dummy/login', 'Dummy\GenerateTokenController::login'); // Kompatibilitas dengan rute sebelumnya
-$routes->get('/parse-token', 'Dummy\GenerateTokenController::parseToken'); // Parsing token JWT
-$routes->get('/logout', 'Dummy\GenerateTokenController::logout'); // Logout
-
+// // Alur dummy untuk login
+$routes->get('/', 'Dummy\LoginController::index');
+$routes->get('/wc-dummy', 'Dummy\LoginController::index');
+$routes->post('/login', 'Dummy\GenerateTokenController::login');
+$routes->post('/wc-dummy/login', 'Dummy\GenerateTokenController::login');
+$routes->get('/parse-token', 'Dummy\GenerateTokenController::parseToken');
+$routes->get('/logout', 'Dummy\GenerateTokenController::logout');
 
 // $routes->get('/', 'Home::index');
 $routes->get('/dashboard', 'Home::dashboard');
