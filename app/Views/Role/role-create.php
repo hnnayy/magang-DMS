@@ -37,7 +37,8 @@
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="status" id="active" value="active" required>
+                    <input class="form-check-input" type="radio" name="status" id="active" value="active"
+                        <?= set_radio('status', '1', true) ?> required>
                     <label class="form-check-label" for="active">Active</label>
                 </div>
                 <div class="form-check form-check-inline">

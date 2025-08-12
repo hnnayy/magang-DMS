@@ -30,7 +30,8 @@
                 <label class="form-label d-block">Status</label>
                 <div style="display: flex; gap: 30px;">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="status" id="statusActive" value="1" required>
+                        <input class="form-check-input" type="radio" name="status" id="statusActive" value="1"
+                            <?= set_radio('status', '1', true) ?> required>
                         <label class="form-check-label" for="statusActive">Active</label>
                     </div>
                     <div class="form-check">
