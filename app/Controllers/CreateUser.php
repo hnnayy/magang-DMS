@@ -32,13 +32,12 @@ class CreateUser extends Controller
 
     public function create()
     {
-        $unitParents = $this->unitParentModel->findAll();
+        // Filter hanya unit parent dan role yang aktif
+        $unitParents = $this->unitParentModel->where('status', 1)->findAll();
         $units = $this->unitModel->findAll();
-
-        // ✅ PERBAIKAN: Hanya ambil role yang status = 1 (Active)
         $roles = $this->roleModel
                     ->select('id, name') 
-                    ->where('status', 1)  // Filter hanya role aktif (1 = Active)
+                    ->where('status', 1)
                     ->findAll();
                     
         $data = [
@@ -59,16 +58,15 @@ class CreateUser extends Controller
         $roleName = $this->request->getPost('role');       
         $status   = (int) $this->request->getPost('status');
 
-        // Validasi basic - tidak menggunakan popup, biarkan client-side validation menangani
+        // Validasi basic fields
         if (
             empty($parentId) || empty($unitId) || empty($username) ||
             empty($fullname) || empty($roleName)
         ) {
-            // Kembali tanpa popup, biarkan invalid feedback bekerja
             return redirect()->back()->withInput();
         }
 
-        // Validasi karakter khusus - gunakan popup karena ini validasi khusus
+        // Validasi karakter khusus
         if (preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $username) ||
             preg_match('/[;:.,"\'<>!?@#$%^&*()+=]/', $fullname)) {
             return redirect()->back()->withInput()
@@ -76,14 +74,14 @@ class CreateUser extends Controller
                             ->with('showPopupError', true);
         }
 
-        // Validasi username sudah ada - gunakan popup karena ini validasi database
+        // Validasi username sudah ada
         if ($this->userModel->where('username', $username)->first()) {
             return redirect()->back()->withInput()
                             ->with('error', 'Username already in use.')
                             ->with('showPopupError', true);
         }
 
-        // Validasi fakultas tidak ditemukan - gunakan popup karena ini kesalahan data
+        // Validasi fakultas tidak ditemukan
         $parent = $this->unitParentModel->find($parentId);
         if (! $parent) {
             return redirect()->back()->withInput()
@@ -91,7 +89,7 @@ class CreateUser extends Controller
                             ->with('showPopupError', true);
         }
 
-        // Validasi unit tidak sesuai fakultas - gunakan popup karena ini kesalahan relasi data
+        // Validasi unit tidak sesuai fakultas
         $unit = $this->unitModel
                     ->where('id', $unitId)
                     ->where('parent_id', $parentId)
@@ -102,10 +100,10 @@ class CreateUser extends Controller
                             ->with('showPopupError', true);
         }
 
-        // ✅ PERBAIKAN: Validasi role tidak ditemukan dan harus aktif
+        // Validasi role harus aktif
         $role = $this->roleModel
                     ->where('name', $roleName)
-                    ->where('status', 1)  // Pastikan role masih aktif (1 = Active)
+                    ->where('status', 1)
                     ->first();
         if (! $role) {
             return redirect()->back()->withInput()
@@ -113,7 +111,7 @@ class CreateUser extends Controller
                             ->with('showPopupError', true);
         }
 
-        // Insert data jika semua validasi berhasil
+        // Insert data user
         $this->userModel->insert([
             'unit_id'   => $unitId,
             'username'  => $username,
@@ -124,6 +122,7 @@ class CreateUser extends Controller
 
         $userId = $this->userModel->getInsertID();
 
+        // Insert user role
         $this->userRoleModel->insert([
             'user_id'   => $userId,
             'role_id'   => $role['id'],
@@ -152,18 +151,15 @@ class CreateUser extends Controller
             ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
             ->join('user_role', 'user_role.user_id = user.id', 'left')
             ->join('role', 'role.id = user_role.role_id', 'left')
-            ->where('user.status', 1) // Hanya tampilkan user yang aktif (status = 1)
+            ->where('user.status', 1)
             ->findAll();
 
         log_message('debug', 'Users retrieved: ' . json_encode($users));
 
-        $unitParents = $this->unitParentModel->findAll();
+        // Filter hanya data yang aktif untuk dropdown
+        $unitParents = $this->unitParentModel->where('status', 1)->findAll();
         $units = $this->unitModel->findAll();
-        
-        // ✅ PERBAIKAN: Untuk list juga filter role aktif saja
-        $roles = $this->roleModel
-                    ->where('status', 1)  // Filter hanya role aktif (1 = Active)
-                    ->findAll();
+        $roles = $this->roleModel->where('status', 1)->findAll();
         
         return view('CreateUser/daftar-users', [
             'users' => $users,
@@ -180,18 +176,15 @@ class CreateUser extends Controller
 
     public function delete()
     {
-        // Set response type to JSON
         $this->response->setContentType('application/json');
         
         $id = $this->request->getPost('id');
 
-        // Validasi ID
         if (! $id) {
             return $this->response->setStatusCode(400)
                                   ->setJSON(['error' => 'User ID is required']);
         }
 
-        // Cek apakah user exists
         $user = $this->userModel->find($id);
         if (! $user) {
             return $this->response->setStatusCode(404)
@@ -199,7 +192,6 @@ class CreateUser extends Controller
         }
 
         try {
-            // Soft delete user (set status = 0)
             $result = $this->userModel->softDeleteById($id);
             
             if ($result) {
@@ -243,10 +235,10 @@ class CreateUser extends Controller
             return $this->response->setJSON(['error' => 'Unit does not match the faculty.']);
         }
 
-        // ✅ PERBAIKAN: Validasi role harus aktif saat update
+        // Validasi role harus aktif saat update
         $role = $this->roleModel
                     ->where('name', $roleName)
-                    ->where('status', 1)  // Pastikan role masih aktif (1 = Active)
+                    ->where('status', 1)
                     ->first();
         if (! $role) {
             return $this->response->setJSON(['error' => 'Role not valid or inactive']);
@@ -262,6 +254,7 @@ class CreateUser extends Controller
                                 ->setJSON(['error' => 'Username is already used by another user.']);
         }
 
+        // Update user data
         $this->userModel->update($id, [
             'username' => $username,
             'fullname' => $fullname,
@@ -269,6 +262,7 @@ class CreateUser extends Controller
             'status'   => $status, 
         ]);
 
+        // Update user role
         $exists = $this->userRoleModel->where('user_id', $id)->first();
         if ($exists) {
             $this->userRoleModel->where('user_id', $id)
