@@ -109,14 +109,13 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Document Code</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="<?= base_url('document-code/add') ?>">
+            <form method="post" action="<?= base_url('document-code/add') ?>" id="addDocumentCodeForm" novalidate>
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="addDocumentType" class="form-label">Document Type</label>
-                        <select class="form-select text-uppercase-auto" id="addDocumentType" name="jenis" required>
+                        <select class="form-select doccode-text-uppercase-auto" id="addDocumentType" name="jenis" required>
                             <option value="">Select Document Type</option>
                             <?php foreach ($kategori_dokumen as $kategori): ?>
                                 <?php if (isset($kategori['use_predefined_codes']) && $kategori['use_predefined_codes'] == 1): ?>
@@ -124,14 +123,23 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </select>
+                        <div class="doccode-invalid-feedback">
+                            Document Type is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="addCode" class="form-label">Code</label>
-                        <input type="text" class="form-control text-uppercase-auto" id="addCode" name="kode" required>
+                        <input type="text" class="form-control doccode-text-uppercase-auto" id="addCode" name="kode" required>
+                        <div class="doccode-invalid-feedback">
+                            Code is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="addDocumentName" class="form-label">Document Name</label>
-                        <input type="text" class="form-control text-uppercase-auto" id="addDocumentName" name="nama" required>
+                        <input type="text" class="form-control doccode-text-uppercase-auto" id="addDocumentName" name="nama" required>
+                        <div class="doccode-invalid-feedback">
+                            Document Name is required.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
@@ -151,24 +159,29 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Document Code</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="<?= base_url('document-code/edit') ?>">
+            <form method="post" action="<?= base_url('document-code/edit') ?>" id="editDocumentCodeForm" novalidate>
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <input type="hidden" id="editId" name="id">
                     <input type="hidden" id="editDocumentTypeId" name="document_type_id">
                     <div class="mb-3">
                         <label for="editDocumentType" class="form-label">Document Type</label>
-                        <input type="text" class="form-control text-uppercase-auto" id="editDocumentType" readonly>
+                        <input type="text" class="form-control doccode-text-uppercase-auto" id="editDocumentType" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="editCode" class="form-label">Code</label>
-                        <input type="text" class="form-control text-uppercase-auto" id="editCode" name="kode" required>
+                        <input type="text" class="form-control doccode-text-uppercase-auto" id="editCode" name="kode" required>
+                        <div class="doccode-invalid-feedback">
+                            Code is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="editDocumentName" class="form-label">Document Name</label>
-                        <input type="text" class="form-control text-uppercase-auto" id="editDocumentName" name="nama" required>
+                        <input type="text" class="form-control doccode-text-uppercase-auto" id="editDocumentName" name="nama" required>
+                        <div class="doccode-invalid-feedback">
+                            Document Name is required.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
@@ -185,27 +198,29 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-<!-- Custom CSS for uppercase input -->
-<style>
-    .text-uppercase-auto {
-        text-transform: uppercase;
-    }
-    
-    .text-uppercase-auto::placeholder {
-        text-transform: none;
-    }
-    
-    .text-uppercase-auto option {
-        text-transform: uppercase;
-    }
-</style>
-
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // Custom form validation function
+    function validateDocumentCodeForm(form) {
+        let isValid = true;
+        const requiredFields = form.querySelectorAll('input[required], select[required]');
+        
+        requiredFields.forEach(function(field) {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        return isValid;
+    }
+
     <?php if ($canUpdate): ?>
     function editDocument(id, type, code, name, typeId) {
         $('#editId').val(id);
@@ -213,6 +228,14 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         $('#editDocumentTypeId').val(typeId);
         $('#editCode').val(code.toUpperCase());
         $('#editDocumentName').val(name.toUpperCase());
+        
+        // Remove any existing validation classes
+        const editModal = document.getElementById('editModal');
+        const inputs = editModal.querySelectorAll('.form-control, .form-select');
+        inputs.forEach(function(input) {
+            input.classList.remove('is-invalid');
+        });
+        
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
     <?php endif; ?>
@@ -251,8 +274,8 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
     $(document).ready(function() {
         $('[title]').tooltip();
         
-        // Auto uppercase function for inputs with class 'text-uppercase-auto'
-        $(document).on('input', '.text-uppercase-auto', function() {
+        // Auto uppercase function for inputs with class 'doccode-text-uppercase-auto'
+        $(document).on('input', '.doccode-text-uppercase-auto', function() {
             const cursorPosition = this.selectionStart;
             const oldLength = this.value.length;
             this.value = this.value.toUpperCase();
@@ -263,12 +286,88 @@ $canDelete = isset($privileges[$currentSubmenu]['can_delete']) ? $privileges[$cu
         });
         
         // Also handle paste events
-        $(document).on('paste', '.text-uppercase-auto', function(e) {
+        $(document).on('paste', '.doccode-text-uppercase-auto', function(e) {
             const element = this;
             setTimeout(function() {
                 element.value = element.value.toUpperCase();
             }, 1);
         });
+
+        <?php if ($canCreate): ?>
+        // Add Document Code Form Validation
+        document.getElementById('addDocumentCodeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (validateDocumentCodeForm(this)) {
+                this.submit();
+            }
+        });
+
+        // Reset add modal when closed
+        document.getElementById('addModal').addEventListener('hidden.bs.modal', function () {
+            const form = this.querySelector('form');
+            form.reset();
+            
+            // Remove validation classes
+            const inputs = form.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(function(input) {
+                input.classList.remove('is-invalid');
+            });
+        });
+
+        // Autofocus on add modal open
+        document.getElementById('addModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('addDocumentType').focus();
+        });
+
+        // Real-time validation for add form
+        document.getElementById('addDocumentType').addEventListener('change', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        document.getElementById('addCode').addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        document.getElementById('addDocumentName').addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+        <?php endif; ?>
+
+        <?php if ($canUpdate): ?>
+        // Edit Document Code Form Validation
+        document.getElementById('editDocumentCodeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (validateDocumentCodeForm(this)) {
+                this.submit();
+            }
+        });
+
+        // Autofocus on edit modal open
+        document.getElementById('editModal').addEventListener('shown.bs.modal', function () {
+            document.getElementById('editCode').focus();
+        });
+
+        // Real-time validation for edit form
+        document.getElementById('editCode').addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        document.getElementById('editDocumentName').addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+        <?php endif; ?>
 
         // Display flash messages
         <?php if (session()->has('added_message')): ?>
