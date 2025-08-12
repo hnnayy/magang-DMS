@@ -23,10 +23,10 @@ class GenerateTokenController extends BaseController
             return redirect()->back()->with('error', 'Username not found in WC system.');
         }
 
-        // Validate if username exists in user (DMS)
-        $user = $this->userModel->where('username', $username)->first();
+        // Validate if username exists in user (DMS) and is active (status = 1)
+        $user = $this->userModel->where('username', $username)->where('status', 1)->first();
         if (!$user) {
-            return redirect()->back()->with('error', 'Username not found in DMS system.');
+            return redirect()->back()->with('error', 'Username not found in DMS system or account is inactive.');
         }
 
         // Prepare token
@@ -52,14 +52,14 @@ class GenerateTokenController extends BaseController
         session()->destroy();
         return redirect()->to('/wc-dummy')->with('success', 'You have been logged out successfully.');
     }
-    
+
     public function parseToken()
     {
         $token = $this->request->getGet('token');
 
         if (!$token) {
             log_message('warning', 'Token not provided in URL.');
-            return redirect()->back()->with('error', 'Token tidak ditemukan. Silakan login kembali.');
+            return view('dummy_wc/dashboard_token', ['error' => 'Token not found. Please login again.']);
         }
 
         log_message('info', '===[ TOKEN RECEIVED ]===');
@@ -68,7 +68,7 @@ class GenerateTokenController extends BaseController
         $secret = getenv('jwt.secret');
         if (!$secret) {
             log_message('critical', 'JWT secret key not found in .env');
-            return redirect()->back()->with('error', 'Terjadi kesalahan konfigurasi sistem. Silakan hubungi administrator.');
+            return view('dummy_wc/dashboard_token', ['error' => 'System configuration error occurred. Please contact administrator.']);
         }
 
         try {
@@ -82,11 +82,12 @@ class GenerateTokenController extends BaseController
                 ->join('unit', 'unit.id = user.unit_id', 'left')
                 ->join('unit_parent', 'unit_parent.id = unit.parent_id', 'left')
                 ->where('user.username', $decoded->sub)
+                ->where('user.status', 1) // Ensure user is active
                 ->first();
 
             if (!$user) {
-                log_message('error', 'User not found for username: ' . $decoded->sub);
-                return redirect()->back()->with('error', 'Pengguna tidak ditemukan. Silakan periksa username Anda.');
+                log_message('error', 'User not found or inactive for username: ' . $decoded->sub);
+                return view('dummy_wc/dashboard_token', ['error' => 'User not found or inactive. Please check your username.']);
             }
 
             log_message('info', "===[ USER FOUND ]===\n" . print_r($user, true));
@@ -101,7 +102,7 @@ class GenerateTokenController extends BaseController
 
             if (!$userRole) {
                 log_message('error', 'User does not have an active role. ID: ' . $user['id']);
-                return redirect()->back()->with('error', 'Pengguna tidak memiliki peran aktif. Silakan hubungi administrator.');
+                return view('dummy_wc/dashboard_token', ['error' => 'User does not have an active role. Please contact administrator.']);
             }
 
             log_message('info', "===[ ACTIVE ROLE FOUND ]===\n" . print_r($userRole, true));
@@ -183,24 +184,24 @@ class GenerateTokenController extends BaseController
 
             log_message('info', "===[ SESSION STORED FOR USER ]=== {$user['username']} | Access Level: {$userRole['access_level']}");
 
-            log_message('info', 'Redirecting to /dashboard ...');
-            return redirect()->to('/dashboard')->with('success', 'Login berhasil! Selamat datang, ' . $user['fullname']);
+            // If token is valid, redirect directly to dashboard
+            return redirect()->to('/dashboard');
 
         } catch (\Firebase\JWT\ExpiredException $e) {
             log_message('error', 'Token expired: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Sesi login telah berakhir. Silakan login kembali.');
+            return view('dummy_wc/dashboard_token', ['error' => 'Login session has expired. Please login again.']);
 
         } catch (\Firebase\JWT\SignatureInvalidException $e) {
             log_message('error', 'Invalid token signature: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Token tidak valid. Silakan login kembali.');
+            return view('dummy_wc/dashboard_token', ['error' => 'Invalid token. Please login again.']);
 
         } catch (\Firebase\JWT\BeforeValidException $e) {
             log_message('error', 'Token not yet valid: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Token belum dapat digunakan. Silakan coba lagi.');
+            return view('dummy_wc/dashboard_token', ['error' => 'Token is not yet valid. Please try again.']);
 
         } catch (\Exception $e) {
             log_message('error', 'Token parsing error: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat memproses login. Silakan coba lagi atau hubungi administrator.');
+            return view('dummy_wc/dashboard_token', ['error' => 'An error occurred while processing login. Please try again or contact administrator.']);
         }
     }
 }
