@@ -6,12 +6,10 @@
     $currentUserUnitId = session()->get('unit_id');
     $currentUserUnitParentId = session()->get('unit_parent_id');
     $currentUserRoleId = session()->get('role_id');
-
     // Get user's role information to determine access level
     $roleModel = new \App\Models\RoleModel();
     $currentUserRole = $roleModel->find($currentUserRoleId);
     $currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2 (lower access)
-
     // Ambil privilege untuk daftar-dokumen dari session
     $documentPrivilege = session()->get('privileges')['document-list'] ?? [
         'can_create' => 0,
@@ -19,11 +17,9 @@
         'can_delete' => 0,
         'can_approve' => 0
     ];
-
     // Cek apakah user memiliki privilege untuk aksi apapun
     $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_delete'];
 ?>
-
 <style>
     
     /* Ensure dropdown toggle is clickable */
@@ -41,17 +37,14 @@
         font-size: 14px;
         pointer-events: auto !important;
     }
-
     .filter-toggle:hover {
         background-color: #f8f9fa !important;
     }
-
     .filter-toggle:after {
         content: "▼" !important;
         font-size: 0.8em;
         color: #6c757d;
     }
-
     .clear-selection {
         padding: 8px 12px;
         background: #dc3545;
@@ -62,17 +55,14 @@
         display: flex;
         align-items: center;
     }
-
     .clear-selection:hover {
         background: #c82333;
     }
-
     .dropdown-search {
         padding: 8px 12px;
         border-bottom: 1px solid #eee;
         background: #f8f9fa;
     }
-
     .dropdown-search input {
         width: 100%;
         padding: 4px 8px;
@@ -80,12 +70,10 @@
         border-radius: 3px;
         font-size: 12px;
     }
-
     .option-group {
         max-height: 200px;
         overflow-y: auto;
     }
-
     .option-item {
         display: flex;
         align-items: center;
@@ -93,24 +81,20 @@
         font-size: 13px;
         border-bottom: 1px solid #f1f1f1;
     }
-
     .option-item:last-child {
         border-bottom: none;
     }
-
     .option-item input[type="radio"],
     .option-item input[type="checkbox"] {
         margin-right: 8px;
         margin-top: 0;
     }
-
     .option-item label {
         margin: 0;
         cursor: pointer;
         flex: 1;
         line-height: 1.2;
     }
-
     .no-results {
         padding: 12px;
         text-align: center;
@@ -118,7 +102,6 @@
         font-style: italic;
         font-size: 12px;
     }
-
     .disabled-message {
         padding: 12px;
         text-align: center;
@@ -127,13 +110,11 @@
         font-size: 12px;
         background: #f8f9fa;
     }
-
     /* Other styles remain unchanged */
     .filter-dropdown {
         position: relative;
         display: inline-block;
     }
-
     .filter-dropdown-content {
         display: none;
         position: absolute;
@@ -148,11 +129,9 @@
         max-height: 300px;
         overflow-y: auto;
     }
-
     .filter-dropdown.show .filter-dropdown-content {
         display: block;
     }
-
     /* Text truncation */
     .text-truncate-custom {
         max-width: 200px;
@@ -161,7 +140,6 @@
         text-overflow: ellipsis;
         display: inline-block;
     }
-
     /* Table specific styles */
     .aksi-column,
     td.aksi-column {
@@ -169,25 +147,21 @@
         text-align: center;
         white-space: nowrap;
     }
-
     .kode-dokumen-simple {
         font-size: 0.9rem;
         color: #333;
         line-height: 1.4;
     }
-
     /* DataTables custom styling */
     .pagination-container {
         display: flex;
         justify-content: flex-end;
         padding-right: 20px;
     }
-
     .pagination-container .dataTables_paginate {
         display: flex;
         gap: 5px;
     }
-
     .pagination-container .dataTables_paginate .paginate_button {
         padding: 8px 12px;
         margin: 0 2px;
@@ -203,24 +177,20 @@
         min-width: 40px;
         text-align: center;
     }
-
     .pagination-container .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
         background-color: #000000;
         color: #ffffff;
     }
-
     .pagination-container .dataTables_paginate .paginate_button.current {
         background-color: #dc3545 !important;
         color: white !important;
     }
-
     .pagination-container .dataTables_paginate .paginate_button.disabled {
         opacity: 0.5;
         cursor: not-allowed;
         background-color: #f8f9fa !important;
         color: #6c757d !important;
     }
-
     /* Hide action column if no privileges */
     <?php if (!$hasAnyPrivilege): ?>
     .aksi-column {
@@ -228,21 +198,17 @@
     }
     <?php endif; ?>
 </style>
-
 <!-- CSS External Links -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
 <div class="container-fluid px-4 py-4">
     <h4 class="mb-4">Daftar Dokumen</h4>
-
     <!-- FILTER SECTION -->
     <div class="bg-light p-3 rounded mb-4">
         <div class="d-flex flex-wrap align-items-center gap-2">
             <strong class="form-label mb-0 me-2">Filter Data</strong>
-
             <!-- Filter Standar dengan Radio Button -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterStandar', event)">
@@ -270,7 +236,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Filter Klausul dengan Checkbox (Dynamic based on Standard) -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterKlausul', event)" id="clauseToggle">
@@ -288,7 +253,6 @@
                     </div>
                 </div>
             </div>
-
             <!-- Filter Pemilik Dokumen -->
             <div class="flex-grow-1" style="min-width:180px;">
                 <select class="form-select" id="filterPemilik">
@@ -301,10 +265,8 @@
                         $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
                         $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
                         $documentCreatorName = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
-
                         $canViewDocument = false;
                         $showCreatorName = false;
-
                         if ($documentCreatorId == $currentUserId) {
                             $canViewDocument = true;
                             $showCreatorName = true;
@@ -313,7 +275,6 @@
                             $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
                             $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
                             $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-
                             if ($inSameHierarchy) {
                                 $canViewDocument = true;
                                 $showCreatorName = true;
@@ -321,19 +282,16 @@
                         } elseif ($currentUserAccessLevel == 2) {
                             $canViewDocument = false;
                         }
-
                         if ($canViewDocument && $showCreatorName && !empty($documentCreatorName) && $documentCreatorName != 'Unknown User') {
                             $unique_owners[$documentCreatorName] = $documentCreatorName;
                         }
                     }
-
                     foreach ($unique_owners as $owner): 
                     ?>
                         <option value="<?= esc($owner) ?>"><?= esc($owner) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <!-- Filter Jenis Dokumen -->
             <div class="flex-grow-1" style="min-width:180px;">
                 <select class="form-select" id="filterJenis">
@@ -343,7 +301,6 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-
             <!-- Tombol Filter dan Export -->
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary btn-sm" id="btnFilter">Filter</button>
@@ -351,7 +308,6 @@
             </div>
         </div>
     </div>
-
     <!-- DATA TABLE CARD -->
     <div class="card shadow-sm">
         <div class="card-body">
@@ -397,12 +353,10 @@
                                 $documentCreatorUnitParentId = $row['creator_unit_parent_id'] ?? 0;
                                 $documentCreatorAccessLevel = $row['creator_access_level'] ?? 2;
                                 $documentCreatorName = $row['creator_fullname'] ?? $row['createdby'] ?? 'Unknown User';
-
                                 $canViewDocument = false;
                                 $showCreatorName = false;
                                 $canEditDocument = false;
                                 $canDeleteDocument = false;
-
                                 if ($documentCreatorId == $currentUserId) {
                                     $canViewDocument = true;
                                     $showCreatorName = true;
@@ -413,7 +367,6 @@
                                     $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
                                     $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
                                     $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-
                                     if ($inSameHierarchy) {
                                         $canViewDocument = true;
                                         $showCreatorName = true;
@@ -423,10 +376,8 @@
                                 } elseif ($currentUserAccessLevel == 2) {
                                     $canViewDocument = false;
                                 }
-
                                 if (!$canViewDocument) continue;
                                 if ($documentCreatorId == 0) continue;
-
                                 $displayedCount++;
                             ?>
                                 <tr data-standar="<?= implode(',', array_filter(explode(',', $row['standar_ids'] ?? ''))) ?>" 
@@ -449,7 +400,6 @@
                                         <div class="kode-dokumen-simple">
                                             <?php 
                                             $kodeDokumenText = '';
-
                                             if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
                                                 $kodeDokumenText = $row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama'];
                                             } elseif (!empty($row['kode_jenis_dokumen'])) {
@@ -460,7 +410,6 @@
                                             } elseif (!empty($row['title'])) {
                                                 $kodeDokumenText = $row['title'];
                                             }
-
                                             if (!empty($kodeDokumenText)):
                                             ?>
                                                 <span class="text-truncate-custom" title="<?= esc($kodeDokumenText) ?>">
@@ -539,7 +488,6 @@
         </div>
     </div>
 </div>
-
 <!-- MODAL EDIT DOKUMEN -->
 <?php 
 foreach ($document as $row): 
@@ -593,7 +541,7 @@ foreach ($document as $row):
                         <div class="col-md-6">
                             <label class="form-label">Standar</label>
                             <div class="filter-dropdown w-100 no-choices">
-                                <div class="filter-toggle" onclick="toggleDropdown('editFilterStandar_<?= $documentId ?>', event)">
+                                <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterStandar_<?= $documentId ?>', event)">
                                     <span id="editFilterStandarText_<?= $documentId ?>">
                                         <?php
                                         // Display the selected standard name
@@ -633,11 +581,10 @@ foreach ($document as $row):
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Klausul</label>
                             <div class="filter-dropdown w-100 no-choices">
-                                <div class="filter-toggle" onclick="toggleDropdown('editFilterKlausul_<?= $documentId ?>', event)" id="editClauseToggle_<?= $documentId ?>">
+                                <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterKlausul_<?= $documentId ?>', event)" id="editClauseToggle_<?= $documentId ?>">
                                     <span id="editFilterKlausulText_<?= $documentId ?>">
                                         <?php
                                         // Display the selected clause names
@@ -695,7 +642,6 @@ foreach ($document as $row):
                                 </div>
                             </div>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Jenis Dokumen</label>
                             <select name="type" class="form-select" disabled>
@@ -706,7 +652,6 @@ foreach ($document as $row):
                                 <?php endforeach; ?>
                             </select>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Kode Jenis</label>
                             <input type="text" class="form-control" name="type_code" 
@@ -733,7 +678,6 @@ foreach ($document as $row):
                                 ?>
                             </div>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Nomor</label>
                             <input type="text" class="form-control" name="number" value="<?= esc($row['number']) ?>" readonly>
@@ -743,7 +687,6 @@ foreach ($document as $row):
                             <label class="form-label">Nama Dokumen</label>
                             <input type="text" class="form-control" name="title" value="<?= esc($row['title']) ?>" readonly>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Pemilik Dokumen</label>
                             <input type="text" class="form-control" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
@@ -754,7 +697,6 @@ foreach ($document as $row):
                             <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
                             <input type="text" class="form-control" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Tanggal Persetujuan</label>
                             <input type="datetime-local" class="form-control" name="approvedate" 
@@ -765,7 +707,6 @@ foreach ($document as $row):
                             <label class="form-label">Revisi</label>
                             <input type="text" class="form-control" name="revision" value="<?= esc($row['revision']) ?>" readonly>
                         </div>
-
                         <div class="col-md-6">
                             <label class="form-label">Tanggal Efektif</label>
                             <input type="date" class="form-control" name="date_published" value="<?= esc($row['date_published']) ?>">
@@ -803,7 +744,6 @@ foreach ($document as $row):
     </div>
 </div>
 <?php endforeach; ?>
-
 <!-- JS External Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -814,37 +754,32 @@ foreach ($document as $row):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
-
 <!-- Custom JavaScript -->
 <script>
     // Assume clausesData is available from PHP
     const clausesData = <?= json_encode($clausesData ?? []) ?>;
-
     $(document).ready(function() {
         // Privilege check dari PHP
         const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
         const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
         const currentUserId = <?= json_encode($currentUserId) ?>;
         const currentUserAccessLevel = <?= json_encode($currentUserAccessLevel) ?>;
-
         // Debug: Log clausesData to verify structure
         console.log('Clauses Data:', clausesData);
-
         // Initialize DataTables
         const tableConfig = {
             dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
             language: {
-                lengthMenu: "Tampilkan _MENU_ entri",
                 paginate: {
                     previous: "Sebelumnya",
                     next: "Berikutnya"
                 },
                 zeroRecords: "",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                info: "Menampilkan *START* sampai *END* dari *TOTAL* entri",
                 infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
-                infoFiltered: "(difilter dari _MAX_ total entri)"
+                infoFiltered: "(difilter dari *MAX* total entri)"
             },
             columnDefs: [
                 { searchable: true, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14] },
@@ -871,19 +806,16 @@ foreach ($document as $row):
                 $('.datatable-info-container').html(`<small class="text-muted">${infoText}</small>`);
             }
         };
-
         if (hasAnyPrivilege) {
             tableConfig.columnDefs.push({ orderable: false, targets: [-1] });
         }
         
         const table = $('#dokumenTable').DataTable(tableConfig);
-
         // Move export buttons to container
         table.buttons().container().appendTo('.dt-buttons-container');
         const excelButton = $('.dt-buttons-container .buttons-excel').detach();
         excelButton.removeClass('dt-button').addClass('btn btn-success btn-sm');
         $('#excel-button-container').html(excelButton);
-
         // Move length control to container
         $('.dt-length-container').html(`
             <div class="d-flex align-items-center">
@@ -897,7 +829,6 @@ foreach ($document as $row):
                 <label class="ms-2 mb-0">entri</label>
             </div>
         `);
-
         // Custom search
         const searchHtml = `
             <div class="d-flex align-items-center">
@@ -906,18 +837,15 @@ foreach ($document as $row):
             </div>
         `;
         $('.dt-search-container').html(searchHtml);
-
         // Connect custom controls
         $('#customSearch').on('keyup', function() {
             const searchTerm = this.value.trim();
             table.search(searchTerm).draw();
             checkVisibleRows();
         });
-
         $('#customLength').on('change', function() {
             table.page.len(parseInt(this.value)).draw();
         });
-
         // Check visible rows and show/hide no data message
         function checkVisibleRows() {
             const visibleRows = table.rows({ filter: 'applied' }).data().length;
@@ -929,7 +857,6 @@ foreach ($document as $row):
                 $('#dokumenTable').show();
             }
         }
-
         // Handle pagination clicks
         $(document).on('click', '.pagination-container .paginate_button', function(e) {
             e.preventDefault();
@@ -944,12 +871,11 @@ foreach ($document as $row):
                 table.page('next').draw('page');
             }
         });
-
         // FILTER FUNCTIONALITY
         // Toggle dropdown function
         window.toggleDropdown = function(filterId, event) {
             event.stopPropagation();
-            event.preventDefault(); // Additional prevention for global click handlers
+            event.preventDefault();
             console.log('Toggling dropdown:', filterId);
             const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
             if (!dropdown) {
@@ -979,7 +905,46 @@ foreach ($document as $row):
                 console.log('Dropdown closed:', filterId);
             }
         };
-
+        // Fungsi khusus untuk toggle dropdown di modal edit
+        window.toggleEditDropdown = function(filterId, event) {
+            event.stopPropagation();
+            event.preventDefault();
+            
+            console.log('Toggling edit dropdown:', filterId);
+            
+            const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+            if (!dropdown) {
+                console.error('Edit dropdown tidak ditemukan untuk ID:', filterId);
+                return;
+            }
+            
+            const isCurrentlyShown = dropdown.classList.contains('show');
+            
+            // Close all other dropdowns in the same modal
+            const modal = dropdown.closest('.modal');
+            if (modal) {
+                modal.querySelectorAll('.filter-dropdown').forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('show');
+                    }
+                });
+            }
+            
+            // Toggle the clicked dropdown
+            if (!isCurrentlyShown) {
+                dropdown.classList.add('show');
+                console.log('Edit dropdown opened:', filterId);
+                
+                // Focus on search input if available
+                const searchInput = dropdown.querySelector('.dropdown-search input');
+                if (searchInput) {
+                    setTimeout(() => searchInput.focus(), 100);
+                }
+            } else {
+                dropdown.classList.remove('show');
+                console.log('Edit dropdown closed:', filterId);
+            }
+        };
         // Close dropdowns when clicking outside, but exclude modal dropdowns
         document.addEventListener('click', function(event) {
             if (!event.target.closest('.filter-dropdown') && !event.target.closest('.modal')) {
@@ -989,26 +954,19 @@ foreach ($document as $row):
                 console.log('Closed non-modal dropdowns due to outside click');
             }
         });
-
-        // Prevent modal dropdowns from being closed by dashboard.js
+        // Prevent modal dropdowns from being closed by outside clicks within modal
         $(document).on('click', '.modal .filter-dropdown', function(e) {
             e.stopPropagation();
-            e.preventDefault();
-            console.log('Modal dropdown click prevented propagation');
         });
-
         // Update clause filter based on selected standard
         window.updateClauseFilter = function() {
             const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
             const selectedStandardId = selectedStandardRadio ? selectedStandardRadio.value : null;
             const clauseGroup = document.getElementById('clauseCheckboxGroup');
             const clauseToggle = document.getElementById('clauseToggle');
-
             console.log('Updating clause filter for standard:', selectedStandardId);
-
             // Clear existing clause checkboxes
             clauseGroup.innerHTML = '';
-
             if (!selectedStandardId) {
                 clauseGroup.innerHTML = '<div class="disabled-message">Pilih standar terlebih dahulu</div>';
                 clauseToggle.style.opacity = '0.6';
@@ -1016,20 +974,15 @@ foreach ($document as $row):
                 updateClauseText();
                 return;
             }
-
             clauseToggle.style.opacity = '1';
             clauseToggle.style.cursor = 'pointer';
-
             let hasAvailableClauses = false;
-
             clausesData.forEach(clause => {
                 if (selectedStandardId === clause.standar_id.toString()) {
                     hasAvailableClauses = true;
-
                     const checkboxItem = document.createElement('div');
                     checkboxItem.className = 'option-item';
                     checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
-
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.id = `klausul_${clause.id}`;
@@ -1037,38 +990,39 @@ foreach ($document as $row):
                     checkbox.name = 'klausul_filter';
                     checkbox.className = 'klausul-checkbox';
                     checkbox.onchange = updateClauseText;
-
                     const label = document.createElement('label');
                     label.setAttribute('for', `klausul_${clause.id}`);
                     label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
-
                     checkboxItem.appendChild(checkbox);
                     checkboxItem.appendChild(label);
                     clauseGroup.appendChild(checkboxItem);
                 }
             });
-
             if (!hasAvailableClauses) {
                 const emptyMessage = document.createElement('div');
                 emptyMessage.className = 'no-results';
                 emptyMessage.textContent = 'Tidak ada klausul tersedia untuk standar yang dipilih.';
                 clauseGroup.appendChild(emptyMessage);
             }
-
             updateClauseText();
         };
-
         // Update clause filter for edit modals
         window.updateEditClauseFilter = function(modalId) {
-            const selectedStandardRadio = document.querySelector(`input[name="standar_id"]:checked`);
-            const selectedStandardId = selectedStandardRadio ? selectedStandardRadio.value : null;
+            console.log('Updating edit clause filter for modal:', modalId);
+            
+            // Find the checked radio button in this specific modal
+            const modal = $(`#editModal${modalId}`);
+            const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
+            const selectedStandardId = selectedStandardRadio.length > 0 ? selectedStandardRadio.val() : null;
+            
             const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
             const clauseToggle = document.getElementById(`editClauseToggle_${modalId}`);
-
-            console.log('Updating edit clause filter for modal:', modalId, 'Standard:', selectedStandardId);
-
+            if (!clauseGroup || !clauseToggle) {
+                console.error('Clause elements not found for modal:', modalId);
+                return;
+            }
+            // Clear existing clause checkboxes
             clauseGroup.innerHTML = '';
-
             if (!selectedStandardId) {
                 clauseGroup.innerHTML = '<div class="disabled-message">Pilih standar terlebih dahulu</div>';
                 clauseToggle.style.opacity = '0.6';
@@ -1076,60 +1030,56 @@ foreach ($document as $row):
                 updateEditClauseText(modalId);
                 return;
             }
-
             clauseToggle.style.opacity = '1';
             clauseToggle.style.cursor = 'pointer';
-
+            // Get existing clause IDs from the table row
             const row = document.querySelector(`tr[data-standar*="${selectedStandardId}"]`);
             const existingClauseIds = row ? row.dataset.klausul.split(',') : [];
-
             let hasAvailableClauses = false;
-
+            // Build clause checkboxes
             clausesData.forEach(clause => {
                 if (selectedStandardId === clause.standar_id.toString()) {
                     hasAvailableClauses = true;
-
                     const checkboxItem = document.createElement('div');
                     checkboxItem.className = 'option-item';
                     checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
-
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.id = `edit_klausul_${modalId}_${clause.id}`;
                     checkbox.value = clause.id;
                     checkbox.name = `clauses[]`;
                     checkbox.className = 'edit-klausul-checkbox';
-                    checkbox.onchange = () => updateEditClauseText(modalId);
-
+                    
+                    // Set checked status based on existing data
                     if (existingClauseIds.includes(clause.id.toString())) {
                         checkbox.checked = true;
                     }
-
+                    
+                    // Add change event
+                    checkbox.addEventListener('change', function() {
+                        updateEditClauseText(modalId);
+                    });
                     const label = document.createElement('label');
                     label.setAttribute('for', `edit_klausul_${modalId}_${clause.id}`);
                     label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
-
+                    label.style.cursor = 'pointer';
                     checkboxItem.appendChild(checkbox);
                     checkboxItem.appendChild(label);
                     clauseGroup.appendChild(checkboxItem);
                 }
             });
-
             if (!hasAvailableClauses) {
                 const emptyMessage = document.createElement('div');
                 emptyMessage.className = 'no-results';
                 emptyMessage.textContent = 'Tidak ada klausul tersedia untuk standar yang dipilih.';
                 clauseGroup.appendChild(emptyMessage);
             }
-
             updateEditClauseText(modalId);
         };
-
         // Update standard text display
         window.updateStandardText = function() {
             const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
             const standardText = document.getElementById('filterStandarText');
-
             if (selectedStandardRadio) {
                 const label = document.querySelector(`label[for="${selectedStandardRadio.id}"]`);
                 standardText.textContent = label.textContent;
@@ -1137,25 +1087,28 @@ foreach ($document as $row):
                 standardText.textContent = 'Pilih Standar...';
             }
         };
-
         // Update standard text for edit modals
         window.updateEditStandardText = function(modalId) {
-            const selectedStandardRadio = document.querySelector(`input[name="standar_id"]:checked`);
+            const modal = $(`#editModal${modalId}`);
+            const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
             const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
-
-            if (selectedStandardRadio) {
-                const label = document.querySelector(`label[for="${selectedStandardRadio.id}"]`);
-                standardText.textContent = label.textContent;
+            if (!standardText) {
+                console.error('Standard text element not found for modal:', modalId);
+                return;
+            }
+            if (selectedStandardRadio.length > 0) {
+                const label = modal.find(`label[for="${selectedStandardRadio.attr('id')}"]`);
+                if (label.length > 0) {
+                    standardText.textContent = label.text();
+                }
             } else {
                 standardText.textContent = 'Pilih Standar...';
             }
         };
-
         // Update clause text display
         window.updateClauseText = function() {
             const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
             const clauseText = document.getElementById('filterKlausulText');
-
             if (selectedClauseCheckboxes.length > 0) {
                 if (selectedClauseCheckboxes.length === 1) {
                     const label = document.querySelector(`label[for="${selectedClauseCheckboxes[0].id}"]`);
@@ -1169,18 +1122,23 @@ foreach ($document as $row):
                 clauseText.textContent = 'Pilih Klausul...';
             }
         };
-
         // Update clause text for edit modals
         window.updateEditClauseText = function(modalId) {
-            const selectedClauseCheckboxes = document.querySelectorAll(`input[name="clauses[]"]:checked`);
+            const modal = $(`#editModal${modalId}`);
+            const selectedClauseCheckboxes = modal.find('input[name="clauses[]"]:checked');
             const clauseText = document.getElementById(`editFilterKlausulText_${modalId}`);
-
+            if (!clauseText) {
+                console.error('Clause text element not found for modal:', modalId);
+                return;
+            }
             if (selectedClauseCheckboxes.length > 0) {
                 if (selectedClauseCheckboxes.length === 1) {
-                    const label = document.querySelector(`label[for="${selectedClauseCheckboxes[0].id}"]`);
-                    const fullText = label.textContent;
-                    const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                    clauseText.textContent = truncatedText;
+                    const label = modal.find(`label[for="${selectedClauseCheckboxes.first().attr('id')}"]`);
+                    if (label.length > 0) {
+                        const fullText = label.text();
+                        const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
+                        clauseText.textContent = truncatedText;
+                    }
                 } else {
                     clauseText.textContent = `${selectedClauseCheckboxes.length} klausul dipilih`;
                 }
@@ -1188,7 +1146,6 @@ foreach ($document as $row):
                 clauseText.textContent = 'Pilih Klausul...';
             }
         };
-
         // Clear standard selection
         window.clearStandardSelection = function() {
             const checkedStandard = document.querySelector('input[name="standar_filter"]:checked');
@@ -1199,18 +1156,27 @@ foreach ($document as $row):
             document.getElementById('filterStandarContent').classList.remove('show');
             updateClauseFilter();
         };
-
         // Clear standard selection for edit modals
         window.clearEditStandardSelection = function(modalId) {
-            const checkedStandard = document.querySelector(`input[name="standar_id"]:checked`);
-            if (checkedStandard) {
-                checkedStandard.checked = false;
+            const modal = $(`#editModal${modalId}`);
+            const checkedStandard = modal.find('input[name="standar_id"]:checked');
+            
+            if (checkedStandard.length > 0) {
+                checkedStandard.prop('checked', false);
             }
-            document.getElementById(`editFilterStandarText_${modalId}`).textContent = 'Pilih Standar...';
-            document.getElementById(`editFilterStandarContent_${modalId}`).classList.remove('show');
+            
+            const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
+            if (standardText) {
+                standardText.textContent = 'Pilih Standar...';
+            }
+            
+            const standardContent = document.getElementById(`editFilterStandarContent_${modalId}`);
+            if (standardContent) {
+                $(standardContent).parent('.filter-dropdown').removeClass('show');
+            }
+            
             updateEditClauseFilter(modalId);
         };
-
         // Clear clause selection
         window.clearClauseSelection = function() {
             const checkedClauses = document.querySelectorAll('input[name="klausul_filter"]:checked');
@@ -1220,24 +1186,30 @@ foreach ($document as $row):
             document.getElementById('filterKlausulText').textContent = 'Pilih Klausul...';
             document.getElementById('filterKlausulContent').classList.remove('show');
         };
-
         // Clear clause selection for edit modals
         window.clearEditClauseSelection = function(modalId) {
-            const checkedClauses = document.querySelectorAll(`input[name="clauses[]"]:checked`);
-            checkedClauses.forEach(checkbox => {
-                checkbox.checked = false;
+            const modal = $(`#editModal${modalId}`);
+            const checkedClauses = modal.find('input[name="clauses[]"]:checked');
+            
+            checkedClauses.each(function() {
+                $(this).prop('checked', false);
             });
-            document.getElementById(`editFilterKlausulText_${modalId}`).textContent = 'Pilih Klausul...';
-            document.getElementById(`editFilterKlausulContent_${modalId}`).classList.remove('show');
-            updateEditClauseText(modalId);
+            
+            const clauseText = document.getElementById(`editFilterKlausulText_${modalId}`);
+            if (clauseText) {
+                clauseText.textContent = 'Pilih Klausul...';
+            }
+            
+            const clauseContent = document.getElementById(`editFilterKlausulContent_${modalId}`);
+            if (clauseContent) {
+                $(clauseContent).parent('.filter-dropdown').removeClass('show');
+            }
         };
-
         // Search functionality for standards
         window.filterStandardOptions = function() {
             const searchTerm = document.getElementById('standardSearchInput').value.toLowerCase();
             const optionItems = document.querySelectorAll('#standardRadioGroup .option-item');
             let hasVisibleItems = false;
-
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
                 if (text.includes(searchTerm)) {
@@ -1247,7 +1219,6 @@ foreach ($document as $row):
                     item.style.display = 'none';
                 }
             });
-
             let noResultsMsg = document.querySelector('#standardRadioGroup .no-results');
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
@@ -1261,13 +1232,11 @@ foreach ($document as $row):
                 noResultsMsg.style.display = 'none';
             }
         };
-
         // Search functionality for clauses
         window.filterClauseOptions = function() {
             const searchTerm = document.getElementById('clauseSearchInput').value.toLowerCase();
             const optionItems = document.querySelectorAll('#clauseCheckboxGroup .option-item');
             let hasVisibleItems = false;
-
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
                 if (text.includes(searchTerm)) {
@@ -1277,7 +1246,6 @@ foreach ($document as $row):
                     item.style.display = 'none';
                 }
             });
-
             let noResultsMsg = document.querySelector('#clauseCheckboxGroup .no-results');
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
@@ -1291,13 +1259,11 @@ foreach ($document as $row):
                 noResultsMsg.style.display = 'none';
             }
         };
-
         // Search functionality for standards in edit modals
         window.filterEditStandardOptions = function(modalId) {
             const searchTerm = document.getElementById(`editStandardSearchInput_${modalId}`).value.toLowerCase();
             const optionItems = document.querySelectorAll(`#editStandardRadioGroup_${modalId} .option-item`);
             let hasVisibleItems = false;
-
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
                 if (text.includes(searchTerm)) {
@@ -1307,7 +1273,6 @@ foreach ($document as $row):
                     item.style.display = 'none';
                 }
             });
-
             let noResultsMsg = document.querySelector(`#editStandardRadioGroup_${modalId} .no-results`);
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
@@ -1321,13 +1286,11 @@ foreach ($document as $row):
                 noResultsMsg.style.display = 'none';
             }
         };
-
         // Search functionality for clauses in edit modals
         window.filterEditClauseOptions = function(modalId) {
             const searchTerm = document.getElementById(`editClauseSearchInput_${modalId}`).value.toLowerCase();
             const optionItems = document.querySelectorAll(`#editClauseCheckboxGroup_${modalId} .option-item`);
             let hasVisibleItems = false;
-
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
                 if (text.includes(searchTerm)) {
@@ -1337,7 +1300,6 @@ foreach ($document as $row):
                     item.style.display = 'none';
                 }
             });
-
             let noResultsMsg = document.querySelector(`#editClauseCheckboxGroup_${modalId} .no-results`);
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
@@ -1351,7 +1313,6 @@ foreach ($document as $row):
                 noResultsMsg.style.display = 'none';
             }
         };
-
         // Apply filters
         $('#btnFilter').on('click', function() {
             const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
@@ -1360,39 +1321,37 @@ foreach ($document as $row):
             const selectedClauses = Array.from(selectedClauseCheckboxes).map(cb => cb.value);
             const selectedPemilik = $('#filterPemilik').val();
             const selectedJenis = $('#filterJenis').val();
-
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                 const row = table.row(dataIndex).node();
                 const rowStandar = $(row).data('standar') ? $(row).data('standar').toString().split(',') : [];
                 const rowKlausul = $(row).data('klausul') ? $(row).data('klausul').toString().split(',') : [];
                 const rowPemilik = $(row).data('pemilik') || '';
-
                 const standarMatch = !selectedStandard || rowStandar.includes(selectedStandard);
                 const klausulMatch = selectedClauses.length === 0 || 
                     selectedClauses.some(clause => rowKlausul.includes(clause));
                 const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
                 const jenisMatch = !selectedJenis || data[5].includes($('#filterJenis option:selected').text());
-
                 return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
             });
-
             table.draw();
             $.fn.dataTable.ext.search.pop();
             checkVisibleRows();
         });
-
         // Modal handling
         $(document).on('show.bs.modal', '.modal', function() {
             const modalId = $(this).attr('id').replace('editModal', '');
+            const modal = $(this);
             
-            $(this).css('z-index', '1000005');
-            $('.modal-backdrop').css('z-index', '1000004');
+            console.log('Modal opened:', modalId);
+        
             
             setTimeout(() => {
+                // Update standard text
                 updateEditStandardText(modalId);
                 
-                const selectedStandardRadio = document.querySelector(`input[name="standar_id"]:checked`);
-                if (selectedStandardRadio) {
+                // Check if standard is selected and update clause filter accordingly
+                const selectedStandardRadio = modal.find(`input[name="standar_id"]:checked`);
+                if (selectedStandardRadio.length > 0) {
                     updateEditClauseFilter(modalId);
                 } else {
                     const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
@@ -1402,23 +1361,56 @@ foreach ($document as $row):
                         clauseToggle.style.opacity = '0.6';
                         clauseToggle.style.cursor = 'not-allowed';
                     }
-                    updateEditClauseText(modalId);
                 }
-
-                $(this).find('.filter-dropdown').css({
+                
+                updateEditClauseText(modalId);
+                // Set proper z-index for dropdowns in modal
+                modal.find('.filter-dropdown').css({
                     'position': 'relative',
                     'z-index': '1000006'
                 });
-                $(this).find('.filter-dropdown-content').css({
+                modal.find('.filter-dropdown-content').css({
                     'z-index': '1000007',
                     'position': 'absolute'
                 });
-
-                console.log('Modal opened:', modalId);
+                
+                // Bind click events for modal dropdowns
+                modal.find('.filter-toggle').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const dropdownContent = $(this).siblings('.filter-dropdown-content');
+                    const dropdown = $(this).parent('.filter-dropdown');
+                    
+                    // Close other dropdowns in this modal
+                    modal.find('.filter-dropdown').not(dropdown).removeClass('show');
+                    
+                    // Toggle current dropdown
+                    dropdown.toggleClass('show');
+                    
+                    // Focus search input if available
+                    if (dropdown.hasClass('show')) {
+                        const searchInput = dropdown.find('.dropdown-search input');
+                        if (searchInput.length) {
+                            setTimeout(() => searchInput.focus(), 100);
+                        }
+                    }
+                });
+                
+                console.log('Modal initialized:', modalId);
             }, 100);
         });
-
-        // Form submission handling
+        // Close modal dropdowns when clicking outside
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('.filter-dropdown').length && !$(event.target).closest('.modal').length) {
+                $('.filter-dropdown:not(.modal .filter-dropdown)').removeClass('show');
+            }
+        });
+        // Prevent modal dropdowns from being closed by outside clicks within modal
+        $(document).on('click', '.modal .filter-dropdown', function(e) {
+            e.stopPropagation();
+        });
+        // Form submission handling - FIX: Use correct endpoint
         if (documentPrivilege.can_update) {
             $('.edit-form').on('submit', function(e) {
                 e.preventDefault();
@@ -1426,9 +1418,7 @@ foreach ($document as $row):
                 const formData = new FormData(this);
                 const modalId = '#editModal' + formData.get('id');
                 $(modalId).modal('hide');
-
                 console.log('Form submission data:', Object.fromEntries(formData));
-
                 Swal.fire({
                     title: 'Menyimpan...',
                     text: 'Memproses data',
@@ -1439,9 +1429,8 @@ foreach ($document as $row):
                         Swal.showLoading();
                     }
                 });
-
                 $.ajax({
-                    url: '<?= base_url('document-list/update') ?>',
+                    url: '<?= base_url('document-list/update') ?>',  // FIXED: Use correct endpoint
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -1474,7 +1463,6 @@ foreach ($document as $row):
                 });
             });
         }
-
         // Delete confirmation
         if (documentPrivilege.can_delete) {
             window.confirmDelete = function(event, form) {
@@ -1507,16 +1495,9 @@ foreach ($document as $row):
                 return false;
             };
         }
-
-        // Initialize tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-
+        
         // Initialize clause filter on page load
         updateClauseFilter();
-
         // Nonaktifkan Choices.js untuk dropdown kustom
         document.querySelectorAll('.no-choices').forEach(element => {
             if (element.querySelector('select')) {
@@ -1525,7 +1506,6 @@ foreach ($document as $row):
         });
     });
 </script>
-
 <!-- Flash Messages -->
 <?php if (session()->getFlashdata('success')): ?>
     <script>
@@ -1537,7 +1517,6 @@ foreach ($document as $row):
         });
     </script>
 <?php endif; ?>
-
 <?php if (session()->getFlashdata('error')): ?>
     <script>
         Swal.fire({
@@ -1548,7 +1527,6 @@ foreach ($document as $row):
         });
     </script>
 <?php endif; ?>
-
 <?php if (session()->getFlashdata('warning')): ?>
     <script>
         Swal.fire({
@@ -1559,5 +1537,6 @@ foreach ($document as $row):
         });
     </script>
 <?php endif; ?>
-
 <?= $this->endSection(); ?>
+
+
