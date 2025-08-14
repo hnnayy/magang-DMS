@@ -19,10 +19,7 @@
                 </div>
             <?php endif; ?>
 
-            <!-- Back to Login Button -->
-            <div class="d-grid">
-                <a href="<?= base_url('/wc-dummy') ?>" class="btn btn-primary">Back to Login</a>
-            </div>
+            
         </div>
     </div>
 
