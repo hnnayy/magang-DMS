@@ -87,7 +87,8 @@ class Filters extends BaseFilters
                 'notification/fetch',
                 'notification/test',
                 'logout',
-                '/logout'
+                '/logout',
+                'document-approval/serveFile'
             ],
         ],
     ],
