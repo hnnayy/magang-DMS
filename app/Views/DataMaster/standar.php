@@ -35,17 +35,13 @@
                                                    style="cursor: pointer; font-size: 16px;" 
                                                    onclick="editStandard(<?= $standard['id'] ?>, '<?= esc($standard['nama_standar'], 'js') ?>', '<?= esc($standard['description'] ?? '', 'js') ?>')"
                                                    title="Edit"></i>
-                                                <i class="bi bi-trash text-danger" 
+                                                <i class="bi bi-trash text-danger delete-icon" 
                                                    style="cursor: pointer; font-size: 16px;" 
-                                                   onclick="deleteStandard(<?= $standard['id'] ?>)"
+                                                   data-id="<?= $standard['id'] ?>"
                                                    title="Delete"></i>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else : ?>
-                                    <tr>
-                                        <td colspan="4" class="text-center text-muted">No data available</td>
-                                    </tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -142,7 +138,8 @@ $(document).ready(function() {
             "paginate": {
                 "previous": "Previous",
                 "next": "Next"
-            }
+            },
+            "emptyTable": ""  // Remove 'No data available in table' message
         },
         "columnDefs": [
             { "orderable": false, "targets": 3 } // Disable sorting on Action column
@@ -158,6 +155,12 @@ $(document).ready(function() {
                 }
             });
         }
+    });
+
+    // Event delegation for delete icon
+    $(document).on('click', '.delete-icon', function() {
+        const id = $(this).data('id');
+        deleteStandard(id);
     });
 
     // Add Form Submit
@@ -183,8 +186,8 @@ $(document).ready(function() {
                     icon: 'success',
                     title: 'Success',
                     text: 'Successfully Added',
-                    timer: 1500,
-                    showConfirmButton: false
+                    confirmButtonColor: '#7066E0',
+                    confirmButtonText: 'OK'
                 }).then(() => {
                     location.reload();
                 });
@@ -254,8 +257,8 @@ $(document).ready(function() {
                     icon: 'success',
                     title: 'Success',
                     text: 'Successfully Updated',
-                    timer: 1500,
-                    showConfirmButton: false
+                    confirmButtonColor: '#7066E0',
+                    confirmButtonText: 'OK'
                 }).then(() => {
                     location.reload();
                 });
@@ -299,6 +302,63 @@ $(document).ready(function() {
         });
     });
 
+    // Delete Standard Function
+    function deleteStandard(id) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Are you sure?',
+            text: 'This action cannot be undone.',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#767d83',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formData = new FormData();
+                formData.append('id', id);
+                formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+                
+                fetch('<?= base_url('document-standards/delete') ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Standard deleted successfully',
+                            confirmButtonColor: '#7066E0',
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message || 'Failed to delete',
+                            confirmButtonColor: '#d33'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Network error occurred',
+                        confirmButtonColor: '#d33'
+                    });
+                });
+            }
+        });
+    }
+
     // Clear validation on modal show
     document.getElementById('addModal').addEventListener('show.bs.modal', function() {
         const form = document.getElementById('addForm');
@@ -320,63 +380,6 @@ function editStandard(id, nama, description) {
     
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
     editModal.show();
-}
-
-// Delete Standard Function
-function deleteStandard(id) {
-    Swal.fire({
-        icon: 'warning',
-        title: 'Are you sure?',
-        text: 'This action cannot be undone.',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#767d83',
-        confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const formData = new FormData();
-            formData.append('id', id);
-            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
-            
-            fetch('<?= base_url('document-standards/delete') ?>', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Standard deleted successfully',
-                        timer: 1500,
-                        showConfirmButton: false
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: data.message || 'Failed to delete',
-                        confirmButtonColor: '#d33'
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: 'Network error occurred',
-                    confirmButtonColor: '#d33'
-                });
-            });
-        }
-    });
 }
 </script>
 
