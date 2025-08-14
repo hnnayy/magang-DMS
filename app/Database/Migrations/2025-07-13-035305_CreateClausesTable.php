@@ -10,7 +10,11 @@ class CreateClausesTable extends Migration
     {
         $this->forge->addField([
             'id'              => ['type' => 'INT', 'auto_increment' => true],
-            'standar_id'      => ['type' => 'INT'],
+            'standar_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+            ],
             'nama_klausul'    => ['type' => 'VARCHAR', 'constraint' => 255],
             'description' => [
                 'type' => 'TEXT',
