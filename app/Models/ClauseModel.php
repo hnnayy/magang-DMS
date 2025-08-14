@@ -8,7 +8,7 @@ class ClauseModel extends Model
 {
     protected $table = 'clauses';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['standar_id', 'nomor_klausul', 'nama_klausul', 'status'];
+    protected $allowedFields = ['standar_id', 'nama_klausul', 'description', 'status'];
     protected $useTimestamps = false;
 
     // Override delete untuk soft delete dengan status

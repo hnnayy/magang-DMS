@@ -151,7 +151,22 @@ class ControllerDaftarDokumen extends BaseController
 
         log_message('debug', 'Documents accessible to current user: ' . count($filteredDocuments));
 
-        // Process documents to ensure proper data structure for the view
+        // Get standards and clauses data
+        $standards = $this->standardModel->where('status', 1)->findAll();
+        $clauses = $this->clauseModel->getWithStandard();
+
+        // Transform clauses to match view's expected structure
+        $clausesData = [];
+        foreach ($clauses as $clause) {
+            $clausesData[] = [
+                'id' => $clause['id'],
+                'nama_klausul' => $clause['nama_klausul'],
+                'nama_standar' => $clause['nama_standar'],
+                'standar_id' => $clause['standar_id']
+            ];
+        }
+
+        // Process documents: Move clause logic to controller
         foreach ($filteredDocuments as &$doc) {
             // Ensure createdby shows the creator's full name
             $doc['createdby'] = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
@@ -165,21 +180,46 @@ class ControllerDaftarDokumen extends BaseController
             $doc['creator_access_level'] = $doc['creator_access_level'] ?? 2;
             
             log_message('debug', "Document {$doc['id']}: Creator ID {$doc['createdby_id']}, Unit {$doc['creator_unit_id']}, Parent {$doc['creator_unit_parent_id']}, Access Level {$doc['creator_access_level']}");
+
+            // Process standar_names
+            $standar_ids = array_filter(explode(',', $doc['standar_ids'] ?? ''));
+            $standar_names = [];
+            foreach ($standar_ids as $id) {
+                foreach ($standards as $s) {
+                    if ($s['id'] == $id) {
+                        $standar_names[] = esc($s['nama_standar']);
+                        break;
+                    }
+                }
+            }
+            $doc['standar_display'] = !empty($standar_names) ? implode(', ', $standar_names) : '-';
+
+            // Process klausul_display (only nama_klausul and nama_standar)
+            $klausul_ids = array_filter(explode(',', $doc['klausul_ids'] ?? ''));
+            $klausul_names = [];
+            foreach ($klausul_ids as $id) {
+                foreach ($clauses as $c) {
+                    if ($c['id'] == $id) {
+                        $klausul_names[] = esc($c['nama_klausul'] . ' (' . $c['nama_standar'] . ')');
+                        break;
+                    }
+                }
+            }
+            $doc['klausul_display'] = !empty($klausul_names) ? implode(', ', $klausul_names) : '-';
         }
 
         // Get additional data for the view
         $kategori_dokumen = $this->typeModel->findAll();
-        $standards = $this->standardModel->findAll();
-        $clauses = $this->clauseModel->getWithStandard();
 
         log_message('debug', 'Documents passed to view: ' . count($filteredDocuments));
+        log_message('debug', 'Clauses data passed to view: ' . json_encode($clausesData));
 
         return view('DaftarDokumen/daftar_dokumen', [
             'title'            => 'Daftar Dokumen',
             'document'         => $filteredDocuments,
             'kategori_dokumen' => $kategori_dokumen,
             'standards'        => $standards,
-            'clauses'          => $clauses,
+            'clausesData'      => $clausesData, // Changed to clausesData to match view
         ]);
     }
 
@@ -187,35 +227,28 @@ class ControllerDaftarDokumen extends BaseController
     {
         header('Content-Type: application/json');
 
-        $validation = \Config\Services::validation();
-        $validation->setRules([
-            'id' => 'required|numeric',
-            'standar' => 'required|is_array',
-            'klausul' => 'required|is_array',
-            'date_published' => 'required|valid_date',
-            'approveby' => 'permit_empty|numeric',
-            'approvedate' => 'permit_empty|valid_date'
-        ]);
+        $postData = $this->request->getPost();
+        $id = $postData['id'] ?? null;
+        $standar_id = $postData['standar_id'] ?? null;
+        $clauses = $postData['clauses'] ?? [];
 
-        if (!$validation->withRequest($this->request)->run()) {
-            log_message('error', 'Validation failed: ' . json_encode($validation->getErrors()));
+        if (!$id || !$standar_id) {
+            log_message('error', 'Missing document ID or standard_id');
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Validasi gagal: ' . implode(', ', $validation->getErrors()),
+                'message' => 'ID dokumen atau standar diperlukan.',
                 'swal' => [
                     'title' => 'Gagal!',
-                    'text' => implode(', ', $validation->getErrors()),
+                    'text' => 'ID dokumen atau standar diperlukan.',
                     'icon' => 'error',
                     'confirmButtonColor' => '#dc3545'
                 ]
             ]);
         }
 
-        $id = $this->request->getPost('id');
         $currentUserId = session()->get('user_id');
         $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
-        // Check if document exists
         $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
             log_message('error', 'Document not found for ID: ' . $id);
@@ -237,61 +270,39 @@ class ControllerDaftarDokumen extends BaseController
             log_message('warning', "User {$currentUserId} attempted to update document {$id} without permission");
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Anda tidak memiliki izin untuk mengubah dokumen ini.',
+                'message' => 'Anda tidak memiliki izin untuk memperbarui dokumen ini.',
                 'swal' => [
                     'title' => 'Error',
-                    'text' => 'Anda tidak memiliki izin untuk mengubah dokumen ini.',
+                    'text' => 'Anda tidak memiliki izin untuk memperbarui dokumen ini.',
                     'icon' => 'error',
                     'confirmButtonColor' => '#dc3545'
                 ]
             ]);
         }
 
-        $standar = $this->request->getPost('standar') ?? [];
-        $klausul = $this->request->getPost('klausul') ?? [];
-        $datePublished = $this->request->getPost('date_published');
-        $approveBy = $this->request->getPost('approveby') ?? null;
-        $approveDate = $this->request->getPost('approvedate') ?? null;
-
-        // Data untuk tabel document
-        $dataDocument = [
-            'standar_ids' => !empty($standar) ? implode(',', $standar) : '',
-            'klausul_ids' => !empty($klausul) ? implode(',', $klausul) : '',
-            'date_published' => $datePublished,
-            'updatedby' => $currentUserId,
-            'updateddate' => time()
-        ];
-
-        // Data untuk tabel document_approval
-        $dataApproval = [
-            'document_id' => $id,
-            'standar_ids' => !empty($standar) ? implode(',', $standar) : '',
-            'klausul_ids' => !empty($klausul) ? implode(',', $klausul) : '',
-            'approveby' => $approveBy,
-            'approvedate' => $approveDate ? date('Y-m-d H:i:s', strtotime($approveDate)) : null,
-            'updatedby' => $currentUserId,
-            'updateddate' => time()
-        ];
-
-        log_message('debug', 'Update data for document ID ' . $id . ': ' . json_encode($dataDocument));
-        log_message('debug', 'Update data for approval ID ' . $id . ': ' . json_encode($dataApproval));
+        // Validate clauses
+        $clauses = is_array($clauses) ? $clauses : [];
+        $validClauses = [];
+        foreach ($clauses as $clauseId) {
+            $clause = $this->clauseModel->where('id', $clauseId)->where('standar_id', $standar_id)->first();
+            if ($clause) {
+                $validClauses[] = $clauseId;
+            }
+        }
 
         try {
-            // Start transaction
             $this->db->transStart();
 
-            // Update document table
+            $dataDocument = [
+                'standar_ids' => $standar_id,
+                'klausul_ids' => implode(',', $validClauses),
+                'date_published' => $postData['date_published'] ?? $document['date_published'],
+                'updatedby' => $currentUserId,
+                'updateddate' => time()
+            ];
+
             $this->documentModel->update($id, $dataDocument);
 
-            // Update or create approval record
-            $existingApproval = $this->approvalModel->where('document_id', $id)->first();
-            if ($existingApproval) {
-                $this->approvalModel->update($existingApproval['id'], $dataApproval);
-            } else {
-                $this->approvalModel->insert($dataApproval);
-            }
-
-            // Complete transaction
             $this->db->transComplete();
 
             if ($this->db->transStatus() === FALSE) {
@@ -308,33 +319,18 @@ class ControllerDaftarDokumen extends BaseController
                 ]);
             }
 
-            if ($this->documentModel->affectedRows() > 0 || $this->approvalModel->affectedRows() > 0 || $this->approvalModel->getInsertID()) {
-                log_message('info', 'Document ID ' . $id . ' and approval updated successfully by user ' . $currentUserId);
-                return $this->response->setJSON([
-                    'status' => 'success',
-                    'message' => 'Dokumen dan approval berhasil diperbarui.',
-                    'swal' => [
-                        'title' => 'Berhasil!',
-                        'text' => 'Dokumen dan approval berhasil diperbarui.',
-                        'icon' => 'success',
-                        'confirmButtonColor' => '#6f42c1'
-                    ]
-                ]);
-            } else {
-                log_message('warning', 'No changes made for document ID ' . $id . ' (data may be identical).');
-                return $this->response->setJSON([
-                    'status' => 'warning',
-                    'message' => 'Tidak ada perubahan pada dokumen.',
-                    'swal' => [
-                        'title' => 'Peringatan',
-                        'text' => 'Tidak ada perubahan pada dokumen.',
-                        'icon' => 'warning',
-                        'confirmButtonColor' => '#ffc107'
-                    ]
-                ]);
-            }
+            log_message('info', 'Document ID ' . $id . ' updated successfully by user ' . $currentUserId);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Dokumen berhasil diperbarui.',
+                'swal' => [
+                    'title' => 'Berhasil!',
+                    'text' => 'Dokumen berhasil diperbarui.',
+                    'icon' => 'success',
+                    'confirmButtonColor' => '#6f42c1'
+                ]
+            ]);
         } catch (\Exception $e) {
-            // Rollback transaction on error
             $this->db->transRollback();
             log_message('error', 'Error updating document ID ' . $id . ': ' . $e->getMessage());
             return $this->response->setJSON([

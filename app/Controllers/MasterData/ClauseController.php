@@ -55,20 +55,20 @@ class ClauseController extends BaseController
                     'numeric' => 'Invalid standard selected.'
                 ]
             ],
-            'nomor_klausul' => [
-                'label' => 'Clause Number',
+            'nama_klausul' => [
+                'label' => 'Clause',
                 'rules' => 'required|max_length[100]',
                 'errors' => [
-                    'required' => 'Clause number is required.',
-                    'max_length' => 'Clause number cannot exceed 100 characters.'
+                    'required' => 'Clause is required.',
+                    'max_length' => 'Clause cannot exceed 100 characters.'
                 ]
             ],
-            'nama_klausul' => [
-                'label' => 'Clause Description',
+            'description' => [
+                'label' => 'Description',
                 'rules' => 'required|max_length[500]',
                 'errors' => [
-                    'required' => 'Clause description is required.',
-                    'max_length' => 'Clause description cannot exceed 500 characters.'
+                    'required' => 'Description is required.',
+                    'max_length' => 'Description cannot exceed 500 characters.'
                 ]
             ]
         ];
@@ -90,16 +90,16 @@ class ClauseController extends BaseController
             ]);
         }
 
-        // Check for duplicate clause number within the same standard
+        // Check for duplicate clause within the same standard
         $existingClause = $this->clauseModel->where([
             'standar_id' => $this->request->getPost('standar_id'),
-            'nomor_klausul' => trim($this->request->getPost('nomor_klausul'))
+            'nama_klausul' => trim($this->request->getPost('nama_klausul'))
         ])->first();
 
         if ($existingClause) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Clause number already exists for this standard.'
+                'message' => 'Clause already exists for this standard.'
             ]);
         }
 
@@ -107,8 +107,8 @@ class ClauseController extends BaseController
             // Prepare data for insertion
             $data = [
                 'standar_id' => $this->request->getPost('standar_id'),
-                'nomor_klausul' => trim($this->request->getPost('nomor_klausul')),
-                'nama_klausul' => trim($this->request->getPost('nama_klausul'))
+                'nama_klausul' => trim($this->request->getPost('nama_klausul')),
+                'description' => trim($this->request->getPost('description'))
             ];
 
             // Insert the clause
@@ -123,7 +123,7 @@ class ClauseController extends BaseController
 
                 return $this->response->setJSON([
                     'status' => 'success',
-                    'message' => 'Succesfully added.',
+                    'message' => 'Successfully added.',
                     'data' => $newClause
                 ]);
             } else {
@@ -147,49 +147,49 @@ class ClauseController extends BaseController
         // Set JSON response header
         $this->response->setContentType('application/json');
     
-            $id = $this->request->getPost('id');
-            
-            if (!$id) {
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Clause ID is required.'
-                ]);
-            }
+        $id = $this->request->getPost('id');
+        
+        if (!$id) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Clause ID is required.'
+            ]);
+        }
 
-            $rules = [
-                'standar_id' => [
-                    'label' => 'Standard',
-                    'rules' => 'required|numeric',
-                    'errors' => [
-                        'required' => 'Standard is required.',
-                        'numeric' => 'Invalid standard selected.'
-                    ]
-                ],
-                'nomor_klausul' => [
-                    'label' => 'Clause Number',
-                    'rules' => 'required|max_length[100]',
-                    'errors' => [
-                        'required' => 'Clause number is required.',
-                        'max_length' => 'Clause number cannot exceed 100 characters.'
-                    ]
-                ],
-                'nama_klausul' => [
-                    'label' => 'Clause Description',
-                    'rules' => 'required|max_length[500]',
-                    'errors' => [
-                        'required' => 'Clause description is required.',
-                        'max_length' => 'Clause description cannot exceed 500 characters.'
-                    ]
+        $rules = [
+            'standar_id' => [
+                'label' => 'Standard',
+                'rules' => 'required|numeric',
+                'errors' => [
+                    'required' => 'Standard is required.',
+                    'numeric' => 'Invalid standard selected.'
                 ]
-            ];
+            ],
+            'nama_klausul' => [
+                'label' => 'Clause',
+                'rules' => 'required|max_length[100]',
+                'errors' => [
+                    'required' => 'Clause is required.',
+                    'max_length' => 'Clause cannot exceed 100 characters.'
+                ]
+            ],
+            'description' => [
+                'label' => 'Description',
+                'rules' => 'required|max_length[500]',
+                'errors' => [
+                    'required' => 'Description is required.',
+                    'max_length' => 'Description cannot exceed 500 characters.'
+                ]
+            ]
+        ];
 
-            if (!$this->validate($rules)) {
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Validation failed.',
-                    'errors' => $this->validator->getErrors()
-                ]);
-            }
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Validation failed.',
+                'errors' => $this->validator->getErrors()
+            ]);
+        }
 
         // Check if standard exists
         $standardExists = $this->standardModel->getActiveById($this->request->getPost('standar_id'));
@@ -200,17 +200,17 @@ class ClauseController extends BaseController
             ]);
         }
 
-        // Check for duplicate clause number within the same standard (excluding current record)
+        // Check for duplicate clause within the same standard (excluding current record)
         $duplicateClause = $this->clauseModel->where([
             'standar_id' => $this->request->getPost('standar_id'),
-            'nomor_klausul' => trim($this->request->getPost('nomor_klausul')),
+            'nama_klausul' => trim($this->request->getPost('nama_klausul')),
             'id !=' => $id
         ])->first();
 
         if ($duplicateClause) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Clause number already exists for this standard.'
+                'message' => 'Clause already exists for this standard.'
             ]);
         }
 
@@ -218,8 +218,8 @@ class ClauseController extends BaseController
             // Prepare data for update
             $data = [
                 'standar_id' => $this->request->getPost('standar_id'),
-                'nomor_klausul' => trim($this->request->getPost('nomor_klausul')),
-                'nama_klausul' => trim($this->request->getPost('nama_klausul'))
+                'nama_klausul' => trim($this->request->getPost('nama_klausul')),
+                'description' => trim($this->request->getPost('description'))
             ];
 
             // Update the clause

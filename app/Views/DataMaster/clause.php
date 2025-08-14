@@ -1,16 +1,16 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
-<div class="container-fluid clause-container-fluid mt-4">
+<div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">Clause Management</h4>
-        <div class="d-flex gap-3 align-items-center">
+        <div class="d-flex gap-2 align-items-center">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
+                <i class="fas fa-plus fa-sm"></i> Add Clause
+            </button>
             <div class="clause-search-container">
-                <i class="fas fa-search clause-search-icon"></i>
+                <i class="fas fa-search fa-sm clause-search-icon"></i>
                 <input type="text" class="form-control" id="clauseSearchInput" placeholder="Search clauses...">
             </div>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
-                <i class="fas fa-plus"></i> Add Clause
-            </button>
         </div>
     </div>
 
@@ -22,10 +22,10 @@
             <table class="table table-bordered table-hover align-middle clause-table">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 80px;">No</th>
-                        <th>Clause</th>
-                        <th>Description</th>
-                        <th style="width: 130px;">Action</th>
+                        <th style="width: 10%;  text-align: center;">No</th>
+                        <th style="width: 30%;">Clause</th>
+                        <th style="width: 40%;">Description</th>
+                        <th style="width: 20%; text-align: center;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,20 +33,20 @@
                     <tr data-clause-id="<?= $clause['id'] ?>">
                         <td class="text-center"><?= $index + 1 ?></td>
                         <td>
-                            <span class="clause-code"><?= esc($clause['nomor_klausul']) ?></span>
+                            <span class="clause-code"><?= esc($clause['nama_klausul']) ?></span>
                         </td>
-                        <td><?= esc($clause['nama_klausul']) ?></td>
+                        <td><?= esc($clause['description']) ?></td>
                         <td class="text-center">
                             <div class="clause-action-buttons">
                                 <button class="clause-edit-btn" 
-                                        onclick="editClause(<?= $clause['id'] ?>, '<?= esc($clause['nama_standar']) ?>', '<?= esc($clause['nomor_klausul']) ?>', '<?= esc($clause['nama_klausul']) ?>', <?= $clause['standar_id'] ?>)"
+                                        onclick="editClause(<?= $clause['id'] ?>, '<?= esc($clause['nama_standar']) ?>', '<?= esc($clause['nama_klausul']) ?>', '<?= esc($clause['description']) ?>', <?= $clause['standar_id'] ?>)"
                                         title="Edit">
-                                    <i class="bi bi-pencil-square fs-5"></i>
+                                    <i class="bi bi-pencil-square fs-6"></i>
                                 </button>
                                 <button class="clause-delete-btn" 
                                         onclick="confirmClauseDelete(<?= $clause['id'] ?>)"
                                         title="Delete">
-                                    <i class="bi bi-trash fs-5"></i>
+                                    <i class="bi bi-trash fs-6"></i>
                                 </button>
                             </div>
                         </td>
@@ -87,11 +87,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="clauseAddCode" class="form-label">Clause <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseAddCode" name="nomor_klausul" required>
+                        <input type="text" class="form-control" id="clauseAddCode" name="nama_klausul" required>
                     </div>
                     <div class="mb-3">
                         <label for="clauseAddDescription" class="form-label">Description <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseAddDescription" name="nama_klausul" placeholder="Enter clause description" required>
+                        <input type="text" class="form-control" id="clauseAddDescription" name="description" placeholder="Enter clause description" required>
                     </div>
                 </div>
                 <div class="modal-footer clause-modal-footer-grid">
@@ -126,11 +126,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="clauseEditCode" class="form-label">Clause <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseEditCode" name="nomor_klausul" required>
+                        <input type="text" class="form-control" id="clauseEditCode" name="nama_klausul" required>
                     </div>
                     <div class="mb-3">
                         <label for="clauseEditDescription" class="form-label">Description <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="clauseEditDescription" name="nama_klausul" placeholder="Enter clause description" required>
+                        <input type="text" class="form-control" id="clauseEditDescription" name="description" placeholder="Enter clause description" required>
                     </div>
                 </div>
                 <div class="modal-footer clause-modal-footer-grid">
@@ -194,77 +194,76 @@
     }
     
     // Edit function
-    function editClause(id, standardName, clauseNumber, description, standardId) {
+    function editClause(id, standardName, clauseNumber, clauseDescription, standardId) {
         $('#clauseEditId').val(id);
         $('#clauseEditStandard').val(standardId);
         $('#clauseEditCode').val(clauseNumber);
-        $('#clauseEditDescription').val(description);
+        $('#clauseEditDescription').val(clauseDescription);
         
         new bootstrap.Modal(document.getElementById('clauseEditModal')).show();
     }
     
     // Delete function
     function confirmClauseDelete(clauseId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: 'This action cannot be undone!',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            deleteClause(clauseId);
-        }
-    });
-}
-
-async function deleteClause(clauseId) {
-    try {
-        const formData = new FormData();
-        formData.append('id', clauseId);
-        // Tambahkan token CSRF
-        formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
-
-        const response = await fetch('<?= base_url('document-clauses/delete') ?>', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteClause(clauseId);
             }
         });
+    }
 
-        const result = await response.json();
+    async function deleteClause(clauseId) {
+        try {
+            const formData = new FormData();
+            formData.append('id', clauseId);
+            formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
 
-        if (result.status === 'success') {
-            $(`tr[data-clause-id="${clauseId}"]`).remove();
-            performClauseSearch();
-            Swal.fire({
-                icon: 'success',
-                title: 'Deleted!',
-                text: result.message,
-                confirmButtonText: 'OK'
+            const response = await fetch('<?= base_url('document-clauses/delete') ?>', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
-        } else {
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                $(`tr[data-clause-id="${clauseId}"]`).remove();
+                performClauseSearch();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: result.message,
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message || 'Failed to delete clause.',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting clause:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: result.message || 'Failed to delete clause.',
+                text: 'An error occurred while deleting the clause.',
                 confirmButtonText: 'OK'
             });
         }
-    } catch (error) {
-        console.error('Error deleting clause:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while deleting the clause.',
-            confirmButtonText: 'OK'
-        });
     }
-}
     
     $(document).ready(function() {
         // Initialize tooltips
@@ -291,22 +290,18 @@ async function deleteClause(clauseId) {
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Close modal and reset form
                     bootstrap.Modal.getInstance(document.getElementById('clauseAddModal')).hide();
                     $('#clauseAddForm')[0].reset();
                     
-                    // Show success message
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
                         text: result.message,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        // Reload page to show updated data
                         location.reload();
                     });
                 } else {
-                    // Show validation errors
                     if (result.errors) {
                         let errorMessages = [];
                         for (let field in result.errors) {
@@ -356,21 +351,17 @@ async function deleteClause(clauseId) {
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // Close modal
                     bootstrap.Modal.getInstance(document.getElementById('clauseEditModal')).hide();
                     
-                    // Show success message
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
                         text: result.message,
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        // Reload page to show updated data
                         location.reload();
                     });
                 } else {
-                    // Show validation errors
                     if (result.errors) {
                         let errorMessages = [];
                         for (let field in result.errors) {
@@ -402,7 +393,6 @@ async function deleteClause(clauseId) {
             }
         });
         
-        // Reset form when modal is hidden
         $('#clauseAddModal, #clauseEditModal').on('hidden.bs.modal', function() {
             $(this).find('form')[0].reset();
         });

@@ -11,10 +11,19 @@ class CreateClausesTable extends Migration
         $this->forge->addField([
             'id'              => ['type' => 'INT', 'auto_increment' => true],
             'standar_id'      => ['type' => 'INT'],
-            'nomor_klausul'   => ['type' => 'VARCHAR', 'constraint' => 50],
             'nama_klausul'    => ['type' => 'VARCHAR', 'constraint' => 255],
-            'created_at'      => ['type' => 'DATETIME', 'null' => true],
-            'updated_at'      => ['type' => 'DATETIME', 'null' => true],
+            'description' => [
+                'type' => 'TEXT',
+                'null' => true,
+                'comment' => 'Deskripsi standar'
+            ],
+            'status' => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 1,
+                'null'       => false,
+                'comment'    => '0 = nonaktif, 1 = aktif',
+            ],
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('standar_id', 'standards', 'id', 'CASCADE', 'CASCADE');
