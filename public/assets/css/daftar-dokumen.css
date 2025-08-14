@@ -553,3 +553,13 @@ td.aksi-column {
         justify-content: center;
     }
 }
+
+.text-white-custom {
+    color: white !important;
+}
+
+.text-white-custom:hover,
+.text-white-custom:focus,
+.text-white-custom:active {
+    color: white !important;
+}

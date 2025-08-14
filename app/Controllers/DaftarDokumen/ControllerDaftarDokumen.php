@@ -241,14 +241,18 @@ class ControllerDaftarDokumen extends BaseController
 
         if (!$id || !$standar_id) {
             log_message('error', 'Missing document ID or standard_id');
+            
+            $this->response->setStatusCode(422); 
+            
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'ID dokumen atau standar diperlukan.',
+                'message' => 'Document or standard ID is required.',
                 'swal' => [
-                    'title' => 'Gagal!',
-                    'text' => 'ID dokumen atau standar diperlukan.',
+                    'title' => 'Failed!',
+                    'text' => 'Document or standard ID is required.',
                     'icon' => 'error',
-                    'confirmButtonColor' => '#dc3545'
+                    'confirmButtonColor' => '#dc3545',
+                    'confirmButtonText' => 'OK'
                 ]
             ]);
         }
@@ -261,10 +265,10 @@ class ControllerDaftarDokumen extends BaseController
             log_message('error', 'Document not found for ID: ' . $id);
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Dokumen tidak ditemukan.',
+                'message' => 'Document not found.',
                 'swal' => [
                     'title' => 'Error',
-                    'text' => 'Dokumen tidak ditemukan.',
+                    'text' => 'Document not found.',
                     'icon' => 'error',
                     'confirmButtonColor' => '#dc3545'
                 ]
@@ -277,10 +281,10 @@ class ControllerDaftarDokumen extends BaseController
             log_message('warning', "User {$currentUserId} attempted to update document {$id} without permission");
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Anda tidak memiliki izin untuk memperbarui dokumen ini.',
+                'message' => 'You do not have permission to update this document.',
                 'swal' => [
                     'title' => 'Error',
-                    'text' => 'Anda tidak memiliki izin untuk memperbarui dokumen ini.',
+                    'text' => 'You do not have permission to update this document.',
                     'icon' => 'error',
                     'confirmButtonColor' => '#dc3545'
                 ]
@@ -316,10 +320,10 @@ class ControllerDaftarDokumen extends BaseController
                 log_message('error', 'Transaction failed for document ID ' . $id);
                 return $this->response->setJSON([
                     'status' => 'error',
-                    'message' => 'Terjadi kesalahan saat memperbarui dokumen.',
+                    'message' => 'An error occurred while updating the document.',
                     'swal' => [
                         'title' => 'Error',
-                        'text' => 'Terjadi kesalahan saat memperbarui dokumen.',
+                        'text' => 'An error occurred while updating the document.',
                         'icon' => 'error',
                         'confirmButtonColor' => '#dc3545'
                     ]
@@ -329,10 +333,10 @@ class ControllerDaftarDokumen extends BaseController
             log_message('info', 'Document ID ' . $id . ' updated successfully by user ' . $currentUserId);
             return $this->response->setJSON([
                 'status' => 'success',
-                'message' => 'Dokumen berhasil diperbarui.',
+                'message' => 'Document updated successfully.',
                 'swal' => [
-                    'title' => 'Berhasil!',
-                    'text' => 'Dokumen berhasil diperbarui.',
+                    'title' => 'Success!',
+                    'text' => 'Document updated successfully.',
                     'icon' => 'success',
                     'confirmButtonColor' => '#6f42c1'
                 ]
@@ -342,10 +346,10 @@ class ControllerDaftarDokumen extends BaseController
             log_message('error', 'Error updating document ID ' . $id . ': ' . $e->getMessage());
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+                'message' => 'Error occurred: ' . $e->getMessage(),
                 'swal' => [
                     'title' => 'Error',
-                    'text' => 'Terjadi kesalahan saat memperbarui dokumen.',
+                    'text' => 'An error occurred while updating the document.',
                     'icon' => 'error',
                     'confirmButtonColor' => '#dc3545'
                 ]
@@ -360,25 +364,25 @@ class ControllerDaftarDokumen extends BaseController
         $currentUserAccessLevel = session()->get('access_level') ?? 2;
 
         if (!$id) {
-            return redirect()->back()->with('error', 'ID dokumen tidak ditemukan.');
+            return redirect()->back()->with('error', 'Document ID not found.');
         }
 
         // Check if document exists
         $document = $this->getDocumentWithCreatorInfo($id);
         if (!$document) {
-            return redirect()->back()->with('error', 'Dokumen tidak ditemukan.');
+            return redirect()->back()->with('error', 'Document not found.');
         }
 
         // Check if user has permission to delete this document
         $canDelete = $this->canUserModifyDocument($document, $currentUserId, $currentUserAccessLevel);
         if (!$canDelete) {
             log_message('warning', "User {$currentUserId} attempted to delete document {$id} without permission");
-            return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus dokumen ini.');
+            return redirect()->back()->with('error', 'You do not have permission to delete this document.');
         }
 
         if ($this->db === null) {
             log_message('error', 'Database connection is null in delete method for document ID: ' . $id);
-            return redirect()->back()->with('error', 'Terjadi kesalahan koneksi database.');
+            return redirect()->back()->with('error', 'Database connection error occurred.');
         }
 
         try {
@@ -407,17 +411,17 @@ class ControllerDaftarDokumen extends BaseController
 
             if ($this->db->transStatus() === FALSE) {
                 log_message('error', 'Transaction failed for document deletion ID ' . $id);
-                return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus dokumen.');
+                return redirect()->back()->with('error', 'An error occurred while deleting the document.');
             }
 
             log_message('info', "Document {$id} deleted by user {$currentUserId}");
-            return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
+            return redirect()->back()->with('success', 'Document deleted successfully.');
         } catch (\Exception $e) {
             if ($this->db !== null) {
                 $this->db->transRollback();
             }
             log_message('error', 'Error deleting document ID ' . $id . ': ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error occurred: ' . $e->getMessage());
         }
     }
 
@@ -429,20 +433,20 @@ class ControllerDaftarDokumen extends BaseController
         $currentUserUnitParentId = session()->get('unit_parent_id');
 
         if (!$userId) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda harus login untuk mengakses file.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You must login to access files.');
         }
 
         $documentId = $this->request->getGet('id');
         if (!$documentId) {
             log_message('error', 'No document ID provided in serveFile request');
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('ID dokumen tidak ditemukan.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Document ID not found.');
         }
 
         // Get document with creator information
         $document = $this->getDocumentWithCreatorInfo($documentId);
         if (!$document) {
             log_message('error', 'Document not found for ID: ' . $documentId);
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Dokumen tidak ditemukan.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Document not found.');
         }
 
         // Check access permissions using the same logic as the view
@@ -476,7 +480,7 @@ class ControllerDaftarDokumen extends BaseController
 
         if (!$canAccessFile) {
             log_message('warning', "User {$userId} attempted to access file for document {$documentId} without permission");
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Anda tidak memiliki izin untuk mengakses file ini.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('You do not have permission to access this file.');
         }
 
         // Get file information
@@ -490,7 +494,7 @@ class ControllerDaftarDokumen extends BaseController
 
         if (!$revision || empty($revision['filepath'])) {
             log_message('error', 'No revision data for document ID: ' . $documentId);
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found.');
         }
 
         $filePath = ROOTPATH . '..' . DIRECTORY_SEPARATOR . $revision['filepath'];
@@ -498,12 +502,12 @@ class ControllerDaftarDokumen extends BaseController
 
         if (!file_exists($filePath)) {
             log_message('error', 'File not found at: ' . $filePath);
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak ditemukan di server.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found on server.');
         }
 
         if (!is_readable($filePath)) {
             log_message('error', 'File not readable at: ' . $filePath);
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File tidak dapat diakses.');
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File cannot be accessed.');
         }
 
         $file = new File($filePath);

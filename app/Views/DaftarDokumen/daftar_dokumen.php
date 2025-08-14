@@ -197,7 +197,7 @@
             <!-- Filter and Export Buttons -->
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary btn-sm" id="btnFilter">Filter</button>
-                <button class="btn btn-warning btn-sm" id="btnResetFilter">Reset Filter</button>
+                <button class="btn btn-secondary btn-sm" id="btnResetFilter">Reset Filter</button>
                 <button class="btn btn-success btn-sm" id="excel-button-container">Export Excel</button>
             </div>
         </div>
@@ -1027,6 +1027,124 @@ $(document).ready(function() {
         updateEditClauseText(modalId);
     };
 
+        // Add this JavaScript code to fix the Reset Filter functionality
+    // Place this code in the $(document).ready() function after the existing filter code
+
+    // Reset Filter button functionality
+    $('#btnResetFilter').on('click', function() {
+        console.log('Reset filter clicked');
+        
+        // 1. Reset Standard filter
+        const checkedStandard = document.querySelector('input[name="standar_filter"]:checked');
+        if (checkedStandard) {
+            checkedStandard.checked = false;
+        }
+        document.getElementById('filterStandarText').textContent = 'Select Standard...';
+        
+        // 2. Reset Clause filter
+        const checkedClauses = document.querySelectorAll('input[name="klausul_filter"]:checked');
+        checkedClauses.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.getElementById('filterKlausulText').textContent = 'Select Clause...';
+        
+        // Reset clause filter to disabled state
+        const clauseGroup = document.getElementById('clauseCheckboxGroup');
+        const clauseToggle = document.getElementById('clauseToggle');
+        clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
+        clauseToggle.style.opacity = '0.6';
+        clauseToggle.style.cursor = 'not-allowed';
+        
+        // 3. Reset Owner filter to "All"
+        const checkedOwner = document.querySelector('input[name="pemilik_filter"]:checked');
+        if (checkedOwner) {
+            checkedOwner.checked = false;
+        }
+        const allOwnerRadio = document.getElementById('pemilik_all');
+        if (allOwnerRadio) {
+            allOwnerRadio.checked = true;
+        }
+        document.getElementById('filterPemilikText').textContent = 'All Document Owners';
+        
+        // 4. Reset Type filter to "All"
+        const checkedType = document.querySelector('input[name="jenis_filter"]:checked');
+        if (checkedType) {
+            checkedType.checked = false;
+        }
+        const allTypeRadio = document.getElementById('jenis_all');
+        if (allTypeRadio) {
+            allTypeRadio.checked = true;
+        }
+        document.getElementById('filterJenisText').textContent = 'All Document Types';
+        
+        // 5. Close all dropdowns
+        document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
+            d.classList.remove('show');
+        });
+        
+        // 6. Clear all search inputs in dropdowns
+        const searchInputs = [
+            'standardSearchInput',
+            'clauseSearchInput', 
+            'ownerSearchInput',
+            'typeSearchInput'
+        ];
+        
+        searchInputs.forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '';
+            }
+        });
+        
+        // 7. Reset dropdown option visibility (clear any search filters)
+        document.querySelectorAll('.option-item').forEach(item => {
+            item.style.display = 'flex';
+        });
+        
+        // Hide any "no results" messages
+        document.querySelectorAll('.no-results').forEach(msg => {
+            msg.style.display = 'none';
+        });
+        
+        // 8. Reset DataTable filter and redraw
+        // Clear any existing DataTable search filters
+        $.fn.dataTable.ext.search = [];
+        table.search('').draw();
+        
+        // 9. Reset custom search input
+        $('#customSearch').val('');
+        
+        // 10. Hide no-data message and show table
+        $('#no-data-message').hide();
+        $('#dokumenTable').show();
+    });
+
+    // Alternative method: Create a comprehensive reset function
+    function resetAllFilters() {
+        // Reset all filter states
+        clearStandardSelection();
+        clearClauseSelection(); 
+        clearOwnerSelection();
+        clearTypeSelection();
+        
+        // Clear search inputs
+        $('#customSearch').val('');
+        
+        // Reset DataTable
+        $.fn.dataTable.ext.search = [];
+        table.search('').draw();
+        
+        // Show all data
+        $('#no-data-message').hide();
+        $('#dokumenTable').show();
+        
+        console.log('Comprehensive reset completed');
+    }
+
+    // You can also bind the alternative method if preferred:
+    // $('#btnResetFilter').on('click', resetAllFilters);
+
     // Update standard text display
     window.updateStandardText = function() {
         const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
@@ -1400,7 +1518,13 @@ $(document).ready(function() {
 
         // ========== UPDATED FILTER APPLICATION ==========
         // Apply filters - Updated to use the new dropdown values
+// Replace the existing filter application section with this corrected code
+
+        // Apply filters - CORRECTED VERSION
         $('#btnFilter').on('click', function() {
+            console.log('Filter button clicked');
+            
+            // Get filter values
             const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
             const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
             const selectedOwnerRadio = document.querySelector('input[name="pemilik_filter"]:checked');
@@ -1408,21 +1532,28 @@ $(document).ready(function() {
             
             const selectedStandard = selectedStandardRadio ? selectedStandardRadio.value : null;
             const selectedClauses = Array.from(selectedClauseCheckboxes).map(cb => cb.value);
-            const selectedPemilik = selectedOwnerRadio ? selectedOwnerRadio.value : '';
-            const selectedJenis = selectedTypeRadio ? selectedTypeRadio.value : '';
+            const selectedOwner = selectedOwnerRadio ? selectedOwnerRadio.value : '';
+            const selectedType = selectedTypeRadio ? selectedTypeRadio.value : '';
 
             console.log('Filter values:', {
                 standard: selectedStandard,
                 clauses: selectedClauses,
-                owner: selectedPemilik,
-                type: selectedJenis
+                owner: selectedOwner,
+                type: selectedType
             });
 
+            // Clear any existing search filters
+            $.fn.dataTable.ext.search = [];
+
+            // Add new filter function
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
                 const row = table.row(dataIndex).node();
                 const rowStandar = $(row).data('standar') ? $(row).data('standar').toString().split(',') : [];
                 const rowKlausul = $(row).data('klausul') ? $(row).data('klausul').toString().split(',') : [];
                 const rowPemilik = $(row).data('pemilik') || '';
+                
+                // Get document type from the table data (column index 5)
+                const rowDocumentType = data[5] || ''; // Column 5 is Document Type
 
                 // Standard filter
                 const standarMatch = !selectedStandard || rowStandar.includes(selectedStandard);
@@ -1431,29 +1562,66 @@ $(document).ready(function() {
                 const klausulMatch = selectedClauses.length === 0 || 
                     selectedClauses.some(clause => rowKlausul.includes(clause));
                 
-                // Owner filter
-                const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
-                
-                // Type filter - check against the actual data in the table
-                let jenisMatch = true;
-                if (selectedJenis) {
-                    // Find the selected type name from the radio button label
-                    const selectedTypeLabel = document.querySelector(`label[for="jenis_${selectedJenis}"]`);
-                    const selectedTypeName = selectedTypeLabel ? selectedTypeLabel.textContent : '';
-                    jenisMatch = data[5].includes(selectedTypeName); // Column 5 is Document Type
+                // Owner filter - FIXED: Check for exact match and handle "All" option
+                let pemilikMatch = true;
+                if (selectedOwner && selectedOwner !== '') {
+                    // If "All Document Owners" is selected or empty, show all
+                    if (selectedOwner === 'All Document Owners' || selectedOwner === 'all') {
+                        pemilikMatch = true;
+                    } else {
+                        // Exact match for specific owner
+                        pemilikMatch = rowPemilik === selectedOwner;
+                    }
                 }
+                
+                // Type filter - FIXED: Check against type ID from data attributes or table content
+                let jenisMatch = true;
+                if (selectedType && selectedType !== '') {
+                    // If "All Document Types" is selected, show all
+                    if (selectedType === 'All Document Types' || selectedType === 'all') {
+                        jenisMatch = true;
+                    } else {
+                        // Find the selected type name from the kategori_dokumen data
+                        const selectedTypeLabel = document.querySelector(`label[for="jenis_${selectedType}"]`);
+                        const selectedTypeName = selectedTypeLabel ? selectedTypeLabel.textContent : '';
+                        
+                        // Match against the document type column content
+                        jenisMatch = rowDocumentType.includes(selectedTypeName);
+                    }
+                }
+
+                console.log('Row check:', {
+                    rowIndex: dataIndex,
+                    standarMatch,
+                    klausulMatch, 
+                    pemilikMatch,
+                    jenisMatch,
+                    rowPemilik,
+                    selectedOwner,
+                    rowDocumentType,
+                    selectedType
+                });
 
                 return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
             });
 
+            // Apply the filter
             table.draw();
-            $.fn.dataTable.ext.search.pop();
+            
+            // Check if there are visible rows
             checkVisibleRows();
+            
+            // Close all dropdowns after filtering
+            document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
+                d.classList.remove('show');
+            });
         });
 
         // Function to check if there are visible rows and show/hide no-data message
         function checkVisibleRows() {
             const visibleRows = table.rows({ filter: 'applied' }).data().length;
+            console.log('Visible rows after filter:', visibleRows);
+            
             if (visibleRows === 0) {
                 $('#no-data-message').show();
                 $('#dokumenTable').hide();
@@ -1560,7 +1728,7 @@ $(document).ready(function() {
         $(document).on('click', '.modal .filter-dropdown', function(e) {
             e.stopPropagation();
         });
-        // Form submission handling - FIX: Use correct endpoint
+        // Form submission handling - FIXED VERSION
         if (documentPrivilege.can_update) {
             $('.edit-form').on('submit', function(e) {
                 e.preventDefault();
@@ -1569,6 +1737,7 @@ $(document).ready(function() {
                 const modalId = '#editModal' + formData.get('id');
                 $(modalId).modal('hide');
                 console.log('Form submission data:', Object.fromEntries(formData));
+                
                 Swal.fire({
                     title: 'Saving...',
                     text: 'Processing data',
@@ -1579,36 +1748,71 @@ $(document).ready(function() {
                         Swal.showLoading();
                     }
                 });
+                
                 $.ajax({
-                    url: '<?= base_url('document-list/update') ?>',  // FIXED: Use correct endpoint
+                    url: '<?= base_url('document-list/update') ?>',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     dataType: 'json',
+                    
                     success: function(response) {
                         console.log('Update response:', response);
-                        Swal.fire({
-                            icon: response.swal.icon,
-                            title: response.swal.title,
-                            text: response.swal.text,
-                            confirmButtonText: 'OK',
-                            showConfirmButton: true
-                        }).then(() => {
-                            if (response.status === 'success') {
+                        
+                        // FIXED: Handle both success dan error response di success callback
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: response.swal.icon,
+                                title: response.swal.title,
+                                text: response.swal.text,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: response.swal.confirmButtonColor || '#28a745'
+                            }).then(() => {
                                 location.reload();
-                            }
-                        });
+                            });
+                        } else {
+                            // Status error tapi masuk ke success callback
+                            Swal.fire({
+                                icon: response.swal.icon || 'error',
+                                title: response.swal.title || 'Error',
+                                text: response.swal.text || response.message || 'Terjadi kesalahan',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: response.swal.confirmButtonColor || '#dc3545'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
                     },
+                    
                     error: function(xhr, status, error) {
                         console.error('Update error:', xhr.responseJSON, status, error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Failed to update document: ' + (xhr.responseJSON?.message || error),
-                            confirmButtonText: 'OK',
-                            showConfirmButton: true
-                        });
+                        
+                        let response = xhr.responseJSON;
+                        
+                        // FIXED: Handle response dari controller dengan benar
+                        if (response && response.swal) {
+                            Swal.fire({
+                                icon: response.swal.icon || 'error',
+                                title: response.swal.title || 'Error',
+                                text: response.swal.text || response.message || 'Terjadi kesalahan',
+                                confirmButtonText: response.swal.confirmButtonText || 'OK',
+                                confirmButtonColor: response.swal.confirmButtonColor || '#dc3545'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            // FIXED: Fallback untuk error tanpa response.swal
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: response?.message || error || 'Failed to update document',
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#dc3545'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
                     }
                 });
             });
@@ -1663,7 +1867,7 @@ $(document).ready(function() {
             icon: 'success',
             title: 'Success!',
             text: '<?= esc(session()->getFlashdata('success')) ?>',
-            confirmButtonColor: '#0d6efd'
+            confirmButtonColor: '#6f42c1'
         });
     </script>
 <?php endif; ?>
