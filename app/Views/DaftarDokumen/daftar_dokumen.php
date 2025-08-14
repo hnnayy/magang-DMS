@@ -10,187 +10,17 @@
     $roleModel = new \App\Models\RoleModel();
     $currentUserRole = $roleModel->find($currentUserRoleId);
     $currentUserAccessLevel = $currentUserRole['access_level'] ?? 2; // Default level 2 (lower access)
-    // Ambil privilege untuk daftar-dokumen dari session
+    // Get privilege for document-list from session
     $documentPrivilege = session()->get('privileges')['document-list'] ?? [
         'can_create' => 0,
         'can_update' => 0,
         'can_delete' => 0,
         'can_approve' => 0
     ];
-    // Cek apakah user memiliki privilege untuk aksi apapun
+    // Check if user has privilege for any action
     $hasAnyPrivilege = $documentPrivilege['can_update'] || $documentPrivilege['can_delete'];
 ?>
 <style>
-    
-    /* Ensure dropdown toggle is clickable */
-    .filter-toggle {
-        background-color: white !important;
-        border: 1px solid #ced4da !important;
-        padding: 0.375rem 0.75rem !important;
-        border-radius: 0.375rem !important;
-        cursor: pointer !important;
-        min-width: 180px;
-        text-align: left;
-        display: flex !important;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 14px;
-        pointer-events: auto !important;
-    }
-    .filter-toggle:hover {
-        background-color: #f8f9fa !important;
-    }
-    .filter-toggle:after {
-        content: "▼" !important;
-        font-size: 0.8em;
-        color: #6c757d;
-    }
-    .clear-selection {
-        padding: 8px 12px;
-        background: #dc3545;
-        color: white;
-        cursor: pointer;
-        font-size: 12px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        align-items: center;
-    }
-    .clear-selection:hover {
-        background: #c82333;
-    }
-    .dropdown-search {
-        padding: 8px 12px;
-        border-bottom: 1px solid #eee;
-        background: #f8f9fa;
-    }
-    .dropdown-search input {
-        width: 100%;
-        padding: 4px 8px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        font-size: 12px;
-    }
-    .option-group {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    .option-item {
-        display: flex;
-        align-items: center;
-        padding: 8px 12px;
-        font-size: 13px;
-        border-bottom: 1px solid #f1f1f1;
-    }
-    .option-item:last-child {
-        border-bottom: none;
-    }
-    .option-item input[type="radio"],
-    .option-item input[type="checkbox"] {
-        margin-right: 8px;
-        margin-top: 0;
-    }
-    .option-item label {
-        margin: 0;
-        cursor: pointer;
-        flex: 1;
-        line-height: 1.2;
-    }
-    .no-results {
-        padding: 12px;
-        text-align: center;
-        color: #999;
-        font-style: italic;
-        font-size: 12px;
-    }
-    .disabled-message {
-        padding: 12px;
-        text-align: center;
-        color: #6c757d;
-        font-style: italic;
-        font-size: 12px;
-        background: #f8f9fa;
-    }
-    /* Other styles remain unchanged */
-    .filter-dropdown {
-        position: relative;
-        display: inline-block;
-    }
-    .filter-dropdown-content {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        background-color: white;
-        min-width: 300px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 1000000;
-        border: 1px solid #ced4da;
-        border-radius: 0.375rem;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    .filter-dropdown.show .filter-dropdown-content {
-        display: block;
-    }
-    /* Text truncation */
-    .text-truncate-custom {
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: inline-block;
-    }
-    /* Table specific styles */
-    .aksi-column,
-    td.aksi-column {
-        min-width: 90px;
-        text-align: center;
-        white-space: nowrap;
-    }
-    .kode-dokumen-simple {
-        font-size: 0.9rem;
-        color: #333;
-        line-height: 1.4;
-    }
-    /* DataTables custom styling */
-    .pagination-container {
-        display: flex;
-        justify-content: flex-end;
-        padding-right: 20px;
-    }
-    .pagination-container .dataTables_paginate {
-        display: flex;
-        gap: 5px;
-    }
-    .pagination-container .dataTables_paginate .paginate_button {
-        padding: 8px 12px;
-        margin: 0 2px;
-        background-color: #ffffff;
-        color: #000000;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: 500;
-        font-size: 14px;
-        transition: all 0.2s ease-in-out;
-        cursor: pointer;
-        min-width: 40px;
-        text-align: center;
-    }
-    .pagination-container .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
-        background-color: #000000;
-        color: #ffffff;
-    }
-    .pagination-container .dataTables_paginate .paginate_button.current {
-        background-color: #dc3545 !important;
-        color: white !important;
-    }
-    .pagination-container .dataTables_paginate .paginate_button.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: #f8f9fa !important;
-        color: #6c757d !important;
-    }
     /* Hide action column if no privileges */
     <?php if (!$hasAnyPrivilege): ?>
     .aksi-column {
@@ -203,23 +33,24 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="<?= base_url('assets/css/daftar-dokumen.css') ?>">
 <div class="container-fluid px-4 py-4">
-    <h4 class="mb-4">Daftar Dokumen</h4>
+    <h4 class="mb-4">Document List</h4>
     <!-- FILTER SECTION -->
     <div class="bg-light p-3 rounded mb-4">
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <strong class="form-label mb-0 me-2">Filter Data</strong>
-            <!-- Filter Standar dengan Radio Button -->
+            
+            <!-- Filter Standard with Radio Button -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterStandar', event)">
-                    <span id="filterStandarText">Pilih Standar...</span>
+                    <span id="filterStandarText">Select Standard...</span>
                 </div>
                 <div class="filter-dropdown-content" id="filterStandarContent">
                     <div class="clear-selection" onclick="clearStandardSelection()">
-                        <i class="bi bi-x-circle me-1"></i> Hapus Pilihan
+                        <i class="bi bi-x-circle me-1"></i> Clear Selection
                     </div>
                     <div class="dropdown-search">
-                        <input type="text" placeholder="Cari standar..." onkeyup="filterStandardOptions()" id="standardSearchInput">
+                        <input type="text" placeholder="Search standard..." onkeyup="filterStandardOptions()" id="standardSearchInput">
                     </div>
                     <div class="option-group" id="standardRadioGroup">
                         <?php foreach ($standards as $s): ?>
@@ -229,81 +60,144 @@
                                        value="<?= $s['id'] ?>" 
                                        name="standar_filter"
                                        class="standar-radio"
-                                       onchange="updateClauseFilter(); updateStandardText();">
+                                       onchange="updateClauseFilter(); updateStandardText(); closeDropdown('filterStandar');">
                                 <label for="standar_<?= $s['id'] ?>"><?= esc($s['nama_standar']) ?></label>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
             </div>
-            <!-- Filter Klausul dengan Checkbox (Dynamic based on Standard) -->
+            
+            <!-- Filter Clause with Checkbox (Dynamic based on Standard) -->
             <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
                 <div class="filter-toggle" onclick="toggleDropdown('filterKlausul', event)" id="clauseToggle">
-                    <span id="filterKlausulText">Pilih Klausul...</span>
+                    <span id="filterKlausulText">Select Clause...</span>
                 </div>
                 <div class="filter-dropdown-content" id="filterKlausulContent">
                     <div class="clear-selection" onclick="clearClauseSelection()">
-                        <i class="bi bi-x-circle me-1"></i> Hapus Pilihan
+                        <i class="bi bi-x-circle me-1"></i> Clear Selection
                     </div>
                     <div class="dropdown-search">
-                        <input type="text" placeholder="Cari klausul..." onkeyup="filterClauseOptions()" id="clauseSearchInput">
+                        <input type="text" placeholder="Search clause..." onkeyup="filterClauseOptions()" id="clauseSearchInput">
                     </div>
                     <div class="option-group" id="clauseCheckboxGroup">
-                        <div class="disabled-message">Pilih standar terlebih dahulu</div>
+                        <div class="disabled-message">Select standard first</div>
                     </div>
                 </div>
             </div>
-            <!-- Filter Pemilik Dokumen -->
-            <div class="flex-grow-1" style="min-width:180px;">
-                <select class="form-select" id="filterPemilik">
-                    <option value="">Semua Pemilik Dokumen</option>
-                    <?php 
-                    $unique_owners = [];
-                    foreach ($document as $doc) {
-                        $documentCreatorId = $doc['createdby_id'] ?? 0;
-                        $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
-                        $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
-                        $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
-                        $documentCreatorName = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
-                        $canViewDocument = false;
-                        $showCreatorName = false;
-                        if ($documentCreatorId == $currentUserId) {
-                            $canViewDocument = true;
-                            $showCreatorName = true;
-                        } elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
-                            $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
-                            $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
-                            $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
-                            $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
-                            if ($inSameHierarchy) {
+            
+            <!-- Filter Document Owner - UPDATED: Now Searchable -->
+            <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
+                <div class="filter-toggle" onclick="toggleDropdown('filterPemilik', event)">
+                    <span id="filterPemilikText">All Document Owners</span>
+                </div>
+                <div class="filter-dropdown-content" id="filterPemilikContent">
+                    <div class="clear-selection" onclick="clearOwnerSelection()">
+                        <i class="bi bi-x-circle me-1"></i> Clear Selection
+                    </div>
+                    <div class="dropdown-search">
+                        <input type="text" placeholder="Search owner..." onkeyup="filterOwnerOptions()" id="ownerSearchInput">
+                    </div>
+                    <div class="option-group" id="ownerRadioGroup">
+                        <div class="option-item" data-text="all document owners">
+                            <input type="radio" 
+                                   id="pemilik_all" 
+                                   value="" 
+                                   name="pemilik_filter"
+                                   class="pemilik-radio"
+                                   checked
+                                   onchange="updateOwnerText(); closeDropdown('filterPemilik');">
+                            <label for="pemilik_all">All Document Owners</label>
+                        </div>
+                        <?php 
+                        $unique_owners = [];
+                        foreach ($document as $doc) {
+                            $documentCreatorId = $doc['createdby_id'] ?? 0;
+                            $documentCreatorUnitId = $doc['creator_unit_id'] ?? 0;
+                            $documentCreatorUnitParentId = $doc['creator_unit_parent_id'] ?? 0;
+                            $documentCreatorAccessLevel = $doc['creator_access_level'] ?? 2;
+                            $documentCreatorName = $doc['creator_fullname'] ?? $doc['createdby'] ?? 'Unknown User';
+                            $canViewDocument = false;
+                            $showCreatorName = false;
+                            
+                            if ($documentCreatorId == $currentUserId) {
                                 $canViewDocument = true;
                                 $showCreatorName = true;
+                            } elseif ($currentUserAccessLevel < $documentCreatorAccessLevel) {
+                                $sameUnit = ($documentCreatorUnitId == $currentUserUnitId);
+                                $sameUnitParent = ($documentCreatorUnitParentId == $currentUserUnitParentId);
+                                $creatorIsSubordinate = ($documentCreatorUnitParentId == $currentUserUnitId);
+                                $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
+                                if ($inSameHierarchy) {
+                                    $canViewDocument = true;
+                                    $showCreatorName = true;
+                                }
+                            } elseif ($currentUserAccessLevel == 2) {
+                                $canViewDocument = false;
                             }
-                        } elseif ($currentUserAccessLevel == 2) {
-                            $canViewDocument = false;
+                            
+                            if ($canViewDocument && $showCreatorName && !empty($documentCreatorName) && $documentCreatorName != 'Unknown User') {
+                                $unique_owners[$documentCreatorName] = $documentCreatorName;
+                            }
                         }
-                        if ($canViewDocument && $showCreatorName && !empty($documentCreatorName) && $documentCreatorName != 'Unknown User') {
-                            $unique_owners[$documentCreatorName] = $documentCreatorName;
-                        }
-                    }
-                    foreach ($unique_owners as $owner): 
-                    ?>
-                        <option value="<?= esc($owner) ?>"><?= esc($owner) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                        foreach ($unique_owners as $owner): 
+                        ?>
+                            <div class="option-item" data-text="<?= strtolower(esc($owner)) ?>">
+                                <input type="radio" 
+                                       id="pemilik_<?= md5($owner) ?>" 
+                                       value="<?= esc($owner) ?>" 
+                                       name="pemilik_filter"
+                                       class="pemilik-radio"
+                                       onchange="updateOwnerText(); closeDropdown('filterPemilik');">
+                                <label for="pemilik_<?= md5($owner) ?>"><?= esc($owner) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
-            <!-- Filter Jenis Dokumen -->
-            <div class="flex-grow-1" style="min-width:180px;">
-                <select class="form-select" id="filterJenis">
-                    <option value="">Semua Jenis Dokumen</option>
-                    <?php foreach ($kategori_dokumen as $k): ?>
-                        <option value="<?= $k['id'] ?>"><?= $k['name'] ?></option>
-                    <?php endforeach; ?>
-                </select>
+            
+            <!-- Filter Document Type - UPDATED: Now Searchable -->
+            <div class="filter-dropdown flex-grow-1" style="min-width:180px;">
+                <div class="filter-toggle" onclick="toggleDropdown('filterJenis', event)">
+                    <span id="filterJenisText">All Document Types</span>
+                </div>
+                <div class="filter-dropdown-content" id="filterJenisContent">
+                    <div class="clear-selection" onclick="clearTypeSelection()">
+                        <i class="bi bi-x-circle me-1"></i> Clear Selection
+                    </div>
+                    <div class="dropdown-search">
+                        <input type="text" placeholder="Search document type..." onkeyup="filterTypeOptions()" id="typeSearchInput">
+                    </div>
+                    <div class="option-group" id="typeRadioGroup">
+                        <div class="option-item" data-text="all document types">
+                            <input type="radio" 
+                                   id="jenis_all" 
+                                   value="" 
+                                   name="jenis_filter"
+                                   class="jenis-radio"
+                                   checked
+                                   onchange="updateTypeText(); closeDropdown('filterJenis');">
+                            <label for="jenis_all">All Document Types</label>
+                        </div>
+                        <?php foreach ($kategori_dokumen as $k): ?>
+                            <div class="option-item" data-text="<?= strtolower(esc($k['name'])) ?>">
+                                <input type="radio" 
+                                       id="jenis_<?= $k['id'] ?>" 
+                                       value="<?= $k['id'] ?>" 
+                                       name="jenis_filter"
+                                       class="jenis-radio"
+                                       onchange="updateTypeText(); closeDropdown('filterJenis');">
+                                <label for="jenis_<?= $k['id'] ?>"><?= esc($k['name']) ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
-            <!-- Tombol Filter dan Export -->
+            
+            <!-- Filter and Export Buttons -->
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-primary btn-sm" id="btnFilter">Filter</button>
+                <button class="btn btn-warning btn-sm" id="btnResetFilter">Reset Filter</button>
                 <button class="btn btn-success btn-sm" id="excel-button-container">Export Excel</button>
             </div>
         </div>
@@ -325,22 +219,22 @@
                         <thead class="table-light">
                             <tr>
                                 <th>No</th>
-                                <th>Fakultas/Direktorat</th>
-                                <th>Jurusan/Unit/Program</th>
-                                <th>Standar</th>
-                                <th>Klausul</th>
-                                <th>Jenis Dokumen</th>
-                                <th>Kode & Nama Dokumen</th>
-                                <th>Nomor Dokumen</th>
-                                <th>Nama Dokumen</th>
-                                <th>Pemilik Dokumen</th>
-                                <th>File Dokumen</th>
-                                <th>Revisi</th>
-                                <th>Tanggal Efektif</th>
-                                <th>Disetujui Oleh</th>
-                                <th>Tanggal Persetujuan</th>
+                                <th>Faculty/Directorate</th>
+                                <th>Department/Unit/Program</th>
+                                <th>Standard</th>
+                                <th>Clause</th>
+                                <th>Document Type</th>
+                                <th>Code & Document Name</th>
+                                <th>Document Number</th>
+                                <th>Document Name</th>
+                                <th>Document Owner</th>
+                                <th>Document File</th>
+                                <th>Revision</th>
+                                <th>Effective Date</th>
+                                <th>Approved By</th>
+                                <th>Approval Date</th>
                                 <?php if ($hasAnyPrivilege): ?>
-                                    <th class="aksi-column">Aksi</th>
+                                    <th class="aksi-column">Action</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -437,14 +331,14 @@
                                     </td>
                                     <td class="text-center">
                                         <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
-                                            <a href="<?= base_url('document-document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                            <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
                                                class="text-decoration-none" 
                                                title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
                                                 <i class="bi bi-download text-success fs-5"></i>
                                             </a>
                                         <?php else: ?>
                                             <span class="text-muted">
-                                                <i class="bi bi-file-earmark-x"></i> Tidak ada file
+                                                <i class="bi bi-file-earmark-x"></i> No file
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -467,7 +361,7 @@
                                                     <form action="<?= base_url('document-list/delete') ?>" method="post" onsubmit="return confirmDelete(event, this);">
                                                         <?= csrf_field() ?>
                                                         <input type="hidden" name="id" value="<?= esc($row['id']) ?>">
-                                                        <button type="submit" class="btn btn-link p-0 text-danger" title="Hapus">
+                                                        <button type="submit" class="btn btn-link p-0 text-danger" title="Delete">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
@@ -480,7 +374,7 @@
                         </tbody>
                     </table>
                     <div class="alert alert-info text-center" style="display: none;" id="no-data-message">
-                        <i class="bi bi-info-circle"></i> Tidak ada dokumen yang ditemukan sesuai kriteria Anda.
+                        <i class="bi bi-info-circle"></i> No documents found matching your criteria.
                     </div>
                 </div>
                 <div class="pagination-container"></div>
@@ -488,7 +382,7 @@
         </div>
     </div>
 </div>
-<!-- MODAL EDIT DOKUMEN -->
+<!-- DOCUMENT EDIT MODAL -->
 <?php 
 foreach ($document as $row): 
     $documentId = esc($row['id']);
@@ -533,20 +427,20 @@ foreach ($document as $row):
             <input type="hidden" name="id" value="<?= $documentId ?>">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel<?= $documentId ?>">Edit Dokumen</h5>
+                    <h5 class="modal-title" id="editModalLabel<?= $documentId ?>">Edit Document</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Standar</label>
+                            <label class="form-label">Standard</label>
                             <div class="filter-dropdown w-100 no-choices">
                                 <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterStandar_<?= $documentId ?>', event)">
                                     <span id="editFilterStandarText_<?= $documentId ?>">
                                         <?php
                                         // Display the selected standard name
                                         $selectedStandardId = array_filter(explode(',', $row['standar_ids'] ?? ''))[0] ?? '';
-                                        $selectedStandardName = 'Pilih Standar...';
+                                        $selectedStandardName = 'Select Standard...';
                                         foreach ($standards as $s) {
                                             if ($s['id'] == $selectedStandardId) {
                                                 $selectedStandardName = esc($s['nama_standar']);
@@ -559,10 +453,10 @@ foreach ($document as $row):
                                 </div>
                                 <div class="filter-dropdown-content" id="editFilterStandarContent_<?= $documentId ?>">
                                     <div class="clear-selection" onclick="clearEditStandardSelection('<?= $documentId ?>')">
-                                        <i class="bi bi-x-circle me-1"></i> Hapus Pilihan
+                                        <i class="bi bi-x-circle me-1"></i> Clear Selection
                                     </div>
                                     <div class="dropdown-search">
-                                        <input type="text" placeholder="Cari standar..." onkeyup="filterEditStandardOptions('<?= $documentId ?>')" id="editStandardSearchInput_<?= $documentId ?>">
+                                        <input type="text" placeholder="Search standard..." onkeyup="filterEditStandardOptions('<?= $documentId ?>')" id="editStandardSearchInput_<?= $documentId ?>">
                                     </div>
                                     <div class="option-group" id="editStandardRadioGroup_<?= $documentId ?>">
                                         <?php foreach ($standards as $s): ?>
@@ -572,7 +466,7 @@ foreach ($document as $row):
                                                        value="<?= $s['id'] ?>" 
                                                        name="standar_id"
                                                        class="edit-standar-radio"
-                                                       onchange="updateEditStandardText('<?= $documentId ?>'); updateEditClauseFilter('<?= $documentId ?>');"
+                                                       onchange="updateEditStandardText('<?= $documentId ?>'); updateEditClauseFilter('<?= $documentId ?>'); closeEditDropdown('editFilterStandar_<?= $documentId ?>');"
                                                        <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'checked' : '' ?>>
                                                 <label for="edit_standar_<?= $documentId ?>_<?= $s['id'] ?>"><?= esc($s['nama_standar']) ?></label>
                                             </div>
@@ -582,7 +476,7 @@ foreach ($document as $row):
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Klausul</label>
+                            <label class="form-label">Clause</label>
                             <div class="filter-dropdown w-100 no-choices">
                                 <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterKlausul_<?= $documentId ?>', event)" id="editClauseToggle_<?= $documentId ?>">
                                     <span id="editFilterKlausulText_<?= $documentId ?>">
@@ -596,22 +490,22 @@ foreach ($document as $row):
                                             }
                                         }
                                         if (count($selectedClauseNames) > 1) {
-                                            echo count($selectedClauseNames) . ' klausul dipilih';
+                                            echo count($selectedClauseNames) . ' clauses selected';
                                         } elseif (count($selectedClauseNames) === 1) {
                                             $fullText = $selectedClauseNames[0];
                                             echo strlen($fullText) > 30 ? substr($fullText, 0, 27) . '...' : $fullText;
                                         } else {
-                                            echo 'Pilih Klausul...';
+                                            echo 'Select Clause...';
                                         }
                                         ?>
                                     </span>
                                 </div>
                                 <div class="filter-dropdown-content" id="editFilterKlausulContent_<?= $documentId ?>">
                                     <div class="clear-selection" onclick="clearEditClauseSelection('<?= $documentId ?>')">
-                                        <i class="bi bi-x-circle me-1"></i> Hapus Pilihan
+                                        <i class="bi bi-x-circle me-1"></i> Clear Selection
                                     </div>
                                     <div class="dropdown-search">
-                                        <input type="text" placeholder="Cari klausul..." onkeyup="filterEditClauseOptions('<?= $documentId ?>')" id="editClauseSearchInput_<?= $documentId ?>">
+                                        <input type="text" placeholder="Search clause..." onkeyup="filterEditClauseOptions('<?= $documentId ?>')" id="editClauseSearchInput_<?= $documentId ?>">
                                     </div>
                                     <div class="option-group" id="editClauseCheckboxGroup_<?= $documentId ?>">
                                         <?php
@@ -636,14 +530,14 @@ foreach ($document as $row):
                                             endforeach;
                                         else:
                                         ?>
-                                            <div class="disabled-message">Pilih standar terlebih dahulu</div>
+                                            <div class="disabled-message">Select standard first</div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Jenis Dokumen</label>
+                            <label class="form-label">Document Type</label>
                             <select name="type" class="form-select" disabled>
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
                                     <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
@@ -653,13 +547,13 @@ foreach ($document as $row):
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Kode Jenis</label>
+                            <label class="form-label">Type Code</label>
                             <input type="text" class="form-control" name="type_code" 
                                    value="<?= esc($row['kode_jenis_dokumen'] ?? $row['kode_dokumen_kode'] ?? '-') ?>" readonly>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Kode & Nama Dokumen</label>
+                            <label class="form-label">Code & Document Name</label>
                             <div class="form-control" style="background-color: #f8f9fa; color: #6c757d;">
                                 <?php 
                                 if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
@@ -673,77 +567,78 @@ foreach ($document as $row):
                                 } elseif (!empty($row['title'])) {
                                     echo esc($row['title']);
                                 } else {
-                                    echo '<span class="text-muted">Tidak ada kode</span>';
+                                    echo '<span class="text-muted">No code</span>';
                                 }
                                 ?>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Nomor</label>
+                            <label class="form-label">Number</label>
                             <input type="text" class="form-control" name="number" value="<?= esc($row['number']) ?>" readonly>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Nama Dokumen</label>
+                            <label class="form-label">Document Name</label>
                             <input type="text" class="form-control" name="title" value="<?= esc($row['title']) ?>" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Pemilik Dokumen</label>
+                            <label class="form-label">Document Owner</label>
                             <input type="text" class="form-control" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Disetujui Oleh</label>
+                            <label class="form-label">Approved By</label>
                             <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
                             <input type="text" class="form-control" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Tanggal Persetujuan</label>
+                            <label class="form-label">Approval Date</label>
                             <input type="datetime-local" class="form-control" name="approvedate" 
                                    value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Revisi</label>
+                            <label class="form-label">Revision</label>
                             <input type="text" class="form-control" name="revision" value="<?= esc($row['revision']) ?>" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Tanggal Efektif</label>
+                            <label class="form-label">Effective Date</label>
                             <input type="date" class="form-control" name="date_published" value="<?= esc($row['date_published']) ?>">
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">File Dokumen</label>
+                            <label class="form-label">Document File</label>
                             <div class="file-display">
                                 <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="file-info flex-grow-1 p-2 bg-light rounded">
                                             <small class="text-muted"><?= esc($row['filename'] ?? basename($row['filepath'])) ?></small>
                                         </div>
-                                        <a href="<?= base_url('document-document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
+                                        <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
                                            class="btn btn-primary btn-sm" 
                                            title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
-                                            <i class="bi bi-download"></i>
+                                            <i class="bi bi-download"></i> View File
                                         </a>
                                     </div>
                                 <?php else: ?>
                                     <div class="alert alert-warning mb-0">
-                                        <i class="bi bi-exclamation-triangle"></i> Tidak ada file tersedia
+                                        <i class="bi bi-exclamation-triangle"></i> No file available
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>    
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 <?php endforeach; ?>
+
 <!-- JS External Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -753,451 +648,514 @@ foreach ($document as $row):
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+
 <!-- Custom JavaScript -->
 <script>
-    // Assume clausesData is available from PHP
+$(document).ready(function() {
+    // Privilege check from PHP
     const clausesData = <?= json_encode($clausesData ?? []) ?>;
-    $(document).ready(function() {
-        // Privilege check dari PHP
-        const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
-        const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
-        const currentUserId = <?= json_encode($currentUserId) ?>;
-        const currentUserAccessLevel = <?= json_encode($currentUserAccessLevel) ?>;
-        // Debug: Log clausesData to verify structure
-        console.log('Clauses Data:', clausesData);
-        // Initialize DataTables
-        const tableConfig = {
-            dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
-            pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
-            language: {
-                paginate: {
-                    previous: "Sebelumnya",
-                    next: "Berikutnya"
-                },
-                zeroRecords: "",
-                info: "Menampilkan *START* sampai *END* dari *TOTAL* entri",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
-                infoFiltered: "(difilter dari *MAX* total entri)"
+    const documentPrivilege = <?= json_encode($documentPrivilege) ?>;
+    const hasAnyPrivilege = <?= json_encode($hasAnyPrivilege) ?>;
+    const currentUserId = <?= json_encode($currentUserId) ?>;
+    const currentUserAccessLevel = <?= json_encode($currentUserAccessLevel) ?>;
+    
+    // Calculate number of columns based on privilege
+    const totalColumns = hasAnyPrivilege ? 16 : 15; // 16 if action column exists, 15 if not
+    
+    // Initialize DataTables with dynamic configuration
+    const tableConfig = {
+        dom: 'rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"l><"pagination-wrapper"p>>',
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
+        language: {
+            lengthMenu: "Show _MENU_ entries",
+            paginate: {
+                previous: "Previous",
+                next: "Next"
             },
-            columnDefs: [
-                { searchable: true, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14] },
-                { className: 'text-center', targets: [0, 10, 11] }
-            ],
-            buttons: [
-                {
-                    extend: 'excel',
-                    title: 'Daftar_Dokumen',
-                    exportOptions: { 
-                        columns: hasAnyPrivilege ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] : ':not(:last-child)'
-                    }
+            zeroRecords: "",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "Showing 0 to 0 of 0 entries",
+            infoFiltered: "(filtered from _MAX_ total entries)"
+        },
+        columnDefs: [
+            { searchable: true, targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13, 14] }, // Enable search on specific columns
+            { className: 'text-center', targets: [0, 10, 11] } // Center align for No, File, and Revision
+        ],
+        buttons: [
+            {
+                extend: 'excel',
+                title: 'Document_List',
+                exportOptions: { 
+                    columns: hasAnyPrivilege ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] : ':not(:last-child)'
                 }
-            ],
-            drawCallback: function() {
-                const paginationHtml = $('.dataTables_paginate').html();
-                if (paginationHtml) {
-                    $('.pagination-container').html('<div class="dataTables_paginate">' + paginationHtml + '</div>');
-                    $('.dataTables_paginate').not('.pagination-container .dataTables_paginate').hide();
-                }
-                
-                const info = this.api().page.info();
-                const infoText = `Menampilkan ${info.start + 1} sampai ${info.end} dari ${info.recordsDisplay} entri`;
-                $('.datatable-info-container').html(`<small class="text-muted">${infoText}</small>`);
             }
-        };
-        if (hasAnyPrivilege) {
-            tableConfig.columnDefs.push({ orderable: false, targets: [-1] });
+        ],
+        drawCallback: function() {
+            const paginationHtml = $('.dataTables_paginate').html();
+            const info = this.api().page.info();
+            const infoText = `Showing ${info.start + 1} to ${info.end} of ${info.recordsDisplay} entries`;
+            
+            // Create pagination container structure with info below
+            $('.pagination-container').html(`
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="table-info-bottom">
+                        <small class="text-muted">${infoText}</small>
+                    </div>
+                    <div class="pagination-wrapper">
+                        ${paginationHtml ? `<div class="dataTables_paginate">${paginationHtml}</div>` : ''}
+                    </div>
+                </div>
+            `);
+            
+            // Hide original pagination from DataTables
+            $('.dataTables_paginate').not('.pagination-container .dataTables_paginate').hide();
+
+            // Clear info container above table
+            $('.datatable-info-container').html('');
+
+            // Styling for wrapper elements
+            $('.dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').css({
+                'position': 'sticky',
+                'left': '0',
+                'background': 'white',
+                'z-index': '10'
+            });
+        }
+    };
+
+    // If action column exists, set as non-sortable
+    if (hasAnyPrivilege) {
+        tableConfig.columnDefs.push({ orderable: false, targets: [-1] });
+    }
+
+    const table = $('#dokumenTable').DataTable(tableConfig);
+
+    // Move export buttons to container
+    table.buttons().container().appendTo('.dt-buttons-container');
+    
+    // Move Excel button to container next to Filter
+    const excelButton = $('.dt-buttons-container .buttons-excel').detach();
+    excelButton.removeClass('dt-button').addClass('btn btn-success');
+    $('#excel-button-container').html(excelButton);
+    
+    // Move length control to container ABOVE the table
+    $('.dt-length-container').html(`
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0">Show:</label>
+            <select class="form-select form-select-sm" id="customLength" style="width: 80px;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <label class="ms-2 mb-0">entries</label>
+        </div>
+    `);
+    
+    const searchHtml = `
+        <div class="d-flex align-items-center">
+            <label class="me-2 mb-0">Search:</label>
+            <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;" placeholder="Search Document...">
+        </div>
+    `;
+    $('.dt-search-container').html(searchHtml);
+    
+    // Connect custom search with DataTables
+    $('#customSearch').on('keyup', function() {
+        const searchTerm = this.value.trim();
+        table.search(searchTerm).draw();
+
+        const visibleRows = table.rows({ filter: 'applied' }).data().length;
+        if (visibleRows === 0) {
+            $('#no-data-message').show();
+            $('#dokumenTable').hide();
+            // Update info text for no results
+            $('.table-info-bottom').html('<small class="text-muted">Showing 0 to 0 of 0 entries</small>');
+        } else {
+            $('#no-data-message').hide();
+            $('#dokumenTable').show();
+        }
+    });
+
+    // Connect custom length selector with DataTables
+    $('#customLength').on('change', function() {
+        table.page.len(parseInt(this.value)).draw();
+    });
+
+    // Handle pagination clicks in new container
+    $(document).on('click', '.pagination-container .paginate_button', function(e) {
+        e.preventDefault();
+        const pageNum = $(this).data('dt-idx');
+        if (pageNum !== undefined) {
+            table.page(pageNum).draw('page');
+        } else if ($(this).hasClass('previous')) {
+            table.page('previous').draw('page');
+        } else if ($(this).hasClass('next')) {
+            table.page('next').draw('page');
+        }
+    });
+
+    // FILTER FUNCTIONALITY
+    // Toggle dropdown function
+    window.toggleDropdown = function(filterId, event) {
+        event.stopPropagation();
+        event.preventDefault();
+        console.log('Toggling dropdown:', filterId);
+        const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+        if (!dropdown) {
+            console.error('Dropdown not found for ID:', filterId);
+            return;
         }
         
-        const table = $('#dokumenTable').DataTable(tableConfig);
-        // Move export buttons to container
-        table.buttons().container().appendTo('.dt-buttons-container');
-        const excelButton = $('.dt-buttons-container .buttons-excel').detach();
-        excelButton.removeClass('dt-button').addClass('btn btn-success btn-sm');
-        $('#excel-button-container').html(excelButton);
-        // Move length control to container
-        $('.dt-length-container').html(`
-            <div class="d-flex align-items-center">
-                <label class="me-2 mb-0">Tampilkan:</label>
-                <select class="form-select form-select-sm" id="customLength" style="width: 80px;">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <label class="ms-2 mb-0">entri</label>
-            </div>
-        `);
-        // Custom search
-        const searchHtml = `
-            <div class="d-flex align-items-center">
-                <label class="me-2 mb-0">Cari:</label>
-                <input type="search" class="form-control form-control-sm" id="customSearch" style="width: 200px;" placeholder="Cari Dokumen...">
-            </div>
-        `;
-        $('.dt-search-container').html(searchHtml);
-        // Connect custom controls
-        $('#customSearch').on('keyup', function() {
-            const searchTerm = this.value.trim();
-            table.search(searchTerm).draw();
-            checkVisibleRows();
+        const isCurrentlyShown = dropdown.classList.contains('show');
+        
+        // Close all dropdowns except those in modals
+        document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
+            d.classList.remove('show');
         });
-        $('#customLength').on('change', function() {
-            table.page.len(parseInt(this.value)).draw();
-        });
-        // Check visible rows and show/hide no data message
-        function checkVisibleRows() {
-            const visibleRows = table.rows({ filter: 'applied' }).data().length;
-            if (visibleRows === 0) {
-                $('#no-data-message').show();
-                $('#dokumenTable').hide();
-            } else {
-                $('#no-data-message').hide();
-                $('#dokumenTable').show();
+        
+        // Open the clicked dropdown if it wasn't already open
+        if (!isCurrentlyShown) {
+            dropdown.classList.add('show');
+            console.log('Dropdown opened:', filterId);
+            
+            // Focus on search input if available
+            const searchInput = dropdown.querySelector('.dropdown-search input');
+            if (searchInput) {
+                setTimeout(() => searchInput.focus(), 100);
             }
+        } else {
+            dropdown.classList.remove('show');
+            console.log('Dropdown closed:', filterId);
         }
-        // Handle pagination clicks
-        $(document).on('click', '.pagination-container .paginate_button', function(e) {
-            e.preventDefault();
-            if ($(this).hasClass('disabled') || $(this).hasClass('current')) return;
+    };
+
+    // Function to close specific dropdown
+    window.closeDropdown = function(filterId) {
+        const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+        if (dropdown) {
+            dropdown.classList.remove('show');
+            console.log('Dropdown closed:', filterId);
+        }
+    };
+
+    // Special function for toggle dropdown in edit modal
+    window.toggleEditDropdown = function(filterId, event) {
+        event.stopPropagation();
+        event.preventDefault();
+        
+        console.log('Toggling edit dropdown:', filterId);
+        
+        const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+        if (!dropdown) {
+            console.error('Edit dropdown not found for ID:', filterId);
+            return;
+        }
+        
+        const isCurrentlyShown = dropdown.classList.contains('show');
+        
+        // Close all other dropdowns in the same modal
+        const modal = dropdown.closest('.modal');
+        if (modal) {
+            modal.querySelectorAll('.filter-dropdown').forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('show');
+                }
+            });
+        }
+        
+        // Toggle the clicked dropdown
+        if (!isCurrentlyShown) {
+            dropdown.classList.add('show');
+            console.log('Edit dropdown opened:', filterId);
             
-            const pageNum = $(this).data('dt-idx');
-            if (pageNum !== undefined) {
-                table.page(pageNum).draw('page');
-            } else if ($(this).hasClass('previous')) {
-                table.page('previous').draw('page');
-            } else if ($(this).hasClass('next')) {
-                table.page('next').draw('page');
+            // Focus on search input if available
+            const searchInput = dropdown.querySelector('.dropdown-search input');
+            if (searchInput) {
+                setTimeout(() => searchInput.focus(), 100);
             }
-        });
-        // FILTER FUNCTIONALITY
-        // Toggle dropdown function
-        window.toggleDropdown = function(filterId, event) {
-            event.stopPropagation();
-            event.preventDefault();
-            console.log('Toggling dropdown:', filterId);
-            const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
-            if (!dropdown) {
-                console.error('Dropdown tidak ditemukan untuk ID:', filterId);
-                return;
-            }
-            
-            const isCurrentlyShown = dropdown.classList.contains('show');
-            
-            // Close all dropdowns except those in modals
+        } else {
+            dropdown.classList.remove('show');
+            console.log('Edit dropdown closed:', filterId);
+        }
+    };
+
+    // Function to close specific edit dropdown
+    window.closeEditDropdown = function(filterId) {
+        const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
+        if (dropdown) {
+            dropdown.classList.remove('show');
+            console.log('Edit dropdown closed:', filterId);
+        }
+    };
+
+    // Close dropdowns when clicking outside, but exclude modal dropdowns
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.filter-dropdown') && !event.target.closest('.modal')) {
             document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
                 d.classList.remove('show');
             });
-            
-            // Open the clicked dropdown if it wasn't already open
-            if (!isCurrentlyShown) {
-                dropdown.classList.add('show');
-                console.log('Dropdown opened:', filterId);
-                
-                // Focus on search input if available
-                const searchInput = dropdown.querySelector('.dropdown-search input');
-                if (searchInput) {
-                    setTimeout(() => searchInput.focus(), 100);
-                }
-            } else {
-                dropdown.classList.remove('show');
-                console.log('Dropdown closed:', filterId);
-            }
-        };
-        // Fungsi khusus untuk toggle dropdown di modal edit
-        window.toggleEditDropdown = function(filterId, event) {
-            event.stopPropagation();
-            event.preventDefault();
-            
-            console.log('Toggling edit dropdown:', filterId);
-            
-            const dropdown = document.querySelector(`.filter-dropdown:has(#${filterId}Content)`);
-            if (!dropdown) {
-                console.error('Edit dropdown tidak ditemukan untuk ID:', filterId);
-                return;
-            }
-            
-            const isCurrentlyShown = dropdown.classList.contains('show');
-            
-            // Close all other dropdowns in the same modal
-            const modal = dropdown.closest('.modal');
-            if (modal) {
-                modal.querySelectorAll('.filter-dropdown').forEach(d => {
-                    if (d !== dropdown) {
-                        d.classList.remove('show');
-                    }
-                });
-            }
-            
-            // Toggle the clicked dropdown
-            if (!isCurrentlyShown) {
-                dropdown.classList.add('show');
-                console.log('Edit dropdown opened:', filterId);
-                
-                // Focus on search input if available
-                const searchInput = dropdown.querySelector('.dropdown-search input');
-                if (searchInput) {
-                    setTimeout(() => searchInput.focus(), 100);
-                }
-            } else {
-                dropdown.classList.remove('show');
-                console.log('Edit dropdown closed:', filterId);
-            }
-        };
-        // Close dropdowns when clicking outside, but exclude modal dropdowns
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.filter-dropdown') && !event.target.closest('.modal')) {
-                document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
-                    d.classList.remove('show');
-                });
-                console.log('Closed non-modal dropdowns due to outside click');
-            }
-        });
-        // Prevent modal dropdowns from being closed by outside clicks within modal
-        $(document).on('click', '.modal .filter-dropdown', function(e) {
-            e.stopPropagation();
-        });
-        // Update clause filter based on selected standard
-        window.updateClauseFilter = function() {
-            const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
-            const selectedStandardId = selectedStandardRadio ? selectedStandardRadio.value : null;
-            const clauseGroup = document.getElementById('clauseCheckboxGroup');
-            const clauseToggle = document.getElementById('clauseToggle');
-            console.log('Updating clause filter for standard:', selectedStandardId);
-            // Clear existing clause checkboxes
-            clauseGroup.innerHTML = '';
-            if (!selectedStandardId) {
-                clauseGroup.innerHTML = '<div class="disabled-message">Pilih standar terlebih dahulu</div>';
-                clauseToggle.style.opacity = '0.6';
-                clauseToggle.style.cursor = 'not-allowed';
-                updateClauseText();
-                return;
-            }
-            clauseToggle.style.opacity = '1';
-            clauseToggle.style.cursor = 'pointer';
-            let hasAvailableClauses = false;
-            clausesData.forEach(clause => {
-                if (selectedStandardId === clause.standar_id.toString()) {
-                    hasAvailableClauses = true;
-                    const checkboxItem = document.createElement('div');
-                    checkboxItem.className = 'option-item';
-                    checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `klausul_${clause.id}`;
-                    checkbox.value = clause.id;
-                    checkbox.name = 'klausul_filter';
-                    checkbox.className = 'klausul-checkbox';
-                    checkbox.onchange = updateClauseText;
-                    const label = document.createElement('label');
-                    label.setAttribute('for', `klausul_${clause.id}`);
-                    label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
-                    checkboxItem.appendChild(checkbox);
-                    checkboxItem.appendChild(label);
-                    clauseGroup.appendChild(checkboxItem);
-                }
-            });
-            if (!hasAvailableClauses) {
-                const emptyMessage = document.createElement('div');
-                emptyMessage.className = 'no-results';
-                emptyMessage.textContent = 'Tidak ada klausul tersedia untuk standar yang dipilih.';
-                clauseGroup.appendChild(emptyMessage);
-            }
+            console.log('Closed non-modal dropdowns due to outside click');
+        }
+    });
+
+    // Prevent modal dropdowns from being closed by outside clicks within modal
+    $(document).on('click', '.modal .filter-dropdown', function(e) {
+        e.stopPropagation();
+    });
+
+    // Update clause filter based on selected standard
+    window.updateClauseFilter = function() {
+        const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
+        const selectedStandardId = selectedStandardRadio ? selectedStandardRadio.value : null;
+        const clauseGroup = document.getElementById('clauseCheckboxGroup');
+        const clauseToggle = document.getElementById('clauseToggle');
+        console.log('Updating clause filter for standard:', selectedStandardId);
+        // Clear existing clause checkboxes
+        clauseGroup.innerHTML = '';
+        if (!selectedStandardId) {
+            clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
+            clauseToggle.style.opacity = '0.6';
+            clauseToggle.style.cursor = 'not-allowed';
             updateClauseText();
-        };
-        // Update clause filter for edit modals
-        window.updateEditClauseFilter = function(modalId) {
-            console.log('Updating edit clause filter for modal:', modalId);
-            
-            // Find the checked radio button in this specific modal
-            const modal = $(`#editModal${modalId}`);
-            const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
-            const selectedStandardId = selectedStandardRadio.length > 0 ? selectedStandardRadio.val() : null;
-            
-            const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
-            const clauseToggle = document.getElementById(`editClauseToggle_${modalId}`);
-            if (!clauseGroup || !clauseToggle) {
-                console.error('Clause elements not found for modal:', modalId);
-                return;
+            return;
+        }
+        clauseToggle.style.opacity = '1';
+        clauseToggle.style.cursor = 'pointer';
+        let hasAvailableClauses = false;
+        clausesData.forEach(clause => {
+            if (selectedStandardId === clause.standar_id.toString()) {
+                hasAvailableClauses = true;
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'option-item';
+                checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `klausul_${clause.id}`;
+                checkbox.value = clause.id;
+                checkbox.name = 'klausul_filter';
+                checkbox.className = 'klausul-checkbox';
+                checkbox.onchange = updateClauseText;
+                const label = document.createElement('label');
+                label.setAttribute('for', `klausul_${clause.id}`);
+                label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
+                checkboxItem.appendChild(checkbox);
+                checkboxItem.appendChild(label);
+                clauseGroup.appendChild(checkboxItem);
             }
-            // Clear existing clause checkboxes
-            clauseGroup.innerHTML = '';
-            if (!selectedStandardId) {
-                clauseGroup.innerHTML = '<div class="disabled-message">Pilih standar terlebih dahulu</div>';
-                clauseToggle.style.opacity = '0.6';
-                clauseToggle.style.cursor = 'not-allowed';
-                updateEditClauseText(modalId);
-                return;
-            }
-            clauseToggle.style.opacity = '1';
-            clauseToggle.style.cursor = 'pointer';
-            // Get existing clause IDs from the table row
-            const row = document.querySelector(`tr[data-standar*="${selectedStandardId}"]`);
-            const existingClauseIds = row ? row.dataset.klausul.split(',') : [];
-            let hasAvailableClauses = false;
-            // Build clause checkboxes
-            clausesData.forEach(clause => {
-                if (selectedStandardId === clause.standar_id.toString()) {
-                    hasAvailableClauses = true;
-                    const checkboxItem = document.createElement('div');
-                    checkboxItem.className = 'option-item';
-                    checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `edit_klausul_${modalId}_${clause.id}`;
-                    checkbox.value = clause.id;
-                    checkbox.name = `clauses[]`;
-                    checkbox.className = 'edit-klausul-checkbox';
-                    
-                    // Set checked status based on existing data
-                    if (existingClauseIds.includes(clause.id.toString())) {
-                        checkbox.checked = true;
-                    }
-                    
-                    // Add change event
-                    checkbox.addEventListener('change', function() {
-                        updateEditClauseText(modalId);
-                    });
-                    const label = document.createElement('label');
-                    label.setAttribute('for', `edit_klausul_${modalId}_${clause.id}`);
-                    label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
-                    label.style.cursor = 'pointer';
-                    checkboxItem.appendChild(checkbox);
-                    checkboxItem.appendChild(label);
-                    clauseGroup.appendChild(checkboxItem);
-                }
-            });
-            if (!hasAvailableClauses) {
-                const emptyMessage = document.createElement('div');
-                emptyMessage.className = 'no-results';
-                emptyMessage.textContent = 'Tidak ada klausul tersedia untuk standar yang dipilih.';
-                clauseGroup.appendChild(emptyMessage);
-            }
+        });
+        if (!hasAvailableClauses) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'no-results';
+            emptyMessage.textContent = 'No clauses available for the selected standard.';
+            clauseGroup.appendChild(emptyMessage);
+        }
+        updateClauseText();
+    };
+
+    // Update clause filter for edit modals
+    window.updateEditClauseFilter = function(modalId) {
+        console.log('Updating edit clause filter for modal:', modalId);
+        
+        // Find the checked radio button in this specific modal
+        const modal = $(`#editModal${modalId}`);
+        const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
+        const selectedStandardId = selectedStandardRadio.length > 0 ? selectedStandardRadio.val() : null;
+        
+        const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
+        const clauseToggle = document.getElementById(`editClauseToggle_${modalId}`);
+        if (!clauseGroup || !clauseToggle) {
+            console.error('Clause elements not found for modal:', modalId);
+            return;
+        }
+        // Clear existing clause checkboxes
+        clauseGroup.innerHTML = '';
+        if (!selectedStandardId) {
+            clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
+            clauseToggle.style.opacity = '0.6';
+            clauseToggle.style.cursor = 'not-allowed';
             updateEditClauseText(modalId);
-        };
-        // Update standard text display
-        window.updateStandardText = function() {
-            const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
-            const standardText = document.getElementById('filterStandarText');
-            if (selectedStandardRadio) {
-                const label = document.querySelector(`label[for="${selectedStandardRadio.id}"]`);
-                standardText.textContent = label.textContent;
-            } else {
-                standardText.textContent = 'Pilih Standar...';
-            }
-        };
-        // Update standard text for edit modals
-        window.updateEditStandardText = function(modalId) {
-            const modal = $(`#editModal${modalId}`);
-            const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
-            const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
-            if (!standardText) {
-                console.error('Standard text element not found for modal:', modalId);
-                return;
-            }
-            if (selectedStandardRadio.length > 0) {
-                const label = modal.find(`label[for="${selectedStandardRadio.attr('id')}"]`);
-                if (label.length > 0) {
-                    standardText.textContent = label.text();
+            return;
+        }
+        clauseToggle.style.opacity = '1';
+        clauseToggle.style.cursor = 'pointer';
+        // Get existing clause IDs from the table row
+        const row = document.querySelector(`tr[data-standar*="${selectedStandardId}"]`);
+        const existingClauseIds = row ? row.dataset.klausul.split(',') : [];
+        let hasAvailableClauses = false;
+        // Build clause checkboxes
+        clausesData.forEach(clause => {
+            if (selectedStandardId === clause.standar_id.toString()) {
+                hasAvailableClauses = true;
+                const checkboxItem = document.createElement('div');
+                checkboxItem.className = 'option-item';
+                checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `edit_klausul_${modalId}_${clause.id}`;
+                checkbox.value = clause.id;
+                checkbox.name = `clauses[]`;
+                checkbox.className = 'edit-klausul-checkbox';
+                
+                // Set checked status based on existing data
+                if (existingClauseIds.includes(clause.id.toString())) {
+                    checkbox.checked = true;
                 }
-            } else {
-                standardText.textContent = 'Pilih Standar...';
+                
+                // Add change event
+                checkbox.addEventListener('change', function() {
+                    updateEditClauseText(modalId);
+                });
+                const label = document.createElement('label');
+                label.setAttribute('for', `edit_klausul_${modalId}_${clause.id}`);
+                label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
+                label.style.cursor = 'pointer';
+                checkboxItem.appendChild(checkbox);
+                checkboxItem.appendChild(label);
+                clauseGroup.appendChild(checkboxItem);
             }
-        };
-        // Update clause text display
-        window.updateClauseText = function() {
-            const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
-            const clauseText = document.getElementById('filterKlausulText');
-            if (selectedClauseCheckboxes.length > 0) {
-                if (selectedClauseCheckboxes.length === 1) {
-                    const label = document.querySelector(`label[for="${selectedClauseCheckboxes[0].id}"]`);
-                    const fullText = label.textContent;
+        });
+        if (!hasAvailableClauses) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'no-results';
+            emptyMessage.textContent = 'No clauses available for the selected standard.';
+            clauseGroup.appendChild(emptyMessage);
+        }
+        updateEditClauseText(modalId);
+    };
+
+    // Update standard text display
+    window.updateStandardText = function() {
+        const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
+        const standardText = document.getElementById('filterStandarText');
+        if (selectedStandardRadio) {
+            const label = document.querySelector(`label[for="${selectedStandardRadio.id}"]`);
+            standardText.textContent = label.textContent;
+        } else {
+            standardText.textContent = 'Select Standard...';
+        }
+    };
+
+    // Update standard text for edit modals
+    window.updateEditStandardText = function(modalId) {
+        const modal = $(`#editModal${modalId}`);
+        const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
+        const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
+        if (!standardText) {
+            console.error('Standard text element not found for modal:', modalId);
+            return;
+        }
+        if (selectedStandardRadio.length > 0) {
+            const label = modal.find(`label[for="${selectedStandardRadio.attr('id')}"]`);
+            if (label.length > 0) {
+                standardText.textContent = label.text();
+            }
+        } else {
+            standardText.textContent = 'Select Standard...';
+        }
+    };
+
+    // Update clause text display
+    window.updateClauseText = function() {
+        const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
+        const clauseText = document.getElementById('filterKlausulText');
+        if (selectedClauseCheckboxes.length > 0) {
+            if (selectedClauseCheckboxes.length === 1) {
+                const label = document.querySelector(`label[for="${selectedClauseCheckboxes[0].id}"]`);
+                const fullText = label.textContent;
+                const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
+                clauseText.textContent = truncatedText;
+            } else {
+                clauseText.textContent = `${selectedClauseCheckboxes.length} clauses selected`;
+            }
+        } else {
+            clauseText.textContent = 'Select Clause...';
+        }
+    };
+
+    // Update clause text for edit modals
+    window.updateEditClauseText = function(modalId) {
+        const modal = $(`#editModal${modalId}`);
+        const selectedClauseCheckboxes = modal.find('input[name="clauses[]"]:checked');
+        const clauseText = document.getElementById(`editFilterKlausulText_${modalId}`);
+        if (!clauseText) {
+            console.error('Clause text element not found for modal:', modalId);
+            return;
+        }
+        if (selectedClauseCheckboxes.length > 0) {
+            if (selectedClauseCheckboxes.length === 1) {
+                const label = modal.find(`label[for="${selectedClauseCheckboxes.first().attr('id')}"]`);
+                if (label.length > 0) {
+                    const fullText = label.text();
                     const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
                     clauseText.textContent = truncatedText;
-                } else {
-                    clauseText.textContent = `${selectedClauseCheckboxes.length} klausul dipilih`;
                 }
             } else {
-                clauseText.textContent = 'Pilih Klausul...';
+                clauseText.textContent = `${selectedClauseCheckboxes.length} clauses selected`;
             }
-        };
-        // Update clause text for edit modals
-        window.updateEditClauseText = function(modalId) {
-            const modal = $(`#editModal${modalId}`);
-            const selectedClauseCheckboxes = modal.find('input[name="clauses[]"]:checked');
-            const clauseText = document.getElementById(`editFilterKlausulText_${modalId}`);
-            if (!clauseText) {
-                console.error('Clause text element not found for modal:', modalId);
-                return;
-            }
-            if (selectedClauseCheckboxes.length > 0) {
-                if (selectedClauseCheckboxes.length === 1) {
-                    const label = modal.find(`label[for="${selectedClauseCheckboxes.first().attr('id')}"]`);
-                    if (label.length > 0) {
-                        const fullText = label.text();
-                        const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                        clauseText.textContent = truncatedText;
-                    }
-                } else {
-                    clauseText.textContent = `${selectedClauseCheckboxes.length} klausul dipilih`;
-                }
-            } else {
-                clauseText.textContent = 'Pilih Klausul...';
-            }
-        };
-        // Clear standard selection
-        window.clearStandardSelection = function() {
-            const checkedStandard = document.querySelector('input[name="standar_filter"]:checked');
-            if (checkedStandard) {
-                checkedStandard.checked = false;
-            }
-            document.getElementById('filterStandarText').textContent = 'Pilih Standar...';
-            document.getElementById('filterStandarContent').classList.remove('show');
-            updateClauseFilter();
-        };
-        // Clear standard selection for edit modals
-        window.clearEditStandardSelection = function(modalId) {
-            const modal = $(`#editModal${modalId}`);
-            const checkedStandard = modal.find('input[name="standar_id"]:checked');
-            
-            if (checkedStandard.length > 0) {
-                checkedStandard.prop('checked', false);
-            }
-            
-            const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
-            if (standardText) {
-                standardText.textContent = 'Pilih Standar...';
-            }
-            
-            const standardContent = document.getElementById(`editFilterStandarContent_${modalId}`);
-            if (standardContent) {
-                $(standardContent).parent('.filter-dropdown').removeClass('show');
-            }
-            
-            updateEditClauseFilter(modalId);
-        };
-        // Clear clause selection
-        window.clearClauseSelection = function() {
-            const checkedClauses = document.querySelectorAll('input[name="klausul_filter"]:checked');
-            checkedClauses.forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            document.getElementById('filterKlausulText').textContent = 'Pilih Klausul...';
-            document.getElementById('filterKlausulContent').classList.remove('show');
-        };
-        // Clear clause selection for edit modals
-        window.clearEditClauseSelection = function(modalId) {
-            const modal = $(`#editModal${modalId}`);
-            const checkedClauses = modal.find('input[name="clauses[]"]:checked');
-            
-            checkedClauses.each(function() {
-                $(this).prop('checked', false);
-            });
+        } else {
+            clauseText.textContent = 'Select Clause...';
+        }
+    };
+
+    // Clear standard selection
+    window.clearStandardSelection = function() {
+        const checkedStandard = document.querySelector('input[name="standar_filter"]:checked');
+        if (checkedStandard) {
+            checkedStandard.checked = false;
+        }
+        document.getElementById('filterStandarText').textContent = 'Select Standard...';
+        document.getElementById('filterStandarContent').classList.remove('show');
+        updateClauseFilter();
+    };
+
+    // Clear standard selection for edit modals
+    window.clearEditStandardSelection = function(modalId) {
+        const modal = $(`#editModal${modalId}`);
+        const checkedStandard = modal.find('input[name="standar_id"]:checked');
+        
+        if (checkedStandard.length > 0) {
+            checkedStandard.prop('checked', false);
+        }
+        
+        const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
+        if (standardText) {
+            standardText.textContent = 'Select Standard...';
+        }
+        
+        const standardContent = document.getElementById(`editFilterStandarContent_${modalId}`);
+        if (standardContent) {
+            $(standardContent).parent('.filter-dropdown').removeClass('show');
+        }
+        
+        updateEditClauseFilter(modalId);
+    };
+
+    // Clear clause selection
+    window.clearClauseSelection = function() {
+        const checkedClauses = document.querySelectorAll('input[name="klausul_filter"]:checked');
+        checkedClauses.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        document.getElementById('filterKlausulText').textContent = 'Select Clause...';
+        document.getElementById('filterKlausulContent').classList.remove('show');
+    };
+
+    // Clear clause selection for edit modals
+    window.clearEditClauseSelection = function(modalId) {
+        const modal = $(`#editModal${modalId}`);
+        const checkedClauses = modal.find('input[name="clauses[]"]:checked');
+        
+        checkedClauses.each(function() {
+            $(this).prop('checked', false);
+        });
             
             const clauseText = document.getElementById(`editFilterKlausulText_${modalId}`);
             if (clauseText) {
-                clauseText.textContent = 'Pilih Klausul...';
+                clauseText.textContent = 'Select Clause...';
             }
             
             const clauseContent = document.getElementById(`editFilterKlausulContent_${modalId}`);
@@ -1224,7 +1182,7 @@ foreach ($document as $row):
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
-                    noResultsMsg.textContent = 'Tidak ada standar ditemukan';
+                    noResultsMsg.textContent = 'No standards found';
                     document.getElementById('standardRadioGroup').appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
@@ -1251,7 +1209,7 @@ foreach ($document as $row):
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
-                    noResultsMsg.textContent = 'Tidak ada klausul ditemukan';
+                    noResultsMsg.textContent = 'No clauses found';
                     document.getElementById('clauseCheckboxGroup').appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
@@ -1278,7 +1236,7 @@ foreach ($document as $row):
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
-                    noResultsMsg.textContent = 'Tidak ada standar ditemukan';
+                    noResultsMsg.textContent = 'No standards found';
                     document.getElementById(`editStandardRadioGroup_${modalId}`).appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
@@ -1305,7 +1263,7 @@ foreach ($document as $row):
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
-                    noResultsMsg.textContent = 'Tidak ada klausul ditemukan';
+                    noResultsMsg.textContent = 'No clauses found';
                     document.getElementById(`editClauseCheckboxGroup_${modalId}`).appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
@@ -1313,6 +1271,198 @@ foreach ($document as $row):
                 noResultsMsg.style.display = 'none';
             }
         };
+
+        // ========== OWNER FILTER FUNCTIONS ==========
+        // Update owner text display
+        window.updateOwnerText = function() {
+            const selectedOwnerRadio = document.querySelector('input[name="pemilik_filter"]:checked');
+            const ownerText = document.getElementById('filterPemilikText');
+            
+            if (selectedOwnerRadio) {
+                const label = document.querySelector(`label[for="${selectedOwnerRadio.id}"]`);
+                ownerText.textContent = label.textContent;
+            } else {
+                ownerText.textContent = 'All Document Owners';
+            }
+        };
+
+        // Clear owner selection
+        window.clearOwnerSelection = function() {
+            // Uncheck all owner radios
+            const checkedOwner = document.querySelector('input[name="pemilik_filter"]:checked');
+            if (checkedOwner) {
+                checkedOwner.checked = false;
+            }
+            
+            // Check the "All" option
+            const allOwnerRadio = document.getElementById('pemilik_all');
+            if (allOwnerRadio) {
+                allOwnerRadio.checked = true;
+            }
+            
+            document.getElementById('filterPemilikText').textContent = 'All Document Owners';
+            document.getElementById('filterPemilikContent').parentElement.classList.remove('show');
+        };
+
+        // Search functionality for owners
+        window.filterOwnerOptions = function() {
+            const searchTerm = document.getElementById('ownerSearchInput').value.toLowerCase();
+            const optionItems = document.querySelectorAll('#ownerRadioGroup .option-item');
+            let hasVisibleItems = false;
+
+            optionItems.forEach(item => {
+                const text = item.getAttribute('data-text') || '';
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Handle no results message
+            let noResultsMsg = document.querySelector('#ownerRadioGroup .no-results');
+            if (!hasVisibleItems && optionItems.length > 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-results';
+                    noResultsMsg.textContent = 'No owners found';
+                    document.getElementById('ownerRadioGroup').appendChild(noResultsMsg);
+                }
+                noResultsMsg.style.display = 'block';
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+        };
+
+        // ========== TYPE FILTER FUNCTIONS ==========
+        // Update type text display
+        window.updateTypeText = function() {
+            const selectedTypeRadio = document.querySelector('input[name="jenis_filter"]:checked');
+            const typeText = document.getElementById('filterJenisText');
+            
+            if (selectedTypeRadio) {
+                const label = document.querySelector(`label[for="${selectedTypeRadio.id}"]`);
+                typeText.textContent = label.textContent;
+            } else {
+                typeText.textContent = 'All Document Types';
+            }
+        };
+
+        // Clear type selection
+        window.clearTypeSelection = function() {
+            // Uncheck all type radios
+            const checkedType = document.querySelector('input[name="jenis_filter"]:checked');
+            if (checkedType) {
+                checkedType.checked = false;
+            }
+            
+            // Check the "All" option
+            const allTypeRadio = document.getElementById('jenis_all');
+            if (allTypeRadio) {
+                allTypeRadio.checked = true;
+            }
+            
+            document.getElementById('filterJenisText').textContent = 'All Document Types';
+            document.getElementById('filterJenisContent').parentElement.classList.remove('show');
+        };
+
+        // Search functionality for types
+        window.filterTypeOptions = function() {
+            const searchTerm = document.getElementById('typeSearchInput').value.toLowerCase();
+            const optionItems = document.querySelectorAll('#typeRadioGroup .option-item');
+            let hasVisibleItems = false;
+
+            optionItems.forEach(item => {
+                const text = item.getAttribute('data-text') || '';
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                    hasVisibleItems = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Handle no results message
+            let noResultsMsg = document.querySelector('#typeRadioGroup .no-results');
+            if (!hasVisibleItems && optionItems.length > 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('div');
+                    noResultsMsg.className = 'no-results';
+                    noResultsMsg.textContent = 'No document types found';
+                    document.getElementById('typeRadioGroup').appendChild(noResultsMsg);
+                }
+                noResultsMsg.style.display = 'block';
+            } else if (noResultsMsg) {
+                noResultsMsg.style.display = 'none';
+            }
+        };
+
+        // ========== UPDATED FILTER APPLICATION ==========
+        // Apply filters - Updated to use the new dropdown values
+        $('#btnFilter').on('click', function() {
+            const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
+            const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
+            const selectedOwnerRadio = document.querySelector('input[name="pemilik_filter"]:checked');
+            const selectedTypeRadio = document.querySelector('input[name="jenis_filter"]:checked');
+            
+            const selectedStandard = selectedStandardRadio ? selectedStandardRadio.value : null;
+            const selectedClauses = Array.from(selectedClauseCheckboxes).map(cb => cb.value);
+            const selectedPemilik = selectedOwnerRadio ? selectedOwnerRadio.value : '';
+            const selectedJenis = selectedTypeRadio ? selectedTypeRadio.value : '';
+
+            console.log('Filter values:', {
+                standard: selectedStandard,
+                clauses: selectedClauses,
+                owner: selectedPemilik,
+                type: selectedJenis
+            });
+
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                const row = table.row(dataIndex).node();
+                const rowStandar = $(row).data('standar') ? $(row).data('standar').toString().split(',') : [];
+                const rowKlausul = $(row).data('klausul') ? $(row).data('klausul').toString().split(',') : [];
+                const rowPemilik = $(row).data('pemilik') || '';
+
+                // Standard filter
+                const standarMatch = !selectedStandard || rowStandar.includes(selectedStandard);
+                
+                // Clause filter
+                const klausulMatch = selectedClauses.length === 0 || 
+                    selectedClauses.some(clause => rowKlausul.includes(clause));
+                
+                // Owner filter
+                const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
+                
+                // Type filter - check against the actual data in the table
+                let jenisMatch = true;
+                if (selectedJenis) {
+                    // Find the selected type name from the radio button label
+                    const selectedTypeLabel = document.querySelector(`label[for="jenis_${selectedJenis}"]`);
+                    const selectedTypeName = selectedTypeLabel ? selectedTypeLabel.textContent : '';
+                    jenisMatch = data[5].includes(selectedTypeName); // Column 5 is Document Type
+                }
+
+                return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
+            });
+
+            table.draw();
+            $.fn.dataTable.ext.search.pop();
+            checkVisibleRows();
+        });
+
+        // Function to check if there are visible rows and show/hide no-data message
+        function checkVisibleRows() {
+            const visibleRows = table.rows({ filter: 'applied' }).data().length;
+            if (visibleRows === 0) {
+                $('#no-data-message').show();
+                $('#dokumenTable').hide();
+                $('.table-info-bottom').html('<small class="text-muted">Showing 0 to 0 of 0 entries</small>');
+            } else {
+                $('#no-data-message').hide();
+                $('#dokumenTable').show();
+            }
+        }
         // Apply filters
         $('#btnFilter').on('click', function() {
             const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
@@ -1357,7 +1507,7 @@ foreach ($document as $row):
                     const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
                     const clauseToggle = document.getElementById(`editClauseToggle_${modalId}`);
                     if (clauseGroup && clauseToggle) {
-                        clauseGroup.innerHTML = '<div class="disabled-message">Pilih standar terlebih dahulu</div>';
+                        clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
                         clauseToggle.style.opacity = '0.6';
                         clauseToggle.style.cursor = 'not-allowed';
                     }
@@ -1420,8 +1570,8 @@ foreach ($document as $row):
                 $(modalId).modal('hide');
                 console.log('Form submission data:', Object.fromEntries(formData));
                 Swal.fire({
-                    title: 'Menyimpan...',
-                    text: 'Memproses data',
+                    title: 'Saving...',
+                    text: 'Processing data',
                     allowOutsideClick: false,
                     allowEscapeKey: false,
                     showConfirmButton: false,
@@ -1455,7 +1605,7 @@ foreach ($document as $row):
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',
-                            text: 'Gagal memperbarui dokumen: ' + (xhr.responseJSON?.message || error),
+                            text: 'Failed to update document: ' + (xhr.responseJSON?.message || error),
                             confirmButtonText: 'OK',
                             showConfirmButton: true
                         });
@@ -1469,19 +1619,19 @@ foreach ($document as $row):
                 event.preventDefault();
                 event.stopPropagation();
                 Swal.fire({
-                    title: 'Apakah Anda yakin?',
-                    text: 'Tindakan ini tidak dapat dibatalkan!',
+                    title: 'Are you sure?',
+                    text: 'This action cannot be undone!',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc3545',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonText: 'Yes, deleted it!',
+                    cancelButtonText: 'cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Menghapus...',
-                            text: 'Mohon tunggu sebentar',
+                            title: 'Deleting...',
+                            text: 'Please wait a moment',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             showConfirmButton: false,
@@ -1511,7 +1661,7 @@ foreach ($document as $row):
     <script>
         Swal.fire({
             icon: 'success',
-            title: 'Berhasil!',
+            title: 'Success!',
             text: '<?= esc(session()->getFlashdata('success')) ?>',
             confirmButtonColor: '#0d6efd'
         });
@@ -1531,7 +1681,7 @@ foreach ($document as $row):
     <script>
         Swal.fire({
             icon: 'warning',
-            title: 'Peringatan!',
+            title: 'Warning',
             text: '<?= esc(session()->getFlashdata('warning')) ?>',
             confirmButtonColor: '#ffc107'
         });
