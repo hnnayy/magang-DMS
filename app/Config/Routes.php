@@ -111,7 +111,7 @@ $routes->get('document-approval/serveFile', 'KelolaDokumen\ControllerPersetujuan
 //document-list
 $routes->get('document-list', 'DaftarDokumen\ControllerDaftarDokumen::index');
 $routes->post('document-list/delete', 'DaftarDokumen\ControllerDaftarDokumen::delete');
-$routes->post('document-list/update', 'DaftarDokumen\ControllerDaftarDokumen::updateDokumen');
+$routes->post('document-list/update', 'DaftarDokumen\ControllerDaftarDokumen::update');
 $routes->get('document-list/serveFile', 'DaftarDokumen\ControllerDaftarDokumen::serveFile');
 
 

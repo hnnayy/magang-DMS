@@ -223,14 +223,21 @@ class ControllerDaftarDokumen extends BaseController
         ]);
     }
 
-    public function updateDokumen()
+    public function update()
     {
+        log_message('info', 'Update method called');
         header('Content-Type: application/json');
 
         $postData = $this->request->getPost();
         $id = $postData['id'] ?? null;
         $standar_id = $postData['standar_id'] ?? null;
         $clauses = $postData['clauses'] ?? [];
+
+        log_message('debug', 'Update request data: ' . json_encode([
+            'id' => $id,
+            'standar_id' => $standar_id,
+            'clauses' => $clauses
+        ]));
 
         if (!$id || !$standar_id) {
             log_message('error', 'Missing document ID or standard_id');
@@ -561,8 +568,7 @@ class ControllerDaftarDokumen extends BaseController
             $inSameHierarchy = $sameUnit || $sameUnitParent || $creatorIsSubordinate;
             
             return $inSameHierarchy;
-        }
-        
+        } 
         return false;
     }
 }
