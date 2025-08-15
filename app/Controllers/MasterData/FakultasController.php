@@ -31,17 +31,8 @@ class FakultasController extends Controller
             'status' => $status
         ]));
         
-        // Validasi input kosong
-        if (empty($nama) || empty($status)) {
-            session()->setFlashdata('swal', [
-                'icon'  => 'error',
-                'title' => 'Error!',
-                'text'  => 'All fields must be filled in.',
-            ]);
-            
-            // Redirect tanpa withInput() agar form kosong
-            return redirect()->back();
-        }
+        // HAPUS VALIDASI FIELD KOSONG - biarkan client-side yang handle
+        // Hanya validasi untuk duplicate check (tetap pake modal)
         
         // Cek apakah nama fakultas sudah ada
         if ($this->unitParentModel->where('name', $nama)->first()) {
@@ -107,7 +98,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty ID is required.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -118,7 +108,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty not found.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -143,13 +132,12 @@ class FakultasController extends Controller
             'status' => $status
         ]));
         
-        if (empty($id) || empty($nama) || empty($status)) {
+        if (empty($id)) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
-                'text'  => 'All fields are required.',
+                'text'  => 'Faculty ID is required.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -160,7 +148,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty not found.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -172,7 +159,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty name already exists.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -190,7 +176,6 @@ class FakultasController extends Controller
                     'title' => 'Success',
                     'text'  => 'Successfully Updated.',
                 ]);
-                
                 log_message('debug', 'Update success alert set in session');
             } else {
                 throw new \Exception('Update failed');
@@ -222,7 +207,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty ID is required.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -233,7 +217,6 @@ class FakultasController extends Controller
                 'title' => 'Error!',
                 'text'  => 'Faculty not found.',
             ]);
-            
             return redirect()->to('faculty-list');
         }
         
@@ -246,7 +229,6 @@ class FakultasController extends Controller
                     'title' => 'Success',
                     'text'  => 'Successfully deleted.',
                 ]);
-                
                 log_message('debug', 'Delete success alert set in session');
             } else {
                 throw new \Exception('Delete failed');

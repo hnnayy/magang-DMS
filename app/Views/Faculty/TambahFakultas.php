@@ -12,15 +12,17 @@
         
         <form id="createFakultasForm" method="post" action="<?= base_url('create-faculty/store') ?>" class="needs-validation" novalidate>
             <?= csrf_field() ?>
+            
             <!-- Nama Fakultas -->
             <div class="form-group">
-                <label class="form-label" for="name">Fakulty/Directorate Name</label>
+                <label class="form-label" for="name">Faculty/Directorate Name</label>
                 <input type="text" id="name" name="name" class="form-input"
                        placeholder="Enter faculty here..."
                        value=""
                        required>
                 <div class="invalid-feedback">Please enter faculty/directorate name.</div>
             </div>
+            
             <!-- Status -->
             <div class="form-group" id="status-group">
                 <label class="form-label d-block">Status</label>
@@ -35,6 +37,7 @@
                 </div>
                 <div class="invalid-feedback">Please select a status.</div>
             </div>
+            
             <button type="submit" class="submit-btn">Submit</button>
         </form>
     </div>
@@ -90,7 +93,6 @@
         });
         
         // Reset group validation
-        document.getElementById('type-group').classList.remove('is-invalid');
         document.getElementById('status-group').classList.remove('is-invalid');
         
         // Set default values kembali
@@ -99,8 +101,6 @@
 
     // Fungsi untuk set default values
     function setDefaultValues() {
-        // Set default Type ke Directorate (1)
-        document.getElementById('type1').checked = true;
         // Set default Status ke Active (1)  
         document.getElementById('status1').checked = true;
     }
@@ -124,25 +124,13 @@
         }
     });
 
-    // Form validation
+    // Form validation - HANYA CLIENT-SIDE untuk field kosong
     (() => {
         'use strict';
         const form = document.getElementById('createFakultasForm');
         
         form.addEventListener('submit', e => {
             let isValid = form.checkValidity();
-            
-            // Validasi untuk radio button Type
-            const typeInputs = form.querySelectorAll('input[name="type"]');
-            const typeGroup = document.getElementById('type-group');
-            const isTypeChecked = Array.from(typeInputs).some(input => input.checked);
-            
-            if (!isTypeChecked) {
-                isValid = false;
-                typeGroup.classList.add('is-invalid');
-            } else {
-                typeGroup.classList.remove('is-invalid');
-            }
             
             // Validasi untuk radio button Status
             const statusInputs = form.querySelectorAll('input[name="status"]');
@@ -176,13 +164,6 @@
         }, false);
         
         // Real-time validation untuk radio buttons
-        document.querySelectorAll('input[name="type"]').forEach(input => {
-            input.addEventListener('change', function() {
-                const typeGroup = document.getElementById('type-group');
-                typeGroup.classList.remove('is-invalid');
-            });
-        });
-        
         document.querySelectorAll('input[name="status"]').forEach(input => {
             input.addEventListener('change', function() {
                 const statusGroup = document.getElementById('status-group');

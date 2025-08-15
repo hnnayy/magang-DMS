@@ -12,7 +12,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center">No</th>
-                    <th>Name Faculty</th>
+                    <th>Faculty Name</th>
                     <th>Status</th>
                     <?php 
                     // Check if user has any action privileges for this page

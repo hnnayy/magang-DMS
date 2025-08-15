@@ -4,13 +4,13 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">Clause Management</h4>
         <div class="d-flex gap-2 align-items-center">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
-                <i class="fas fa-plus fa-sm"></i> Add Clause
-            </button>
             <div class="clause-search-container">
                 <i class="fas fa-search fa-sm clause-search-icon"></i>
                 <input type="text" class="form-control" id="clauseSearchInput" placeholder="Search clauses...">
             </div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
+                <i class="fas fa-plus fa-sm"></i> Add Clause
+            </button>
         </div>
     </div>
 
@@ -71,7 +71,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Clause</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="clauseAddForm">
                 <?= csrf_field() ?>
@@ -96,7 +95,7 @@
                 </div>
                 <div class="modal-footer clause-modal-footer-grid">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
@@ -109,7 +108,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Clause</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="clauseEditForm">
                 <?= csrf_field() ?>

@@ -346,7 +346,6 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                         <input type="hidden" name="document_id" id="editDocumentId">
                         <div class="modal-header border-bottom-0 pb-2">
                             <h5 class="modal-title fw-bold" id="editModalLabel">Edit Document</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="row g-3">
@@ -440,7 +439,6 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                 <div class="modal-content border-0 shadow-sm">
                     <div class="modal-header border-bottom-0 pb-2">
                         <h5 class="modal-title fw-bold" id="historyModalLabel">Document Revision History</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-4">
@@ -492,7 +490,6 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                         <input type="hidden" name="document_id" id="approveDocumentId">
                         <div class="modal-header border-bottom-0 pb-2">
                             <h5 class="modal-title fw-bold">Document Approval</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
@@ -685,32 +682,55 @@ $(document).ready(function() {
         }
     });
 
+    // Hide the default DataTables search
     $('.dataTables_filter').hide();
 
+    // Custom search input
     $('#searchInput').on('keyup', function() {
         table.search(this.value).draw();
     });
 
-    $('#filterFakultas').on('change', function() {
-        const val = this.value;
+    // Combined filter function - FIXED VERSION
+    function applyFilters() {
+        const fakultasFilter = $('#filterFakultas').val();
+        const jenisFilter = $('#filterJenis').val();
+        
         $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
             const row = $('#documentsTable').DataTable().row(dataIndex);
-            const fakultasId = row.node().querySelector('td[data-fakultas]')?.getAttribute('data-fakultas') || '';
-            return val === '' || fakultasId === val;
+            const rowNode = row.node();
+            
+            // Skip if row is empty or invalid
+            if (!rowNode || $(rowNode).hasClass('empty-row')) {
+                return false;
+            }
+            
+            const fakultasId = rowNode.querySelector('td[data-fakultas]')?.getAttribute('data-fakultas') || '';
+            const jenisId = rowNode.querySelector('td[data-jenis]')?.getAttribute('data-jenis') || '';
+            
+            // Check fakultas filter
+            const fakultasMatch = fakultasFilter === '' || fakultasId === fakultasFilter;
+            
+            // Check jenis filter  
+            const jenisMatch = jenisFilter === '' || jenisId === jenisFilter;
+            
+            // Return true only if both filters match
+            return fakultasMatch && jenisMatch;
         });
+        
         table.draw();
+        
+        // Remove the filter after drawing
         $.fn.dataTable.ext.search.pop();
+    }
+
+    // Faculty filter change event
+    $('#filterFakultas').on('change', function() {
+        applyFilters();
     });
 
+    // Type filter change event
     $('#filterJenis').on('change', function() {
-        const val = this.value;
-        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-            const row = $('#documentsTable').DataTable().row(dataIndex);
-            const jenisId = row.node().querySelector('td[data-jenis]')?.getAttribute('data-jenis') || '';
-            return val === '' || jenisId === val;
-        });
-        table.draw();
-        $.fn.dataTable.ext.search.pop();
+        applyFilters();
     });
 
     function filterAndHighlightDocumentFromUrl() {
@@ -844,7 +864,6 @@ $(document).ready(function() {
 
     function resetFilters() {
         table.search('').columns().search('');
-        $.fn.dataTable.ext.search.pop();
         $('#searchInput').val('');
         $('#filterFakultas').val('');
         $('#filterJenis').val('');
