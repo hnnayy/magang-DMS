@@ -295,15 +295,11 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                // Remove row from DataTable by finding the row with matching clause ID
-                const rowToRemove = clauseTable.rows().indexes().filter(function(index) {
-                    const rowNode = clauseTable.row(index).node();
-                    return $(rowNode).attr('data-clause-id') == clauseId;
-                });
+                // Remove row from DataTable
+                clauseTable.row($(`tr[data-clause-id="${clauseId}"]`)).remove().draw();
                 
-                if (rowToRemove.length > 0) {
-                    clauseTable.row(rowToRemove[0]).remove().draw();
-                }
+                // Check if table is empty after deletion and show "No data found"
+                checkAndShowNoDataRow();
                 
                 Swal.fire({
                     icon: 'success',
@@ -330,7 +326,20 @@
         }
     }
 
-
+    // Function to check and show "No data found" row
+    function checkAndShowNoDataRow() {
+        const visibleRows = $('#tableBody tr:visible').not('#noDataRow').length;
+        
+        if (visibleRows === 0) {
+            // Remove existing no data row if any
+            $('#noDataRow').remove();
+            // Add new no data row
+            $('#tableBody').append('<tr id="noDataRow"><td class="text-center" colspan="5">No data found</td></tr>');
+        } else {
+            // Remove no data row if there are visible rows
+            $('#noDataRow').remove();
+        }
+    }
 
     $(document).ready(function() {
         // Initialize DataTable
@@ -341,8 +350,6 @@
                 "info": "Showing _START_ to _END_ of _TOTAL_ entries",
                 "infoEmpty": "Showing 0 to 0 of 0 entries",
                 "infoFiltered": "(filtered from _MAX_ total entries)",
-                "emptyTable": "No data found",
-                "zeroRecords": "No data found",
                 "paginate": {
                     "first": "First",
                     "last": "Last",
@@ -350,9 +357,7 @@
                     "previous": "Previous"
                 }
             },
-            "searching": false, // Disable default search since we're using custom filters
-            "paging": true,
-            "info": true
+            "searching": false // Disable default search since we're using custom filters
         });
 
         // FILTER STANDARD SEARCHABLE DROPDOWN
@@ -477,21 +482,18 @@
             const searchText = $('#searchClause').val().toLowerCase();
             const standardFilter = selectedStandard;
 
-            // Clear DataTable data
-            clauseTable.clear();
+            // Remove existing no data row before filtering
+            $('#noDataRow').remove();
 
-            let filteredData = [];
-            let rowIndex = 1;
+            let visibleCount = 0;
 
-            // Get all original data rows (excluding no data row)
-            $('#tableBody tr[data-clause-id]').each(function() {
-                const row = $(this);
+            $('#tableBody tr').not('#noDataRow').each(function() {
+                const row = this;
                 
                 // Get text content from each cell
-                const standard = row.find('td:nth-child(2)').text();
-                const clause = row.find('td:nth-child(3)').text().toLowerCase();
-                const description = row.find('td:nth-child(4)').text().toLowerCase();
-                const clauseId = row.attr('data-clause-id');
+                const standard = $(row).find('td:nth-child(2)').text();
+                const clause = $(row).find('td:nth-child(3)').text().toLowerCase();
+                const description = $(row).find('td:nth-child(4)').text().toLowerCase();
 
                 let show = true;
 
@@ -505,25 +507,21 @@
                     show = false;
                 }
 
-                // Add to filtered data if it matches
+                // Show/hide row
                 if (show) {
-                    const actionButtons = row.find('td:nth-child(5)').html();
-                    filteredData.push([
-                        rowIndex++,
-                        standard,
-                        row.find('td:nth-child(3)').html(), // Keep original HTML with span
-                        row.find('td:nth-child(4)').text(),
-                        actionButtons
-                    ]);
+                    $(row).show();
+                    visibleCount++;
+                } else {
+                    $(row).hide();
                 }
             });
 
-            // Add filtered data to DataTable
-            if (filteredData.length > 0) {
-                clauseTable.rows.add(filteredData);
+            // Show "No data found" if no rows are visible
+            if (visibleCount === 0) {
+                $('#tableBody').append('<tr id="noDataRow"><td class="text-center" colspan="5">No data found</td></tr>');
             }
 
-            // Redraw table
+            // Update DataTable display
             clauseTable.draw();
         }
 
@@ -538,27 +536,14 @@
             $('#filterStandard').val('');
             selectedStandard = '';
             
-            // Clear and reload original data
-            clauseTable.clear();
+            // Remove no data row
+            $('#noDataRow').remove();
             
-            let originalData = [];
-            let rowIndex = 1;
+            // Show all data rows
+            $('#tableBody tr').not('#noDataRow').show();
             
-            $('#tableBody tr[data-clause-id]').each(function() {
-                const row = $(this);
-                const actionButtons = row.find('td:nth-child(5)').html();
-                originalData.push([
-                    rowIndex++,
-                    row.find('td:nth-child(2)').text(),
-                    row.find('td:nth-child(3)').html(), // Keep original HTML with span
-                    row.find('td:nth-child(4)').text(),
-                    actionButtons
-                ]);
-            });
-            
-            if (originalData.length > 0) {
-                clauseTable.rows.add(originalData);
-            }
+            // Check if we need to show no data row
+            checkAndShowNoDataRow();
             
             clauseTable.draw();
         });
@@ -708,34 +693,8 @@
             $('#clauseEditCode').focus();
         });
 
-        // Initialize table with original data
-        function initializeTableData() {
-            clauseTable.clear();
-            
-            let originalData = [];
-            let rowIndex = 1;
-            
-            $('#tableBody tr[data-clause-id]').each(function() {
-                const row = $(this);
-                const actionButtons = row.find('td:nth-child(5)').html();
-                originalData.push([
-                    rowIndex++,
-                    row.find('td:nth-child(2)').text(),
-                    row.find('td:nth-child(3)').html(),
-                    row.find('td:nth-child(4)').text(),
-                    actionButtons
-                ]);
-            });
-            
-            if (originalData.length > 0) {
-                clauseTable.rows.add(originalData);
-            }
-            
-            clauseTable.draw();
-        }
-
-        // Initial setup
-        initializeTableData();
+        // Initial check for no data
+        checkAndShowNoDataRow();
     });
 </script>
 
