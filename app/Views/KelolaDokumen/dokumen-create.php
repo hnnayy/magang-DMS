@@ -196,6 +196,8 @@
         const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
         const jenisId = selectedOption.value;
 
+        console.log('Jenis changed:', jenisId, 'Use predefined:', usePredefined);
+
         const kodeGroup = document.getElementById('kode-dokumen-group');
         const kodeCustomGroup = document.getElementById('kode-dokumen-custom-group');
         const kodeSelect = document.getElementById('kode-dokumen');
@@ -210,8 +212,14 @@
             namaCustomInput.required = false;
             kodeCustomInput.value = '';
             namaCustomInput.value = '';
+            
+            // Remove validation classes from custom inputs
+            kodeCustomInput.classList.remove('is-invalid');
+            namaCustomInput.classList.remove('is-invalid');
+            
             loadKodeDokumen(jenisId);
         } else {
+            console.log('Setting up custom form');
             kodeGroup.style.display = 'none';
             kodeCustomGroup.style.display = 'block';
             kodeSelect.required = false;
@@ -219,6 +227,9 @@
             namaCustomInput.required = true;
             kodeSelect.innerHTML = '<option value="">-- Select Document --</option>';
             kodeSelect.value = '';
+            
+            // Remove validation classes from predefined select
+            kodeSelect.classList.remove('is-invalid');
         }
     }
 
@@ -257,6 +268,34 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Add form submit validation
+        const form = document.getElementById('addDocumentForm');
+        form.addEventListener('submit', function(e) {
+            console.log('Form submit triggered');
+            
+            const jenisSelect = document.getElementById('jenis-dokumen');
+            const selectedOption = jenisSelect.options[jenisSelect.selectedIndex];
+            const usePredefined = selectedOption.getAttribute('data-use-predefined') === 'true';
+            
+            if (!usePredefined) {
+                const kodeCustom = document.getElementById('kode-dokumen-custom').value.trim();
+                const namaCustom = document.getElementById('nama-dokumen-custom').value.trim();
+                
+                console.log('Custom submission - Kode:', kodeCustom, 'Nama:', namaCustom);
+                
+                if (!kodeCustom || !namaCustom) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: 'Kode dokumen dan nama dokumen custom wajib diisi!',
+                        confirmButtonText: 'OK'
+                    });
+                    return false;
+                }
+            }
+        });
+
         // Check for success message from controller and show SweetAlert
         <?php if (session()->getFlashdata('added_message')): ?>
             Swal.fire({
@@ -265,6 +304,18 @@
                 text: '<?= session()->getFlashdata('added_message') ?>',
                 confirmButtonText: 'OK',
                 confirmButtonColor: '#600c8c',
+                showConfirmButton: true,
+                allowOutsideClick: false
+            });
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('error')): ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '<?= session()->getFlashdata('error') ?>',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc3545',
                 showConfirmButton: true,
                 allowOutsideClick: false
             });

@@ -26,6 +26,9 @@ class ControllerPersetujuan extends BaseController
     protected $notificationModel;
     protected $notificationRecipientsModel;
     protected $userModel;
+    protected $kodeDokumenModel;
+    protected $documentTypeModel;
+    protected $documentApprovalModel;
     protected $db;
     protected $helpers = ['url', 'form'];
     protected $session;
@@ -228,31 +231,39 @@ class ControllerPersetujuan extends BaseController
             ], 404);
         }
 
+        // Convert to array if it's an object
+        if (is_object($originalDocument)) {
+            $originalDocument = (array) $originalDocument;
+        }
+
         try {
             $this->db->transStart();
 
+            // Always set original document status to superseded (4)
+            $this->documentModel->update($documentId, ['status' => 4]);
+
+            // Create new document with new ID
+            $newDocumentData = [
+                'type' => $originalDocument['type'],
+                'kode_dokumen_id' => $originalDocument['kode_dokumen_id'],
+                'number' => $originalDocument['number'],
+                'date_published' => date('Y-m-d'),
+                'revision' => $revisi,
+                'title' => $nama,
+                'description' => $originalDocument['description'],
+                'unit_id' => session()->get('unit_id') ?? $originalDocument['unit_id'] ?? 99,
+                'status' => 1, // Set as approved
+                'createddate' => date('Y-m-d H:i:s'),
+                'createdby' => session('user_id'),
+                'standar_ids' => $originalDocument['standar_ids'] ?? '',
+                'klausul_ids' => $originalDocument['klausul_ids'] ?? ''
+            ];
+
+            $this->documentModel->insert($newDocumentData);
+            $newDocumentId = $this->documentModel->getInsertID();
+
             if ($file && $file->isValid() && !$file->hasMoved()) {
-                $this->documentModel->update($documentId, ['status' => 4]);
-
-                $newDocumentData = [
-                    'type' => $originalDocument['type'],
-                    'kode_dokumen_id' => $originalDocument['kode_dokumen_id'],
-                    'number' => $originalDocument['number'],
-                    'date_published' => date('Y-m-d'),
-                    'revision' => $revisi,
-                    'title' => $nama,
-                    'description' => $originalDocument['description'],
-                    'unit_id' => session()->get('unit_id') ?? $originalDocument['unit_id'] ?? 99,
-                    'status' => 1, // Keep status as approved when updating
-                    'createddate' => date('Y-m-d H:i:s'),
-                    'createdby' => session('user_id'),
-                    'standar_ids' => $originalDocument['standar_ids'] ?? '',
-                    'klausul_ids' => $originalDocument['klausul_ids'] ?? ''
-                ];
-
-                $this->documentModel->insert($newDocumentData);
-                $newDocumentId = $this->documentModel->getInsertID();
-
+                // Handle new file upload
                 $uploadPath = ROOTPATH . '../storage/uploads';
                 if (!is_dir($uploadPath)) {
                     mkdir($uploadPath, 0755, true);
@@ -272,38 +283,51 @@ class ControllerPersetujuan extends BaseController
                     'createdby' => session('user_id'),
                 ]);
             } else {
-                $updateData = [
-                    'title' => $nama,
-                    'revision' => $revisi,
-                    'description' => $keterangan ?: $originalDocument['description'],
-                    'status' => 1, // Maintain approved status when updating without file change
-                ];
-
-                $this->documentModel->update($documentId, $updateData);
-
+                // If no new file uploaded, copy the latest revision from original document
                 $oldRevision = $this->documentRevisionModel
                     ->where('document_id', $documentId)
                     ->orderBy('id', 'DESC')
                     ->first();
 
                 if ($oldRevision) {
-                    $this->documentRevisionModel->update($oldRevision['id'], [
+                    // Copy file to new location if it exists
+                    $newFilepath = null;
+                    if ($oldRevision['filepath'] && file_exists(ROOTPATH . '../' . $oldRevision['filepath'])) {
+                        $uploadPath = ROOTPATH . '../storage/uploads';
+                        if (!is_dir($uploadPath)) {
+                            mkdir($uploadPath, 0755, true);
+                        }
+                        
+                        $oldFile = ROOTPATH . '../' . $oldRevision['filepath'];
+                        $extension = pathinfo($oldRevision['filename'], PATHINFO_EXTENSION);
+                        $newName = uniqid() . '.' . $extension;
+                        $newFilepath = 'storage/uploads/' . $newName;
+                        
+                        copy($oldFile, ROOTPATH . '../' . $newFilepath);
+                    }
+
+                    // Create new revision record for new document
+                    $this->documentRevisionModel->insert([
+                        'document_id' => $newDocumentId,
                         'revision' => $revisi,
+                        'filename' => $oldRevision['filename'],
+                        'filepath' => $newFilepath ?: $oldRevision['filepath'],
+                        'filesize' => $oldRevision['filesize'],
                         'remark' => $keterangan ?: $oldRevision['remark'],
                         'createddate' => date('Y-m-d H:i:s'),
+                        'createdby' => session('user_id'),
                     ]);
                 }
             }
 
-            if ($keterangan) {
-                $this->documentApprovalModel->insert([
-                    'document_id' => $documentId,
-                    'remark' => $keterangan,
-                    'status' => 0,
-                    'createddate' => date('Y-m-d H:i:s'),
-                    'createdby' => session('user_id'),
-                ]);
-            }
+            // Create document approval record for the new approved document
+            $this->documentApprovalModel->insert([
+                'document_id' => $newDocumentId, // Use new document ID
+                'remark' => $keterangan ?: 'Document updated and automatically approved',
+                'status' => 1, // Set as approved to match document status
+                'approvedate' => date('Y-m-d H:i:s'),
+                'approveby' => session('user_id'),
+            ]);
 
             $this->db->transComplete();
 
@@ -313,11 +337,12 @@ class ControllerPersetujuan extends BaseController
 
             $documentType = $this->documentTypeModel->where('id', $originalDocument['type'])->first();
             $documentTypeName = $documentType['name'] ?? 'Unknown Type';
-            $this->createDocumentNotification($documentId, $nama, $documentTypeName);
+            $this->createDocumentNotification($newDocumentId, $nama, $documentTypeName);
 
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Document successfully updated.'
+                'message' => 'New document revision successfully created.',
+                'new_document_id' => $newDocumentId
             ], 200);
         } catch (\Exception $e) {
             log_message('error', 'Error updating document ID ' . $documentId . ': ' . $e->getMessage());
