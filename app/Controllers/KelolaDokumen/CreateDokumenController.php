@@ -26,6 +26,8 @@ class CreateDokumenController extends BaseController
     protected $notificationModel;
     protected $notificationRecipientsModel;
     protected $userModel;
+    protected $kodeDokumenModel;
+    protected $documentCodeModel;
     protected $db;
     protected $helpers = ['url', 'form'];
     protected $session;
@@ -145,6 +147,9 @@ class CreateDokumenController extends BaseController
 
     public function tambah()
 {
+    log_message('debug', 'Starting tambah() method');
+    log_message('debug', 'POST data: ' . json_encode($this->request->getPost()));
+
     $file = $this->request->getFile('file');
     if (!$file->isValid() || $file->hasMoved()) {
         return redirect()->back()->with('error', 'Upload file gagal.');
@@ -156,6 +161,13 @@ class CreateDokumenController extends BaseController
     }
 
     $documentType = $this->documentTypeModel->find($jenisId);
+    if (!$documentType) {
+        return redirect()->back()->with('error', 'Jenis dokumen tidak ditemukan.');
+    }
+    
+    // Convert to array for consistency
+    $documentType = (array) $documentType;
+    
     $usePredefined = str_contains($documentType['description'] ?? '', '[predefined]');
 
     $kodeDokumenId = null;
@@ -169,8 +181,20 @@ class CreateDokumenController extends BaseController
         $kodeCustom = $this->request->getPost('kode-dokumen-custom');
         $namaCustom = $this->request->getPost('nama-dokumen-custom');
 
+        log_message('debug', 'Custom code submission - Kode: ' . $kodeCustom . ', Nama: ' . $namaCustom);
+
         if (!$kodeCustom || !$namaCustom) {
+            log_message('error', 'Kode dokumen dan nama dokumen custom wajib diisi. Kode: ' . ($kodeCustom ?? 'null') . ', Nama: ' . ($namaCustom ?? 'null'));
             return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom wajib diisi.');
+        }
+
+        // Trim whitespace
+        $kodeCustom = trim($kodeCustom);
+        $namaCustom = trim($namaCustom);
+
+        if (empty($kodeCustom) || empty($namaCustom)) {
+            log_message('error', 'Kode dokumen dan nama dokumen custom tidak boleh kosong setelah trim.');
+            return redirect()->back()->with('error', 'Kode dokumen dan nama dokumen custom tidak boleh kosong.');
         }
 
         $existingKode = $this->kodeDokumenModel
@@ -180,6 +204,7 @@ class CreateDokumenController extends BaseController
             ->first();
 
         if ($existingKode) {
+            log_message('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini. Existing ID: ' . $existingKode['id']);
             return redirect()->back()->with('error', 'Kode dokumen "' . $kodeCustom . '" sudah ada untuk jenis ini.');
         }
 
@@ -192,8 +217,16 @@ class CreateDokumenController extends BaseController
             'createdby' => session('user_id')
         ];
 
-        $this->kodeDokumenModel->insert($kodeDokumenData);
+        log_message('debug', 'Inserting kode dokumen data: ' . json_encode($kodeDokumenData));
+
+        $insertResult = $this->kodeDokumenModel->insert($kodeDokumenData);
+        if (!$insertResult) {
+            log_message('error', 'Failed to insert kode dokumen: ' . json_encode($this->kodeDokumenModel->errors()));
+            return redirect()->back()->with('error', 'Gagal menyimpan kode dokumen custom.');
+        }
+        
         $kodeDokumenId = $this->kodeDokumenModel->getInsertID();
+        log_message('debug', 'Successfully inserted kode dokumen with ID: ' . $kodeDokumenId);
     }
 
     $uploadPath = ROOTPATH . '../storage/uploads';

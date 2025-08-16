@@ -72,11 +72,11 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                     </button>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="input-group">
-                    <input type="text" class="form-control" id="customSearch" placeholder="Search documents...">
-                    <button class="btn btn-outline-secondary" type="button" id="searchBtn">
-                        <i class="bi bi-search"></i> Search
+            <div class="col-md-6 d-flex justify-content-end">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <input type="text" class="form-control form-control-sm" id="customSearch" placeholder="Search documents...">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" id="searchBtn">
+                        <i class="bi bi-search"></i>
                     </button>
                 </div>
             </div>
@@ -153,7 +153,6 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                         </td>
                     </tr>
                     <?php endforeach; endif; ?>
-                    <?php if (!$hasVisibleDocuments): ?><tr class="empty-row"><td class="text-center" colspan="13">No documents available</td></tr><?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -163,7 +162,7 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content shadow">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="editModalLabel">Edit Document</h5>
+                        <h5 class="modal-title" id="editModalLabel">Edit Document Approval</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="editDocumentForm" action="<?= base_url('document-approval/update') ?>" method="post" enctype="multipart/form-data">
@@ -237,11 +236,12 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                                     <tr>
                                         <th class="text-center" style="width: 5%;">No</th>
                                         <th class="text-center d-none" style="width: 10%;">Revision ID</th>
-                                        <th style="width: 25%;">Document Name</th>
-                                        <th style="width: 20%;">Document Number</th>
+                                        <th style="width: 20%;">Document Name</th>
+                                        <th style="width: 15%;">Document Number</th>
                                         <th style="width: 10%;">File</th>
-                                        <th class="text-center" style="width: 15%;">Revision</th>
-                                        <th style="width: 30%;">Date</th>
+                                        <th class="text-center" style="width: 10%;">Revision</th>
+                                        <th style="width: 15%;">Remark</th>
+                                        <th style="width: 25%;">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody id="historyTableBody"></tbody>
@@ -291,12 +291,21 @@ var currentUserAccessLevel = <?= $currentUserAccessLevel ?>;
 var currentUserId = <?= $currentUserId ?>;
 
 $(document).ready(function() {
+    // Check if table has any actual data rows (not empty message)
+    var hasData = $('#documentsTable tbody tr').length > 0 && 
+                  !$('#documentsTable tbody tr').hasClass('empty-row');
+    
     const table = $('#documentsTable').DataTable({
         pageLength: 10,
         lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
         paging: true,
         searching: true,
         ordering: true,
+        // Handle initialization errors
+        initComplete: function(settings, json) {
+            console.log('DataTables initialization complete');
+        },
+        errorMode: 'none', // Suppress DataTables errors
         dom: '<"row"<"col-sm-6"l><"col-sm-6">>' +
              '<"row"<"col-sm-12"tr>>' +
              '<"row"<"col-sm-6"i><"col-sm-6 text-end"p>>',
@@ -329,19 +338,35 @@ $(document).ready(function() {
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
             infoEmpty: "Showing 0 to 0 of 0 entries",
             infoFiltered: "(filtered from _MAX_ total entries)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+            emptyTable: "No documents available"
         },
-        columnDefs: [{ targets: 0, searchable: false, orderable: false }, { targets: 1, visible: false, searchable: true, orderable: true }, { targets: 12, orderable: false, searchable: false }],
+        columnDefs: [
+            { targets: 0, searchable: false, orderable: false }, 
+            { targets: 1, visible: false, searchable: true, orderable: true }, 
+            { targets: 12, orderable: false, searchable: false }
+        ],
         responsive: true,
         autoWidth: false,
         order: [[0, 'desc']],
+        // Handle empty table scenario
+        deferRender: true,
+        processing: false,
+        serverSide: false,
         drawCallback: function(settings) {
             var api = this.api();
             var pageInfo = api.page.info();
+            
+            // Only renumber if there are actual data rows (not empty table message)
             if (pageInfo.recordsDisplay > 0) {
                 var startRow = pageInfo.start;
                 $('#documentsTable tbody tr').each(function(index) {
-                    if ($(this).hasClass('empty-row') || ($(this).hasClass('odd') && $(this).find('td').length === 1)) return;
+                    // Skip empty row or single-column spanning rows
+                    if ($(this).hasClass('empty-row') || 
+                        ($(this).hasClass('odd') && $(this).find('td').length === 1) ||
+                        $(this).find('td[colspan]').length > 0) {
+                        return;
+                    }
                     $(this).find('td:first').text(startRow + index + 1);
                 });
             }
@@ -416,7 +441,7 @@ $(document).ready(function() {
                         const reversedHistory = response.data.history.slice().reverse();
                         reversedHistory.forEach((item, index) => {
                             const fileLink = item.filepath ? `<div class="d-flex gap-2"><a href="<?= base_url('document-approval/serveFile') ?>?id=${item.document_id}" class="text-decoration-none" title="Download file"><i class="bi bi-download text-success fs-5"></i></a></div>` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
-                            html += `<tr data-revision-id="${item.revision_id}" ${item.revision_id == revisionId ? 'class="document-highlight"' : ''}><td class="text-center">${index + 1}</td><td class="text-center d-none">${item.revision_id}</td><td>${item.document_title || '-'}</td><td>${item.document_number || '-'}</td><td>${fileLink}</td><td class="text-center">${item.revision || 'Rev. 0'}</td><td>${formatDate(item.updated_at)}</td></tr>`;
+                            html += `<tr data-revision-id="${item.revision_id}" ${item.revision_id == revisionId ? 'class="document-highlight"' : ''}><td class="text-center">${index + 1}</td><td class="text-center d-none">${item.revision_id}</td><td>${item.document_title || '-'}</td><td>${item.document_number || '-'}</td><td>${fileLink}</td><td class="text-center">${item.revision || 'Rev. 0'}</td><td>${item.remark || '-'}</td><td>${formatDate(item.updated_at)}</td></tr>`;
                         });
                         $('#historyTableBody').html(html);
                         const historyModal = new bootstrap.Modal(document.getElementById('historyModal'), { backdrop: 'static', keyboard: false });
@@ -449,7 +474,7 @@ $(document).ready(function() {
             const editBtn = $(this);
             Swal.fire({
                 title: 'Edit Document',
-                text: 'Are you sure you want to edit this document?',
+                text: 'Are you sure you want to edit this document',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -545,7 +570,15 @@ $(document).ready(function() {
                     const editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
                     editModal.hide();
                     if (response.success) {
-                        Swal.fire({ icon: 'success', title: 'Success', text: response.message, confirmButtonColor: '#198754' }).then(() => {
+                        const message = response.new_document_id ? 
+                            'Document succesfully updated' : 
+                            response.message;
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Success', 
+                            text: message, 
+                            confirmButtonColor: '#198754' 
+                        }).then(() => {
                             location.reload(); // Auto-reload setelah sukses
                         });
                     } else {
@@ -618,7 +651,7 @@ $(document).ready(function() {
         const id = $(this).data('id');
         $('#historyNamaDokumen').text('-');
         $('#historyJenisDokumen').text('-');
-        $('#historyTableBody').html('<tr><td colspan="7" class="text-center">Loading data...</td></tr>');
+        $('#historyTableBody').html('<tr><td colspan="8" class="text-center">Loading data...</td></tr>');
         $.ajax({
             url: '<?= base_url("document-approval") ?>?action=get-history&id=' + id,
             type: 'GET',
@@ -633,19 +666,19 @@ $(document).ready(function() {
                         const reversedHistory = response.data.history.slice().reverse();
                         reversedHistory.forEach((item, index) => {
                             const fileLink = item.filepath ? `<div class="d-flex gap-2"><a href="<?= base_url('document-approval/serveFile') ?>?id=${item.document_id}" class="text-decoration-none" title="Download file"><i class="bi bi-download text-success fs-5"></i></a></div>` : '<span class="text-muted"><i class="bi bi-file-earmark-x"></i> No file</span>';
-                            html += `<tr data-revision-id="${item.revision_id}"><td class="text-center">${index + 1}</td><td class="text-center d-none">${item.revision_id}</td><td>${item.document_title || '-'}</td><td>${item.document_number || '-'}</td><td>${fileLink}</td><td class="text-center">${item.revision || 'Rev. 0'}</td><td>${formatDate(item.updated_at)}</td></tr>`;
+                            html += `<tr data-revision-id="${item.revision_id}"><td class="text-center">${index + 1}</td><td class="text-center d-none">${item.revision_id}</td><td>${item.document_title || '-'}</td><td>${item.document_number || '-'}</td><td>${fileLink}</td><td class="text-center">${item.revision || 'Rev. 0'}</td><td>${item.remark || '-'}</td><td>${formatDate(item.updated_at)}</td></tr>`;
                         });
                     } else {
-                        html = '<tr><td colspan="7" class="text-center text-muted">No revision history available</td></tr>';
+                        html = '<tr><td colspan="8" class="text-center text-muted">No revision history available</td></tr>';
                     }
                     $('#historyTableBody').html(html);
                 } else {
-                    $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Failed to load revision history</td></tr>');
+                    $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Failed to load revision history</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
                 console.log('AJAX error:', error, xhr.responseText);
-                $('#historyTableBody').html('<tr><td colspan="7" class="text-center text-muted">Error loading revision history</td></tr>');
+                $('#historyTableBody').html('<tr><td colspan="8" class="text-center text-muted">Error loading revision history</td></tr>');
             }
         });
     });
