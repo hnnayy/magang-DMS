@@ -41,7 +41,7 @@ if ($canUpdate || $canDelete) {
                         // Tampilkan semua kategori yang memiliki use_predefined_codes = 1
                         foreach ($kategori_dokumen as $kategori) {
                             if (isset($kategori['use_predefined_codes']) && $kategori['use_predefined_codes'] == 1) {
-                                echo '<li><a class="dropdown-item" href="#" data-value="' . esc($kategori['nama']) . '">' . esc($kategori['nama']) . '</a></li>';
+                                echo '<li><a class="dropdown-item" href="#" data-value="' . esc($kategori['id']) . '">' . esc($kategori['nama']) . '</a></li>';
                             }
                         }
                         ?>
@@ -82,9 +82,9 @@ if ($canUpdate || $canDelete) {
             </thead>
             <tbody id="documentTableBody">
             <?php if (!empty($kode_dokumen)) : ?>
-                <?php $no = 1; foreach ($kode_dokumen as $kode): ?>
-                <tr data-document-id="<?= $kode['id'] ?>">
-                    <td class="text-center"><?= $no++ ?></td>
+                <?php foreach ($kode_dokumen as $kode): ?>
+                <tr data-document-id="<?= $kode['id'] ?>" data-document-type-id="<?= $kode['document_type_id'] ?>">
+                    <td class="text-center"></td> <!-- Kolom No akan diisi oleh DataTable -->
                     <td><?= esc($kode['kategori_nama']) ?></td>
                     <td><?= esc($kode['kode']) ?></td>
                     <td><?= esc($kode['nama']) ?></td>
@@ -108,10 +108,6 @@ if ($canUpdate || $canDelete) {
                     <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
-            <?php else : ?>
-                <tr id="noDataRow">
-                    <td class="text-center" colspan="<?= $totalColumns ?>">No data found</td>
-                </tr>
             <?php endif; ?>
             </tbody>
         </table>
@@ -140,7 +136,7 @@ if ($canUpdate || $canDelete) {
                                    aria-expanded="false"
                                    autocomplete="off"
                                    required>
-                            <input type="hidden" id="addDocumentTypeId" name="jenis" required>
+                            <input type="hidden" id="addDocumentTypeId" name="document_type_id" required>
                             <ul class="dropdown-menu w-100" id="addCategoryDropdown" style="max-height: 200px; overflow-y: auto;">
                                 <?php foreach ($kategori_dokumen as $kategori): ?>
                                     <?php if (isset($kategori['use_predefined_codes']) && $kategori['use_predefined_codes'] == 1): ?>
@@ -249,6 +245,8 @@ if ($canUpdate || $canDelete) {
 
 <script>
     let documentTable;
+    let selectedCategory = '';
+    let searchText = '';
 
     // Custom form validation function
     function validateDocumentCodeForm(form) {
@@ -266,17 +264,15 @@ if ($canUpdate || $canDelete) {
             }
         });
         
-        // Special validation for hidden document type fields in add modal
-        if (form.id === 'addDocumentCodeForm') {
-            const hiddenTypeField = form.querySelector('#addDocumentTypeId');
-            const visibleTypeField = form.querySelector('#addDocumentType');
-            
-            if (!hiddenTypeField.value.trim()) {
-                visibleTypeField.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                visibleTypeField.classList.remove('is-invalid');
-            }
+        // Special validation for hidden document type fields
+        const hiddenTypeField = form.querySelector('#addDocumentTypeId, #editDocumentTypeId');
+        const visibleTypeField = form.querySelector('#addDocumentType, #editDocumentType');
+        
+        if (!hiddenTypeField.value.trim()) {
+            visibleTypeField.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            visibleTypeField.classList.remove('is-invalid');
         }
         
         return isValid;
@@ -385,27 +381,7 @@ if ($canUpdate || $canDelete) {
     }
     <?php endif; ?>
 
-    // Function to show/hide no data row
-    function updateNoDataRow() {
-        const visibleRows = $('#documentTableBody tr:visible').not('#noDataRow');
-        const noDataRow = $('#noDataRow');
-        
-        if (visibleRows.length === 0) {
-            // Show no data row if it doesn't exist
-            if (noDataRow.length === 0) {
-                $('#documentTableBody').append(`<tr id="noDataRow"><td class="text-center" colspan="<?= $totalColumns ?>">No data found</td></tr>`);
-            } else {
-                noDataRow.show();
-            }
-        } else {
-            // Hide no data row
-            noDataRow.hide();
-        }
-    }
-
     $(document).ready(function() {
-        let selectedCategory = '';
-
         // Initialize DataTable with proper column configuration
         documentTable = $('#documentTable').DataTable({
             "language": {
@@ -419,16 +395,59 @@ if ($canUpdate || $canDelete) {
                     "last": "Last",
                     "next": "Next",
                     "previous": "Previous"
-                }
+                },
+                "emptyTable": "No data found",
+                "zeroRecords": "No matching records found"
             },
-            "searching": false, // Disable default search since we're using custom filters
+            "searching": true, // Enable DataTables search
             "columnDefs": [
-                { "orderable": false, "targets": <?= ($canUpdate || $canDelete) ? '[-1]' : '[]' ?> } // Disable ordering on action column
+                { 
+                    "targets": 0, // No column
+                    "orderable": false, // Disable sorting
+                    "render": function (data, type, row, meta) {
+                        // Return sequential number based on visible row index
+                        return meta.row + 1; // Start from 1
+                    }
+                },
+                { 
+                    "targets": <?= ($canUpdate || $canDelete) ? '[-1]' : '[]' ?>, // Action column
+                    "orderable": false // Disable sorting on action column
+                }
             ],
-            "order": [[0, 'asc']] // Default sort by No column
+            "order": [] // Data sudah diurutkan alfabetis dari database
         });
 
-        // FIXED: Only show dropdown on CLICK, removed focus event
+        // Custom filter for DataTables
+        $.fn.dataTable.ext.search.push(
+            function(settings, data, dataIndex) {
+                const row = documentTable.row(dataIndex).node();
+                const documentTypeId = $(row).data('document-type-id');
+                const code = data[2].toLowerCase(); // Code (index 2)
+                const name = data[3].toLowerCase(); // Document Name (index 3)
+                const categoryFilter = selectedCategory;
+                const search = searchText.toLowerCase();
+
+                // Apply search filter (searches in code and name)
+                if (search && !code.includes(search) && !name.includes(search)) {
+                    return false;
+                }
+
+                // Apply category filter (match document_type_id)
+                if (categoryFilter && documentTypeId != categoryFilter) {
+                    return false;
+                }
+
+                return true;
+            }
+        );
+
+        // Search input handler
+        $('#searchDocument').on('keyup', function() {
+            searchText = $(this).val();
+            documentTable.draw(); // Use custom filter with draw
+        });
+
+        // Category filter dropdown
         $('#filterCategory').on('click', function() {
             // Show all items first
             $('#categoryDropdown .dropdown-item').parent().show();
@@ -436,7 +455,7 @@ if ($canUpdate || $canDelete) {
             $(this).dropdown('show');
         });
 
-        // Searchable Dropdown Logic
+        // Searchable Dropdown Logic for Category
         $('#filterCategory').on('input', function() {
             const searchText = this.value.toLowerCase();
             const dropdownItems = $('#categoryDropdown .dropdown-item');
@@ -469,7 +488,7 @@ if ($canUpdate || $canDelete) {
             $('#filterCategory').dropdown('hide');
             
             // Apply filter
-            applyFilters();
+            documentTable.draw();
         });
 
         // Show all items when dropdown is opened
@@ -477,69 +496,13 @@ if ($canUpdate || $canDelete) {
             $('#categoryDropdown .dropdown-item').parent().show();
         });
 
-        // Custom filter functions
-        function applyFilters() {
-            const searchText = $('#searchDocument').val().toLowerCase();
-            const categoryFilter = selectedCategory.toLowerCase();
-
-            documentTable.rows().every(function() {
-                const row = this.node();
-                
-                // Skip no data row
-                if ($(row).attr('id') === 'noDataRow') {
-                    return;
-                }
-                
-                // Get text content from each cell
-                const category = $(row).find('td:nth-child(2)').text().toLowerCase();
-                const code = $(row).find('td:nth-child(3)').text().toLowerCase();
-                const name = $(row).find('td:nth-child(4)').text().toLowerCase();
-
-                let show = true;
-
-                // Apply search filter (searches in code and name)
-                if (searchText && !code.includes(searchText) && !name.includes(searchText)) {
-                    show = false;
-                }
-
-                // Apply category filter (exact match for dropdown)
-                if (categoryFilter && category !== categoryFilter) {
-                    show = false;
-                }
-
-                // Show/hide row
-                if (show) {
-                    $(row).show();
-                } else {
-                    $(row).hide();
-                }
-            });
-
-            // Update DataTable display and check for no data
-            documentTable.draw();
-            updateNoDataRow();
-        }
-
-        // Bind filter events
-        $('#searchDocument').on('keyup', function() {
-            applyFilters();
-        });
-
         // Reset filters
         $('#resetFilters').on('click', function() {
             $('#searchDocument').val('');
             $('#filterCategory').val('');
             selectedCategory = '';
-            
-            // Show all rows (except no data row initially)
-            documentTable.rows().every(function() {
-                const row = this.node();
-                if ($(row).attr('id') !== 'noDataRow') {
-                    $(row).show();
-                }
-            });
-            documentTable.draw();
-            updateNoDataRow();
+            searchText = '';
+            documentTable.draw(); // Redraw table with no filters
         });
 
         // Auto uppercase function for inputs with class 'doccode-text-uppercase-auto'
@@ -565,7 +528,7 @@ if ($canUpdate || $canDelete) {
         // Add Modal Searchable Dropdown Logic
         let addSelectedTypeId = '';
 
-        // FIXED: Only show dropdown when clicked
+        // Show dropdown when clicked
         $('#addDocumentType').on('click', function() {
             // Show all items first
             $('#addCategoryDropdown .dropdown-item').parent().show();
@@ -670,7 +633,7 @@ if ($canUpdate || $canDelete) {
         // Edit Modal Searchable Dropdown Logic
         let editSelectedTypeId = '';
 
-        // FIXED: Show dropdown when clicked ONLY
+        // Show dropdown when clicked ONLY
         $('#editDocumentType').on('click', function() {
             // Show all items first
             $('#editCategoryDropdown .dropdown-item').parent().show();
@@ -753,9 +716,6 @@ if ($canUpdate || $canDelete) {
             }
         });
         <?php endif; ?>
-
-        // Initial check for no data row
-        updateNoDataRow();
 
         // Display flash messages
         <?php if (session()->has('added_message')): ?>

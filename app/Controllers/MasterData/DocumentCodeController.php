@@ -40,6 +40,7 @@ class DocumentCodeController extends Controller
             ->where('kode_dokumen.status', 1)
             ->where('document_type.status', 1)
             ->where('document_type.description', '[predefined]')
+            ->orderBy('document_type.name', 'ASC') // Mengurutkan berdasarkan nama kategori alfabetis
             ->findAll();
 
         $data['kode_dokumen'] = $kodeList;
@@ -49,9 +50,18 @@ class DocumentCodeController extends Controller
 
     public function add()
     {
-        $jenis = $this->request->getPost('jenis');
+        $jenis = $this->request->getPost('document_type_id'); // Ubah dari 'jenis' ke 'document_type_id'
         $kode = strtoupper($this->request->getPost('kode'));
         $nama = $this->request->getPost('nama');
+
+        // Debug untuk melihat data yang diterima
+        log_message('debug', 'Document Type ID: ' . $jenis);
+        log_message('debug', 'Code: ' . $kode);
+        log_message('debug', 'Name: ' . $nama);
+
+        if (!$jenis) {
+            return redirect()->to('/document-code')->with('error', 'Document type ID is required');
+        }
 
         $kategori = $this->documentTypeModel
             ->where('id', $jenis)
@@ -114,6 +124,7 @@ class DocumentCodeController extends Controller
         }
 
         $this->kodeDokumenModel->update($id, [
+            'document_type_id' => $document_type_id, // Tambahkan update document_type_id
             'kode' => $kode,
             'nama' => $nama,
             'updated_at' => date('Y-m-d H:i:s'),
