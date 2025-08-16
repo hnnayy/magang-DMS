@@ -74,6 +74,7 @@ class ControllerDaftarDokumen extends BaseController
                 kd.nama AS kode_dokumen_nama,
                 document_approval.approvedate,
                 document_approval.approveby,
+                document_approval.effective_date,
                 user_approver.fullname AS approved_by_name,
                 document_revision.filename,
                 document_revision.filepath,

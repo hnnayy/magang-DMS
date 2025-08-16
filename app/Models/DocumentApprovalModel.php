@@ -8,7 +8,7 @@ class DocumentApprovalModel extends Model
 {
     protected $table = 'document_approval';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['document_id', 'remark', 'status', 'approvedate', 'approveby', 'standar_ids', 'klausul_ids'];
+    protected $allowedFields = ['document_id', 'remark', 'status', 'approvedate', 'approveby', 'effective_date'];
     protected $useTimestamps = false;
 
     // Method untuk join dengan document dan approver

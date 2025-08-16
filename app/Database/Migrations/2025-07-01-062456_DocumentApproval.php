@@ -44,17 +44,11 @@ class DocumentApproval extends Migration
                 'unsigned'   => true,
                 'null'       => false,
             ],
-            'standar_ids' => [
-                'type'       => 'TEXT',
-                'null'       => false,
-                'default' => '',
-                'comment'    => 'Comma-separated list of standard IDs',
-            ],
-            'klausul_ids' => [
-                'type'       => 'TEXT',
-                'null'       => false,
-                'default' => '',
-                'comment'    => 'Comma-separated list of clause IDs',
+            'effective_date' => [
+                'type'    => 'DATE',
+                'null'    => false,
+                'default' => 'CURRENT_DATE',
+                'comment' => 'Date when the document takes effect',
             ],
         ]);
 
@@ -64,8 +58,6 @@ class DocumentApproval extends Migration
 
     public function down()
     {
-        if ($this->db->tableExists('document_approval')) {
-            $this->forge->dropTable('document_approval');
-        }
+        $this->forge->dropTable('document_approval');
     }
 }

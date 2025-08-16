@@ -500,12 +500,20 @@ public function update()
     $approved_by = $this->request->getPost('approved_by');
     $remarks = $this->request->getPost('remarks');
     $action = trim($this->request->getPost('action') ?? '');
+    $approval_date = $this->request->getPost('approval_date');
+    $effective_date = $this->request->getPost('effective_date');
 
-    log_message('debug', 'Received data - document_id: ' . $document_id . ', approved_by: ' . $approved_by . ', remarks: ' . $remarks . ', action: ' . $action);
+    log_message('debug', 'Received data - document_id: ' . $document_id . ', approved_by: ' . $approved_by . ', remarks: ' . $remarks . ', action: ' . $action . ', approval_date: ' . $approval_date . ', effective_date: ' . $effective_date);
 
     if (!$document_id || !$approved_by) {
         log_message('error', 'Missing required fields: document_id or approved_by');
         return redirect()->back()->with('error', 'Required data is incomplete.');
+    }
+
+    // Validate approval_date and effective_date for approve action
+    if (strtolower($action) === 'approve' && (!$approval_date || !$effective_date)) {
+        log_message('error', 'Missing approval_date or effective_date for approve action');
+        return redirect()->back()->with('error', 'Approval date and effective date are required for approval.');
     }
 
     $validActions = ['approve', 'disapprove'];
@@ -536,12 +544,16 @@ public function update()
     $approver = $this->userModel->find($approved_by);
     $approverName = $approver['fullname'] ?? $approver['username'] ?? 'Unknown User';
 
+    // Use approval_date from form, or current date/time as fallback
+    $approveDate = $approval_date ? $approval_date . ' ' . date('H:i:s') : date('Y-m-d H:i:s');
+
     $data = [
         'document_id' => $document_id,
         'remark' => $remarks,
         'status' => $status,
-        'approvedate' => date('Y-m-d H:i:s'),
+        'approvedate' => $approveDate,
         'approveby' => $approved_by,
+        'effective_date' => $effective_date,
     ];
 
     try {

@@ -514,6 +514,10 @@ foreach ($uniqueJenisDokumen as $index => $jenis) {
                                 <input type="date" class="form-control" name="approval_date" id="approval_date" required>
                             </div>
                             <div class="mb-3">
+                                <label for="effective_date" class="form-label">Effective Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="effective_date" id="effective_date" required>
+                            </div>
+                            <div class="mb-3">
                                 <label for="remarks" class="form-label">Remarks</label>
                                 <textarea class="form-control" name="remarks" id="remarks" rows="3"></textarea>
                             </div>
@@ -876,6 +880,7 @@ $(document).ready(function() {
     const today = new Date().toISOString().split('T')[0];
     if (documentPrivileges.can_approve) {
         $('#approval_date').val(today);
+        $('#effective_date').val(today);
     }
 
     if (documentPrivileges.can_update) {
