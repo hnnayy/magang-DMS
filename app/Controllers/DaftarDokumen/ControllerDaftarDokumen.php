@@ -230,17 +230,17 @@ class ControllerDaftarDokumen extends BaseController
 
         $postData = $this->request->getPost();
         $id = $postData['id'] ?? null;
-        $standar_id = $postData['standar_id'] ?? null;
+        $standar_ids = $postData['standar_ids'] ?? [];
         $clauses = $postData['clauses'] ?? [];
 
         log_message('debug', 'Update request data: ' . json_encode([
             'id' => $id,
-            'standar_id' => $standar_id,
+            'standar_ids' => $standar_ids,
             'clauses' => $clauses
         ]));
 
-        if (!$id || !$standar_id) {
-            log_message('error', 'Missing document ID or standard_id');
+        if (!$id || empty($standar_ids)) {
+            log_message('error', 'Missing document ID or standard IDs');
             
             $this->response->setStatusCode(422); 
             
@@ -295,7 +295,8 @@ class ControllerDaftarDokumen extends BaseController
         $clauses = is_array($clauses) ? $clauses : [];
         $validClauses = [];
         foreach ($clauses as $clauseId) {
-            $clause = $this->clauseModel->where('id', $clauseId)->where('standar_id', $standar_id)->first();
+            // Check if clause belongs to any of the selected standards
+            $clause = $this->clauseModel->where('id', $clauseId)->whereIn('standar_id', $standar_ids)->first();
             if ($clause) {
                 $validClauses[] = $clauseId;
             }
@@ -305,7 +306,7 @@ class ControllerDaftarDokumen extends BaseController
             $this->db->transStart();
 
             $dataDocument = [
-                'standar_ids' => $standar_id,
+                'standar_ids' => implode(',', $standar_ids),
                 'klausul_ids' => implode(',', $validClauses),
                 'date_published' => $postData['date_published'] ?? $document['date_published'],
                 'updatedby' => $currentUserId,

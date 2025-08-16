@@ -27,6 +27,7 @@
         display: none !important;
     }
     <?php endif; ?>
+    
 </style>
 <!-- CSS External Links -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -52,15 +53,15 @@
                     <div class="dropdown-search">
                         <input type="text" placeholder="Search standard..." onkeyup="filterStandardOptions()" id="standardSearchInput">
                     </div>
-                    <div class="option-group" id="standardRadioGroup">
+                    <div class="option-group" id="standardCheckboxGroup">
                         <?php foreach ($standards as $s): ?>
                             <div class="option-item" data-text="<?= strtolower(esc($s['nama_standar'])) ?>">
-                                <input type="radio" 
+                                <input type="checkbox" 
                                        id="standar_<?= $s['id'] ?>" 
                                        value="<?= $s['id'] ?>" 
                                        name="standar_filter"
-                                       class="standar-radio"
-                                       onchange="updateClauseFilter(); updateStandardText(); closeDropdown('filterStandar');">
+                                       class="standar-checkbox"
+                                       onchange="updateClauseFilter(); updateStandardText();">
                                 <label for="standar_<?= $s['id'] ?>"><?= esc($s['nama_standar']) ?></label>
                             </div>
                         <?php endforeach; ?>
@@ -220,7 +221,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Faculty/Directorate</th>
-                                <th>Department/Unit/Program</th>
+                                <th>Department/Unit</th>
                                 <th>Standard</th>
                                 <th>Clause</th>
                                 <th>Document Type</th>
@@ -283,11 +284,90 @@
                                     <td class="text-center"><?= $displayedCount ?></td>
                                     <td><?= esc($row['parent_name'] ?? '-') ?></td>
                                     <td><?= esc($row['unit_name'] ?? '-') ?></td>
-                                    <td><?= esc($row['standar_display']) ?></td>
                                     <td>
-                                        <span class="text-truncate-custom" title="<?= esc($row['klausul_display']) ?>">
-                                            <?= esc($row['klausul_display']) ?>
-                                        </span>
+                                        <?php
+                                        // Display standards with color coding
+                                        $standardIds = array_filter(explode(',', $row['standar_ids'] ?? ''));
+                                        $standardNames = [];
+                                        
+                                        // Get standard names
+                                        foreach ($standardIds as $standardId) {
+                                            foreach ($standards as $standard) {
+                                                if ($standard['id'] == $standardId) {
+                                                    $standardNames[] = $standard['nama_standar'];
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (!empty($standardNames)):
+                                            $colorIndex = 1;
+                                            foreach ($standardNames as $standardName):
+                                                $colorClass = $colorIndex <= 6 ? "standard-{$colorIndex}" : "standard-default";
+                                                $colorIndex++;
+                                        ?>
+                                            <div class="clause-group standard-only <?= $colorClass ?>">
+                                                <div class="standard-name"><?= esc($standardName) ?></div>
+                                            </div>
+                                        <?php 
+                                            endforeach;
+                                        else: 
+                                        ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        // Group clauses by standard
+                                        $standardIds = array_filter(explode(',', $row['standar_ids'] ?? ''));
+                                        $clauseIds = array_filter(explode(',', $row['klausul_ids'] ?? ''));
+                                        
+                                        $clausesByStandard = [];
+                                        
+                                        // Group clauses by their standards
+                                        foreach ($clauseIds as $clauseId) {
+                                            foreach ($clausesData as $clause) {
+                                                if ($clause['id'] == $clauseId) {
+                                                    $standardId = $clause['standar_id'];
+                                                    if (!isset($clausesByStandard[$standardId])) {
+                                                        $clausesByStandard[$standardId] = [
+                                                            'standard_name' => '',
+                                                            'clauses' => []
+                                                        ];
+                                                    }
+                                                    $clausesByStandard[$standardId]['clauses'][] = $clause['nama_klausul'];
+                                                    
+                                                    // Get standard name
+                                                    foreach ($standards as $standard) {
+                                                        if ($standard['id'] == $standardId) {
+                                                            $clausesByStandard[$standardId]['standard_name'] = $standard['nama_standar'];
+                                                            break;
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        if (!empty($clausesByStandard)):
+                                            $colorIndex = 1;
+                                            foreach ($clausesByStandard as $standardId => $data):
+                                                $colorClass = $colorIndex <= 6 ? "standard-{$colorIndex}" : "standard-default";
+                                                $clausesText = implode(', ', $data['clauses']);
+                                                $colorIndex++;
+                                        ?>
+                                            <div class="clause-group <?= $colorClass ?>">
+                                                <div class="standard-name"><?= esc($data['standard_name']) ?></div>
+                                                <div class="clause-list">
+                                                    <?= esc(strlen($clausesText) > 50 ? substr($clausesText, 0, 47) . '...' : $clausesText) ?>
+                                                </div>
+                                            </div>
+                                        <?php 
+                                            endforeach;
+                                        else: 
+                                        ?>
+                                            <span class="text-muted">-</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td><?= esc($row['jenis_dokumen'] ?? '-') ?></td>
                                     <td>
@@ -332,9 +412,12 @@
                                     <td class="text-center">
                                         <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                             <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
-                                               class="text-decoration-none" 
+                                               class="text-decoration-none d-flex align-items-center justify-content-center gap-1" 
                                                title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
                                                 <i class="bi bi-download text-success fs-5"></i>
+                                                <span class="small text-muted" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                    <?= esc($row['filename'] ?? basename($row['filepath'])) ?>
+                                                </span>
                                             </a>
                                         <?php else: ?>
                                             <span class="text-muted">
@@ -421,7 +504,7 @@ foreach ($document as $row):
     if ($documentCreatorId == 0) continue;
 ?>
 <div class="modal fade" id="editModal<?= $documentId ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $documentId ?>" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-md">
         <form action="<?= base_url('document-list/update') ?>" method="post" class="edit-form" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $documentId ?>">
@@ -430,23 +513,30 @@ foreach ($document as $row):
                     <h5 class="modal-title" id="editModalLabel<?= $documentId ?>">Edit Document</h5>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                    <div class="row g-4 justify-content-center">
+                        <div class="col-12">
                             <label class="form-label">Standard</label>
                             <div class="filter-dropdown w-100 no-choices">
                                 <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterStandar_<?= $documentId ?>', event)">
                                     <span id="editFilterStandarText_<?= $documentId ?>">
                                         <?php
-                                        // Display the selected standard name
-                                        $selectedStandardId = array_filter(explode(',', $row['standar_ids'] ?? ''))[0] ?? '';
-                                        $selectedStandardName = 'Select Standard...';
+                                        // Display the selected standards
+                                        $selectedStandardIds = array_filter(explode(',', $row['standar_ids'] ?? ''));
+                                        $selectedStandardNames = [];
                                         foreach ($standards as $s) {
-                                            if ($s['id'] == $selectedStandardId) {
-                                                $selectedStandardName = esc($s['nama_standar']);
-                                                break;
+                                            if (in_array($s['id'], $selectedStandardIds)) {
+                                                $selectedStandardNames[] = esc($s['nama_standar']);
                                             }
                                         }
-                                        echo $selectedStandardName;
+                                        
+                                        if (count($selectedStandardNames) > 1) {
+                                            echo count($selectedStandardNames) . ' standards selected';
+                                        } elseif (count($selectedStandardNames) === 1) {
+                                            $fullText = $selectedStandardNames[0];
+                                            echo strlen($fullText) > 30 ? substr($fullText, 0, 27) . '...' : $fullText;
+                                        } else {
+                                            echo 'Select Standard...';
+                                        }
                                         ?>
                                     </span>
                                 </div>
@@ -457,15 +547,15 @@ foreach ($document as $row):
                                     <div class="dropdown-search">
                                         <input type="text" placeholder="Search standard..." onkeyup="filterEditStandardOptions('<?= $documentId ?>')" id="editStandardSearchInput_<?= $documentId ?>">
                                     </div>
-                                    <div class="option-group" id="editStandardRadioGroup_<?= $documentId ?>">
+                                    <div class="option-group" id="editStandardCheckboxGroup_<?= $documentId ?>">
                                         <?php foreach ($standards as $s): ?>
                                             <div class="option-item" data-text="<?= strtolower(esc($s['nama_standar'])) ?>">
-                                                <input type="radio" 
+                                                <input type="checkbox" 
                                                        id="edit_standar_<?= $documentId ?>_<?= $s['id'] ?>" 
                                                        value="<?= $s['id'] ?>" 
-                                                       name="standar_id"
-                                                       class="edit-standar-radio"
-                                                       onchange="updateEditStandardText('<?= $documentId ?>'); updateEditClauseFilter('<?= $documentId ?>'); closeEditDropdown('editFilterStandar_<?= $documentId ?>');"
+                                                       name="standar_ids[]"
+                                                       class="edit-standar-checkbox"
+                                                       onchange="updateEditStandardText('<?= $documentId ?>'); updateEditClauseFilter('<?= $documentId ?>');"
                                                        <?= in_array($s['id'], array_filter(explode(',', $row['standar_ids'] ?? ''))) ? 'checked' : '' ?>>
                                                 <label for="edit_standar_<?= $documentId ?>_<?= $s['id'] ?>"><?= esc($s['nama_standar']) ?></label>
                                             </div>
@@ -474,7 +564,7 @@ foreach ($document as $row):
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label">Clause</label>
                             <div class="filter-dropdown w-100 no-choices">
                                 <div class="filter-toggle" onclick="event.preventDefault(); event.stopPropagation(); toggleEditDropdown('editFilterKlausul_<?= $documentId ?>', event)" id="editClauseToggle_<?= $documentId ?>">
@@ -508,11 +598,11 @@ foreach ($document as $row):
                                     </div>
                                     <div class="option-group" id="editClauseCheckboxGroup_<?= $documentId ?>">
                                         <?php
-                                        // Pre-populate clauses for the selected standard
-                                        $selectedStandardId = array_filter(explode(',', $row['standar_ids'] ?? ''))[0] ?? '';
-                                        if ($selectedStandardId):
+                                        // Pre-populate clauses for all selected standards
+                                        $selectedStandardIds = array_filter(explode(',', $row['standar_ids'] ?? ''));
+                                        if (!empty($selectedStandardIds)):
                                             foreach ($clausesData as $clause):
-                                                if ($clause['standar_id'] == $selectedStandardId):
+                                                if (in_array($clause['standar_id'], $selectedStandardIds)):
                                         ?>
                                                     <div class="option-item" data-text="<?= strtolower(esc($clause['nama_klausul'] . ' ' . $clause['nama_standar'])) ?>">
                                                         <input type="checkbox" 
@@ -535,101 +625,11 @@ foreach ($document as $row):
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Document Type</label>
-                            <select name="type" class="form-select" disabled>
-                                <?php foreach ($kategori_dokumen as $kategori): ?>
-                                    <option value="<?= $kategori['id'] ?>" <?= ($row['type'] == $kategori['id']) ? 'selected' : '' ?>>
-                                        <?= $kategori['name'] ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Type Code</label>
-                            <input type="text" class="form-control" name="type_code" 
-                                   value="<?= esc($row['kode_jenis_dokumen'] ?? $row['kode_dokumen_kode'] ?? '-') ?>" readonly>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Code & Document Name</label>
-                            <div class="form-control" style="background-color: #f8f9fa; color: #6c757d;">
-                                <?php 
-                                if (!empty($row['kode_dokumen_kode']) && !empty($row['kode_dokumen_nama'])) {
-                                    echo esc($row['kode_dokumen_kode'] . ' - ' . $row['kode_dokumen_nama']);
-                                } elseif (!empty($row['kode_jenis_dokumen'])) {
-                                    $displayText = esc($row['kode_jenis_dokumen']);
-                                    if (!empty($row['title'])) {
-                                        $displayText .= ' - ' . esc($row['title']);
-                                    }
-                                    echo $displayText;
-                                } elseif (!empty($row['title'])) {
-                                    echo esc($row['title']);
-                                } else {
-                                    echo '<span class="text-muted">No code</span>';
-                                }
-                                ?>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Number</label>
-                            <input type="text" class="form-control" name="number" value="<?= esc($row['number']) ?>" readonly>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Document Name</label>
-                            <input type="text" class="form-control" name="title" value="<?= esc($row['title']) ?>" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Document Owner</label>
-                            <input type="text" class="form-control" name="createdby" value="<?= esc($documentCreatorName) ?>" readonly>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Approved By</label>
-                            <input type="hidden" name="approveby" value="<?= esc($row['approveby'] ?? '') ?>">
-                            <input type="text" class="form-control" value="<?= esc($row['approved_by_name'] ?? '') ?>" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Approval Date</label>
-                            <input type="datetime-local" class="form-control" name="approvedate" 
-                                   value="<?= esc(date('Y-m-d\TH:i', strtotime($row['approvedate'] ?? 'now'))) ?>" readonly>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Revision</label>
-                            <input type="text" class="form-control" name="revision" value="<?= esc($row['revision']) ?>" readonly>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Effective Date</label>
-                            <input type="date" class="form-control" name="date_published" value="<?= esc($row['date_published']) ?>">
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Document File</label>
-                            <div class="file-display">
-                                <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="file-info flex-grow-1 p-2 bg-light rounded">
-                                            <small class="text-muted"><?= esc($row['filename'] ?? basename($row['filepath'])) ?></small>
-                                        </div>
-                                        <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
-                                           class="btn btn-primary btn-sm" 
-                                           title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
-                                            <i class="bi bi-download"></i> View File
-                                        </a>
-                                    </div>
-                                <?php else: ?>
-                                    <div class="alert alert-warning mb-0">
-                                        <i class="bi bi-exclamation-triangle"></i> No file available
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>    
+    
                     </div>
                 </div>
-                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </div>
@@ -688,7 +688,90 @@ $(document).ready(function() {
                 extend: 'excel',
                 title: 'Document_List',
                 exportOptions: { 
-                    columns: hasAnyPrivilege ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] : ':not(:last-child)'
+                    columns: hasAnyPrivilege ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] : ':not(:last-child)',
+                    format: {
+                        body: function (data, row, column, node) {
+                            // Handle the Document File column (column 10)
+                            if (column === 10) {
+                                var $node = $(node);
+                                var $link = $node.find('a');
+                                if ($link.length > 0) {
+                                    // Extract filename from the span text or title attribute
+                                    var filename = $node.find('span').text().trim();
+                                    if (filename) {
+                                        return filename;
+                                    }
+                                    // Fallback: try to get from title attribute
+                                    var title = $link.attr('title');
+                                    if (title && title.includes('Download ')) {
+                                        return title.replace('Download ', '');
+                                    }
+                                    return "File Available";
+                                } else {
+                                    // No file available
+                                    return "No file";
+                                }
+                            }
+                            
+                            // Handle Standard column (column 3) - extract text from colored divs
+                            if (column === 3) {
+                                var $node = $(node);
+                                var standards = [];
+                                $node.find('.standard-name').each(function() {
+                                    var text = $(this).text().trim();
+                                    if (text && text !== '-') {
+                                        standards.push(text);
+                                    }
+                                });
+                                if (standards.length > 0) {
+                                    return standards.join('; ');
+                                }
+                                // Fallback: clean HTML and get text
+                                var cleanText = data.replace(/<[^>]*>/g, '').trim();
+                                return cleanText && cleanText !== '-' ? cleanText : '-';
+                            }
+                            
+                            // Handle Clause column (column 4) - extract text from colored divs
+                            if (column === 4) {
+                                var $node = $(node);
+                                var clauses = [];
+                                $node.find('.clause-group').each(function() {
+                                    var standardName = $(this).find('.standard-name').text().trim();
+                                    var clauseList = $(this).find('.clause-list').text().trim();
+                                    if (standardName && clauseList && standardName !== '-' && clauseList !== '-') {
+                                        clauses.push(standardName + ': ' + clauseList);
+                                    }
+                                });
+                                if (clauses.length > 0) {
+                                    return clauses.join('; ');
+                                }
+                                // Fallback: clean HTML and get text
+                                var cleanText = data.replace(/<[^>]*>/g, '').trim();
+                                return cleanText && cleanText !== '-' ? cleanText : '-';
+                            }
+                            
+                            // For other columns, clean HTML tags and return text content
+                            return data.replace(/<[^>]*>/g, '').trim();
+                        }
+                    },
+                    modifier: {
+                        // Export only visible rows (filtered data)
+                        search: 'applied',
+                        order: 'applied'
+                    }
+                },
+                customize: function(xlsx) {
+                    // Get the worksheet
+                    var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    
+                    // Add auto-width to columns
+                    var cols = sheet.getElementsByTagName('col');
+                    for (var i = 0; i < cols.length; i++) {
+                        cols[i].setAttribute('width', '20');
+                    }
+                    
+                    // Set header row style
+                    $('row:first c', sheet).attr('s', '42');
                 }
             }
         ],
@@ -893,11 +976,25 @@ $(document).ready(function() {
 
     // Close dropdowns when clicking outside, but exclude modal dropdowns
     document.addEventListener('click', function(event) {
+        // Close non-modal dropdowns when clicking outside
         if (!event.target.closest('.filter-dropdown') && !event.target.closest('.modal')) {
             document.querySelectorAll('.filter-dropdown:not(.modal .filter-dropdown)').forEach(d => {
                 d.classList.remove('show');
             });
             console.log('Closed non-modal dropdowns due to outside click');
+        }
+    });
+
+    // Auto close dropdown after radio selection for non-modal dropdowns (excluding standard filter)
+    document.addEventListener('change', function(event) {
+        if (event.target.type === 'radio' && !event.target.closest('.modal')) {
+            // Don't auto-close for standard filter since it now uses checkboxes
+            const dropdown = event.target.closest('.filter-dropdown');
+            if (dropdown) {
+                setTimeout(() => {
+                    dropdown.classList.remove('show');
+                }, 100);
+            }
         }
     });
 
@@ -908,29 +1005,37 @@ $(document).ready(function() {
 
     // Update clause filter based on selected standard
     window.updateClauseFilter = function() {
-        const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
-        const selectedStandardId = selectedStandardRadio ? selectedStandardRadio.value : null;
+        const selectedStandardCheckboxes = document.querySelectorAll('input[name="standar_filter"]:checked');
+        const selectedStandardIds = Array.from(selectedStandardCheckboxes).map(cb => cb.value);
         const clauseGroup = document.getElementById('clauseCheckboxGroup');
         const clauseToggle = document.getElementById('clauseToggle');
-        console.log('Updating clause filter for standard:', selectedStandardId);
+        
+        console.log('Updating clause filter for standards:', selectedStandardIds);
+        
         // Clear existing clause checkboxes
         clauseGroup.innerHTML = '';
-        if (!selectedStandardId) {
+        
+        if (selectedStandardIds.length === 0) {
             clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
             clauseToggle.style.opacity = '0.6';
             clauseToggle.style.cursor = 'not-allowed';
             updateClauseText();
             return;
         }
+        
         clauseToggle.style.opacity = '1';
         clauseToggle.style.cursor = 'pointer';
+        
         let hasAvailableClauses = false;
+        
         clausesData.forEach(clause => {
-            if (selectedStandardId === clause.standar_id.toString()) {
+            // Show clause if it belongs to any of the selected standards
+            if (selectedStandardIds.includes(clause.standar_id.toString())) {
                 hasAvailableClauses = true;
                 const checkboxItem = document.createElement('div');
                 checkboxItem.className = 'option-item';
                 checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
+                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `klausul_${clause.id}`;
@@ -938,20 +1043,24 @@ $(document).ready(function() {
                 checkbox.name = 'klausul_filter';
                 checkbox.className = 'klausul-checkbox';
                 checkbox.onchange = updateClauseText;
+                
                 const label = document.createElement('label');
                 label.setAttribute('for', `klausul_${clause.id}`);
                 label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
+                
                 checkboxItem.appendChild(checkbox);
                 checkboxItem.appendChild(label);
                 clauseGroup.appendChild(checkboxItem);
             }
         });
+        
         if (!hasAvailableClauses) {
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'no-results';
-            emptyMessage.textContent = 'No clauses available for the selected standard.';
+            emptyMessage.textContent = 'No clauses available for the selected standards.';
             clauseGroup.appendChild(emptyMessage);
         }
+        
         updateClauseText();
     };
 
@@ -959,10 +1068,10 @@ $(document).ready(function() {
     window.updateEditClauseFilter = function(modalId) {
         console.log('Updating edit clause filter for modal:', modalId);
         
-        // Find the checked radio button in this specific modal
+        // Find the checked checkboxes in this specific modal
         const modal = $(`#editModal${modalId}`);
-        const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
-        const selectedStandardId = selectedStandardRadio.length > 0 ? selectedStandardRadio.val() : null;
+        const selectedStandardCheckboxes = modal.find('input[name="standar_ids[]"]:checked');
+        const selectedStandardIds = selectedStandardCheckboxes.map(function() { return $(this).val(); }).get();
         
         const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
         const clauseToggle = document.getElementById(`editClauseToggle_${modalId}`);
@@ -970,28 +1079,35 @@ $(document).ready(function() {
             console.error('Clause elements not found for modal:', modalId);
             return;
         }
+        
         // Clear existing clause checkboxes
         clauseGroup.innerHTML = '';
-        if (!selectedStandardId) {
+        
+        if (selectedStandardIds.length === 0) {
             clauseGroup.innerHTML = '<div class="disabled-message">Select standard first</div>';
             clauseToggle.style.opacity = '0.6';
             clauseToggle.style.cursor = 'not-allowed';
             updateEditClauseText(modalId);
             return;
         }
+        
         clauseToggle.style.opacity = '1';
         clauseToggle.style.cursor = 'pointer';
+        
         // Get existing clause IDs from the table row
-        const row = document.querySelector(`tr[data-standar*="${selectedStandardId}"]`);
+        const row = document.querySelector(`tr[data-standar]`);
         const existingClauseIds = row ? row.dataset.klausul.split(',') : [];
+        
         let hasAvailableClauses = false;
-        // Build clause checkboxes
+        
+        // Build clause checkboxes for all selected standards
         clausesData.forEach(clause => {
-            if (selectedStandardId === clause.standar_id.toString()) {
+            if (selectedStandardIds.includes(clause.standar_id.toString())) {
                 hasAvailableClauses = true;
                 const checkboxItem = document.createElement('div');
                 checkboxItem.className = 'option-item';
                 checkboxItem.setAttribute('data-text', clause.nama_klausul.toLowerCase() + ' ' + clause.nama_standar.toLowerCase());
+                
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.id = `edit_klausul_${modalId}_${clause.id}`;
@@ -1008,21 +1124,25 @@ $(document).ready(function() {
                 checkbox.addEventListener('change', function() {
                     updateEditClauseText(modalId);
                 });
+                
                 const label = document.createElement('label');
                 label.setAttribute('for', `edit_klausul_${modalId}_${clause.id}`);
                 label.textContent = `${clause.nama_klausul} (${clause.nama_standar})`;
                 label.style.cursor = 'pointer';
+                
                 checkboxItem.appendChild(checkbox);
                 checkboxItem.appendChild(label);
                 clauseGroup.appendChild(checkboxItem);
             }
         });
+        
         if (!hasAvailableClauses) {
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'no-results';
-            emptyMessage.textContent = 'No clauses available for the selected standard.';
+            emptyMessage.textContent = 'No clauses available for the selected standards.';
             clauseGroup.appendChild(emptyMessage);
         }
+        
         updateEditClauseText(modalId);
     };
 
@@ -1146,11 +1266,17 @@ $(document).ready(function() {
 
     // Update standard text display
     window.updateStandardText = function() {
-        const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
+        const selectedStandardCheckboxes = document.querySelectorAll('input[name="standar_filter"]:checked');
         const standardText = document.getElementById('filterStandarText');
-        if (selectedStandardRadio) {
-            const label = document.querySelector(`label[for="${selectedStandardRadio.id}"]`);
-            standardText.textContent = label.textContent;
+        if (selectedStandardCheckboxes.length > 0) {
+            if (selectedStandardCheckboxes.length === 1) {
+                const label = document.querySelector(`label[for="${selectedStandardCheckboxes[0].id}"]`);
+                const fullText = label.textContent;
+                const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
+                standardText.textContent = truncatedText;
+            } else {
+                standardText.textContent = `${selectedStandardCheckboxes.length} standards selected`;
+            }
         } else {
             standardText.textContent = 'Select Standard...';
         }
@@ -1159,16 +1285,22 @@ $(document).ready(function() {
     // Update standard text for edit modals
     window.updateEditStandardText = function(modalId) {
         const modal = $(`#editModal${modalId}`);
-        const selectedStandardRadio = modal.find('input[name="standar_id"]:checked');
+        const selectedStandardCheckboxes = modal.find('input[name="standar_ids[]"]:checked');
         const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
         if (!standardText) {
             console.error('Standard text element not found for modal:', modalId);
             return;
         }
-        if (selectedStandardRadio.length > 0) {
-            const label = modal.find(`label[for="${selectedStandardRadio.attr('id')}"]`);
-            if (label.length > 0) {
-                standardText.textContent = label.text();
+        if (selectedStandardCheckboxes.length > 0) {
+            if (selectedStandardCheckboxes.length === 1) {
+                const label = modal.find(`label[for="${selectedStandardCheckboxes.first().attr('id')}"]`);
+                if (label.length > 0) {
+                    const fullText = label.text();
+                    const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
+                    standardText.textContent = truncatedText;
+                }
+            } else {
+                standardText.textContent = `${selectedStandardCheckboxes.length} standards selected`;
             }
         } else {
             standardText.textContent = 'Select Standard...';
@@ -1220,10 +1352,10 @@ $(document).ready(function() {
 
     // Clear standard selection
     window.clearStandardSelection = function() {
-        const checkedStandard = document.querySelector('input[name="standar_filter"]:checked');
-        if (checkedStandard) {
-            checkedStandard.checked = false;
-        }
+        const checkedStandards = document.querySelectorAll('input[name="standar_filter"]:checked');
+        checkedStandards.forEach(checkbox => {
+            checkbox.checked = false;
+        });
         document.getElementById('filterStandarText').textContent = 'Select Standard...';
         document.getElementById('filterStandarContent').classList.remove('show');
         updateClauseFilter();
@@ -1232,11 +1364,11 @@ $(document).ready(function() {
     // Clear standard selection for edit modals
     window.clearEditStandardSelection = function(modalId) {
         const modal = $(`#editModal${modalId}`);
-        const checkedStandard = modal.find('input[name="standar_id"]:checked');
+        const checkedStandards = modal.find('input[name="standar_ids[]"]:checked');
         
-        if (checkedStandard.length > 0) {
-            checkedStandard.prop('checked', false);
-        }
+        checkedStandards.each(function() {
+            $(this).prop('checked', false);
+        });
         
         const standardText = document.getElementById(`editFilterStandarText_${modalId}`);
         if (standardText) {
@@ -1283,7 +1415,7 @@ $(document).ready(function() {
         // Search functionality for standards
         window.filterStandardOptions = function() {
             const searchTerm = document.getElementById('standardSearchInput').value.toLowerCase();
-            const optionItems = document.querySelectorAll('#standardRadioGroup .option-item');
+            const optionItems = document.querySelectorAll('#standardCheckboxGroup .option-item');
             let hasVisibleItems = false;
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
@@ -1294,13 +1426,13 @@ $(document).ready(function() {
                     item.style.display = 'none';
                 }
             });
-            let noResultsMsg = document.querySelector('#standardRadioGroup .no-results');
+            let noResultsMsg = document.querySelector('#standardCheckboxGroup .no-results');
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
                     noResultsMsg.textContent = 'No standards found';
-                    document.getElementById('standardRadioGroup').appendChild(noResultsMsg);
+                    document.getElementById('standardCheckboxGroup').appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
             } else if (noResultsMsg) {
@@ -1337,7 +1469,7 @@ $(document).ready(function() {
         // Search functionality for standards in edit modals
         window.filterEditStandardOptions = function(modalId) {
             const searchTerm = document.getElementById(`editStandardSearchInput_${modalId}`).value.toLowerCase();
-            const optionItems = document.querySelectorAll(`#editStandardRadioGroup_${modalId} .option-item`);
+            const optionItems = document.querySelectorAll(`#editStandardCheckboxGroup_${modalId} .option-item`);
             let hasVisibleItems = false;
             optionItems.forEach(item => {
                 const text = item.getAttribute('data-text') || '';
@@ -1348,13 +1480,13 @@ $(document).ready(function() {
                     item.style.display = 'none';
                 }
             });
-            let noResultsMsg = document.querySelector(`#editStandardRadioGroup_${modalId} .no-results`);
+            let noResultsMsg = document.querySelector(`#editStandardCheckboxGroup_${modalId} .no-results`);
             if (!hasVisibleItems && optionItems.length > 0) {
                 if (!noResultsMsg) {
                     noResultsMsg = document.createElement('div');
                     noResultsMsg.className = 'no-results';
                     noResultsMsg.textContent = 'No standards found';
-                    document.getElementById(`editStandardRadioGroup_${modalId}`).appendChild(noResultsMsg);
+                    document.getElementById(`editStandardCheckboxGroup_${modalId}`).appendChild(noResultsMsg);
                 }
                 noResultsMsg.style.display = 'block';
             } else if (noResultsMsg) {
@@ -1524,18 +1656,18 @@ $(document).ready(function() {
             console.log('Filter button clicked');
             
             // Get filter values
-            const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
+            const selectedStandardCheckboxes = document.querySelectorAll('input[name="standar_filter"]:checked');
             const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
             const selectedOwnerRadio = document.querySelector('input[name="pemilik_filter"]:checked');
             const selectedTypeRadio = document.querySelector('input[name="jenis_filter"]:checked');
             
-            const selectedStandard = selectedStandardRadio ? selectedStandardRadio.value : null;
+            const selectedStandards = Array.from(selectedStandardCheckboxes).map(cb => cb.value);
             const selectedClauses = Array.from(selectedClauseCheckboxes).map(cb => cb.value);
             const selectedOwner = selectedOwnerRadio ? selectedOwnerRadio.value : '';
             const selectedType = selectedTypeRadio ? selectedTypeRadio.value : '';
 
             console.log('Filter values:', {
-                standard: selectedStandard,
+                standards: selectedStandards,
                 clauses: selectedClauses,
                 owner: selectedOwner,
                 type: selectedType
@@ -1554,8 +1686,9 @@ $(document).ready(function() {
                 // Get document type from the table data (column index 5)
                 const rowDocumentType = data[5] || ''; // Column 5 is Document Type
 
-                // Standard filter
-                const standarMatch = !selectedStandard || rowStandar.includes(selectedStandard);
+                // Standard filter - Check if any selected standard matches the row
+                const standarMatch = selectedStandards.length === 0 || 
+                    selectedStandards.some(standard => rowStandar.includes(standard));
                 
                 // Clause filter
                 const klausulMatch = selectedClauses.length === 0 || 
@@ -1598,7 +1731,9 @@ $(document).ready(function() {
                     rowPemilik,
                     selectedOwner,
                     rowDocumentType,
-                    selectedType
+                    selectedType,
+                    rowStandar,
+                    selectedStandards
                 });
 
                 return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
@@ -1630,30 +1765,6 @@ $(document).ready(function() {
                 $('#dokumenTable').show();
             }
         }
-        // Apply filters
-        $('#btnFilter').on('click', function() {
-            const selectedStandardRadio = document.querySelector('input[name="standar_filter"]:checked');
-            const selectedClauseCheckboxes = document.querySelectorAll('input[name="klausul_filter"]:checked');
-            const selectedStandard = selectedStandardRadio ? selectedStandardRadio.value : null;
-            const selectedClauses = Array.from(selectedClauseCheckboxes).map(cb => cb.value);
-            const selectedPemilik = $('#filterPemilik').val();
-            const selectedJenis = $('#filterJenis').val();
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                const row = table.row(dataIndex).node();
-                const rowStandar = $(row).data('standar') ? $(row).data('standar').toString().split(',') : [];
-                const rowKlausul = $(row).data('klausul') ? $(row).data('klausul').toString().split(',') : [];
-                const rowPemilik = $(row).data('pemilik') || '';
-                const standarMatch = !selectedStandard || rowStandar.includes(selectedStandard);
-                const klausulMatch = selectedClauses.length === 0 || 
-                    selectedClauses.some(clause => rowKlausul.includes(clause));
-                const pemilikMatch = !selectedPemilik || rowPemilik.includes(selectedPemilik);
-                const jenisMatch = !selectedJenis || data[5].includes($('#filterJenis option:selected').text());
-                return standarMatch && klausulMatch && pemilikMatch && jenisMatch;
-            });
-            table.draw();
-            $.fn.dataTable.ext.search.pop();
-            checkVisibleRows();
-        });
         // Modal handling
         $(document).on('show.bs.modal', '.modal', function() {
             const modalId = $(this).attr('id').replace('editModal', '');
@@ -1666,9 +1777,9 @@ $(document).ready(function() {
                 // Update standard text
                 updateEditStandardText(modalId);
                 
-                // Check if standard is selected and update clause filter accordingly
-                const selectedStandardRadio = modal.find(`input[name="standar_id"]:checked`);
-                if (selectedStandardRadio.length > 0) {
+                // Check if standards are selected and update clause filter accordingly
+                const selectedStandardCheckboxes = modal.find(`input[name="standar_ids[]"]:checked`);
+                if (selectedStandardCheckboxes.length > 0) {
                     updateEditClauseFilter(modalId);
                 } else {
                     const clauseGroup = document.getElementById(`editClauseCheckboxGroup_${modalId}`);
@@ -1719,13 +1830,52 @@ $(document).ready(function() {
         });
         // Close modal dropdowns when clicking outside
         $(document).on('click', function(event) {
+            // Close non-modal dropdowns
             if (!$(event.target).closest('.filter-dropdown').length && !$(event.target).closest('.modal').length) {
                 $('.filter-dropdown:not(.modal .filter-dropdown)').removeClass('show');
             }
+            
+            // Close modal dropdowns when clicking outside modal or on modal backdrop
+            if (!$(event.target).closest('.modal-content').length) {
+                $('.modal .filter-dropdown').removeClass('show');
+            }
         });
-        // Prevent modal dropdowns from being closed by outside clicks within modal
+        
+        // Handle clicks within modal
+        $(document).on('click', '.modal', function(e) {
+            // If clicking on modal backdrop (not modal content), close dropdowns
+            if (e.target === this) {
+                $('.modal .filter-dropdown').removeClass('show');
+            }
+        });
+        
+        // Handle clicks within modal content
+        $(document).on('click', '.modal-content', function(e) {
+            // If clicking outside any dropdown within modal content, close all dropdowns
+            if (!$(e.target).closest('.filter-dropdown').length) {
+                $('.modal .filter-dropdown').removeClass('show');
+            }
+        });
+        
+        // Prevent dropdown from closing when clicking inside it
         $(document).on('click', '.modal .filter-dropdown', function(e) {
             e.stopPropagation();
+        });
+        
+        // Auto close dropdown after selection
+        $(document).on('change', '.modal input[type="radio"]', function(e) {
+            // Close the dropdown after radio selection
+            const dropdown = $(this).closest('.filter-dropdown');
+            setTimeout(() => {
+                dropdown.removeClass('show');
+            }, 100);
+        });
+        
+        // Auto close dropdown after checkbox selection (optional - you can remove this if you want checkboxes to stay open)
+        $(document).on('change', '.modal input[type="checkbox"]', function(e) {
+            // Optional: uncomment the line below if you want dropdown to close after each checkbox selection
+            // const dropdown = $(this).closest('.filter-dropdown');
+            // setTimeout(() => dropdown.removeClass('show'), 100);
         });
         // Form submission handling - FIXED VERSION
         if (documentPrivilege.can_update) {
