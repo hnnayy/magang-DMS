@@ -412,16 +412,14 @@
                                     <td class="text-center">
                                         <?php if (!empty($row['filepath']) && file_exists(ROOTPATH . '..' . DIRECTORY_SEPARATOR . $row['filepath'])): ?>
                                             <a href="<?= base_url('document-list/serveFile?id=' . $row['id'] . '&action=download') ?>" 
-                                               class="text-decoration-none d-flex align-items-center justify-content-center gap-1" 
-                                               title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
+                                               class="text-decoration-none" 
+                                               title="Download <?= esc($row['filename'] ?? basename($row['filepath'])) ?>"
+                                               data-filename="<?= esc($row['filename'] ?? basename($row['filepath'])) ?>">
                                                 <i class="bi bi-download text-success fs-5"></i>
-                                                <span class="small text-muted" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    <?= esc($row['filename'] ?? basename($row['filepath'])) ?>
-                                                </span>
                                             </a>
                                         <?php else: ?>
-                                            <span class="text-muted">
-                                                <i class="bi bi-file-earmark-x"></i> No file
+                                            <span class="text-muted" data-filename="">
+                                                <i class="bi bi-file-earmark-x"></i>
                                             </span>
                                         <?php endif; ?>
                                     </td>
@@ -695,12 +693,19 @@ $(document).ready(function() {
                             if (column === 10) {
                                 var $node = $(node);
                                 var $link = $node.find('a');
+                                var $span = $node.find('span');
+                                
+                                // Get filename from data-filename attribute
+                                var filename = '';
                                 if ($link.length > 0) {
-                                    // Extract filename from the span text or title attribute
-                                    var filename = $node.find('span').text().trim();
-                                    if (filename) {
-                                        return filename;
-                                    }
+                                    filename = $link.attr('data-filename') || '';
+                                } else if ($span.length > 0) {
+                                    filename = $span.attr('data-filename') || '';
+                                }
+                                
+                                if (filename && filename.trim() !== '') {
+                                    return filename.trim();
+                                } else if ($link.length > 0) {
                                     // Fallback: try to get from title attribute
                                     var title = $link.attr('title');
                                     if (title && title.includes('Download ')) {
