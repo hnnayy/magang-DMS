@@ -124,16 +124,53 @@ class DocumentCodeController extends Controller
 
     public function delete()
     {
-        $id = $this->request->getPost('id');
-        if (!$id) {
-            return redirect()->to('/document-code')->with('error', 'ID is invalid.');
+        // Cek apakah request adalah AJAX
+        if ($this->request->isAJAX()) {
+            $id = $this->request->getPost('id');
+            
+            if (!$id) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'ID is invalid.'
+                ]);
+            }
+
+            // Cek apakah data exists
+            $existing = $this->kodeDokumenModel->find($id);
+            if (!$existing) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Document code not found.'
+                ]);
+            }
+
+            try {
+                // Soft delete - update status menjadi 0
+                $result = $this->kodeDokumenModel->update($id, [
+                    'status' => 0,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+
+                if ($result) {
+                    return $this->response->setJSON([
+                        'status' => 'success',
+                        'message' => 'Document code deleted successfully.'
+                    ]);
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => 'Failed to delete document code.'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'An error occurred: ' . $e->getMessage()
+                ]);
+            }
         }
 
-        $this->kodeDokumenModel->update($id, [
-            'status' => 0,
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        return redirect()->to('/document-code')->with('deleted_message', 'Successfully Deleted.');
+        // Jika bukan AJAX, redirect dengan error
+        return redirect()->to('/document-code')->with('error', 'Invalid request method.');
     }
 }
