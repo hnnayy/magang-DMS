@@ -27,6 +27,8 @@ class ClauseModel extends Model
         return $this->select('clauses.*, standards.nama_standar')
                     ->join('standards', 'standards.id = clauses.standar_id', 'left')
                     ->where('clauses.status', 1) // Ambil hanya data aktif
+                    ->orderBy('standards.nama_standar', 'ASC') // Urutkan berdasarkan nama standar
+                    ->orderBy('clauses.id', 'ASC') // Data baru (ID lebih besar) di bawah
                     ->findAll();
     }
 }

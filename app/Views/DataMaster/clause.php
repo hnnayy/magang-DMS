@@ -1,129 +1,163 @@
 <?= $this->extend('layout/main_layout') ?>
 <?= $this->section('content') ?>
 
-<div class="px-4 py-3 w-100">
-    <h4>Clause Management</h4>
-    <hr>
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Clause Management</h4>
+    </div>
 
-    <!-- Filter Section -->
-    <div class="bg-light border rounded p-3 mb-4">
-        <div class="row g-3 align-items-end">
-            <div class="col-xl-4 col-lg-4 col-md-6">
-                <label for="filterStandard" class="form-label fw-semibold">Filter Standard</label>
-                <div class="dropdown">
-                    <input type="text" 
-                           class="form-control dropdown-toggle" 
-                           id="filterStandard" 
-                           placeholder="Search standards..." 
-                           data-bs-toggle="dropdown" 
-                           aria-expanded="false"
-                           autocomplete="off">
-                    <ul class="dropdown-menu w-100" id="standardDropdown" style="max-height: 200px; overflow-y: auto;">
-                        <li><a class="dropdown-item" href="#" data-value="">All Standards</a></li>
-                        <?php 
-                        // Show ALL standards from $standards variable, not just those with clauses
-                        foreach ($standards as $standard) {
-                            echo '<li><a class="dropdown-item" href="#" data-value="' . esc($standard['nama_standar']) . '">' . esc($standard['nama_standar']) . '</a></li>';
-                        }
-                        ?>
-                    </ul>
+    <!-- Show Entries and Search -->
+    <div class="mb-2">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <div class="d-flex align-items-center">
+                    <label for="entriesPerPage" class="form-label me-2 mb-0">Show</label>
+                    <select class="form-select form-select-sm" id="entriesPerPage" onchange="changeEntriesPerPage()" style="width: 70px;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="ms-2">entries</span>
                 </div>
             </div>
-            <div class="col-xl-4 col-lg-4 col-md-6">
-                <label for="searchClause" class="form-label fw-semibold">Search Clause</label>
-                <input type="text" class="form-control" id="searchClause" placeholder="Search clauses...">
-            </div>
-            <div class="col-xl-4 col-lg-4 col-md-12">
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-secondary flex-fill" id="resetFilters">
-                        <i class="bi bi-arrow-counterclockwise"></i> Reset
-                    </button>
-                    <button type="button" class="btn btn-primary flex-fill" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
-                        <i class="fas fa-plus me-1"></i> Add Clause
+            <div class="col-md-9">
+                <div class="d-flex justify-content-end align-items-center gap-2">
+                    <div class="input-group" style="width: 250px;">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="clauseSearchInput" placeholder="Search clauses..." autocomplete="off">
+                    </div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#clauseAddModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add New Clause
                     </button>
                 </div>
+            </div>
             </div>
         </div>
     </div>
 
-    <div class="table-responsive shadow-sm rounded bg-white p-3">
-        <table class="table table-bordered table-hover align-middle" id="documentTable">
+    <!-- Single Table with Grouped Data -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="text-center">No</th>
-                    <th>Standard</th>
-                    <th>Clause</th>
-                    <th>Description</th>
-                    <th class="text-center">Action</th>
+                    <th style="width: 8%; text-align: center;">No</th>
+                    <th style="width: 20%;">Standard</th>
+                    <th style="width: 25%;">Clause</th>
+                    <th style="width: 35%;">Description</th>
+                    <th style="width: 12%; text-align: center;">Action</th>
                 </tr>
             </thead>
-            <tbody id="tableBody">
-            <?php if (!empty($groupedClauses)) : ?>
-                <?php 
-                $no = 1;
-                foreach ($groupedClauses as $standardName => $clauses): 
-                    foreach ($clauses as $clause): ?>
-                <tr data-clause-id="<?= $clause['id'] ?>" data-standard="<?= esc($standardName) ?>">
-                    <td class="text-center"><?= $no++ ?></td>
-                    <td><?= esc($standardName) ?></td>
-                    <td>
-                        <span class="clause-code"><?= esc($clause['nama_klausul']) ?></span>
-                    </td>
-                    <td><?= esc($clause['description']) ?></td>
-                    <td class="text-center">
-                        <div class="d-flex justify-content-center gap-2">
-                            <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#clauseEditModal"
-                                onclick="editClause(<?= $clause['id'] ?>, '<?= esc($clause['nama_standar']) ?>', '<?= esc($clause['nama_klausul']) ?>', '<?= esc($clause['description']) ?>', <?= $clause['standar_id'] ?>)"
-                                title="Edit">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-link p-0" onclick="confirmClauseDelete(<?= $clause['id'] ?>)" title="Delete">
-                                <i class="bi bi-trash text-danger"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <?php 
-                    endforeach;
-                endforeach; ?>
-            <?php else : ?>
-                <tr id="noDataRow">
-                    <td class="text-center" colspan="5">No data found</td>
-                </tr>
-            <?php endif; ?>
+            <tbody>
+                <?php if (empty($clauses)): ?>
+                    <tr id="noDataRow">
+                        <td colspan="5" class="text-center py-4">
+                            <span class="text-muted">No data</span>
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php 
+                    $currentStandard = ''; 
+                    $rowNumber = 1; 
+                    ?>
+                    <?php foreach ($clauses as $clause): ?>
+                    <?php 
+                    $isNewStandard = ($currentStandard !== $clause['nama_standar']);
+                    if ($isNewStandard) {
+                        $currentStandard = $clause['nama_standar'];
+                    }
+                    ?>
+                    <tr data-clause-id="<?= $clause['id'] ?>" 
+                        data-standard="<?= esc($clause['nama_standar']) ?>">
+                        <td class="text-center"><?= $rowNumber ?></td>
+                        <td><?= esc($clause['nama_standar']) ?></td>
+                        <td><?= esc($clause['nama_klausul']) ?></td>
+                        <td><?= esc($clause['description']) ?></td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-sm btn-outline-primary border-0" 
+                                        onclick="editClause(<?= $clause['id'] ?>, '<?= esc($clause['nama_standar']) ?>', '<?= esc($clause['nama_klausul']) ?>', '<?= esc($clause['description']) ?>', <?= $clause['standar_id'] ?>)"
+                                        title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger border-0" 
+                                        onclick="confirmClauseDelete(<?= $clause['id'] ?>)"
+                                        title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php $rowNumber++; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Pagination Info and Controls -->
+    <div class="row align-items-center mt-2">
+        <div class="col-md-6">
+            <div id="paginationInfo" class="text-muted">
+                Showing 1 to 10 of 45 entries
+            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="Clause pagination">
+                <ul class="pagination pagination-sm justify-content-end mb-0" id="paginationControls">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" onclick="changePage('previous')" aria-label="Previous">Previous</a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link" href="#" onclick="changePage(1)">1</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(2)">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(3)">3</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(4)">4</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(5)">5</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage('next')" aria-label="Next">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- No Results Message -->
+    <div id="clauseNoResults" class="text-center py-5" style="display: none;">
+        <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+        <p class="text-muted">No clauses found matching your search.</p>
     </div>
 </div>
 
 <!-- Add Modal -->
-<div class="modal fade" id="clauseAddModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow border-0">
+<div class="modal fade" id="clauseAddModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Clause</h5>
             </div>
-            <form id="clauseAddForm" method="post" action="<?= base_url('document-clauses/store') ?>">
+            <form id="clauseAddForm">
                 <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="clauseAddStandard" class="form-label">Standard <span class="text-danger">*</span></label>
-                        <div class="dropdown">
-                            <input type="text" 
-                                   class="form-control dropdown-toggle" 
-                                   id="clauseAddStandard" 
-                                   placeholder="Select a standard..." 
-                                   data-bs-toggle="dropdown" 
-                                   aria-expanded="false"
-                                   autocomplete="off"
-                                   required>
-                            <input type="hidden" id="clauseAddStandardId" name="standar_id">
-                            <ul class="dropdown-menu w-100" id="addStandardDropdown" style="max-height: 200px; overflow-y: auto;">
-                                <?php foreach ($standards as $standard): ?>
-                                    <li><a class="dropdown-item" href="#" data-value="<?= $standard['id'] ?>" data-name="<?= esc($standard['nama_standar']) ?>"><?= esc($standard['nama_standar']) ?></a></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
+                        <select class="form-select" id="clauseAddStandard" name="standar_id" required>
+                            <option value="">Select a standard...</option>
+                            <?php foreach ($standards as $standard): ?>
+                                <option value="<?= $standard['id'] ?>"><?= esc($standard['nama_standar']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="clauseAddCode" class="form-label">Clause <span class="text-danger">*</span></label>
@@ -144,34 +178,24 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal fade" id="clauseEditModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow border-0">
+<div class="modal fade" id="clauseEditModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Edit Clause</h5>
             </div>
-            <form id="clauseEditForm" method="post" action="<?= base_url('document-clauses/edit') ?>">
+            <form id="clauseEditForm">
                 <?= csrf_field() ?>
-                <input type="hidden" id="clauseEditId" name="id">
                 <div class="modal-body">
+                    <input type="hidden" id="clauseEditId" name="id">
                     <div class="mb-3">
                         <label for="clauseEditStandard" class="form-label">Standard <span class="text-danger">*</span></label>
-                        <div class="dropdown">
-                            <input type="text" 
-                                   class="form-control dropdown-toggle" 
-                                   id="clauseEditStandard" 
-                                   placeholder="Select a standard..." 
-                                   data-bs-toggle="dropdown" 
-                                   aria-expanded="false"
-                                   autocomplete="off"
-                                   required>
-                            <input type="hidden" id="clauseEditStandardId" name="standar_id">
-                            <ul class="dropdown-menu w-100" id="editStandardDropdown" style="max-height: 200px; overflow-y: auto;">
-                                <?php foreach ($standards as $standard): ?>
-                                    <li><a class="dropdown-item" href="#" data-value="<?= $standard['id'] ?>" data-name="<?= esc($standard['nama_standar']) ?>"><?= esc($standard['nama_standar']) ?></a></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
+                        <select class="form-select" id="clauseEditStandard" name="standar_id" required>
+                            <option value="">Select a standard...</option>
+                            <?php foreach ($standards as $standard): ?>
+                                <option value="<?= $standard['id'] ?>"><?= esc($standard['nama_standar']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="clauseEditCode" class="form-label">Clause <span class="text-danger">*</span></label>
@@ -191,75 +215,71 @@
     </div>
 </div>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('script') ?>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Success/Error messages -->
-<?php if (session()->has('swal')) : ?>
 <script>
-    Swal.fire({
-        icon: '<?= session('swal.icon') ?>',
-        title: '<?= session('swal.title') ?>',
-        text: '<?= session('swal.text') ?>',
-        confirmButtonColor: '#7066E0'
-    });
-</script>
-<?php endif; ?>
-
-<?php if (session()->has('added_message')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= session('added_message') ?>',
-        confirmButtonColor: '#28a745'
-    });
-</script>
-<?php endif; ?>
-
-<?php if (session()->has('updated_message')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= session('updated_message') ?>',
-        confirmButtonColor: '#28a745'
-    });
-</script>
-<?php endif; ?>
-
-<?php if (session()->has('deleted_message')) : ?>
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: '<?= session('deleted_message') ?>',
-        confirmButtonColor: '#28a745'
-    });
-</script>
-<?php endif; ?>
-
-<script>
-    let clauseTable;
-    let selectedStandard = '';
-    let addSelectedStandardId = '';
-    let editSelectedStandardId = '';
-
+    // Search functionality
+    function performClauseSearch() {
+        const searchTerm = $('#clauseSearchInput').val().toLowerCase().trim();
+        let hasVisibleResults = false;
+        
+        console.log('Search term:', searchTerm); // Debug log
+        
+        // Check if we have data to search
+        const dataRows = $('tbody tr:not(#noDataRow)');
+        if (dataRows.length === 0) {
+            console.log('No data available to search');
+            return;
+        }
+        
+        // First, show all data rows to apply search filter
+        dataRows.show();
+        
+        dataRows.each(function() {
+            const row = $(this);
+            
+            // Get text content from each column
+            const standard = row.find('td:nth-child(2)').text().toLowerCase().trim();
+            const clause = row.find('td:nth-child(3)').text().toLowerCase().trim();
+            const description = row.find('td:nth-child(4)').text().toLowerCase().trim();
+            
+            console.log('Row data:', { standard, clause, description }); // Debug log
+            
+            // Check if search term matches any of the columns
+            const isMatch = searchTerm === '' || 
+                           standard.includes(searchTerm) ||
+                           clause.includes(searchTerm) || 
+                           description.includes(searchTerm);
+            
+            if (isMatch) {
+                hasVisibleResults = true;
+                row.show();
+            } else {
+                row.hide();
+            }
+        });
+        
+        // Update display based on search results
+        if (hasVisibleResults || searchTerm === '') {
+            $('#clauseNoResults').hide();
+            $('.table-responsive').show();
+            updateFilteredEntries(); // Update pagination after filtering
+        } else {
+            $('#clauseNoResults').show();
+            $('.table-responsive').hide();
+        }
+        
+        console.log('Has visible results:', hasVisibleResults); // Debug log
+    }
+    
     // Edit function
     function editClause(id, standardName, clauseNumber, clauseDescription, standardId) {
         $('#clauseEditId').val(id);
-        $('#clauseEditStandard').val(standardName);
-        $('#clauseEditStandardId').val(standardId);
+        $('#clauseEditStandard').val(standardId);
         $('#clauseEditCode').val(clauseNumber);
         $('#clauseEditDescription').val(clauseDescription);
-        editSelectedStandardId = standardId;
+        
+        new bootstrap.Modal(document.getElementById('clauseEditModal')).show();
     }
-
+    
     // Delete function
     function confirmClauseDelete(clauseId) {
         Swal.fire({
@@ -268,7 +288,7 @@
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: 'rgba(118, 125, 131, 1)',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
         }).then((result) => {
@@ -295,24 +315,23 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                // Remove row from DataTable
-                clauseTable.row($(`tr[data-clause-id="${clauseId}"]`)).remove().draw();
+                $(`tr[data-clause-id="${clauseId}"]`).remove();
                 
-                // Check if table is empty after deletion and show "No data found"
-                checkAndShowNoDataRow();
+                // Update pagination after deletion
+                initializePagination();
                 
                 Swal.fire({
                     icon: 'success',
                     title: 'Deleted!',
                     text: result.message,
-                    confirmButtonColor: '#28a745'
+                    confirmButtonText: 'OK'
                 });
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: result.message || 'Failed to delete clause.',
-                    confirmButtonColor: '#d33'
+                    confirmButtonText: 'OK'
                 });
             }
         } catch (error) {
@@ -321,233 +340,177 @@
                 icon: 'error',
                 title: 'Error',
                 text: 'An error occurred while deleting the clause.',
-                confirmButtonColor: '#d33'
+                confirmButtonText: 'OK'
             });
         }
     }
-
-    // Function to check and show "No data found" row
-    function checkAndShowNoDataRow() {
-        const visibleRows = $('#tableBody tr:visible').not('#noDataRow').length;
+    
+    // Pagination variables
+    let currentPage = 1;
+    let entriesPerPage = 10;
+    let totalEntries = 0;
+    let filteredEntries = [];
+    
+    // Function to change entries per page
+    function changeEntriesPerPage() {
+        entriesPerPage = parseInt($('#entriesPerPage').val());
+        currentPage = 1; // Reset to first page
+        updatePagination();
+        displayCurrentPage();
+    }
+    
+    // Function to change page
+    function changePage(page) {
+        const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
         
-        if (visibleRows === 0) {
-            // Remove existing no data row if any
-            $('#noDataRow').remove();
-            // Add new no data row
-            $('#tableBody').append('<tr id="noDataRow"><td class="text-center" colspan="5">No data found</td></tr>');
+        if (page === 'previous') {
+            if (currentPage > 1) {
+                currentPage--;
+            }
+        } else if (page === 'next') {
+            if (currentPage < totalPages) {
+                currentPage++;
+            }
         } else {
-            // Remove no data row if there are visible rows
-            $('#noDataRow').remove();
+            currentPage = parseInt(page);
+        }
+        
+        updatePagination();
+        displayCurrentPage();
+    }
+    
+    // Function to update pagination controls
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
+        const startEntry = ((currentPage - 1) * entriesPerPage) + 1;
+        const endEntry = Math.min(currentPage * entriesPerPage, filteredEntries.length);
+        
+        // Update pagination info
+        $('#paginationInfo').text(`Showing ${startEntry} to ${endEntry} of ${filteredEntries.length} entries`);
+        
+        // Update pagination controls
+        let paginationHtml = '';
+        
+        // Previous button
+        paginationHtml += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage('previous')" aria-label="Previous">Previous</a>
+        </li>`;
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === currentPage) {
+                paginationHtml += `<li class="page-item active">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>`;
+            } else if (i <= 5 || (currentPage <= 3 && i <= 5) || (currentPage >= totalPages - 2 && i >= totalPages - 4) || Math.abs(i - currentPage) <= 1) {
+                paginationHtml += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                </li>`;
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                paginationHtml += `<li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>`;
+            }
+        }
+        
+        // Next button
+        paginationHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="changePage('next')" aria-label="Next">Next</a>
+        </li>`;
+        
+        $('#paginationControls').html(paginationHtml);
+    }
+    
+    // Function to display current page
+    function displayCurrentPage() {
+        const startIndex = (currentPage - 1) * entriesPerPage;
+        const endIndex = startIndex + entriesPerPage;
+        
+        // Hide all data rows first (but not the noDataRow)
+        $('tbody tr:not(#noDataRow)').hide();
+        
+        // Show only rows for current page
+        for (let i = startIndex; i < endIndex && i < filteredEntries.length; i++) {
+            $(filteredEntries[i]).show();
+        }
+        
+        updateTableDisplay();
+    }
+    
+    // Function to initialize pagination data
+    function initializePagination() {
+        filteredEntries = $('tbody tr:not(#noDataRow)').toArray();
+        totalEntries = filteredEntries.length;
+        currentPage = 1;
+        
+        if (totalEntries === 0) {
+            // Show no data message and hide pagination
+            $('#paginationInfo').text('Showing 0 to 0 of 0 entries');
+            $('#paginationControls').html('');
+            return;
+        }
+        
+        updatePagination();
+        displayCurrentPage();
+    }
+    
+    // Function to update filtered entries (used after search)
+    function updateFilteredEntries() {
+        filteredEntries = $('tbody tr:visible:not(#noDataRow)').toArray();
+        currentPage = 1; // Reset to first page when filtering
+        
+        console.log('Filtered entries count:', filteredEntries.length); // Debug log
+        
+        if (filteredEntries.length === 0) {
+            // Show no results message
+            $('#clauseNoResults').show();
+            $('.table-responsive').hide();
+            $('#paginationInfo').text('Showing 0 to 0 of 0 entries');
+            $('#paginationControls').html('');
+        } else {
+            // Update pagination and display
+            $('#clauseNoResults').hide();
+            $('.table-responsive').show();
+            updatePagination();
+            displayCurrentPage();
         }
     }
-
+    
+    // Function to update table display after changes
+    function updateTableDisplay() {
+        let rowNumber = ((currentPage - 1) * entriesPerPage) + 1;
+        
+        $('tbody tr:visible:not(#noDataRow)').each(function() {
+            const row = $(this);
+            // Update row number
+            row.find('td:first-child').text(rowNumber++);
+        });
+    }
+    
     $(document).ready(function() {
-        // Initialize DataTable
-        clauseTable = $('#documentTable').DataTable({
-            "language": {
-                "search": "Search:",
-                "lengthMenu": "Show _MENU_ entries",
-                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
-                "infoEmpty": "Showing 0 to 0 of 0 entries",
-                "infoFiltered": "(filtered from _MAX_ total entries)",
-                "paginate": {
-                    "first": "First",
-                    "last": "Last",
-                    "next": "Next",
-                    "previous": "Previous"
-                }
-            },
-            "searching": false // Disable default search since we're using custom filters
+        console.log('Document ready - initializing clause management'); // Debug log
+        
+        // Initialize pagination
+        initializePagination();
+        
+        // Initialize tooltips
+        $('[title]').tooltip();
+        
+        // Search functionality - with event delegation to ensure it works
+        $(document).off('input', '#clauseSearchInput').on('input', '#clauseSearchInput', function() {
+            console.log('Search input triggered'); // Debug log
+            performClauseSearch();
         });
-
-        // FILTER STANDARD SEARCHABLE DROPDOWN
-        // Show dropdown when clicked
-        $('#filterStandard').on('click', function() {
-            $('#standardDropdown .dropdown-item').parent().show();
-            $(this).dropdown('show');
+        
+        // Also add keyup event for better responsiveness
+        $(document).off('keyup', '#clauseSearchInput').on('keyup', '#clauseSearchInput', function() {
+            performClauseSearch();
         });
-
-        // Searchable logic for filter
-        $('#filterStandard').on('input', function() {
-            const searchText = this.value.toLowerCase();
-            const dropdownItems = $('#standardDropdown .dropdown-item');
-            
-            dropdownItems.each(function() {
-                const itemText = $(this).text().toLowerCase();
-                if (itemText.includes(searchText) || searchText === '') {
-                    $(this).parent().show();
-                } else {
-                    $(this).parent().hide();
-                }
-            });
-
-            if (!$(this).next('.dropdown-menu').hasClass('show')) {
-                $(this).dropdown('show');
-            }
-        });
-
-        // Handle filter dropdown selection
-        $('#standardDropdown').on('click', '.dropdown-item', function(e) {
-            e.preventDefault();
-            const selectedText = $(this).text();
-            const selectedValue = $(this).data('value');
-            
-            $('#filterStandard').val(selectedText);
-            selectedStandard = selectedValue;
-            
-            $('#filterStandard').dropdown('hide');
-            applyFilters();
-        });
-
-        // ADD MODAL SEARCHABLE DROPDOWN
-        // Show dropdown when clicked
-        $('#clauseAddStandard').on('click', function() {
-            $('#addStandardDropdown .dropdown-item').parent().show();
-            $(this).dropdown('show');
-        });
-
-        // Searchable logic for add modal
-        $('#clauseAddStandard').on('input', function() {
-            const searchText = this.value.toLowerCase();
-            const dropdownItems = $('#addStandardDropdown .dropdown-item');
-            
-            dropdownItems.each(function() {
-                const itemText = $(this).text().toLowerCase();
-                if (itemText.includes(searchText) || searchText === '') {
-                    $(this).parent().show();
-                } else {
-                    $(this).parent().hide();
-                }
-            });
-
-            if (!$(this).next('.dropdown-menu').hasClass('show')) {
-                $(this).dropdown('show');
-            }
-        });
-
-        // Handle add dropdown selection
-        $('#addStandardDropdown').on('click', '.dropdown-item', function(e) {
-            e.preventDefault();
-            const selectedText = $(this).data('name');
-            const selectedValue = $(this).data('value');
-            
-            $('#clauseAddStandard').val(selectedText);
-            $('#clauseAddStandardId').val(selectedValue);
-            addSelectedStandardId = selectedValue;
-            
-            $('#clauseAddStandard').dropdown('hide');
-        });
-
-        // EDIT MODAL SEARCHABLE DROPDOWN
-        // Show dropdown when clicked
-        $('#clauseEditStandard').on('click', function() {
-            $('#editStandardDropdown .dropdown-item').parent().show();
-            $(this).dropdown('show');
-        });
-
-        // Searchable logic for edit modal
-        $('#clauseEditStandard').on('input', function() {
-            const searchText = this.value.toLowerCase();
-            const dropdownItems = $('#editStandardDropdown .dropdown-item');
-            
-            dropdownItems.each(function() {
-                const itemText = $(this).text().toLowerCase();
-                if (itemText.includes(searchText) || searchText === '') {
-                    $(this).parent().show();
-                } else {
-                    $(this).parent().hide();
-                }
-            });
-
-            if (!$(this).next('.dropdown-menu').hasClass('show')) {
-                $(this).dropdown('show');
-            }
-        });
-
-        // Handle edit dropdown selection
-        $('#editStandardDropdown').on('click', '.dropdown-item', function(e) {
-            e.preventDefault();
-            const selectedText = $(this).data('name');
-            const selectedValue = $(this).data('value');
-            
-            $('#clauseEditStandard').val(selectedText);
-            $('#clauseEditStandardId').val(selectedValue);
-            editSelectedStandardId = selectedValue;
-            
-            $('#clauseEditStandard').dropdown('hide');
-        });
-
-        // Custom filter functions
-        function applyFilters() {
-            const searchText = $('#searchClause').val().toLowerCase();
-            const standardFilter = selectedStandard;
-
-            // Remove existing no data row before filtering
-            $('#noDataRow').remove();
-
-            let visibleCount = 0;
-
-            $('#tableBody tr').not('#noDataRow').each(function() {
-                const row = this;
-                
-                // Get text content from each cell
-                const standard = $(row).find('td:nth-child(2)').text();
-                const clause = $(row).find('td:nth-child(3)').text().toLowerCase();
-                const description = $(row).find('td:nth-child(4)').text().toLowerCase();
-
-                let show = true;
-
-                // Apply search filter (searches in clause and description)
-                if (searchText && !clause.includes(searchText) && !description.includes(searchText)) {
-                    show = false;
-                }
-
-                // Apply standard filter
-                if (standardFilter && standard !== standardFilter) {
-                    show = false;
-                }
-
-                // Show/hide row
-                if (show) {
-                    $(row).show();
-                    visibleCount++;
-                } else {
-                    $(row).hide();
-                }
-            });
-
-            // Show "No data found" if no rows are visible
-            if (visibleCount === 0) {
-                $('#tableBody').append('<tr id="noDataRow"><td class="text-center" colspan="5">No data found</td></tr>');
-            }
-
-            // Update DataTable display
-            clauseTable.draw();
-        }
-
-        // Bind filter events
-        $('#searchClause').on('keyup', function() {
-            applyFilters();
-        });
-
-        // Reset filters
-        $('#resetFilters').on('click', function() {
-            $('#searchClause').val('');
-            $('#filterStandard').val('');
-            selectedStandard = '';
-            
-            // Remove no data row
-            $('#noDataRow').remove();
-            
-            // Show all data rows
-            $('#tableBody tr').not('#noDataRow').show();
-            
-            // Check if we need to show no data row
-            checkAndShowNoDataRow();
-            
-            clauseTable.draw();
-        });
-
+        
+        // Test if jQuery is working
+        console.log('jQuery version:', $.fn.jquery);
+        console.log('Search input element found:', $('#clauseSearchInput').length > 0);
+        
         // Handle add form submission
         $('#clauseAddForm').on('submit', async function(e) {
             e.preventDefault();
@@ -573,7 +536,7 @@
                         icon: 'success',
                         title: 'Success!',
                         text: result.message,
-                        confirmButtonColor: '#28a745'
+                        confirmButtonText: 'OK'
                     }).then(() => {
                         location.reload();
                     });
@@ -587,14 +550,14 @@
                             icon: 'error',
                             title: 'Validation Error',
                             html: errorMessages.join('<br>'),
-                            confirmButtonColor: '#d33'
+                            confirmButtonText: 'OK'
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
                             text: result.message || 'Failed to add clause.',
-                            confirmButtonColor: '#d33'
+                            confirmButtonText: 'OK'
                         });
                     }
                 }
@@ -604,7 +567,7 @@
                     icon: 'error',
                     title: 'Error',
                     text: 'An error occurred while adding the clause.',
-                    confirmButtonColor: '#d33'
+                    confirmButtonText: 'OK'
                 });
             }
         });
@@ -633,7 +596,7 @@
                         icon: 'success',
                         title: 'Success!',
                         text: result.message,
-                        confirmButtonColor: '#28a745'
+                        confirmButtonText: 'OK'
                     }).then(() => {
                         location.reload();
                     });
@@ -647,14 +610,14 @@
                             icon: 'error',
                             title: 'Validation Error',
                             html: errorMessages.join('<br>'),
-                            confirmButtonColor: '#d33'
+                            confirmButtonText: 'OK'
                         });
                     } else {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
                             text: result.message || 'Failed to update clause.',
-                            confirmButtonColor: '#d33'
+                            confirmButtonText: 'OK'
                         });
                     }
                 }
@@ -664,38 +627,56 @@
                     icon: 'error',
                     title: 'Error',
                     text: 'An error occurred while updating the clause.',
-                    confirmButtonColor: '#d33'
+                    confirmButtonText: 'OK'
                 });
             }
         });
         
-        // Reset forms when modal is hidden
-        $('#clauseAddModal').on('hidden.bs.modal', function() {
+        $('#clauseAddModal, #clauseEditModal').on('hidden.bs.modal', function() {
             $(this).find('form')[0].reset();
-            $('#clauseAddStandard').val('');
-            $('#clauseAddStandardId').val('');
-            addSelectedStandardId = '';
         });
-
-        $('#clauseEditModal').on('hidden.bs.modal', function() {
-            $(this).find('form')[0].reset();
-            $('#clauseEditStandard').val('');
-            $('#clauseEditStandardId').val('');
-            editSelectedStandardId = '';
-        });
-
-        // Autofocus on modal open
-        $('#clauseAddModal').on('shown.bs.modal', function() {
-            $('#clauseAddStandard').focus();
-        });
-
-        $('#clauseEditModal').on('shown.bs.modal', function() {
-            $('#clauseEditCode').focus();
-        });
-
-        // Initial check for no data
-        checkAndShowNoDataRow();
+    });
+    
+    // Fallback initialization in case document ready doesn't work properly
+    window.addEventListener('load', function() {
+        console.log('Window loaded - setting up fallback search');
+        
+        const searchInput = document.getElementById('clauseSearchInput');
+        if (searchInput && typeof performClauseSearch === 'function') {
+            // Remove any existing listeners first
+            searchInput.removeEventListener('input', performClauseSearch);
+            searchInput.removeEventListener('keyup', performClauseSearch);
+            
+            // Add new listeners
+            searchInput.addEventListener('input', performClauseSearch);
+            searchInput.addEventListener('keyup', performClauseSearch);
+            
+            console.log('Fallback search listeners attached');
+        }
     });
 </script>
+<?= $this->endSection() ?>
 
+<?= $this->section('additional_scripts') ?>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Additional search initialization after all scripts are loaded
+$(function() {
+    console.log('Additional jQuery initialization');
+    
+    // Double-check search functionality
+    $('#clauseSearchInput').off('input keyup').on('input keyup', function() {
+        console.log('Search triggered from additional init');
+        performClauseSearch();
+    });
+    
+    // Test search immediately
+    if ($('#clauseSearchInput').length) {
+        console.log('Search input found and ready');
+    } else {
+        console.error('Search input not found!');
+    }
+});
+</script>
 <?= $this->endSection() ?>

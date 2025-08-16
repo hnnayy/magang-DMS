@@ -18,7 +18,14 @@ class ClauseController extends BaseController
 
     public function index()
     {
-        $clauses = $this->clauseModel->getWithStandard();
+        // Get clauses ordered by standard name first, then by clause name
+        $clauses = $this->clauseModel->select('clauses.*, standards.nama_standar')
+                    ->join('standards', 'standards.id = clauses.standar_id', 'left')
+                    ->where('clauses.status', 1)
+                    ->orderBy('standards.nama_standar', 'ASC')
+                    ->orderBy('clauses.nama_klausul', 'ASC')
+                    ->findAll();
+        
         $standards = $this->standardModel->where('status', 1)->orderBy('nama_standar', 'ASC')->findAll();
         
         $groupedClauses = [];
