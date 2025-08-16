@@ -424,7 +424,7 @@
                                         <?php endif; ?>
                                     </td>
                                     <td><?= esc($row['revision'] ?? '-') ?></td>
-                                    <td><?= esc($row['date_published'] ?? '-') ?></td>
+                                    <td><?= esc($row['effective_date'] ?? '-') ?></td>
                                     <td><?= esc($row['approved_by_name'] ?? '-') ?></td>
                                     <td><?= esc($row['approvedate'] ?? '-') ?></td>
                                     <?php if ($hasAnyPrivilege): ?>
