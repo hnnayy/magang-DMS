@@ -34,8 +34,8 @@ class FakultasController extends Controller
         // HAPUS VALIDASI FIELD KOSONG - biarkan client-side yang handle
         // Hanya validasi untuk duplicate check (tetap pake modal)
         
-        // Cek apakah nama fakultas sudah ada
-        if ($this->unitParentModel->where('name', $nama)->first()) {
+        // Cek apakah nama fakultas sudah ada (hanya untuk type=2/Faculty)
+        if ($this->unitParentModel->where('name', $nama)->where('type', 2)->first()) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
                 'title' => 'Error!',
@@ -48,8 +48,8 @@ class FakultasController extends Controller
         
         try {
             $result = $this->unitParentModel->insert([
+                'type'        => 2, // 2=Faculty
                 'name'        => $nama,
-                'description' => null,
                 'status'      => (int)$status,
             ]);
             
@@ -84,7 +84,10 @@ class FakultasController extends Controller
     
     public function index()
     {
-        $fakultas = $this->unitParentModel->where('status !=', 0)->findAll();
+        $fakultas = $this->unitParentModel
+            ->where('type', 2) // 2=Faculty
+            ->where('status !=', 0)
+            ->findAll();
         return view('Faculty/DaftarFakultas', ['unitParent' => $fakultas]);
     }
     
@@ -101,7 +104,10 @@ class FakultasController extends Controller
             return redirect()->to('faculty-list');
         }
         
-        $fakultas = $this->unitParentModel->find($id);
+        $fakultas = $this->unitParentModel
+            ->where('id', $id)
+            ->where('type', 2) // 2=Faculty
+            ->first();
         if (!$fakultas) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
@@ -141,7 +147,10 @@ class FakultasController extends Controller
             return redirect()->to('faculty-list');
         }
         
-        $fakultas = $this->unitParentModel->find($id);
+        $fakultas = $this->unitParentModel
+            ->where('id', $id)
+            ->where('type', 2) // 2=Faculty
+            ->first();
         if (!$fakultas) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
@@ -151,8 +160,12 @@ class FakultasController extends Controller
             return redirect()->to('faculty-list');
         }
         
-        // Check if name already exists (exclude current record)
-        $existingFakultas = $this->unitParentModel->where('name', $nama)->where('id !=', $id)->first();
+        // Check if name already exists (exclude current record, only for Faculty type)
+        $existingFakultas = $this->unitParentModel
+            ->where('name', $nama)
+            ->where('type', 2) // 2=Faculty
+            ->where('id !=', $id)
+            ->first();
         if ($existingFakultas) {
             session()->setFlashdata('swal', [
                 'icon'  => 'error',
@@ -165,7 +178,8 @@ class FakultasController extends Controller
         try {
             $updateData = [
                 'name'   => $nama,
-                'status' => (int)$status
+                'status' => (int)$status,
+                // timestamp akan otomatis di-update oleh model
             ];
             
             $result = $this->unitParentModel->update($id, $updateData);

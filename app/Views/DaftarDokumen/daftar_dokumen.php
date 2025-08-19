@@ -626,7 +626,7 @@ foreach ($document as $row):
     
                     </div>
                 </div>
-                <div class="modal-footer justify-content-center">
+                <div class="modal-footer d-grid gap-2" style="grid-template-columns: 1fr 1fr;">
                     <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>

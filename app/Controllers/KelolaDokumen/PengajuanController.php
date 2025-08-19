@@ -802,6 +802,13 @@ private function handleGetHistory()
             ->where('id', $revision['document_id'])
             ->first();
 
+        // Ambil remarks dari document_approval untuk dokumen ini
+        $approvalRemark = $this->documentApprovalModel
+            ->select('remark')
+            ->where('document_id', $revision['document_id'])
+            ->orderBy('id', 'DESC')
+            ->first();
+
         if ($relatedDocument) {
             $history[] = [
                 'revision_id' => $revision['revision_id'],
@@ -810,7 +817,7 @@ private function handleGetHistory()
                 'filename' => $revision['filename'],
                 'filepath' => $revision['filepath'],
                 'filesize' => $revision['filesize'],
-                'remark' => $revision['remark'],
+                'remark' => $approvalRemark['remark'] ?? $revision['remark'] ?? '-', // Prioritaskan remarks dari document_approval
                 'updated_at' => $revision['createddate'],
                 'updated_by' => $revision['createdby'],
                 'document_title' => $relatedDocument['title'], // Ambil title dari dokumen terkait
@@ -1135,13 +1142,38 @@ private function createApprovalNotification($documentId, $documentTitle, $docume
 
     $revisionModel = new \App\Models\DocumentRevisionModel();
     $documentModel = new \App\Models\DocumentModel();
+    $documentApprovalModel = new \App\Models\DocumentApprovalModel();
 
     $document = $documentModel->find($document_id);
     if (!$document) {
         return $this->response->setJSON(['success' => false, 'message' => 'Document not found']);
     }
 
-    $history = $revisionModel->where('document_id', $document_id)->findAll();
+    $revisions = $revisionModel->where('document_id', $document_id)->findAll();
+    
+    // Enhance history with approval remarks
+    $history = [];
+    foreach ($revisions as $revision) {
+        // Ambil remarks dari document_approval untuk dokumen ini
+        $approvalRemark = $documentApprovalModel
+            ->select('remark')
+            ->where('document_id', $document_id)
+            ->orderBy('id', 'DESC')
+            ->first();
+
+        $history[] = [
+            'id' => $revision['id'],
+            'document_id' => $revision['document_id'],
+            'revision' => $revision['revision'],
+            'filename' => $revision['filename'],
+            'filepath' => $revision['filepath'],
+            'filesize' => $revision['filesize'],
+            'remark' => $approvalRemark['remark'] ?? $revision['remark'] ?? '-', // Prioritaskan remarks dari document_approval
+            'createddate' => $revision['createddate'],
+            'createdby' => $revision['createdby'],
+        ];
+    }
+
     return $this->response->setJSON([
         'success' => true,
         'data' => [

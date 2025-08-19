@@ -612,6 +612,13 @@ private function handleFileDownload()
             ->where('id', $revision['document_id'])
             ->first();
 
+        // Ambil remarks dari document_approval untuk dokumen ini
+        $approvalRemark = $this->documentApprovalModel
+            ->select('remark')
+            ->where('document_id', $revision['document_id'])
+            ->orderBy('id', 'DESC')
+            ->first();
+
         if ($relatedDocument) {
             $history[] = [
                 'revision_id' => $revision['revision_id'],
@@ -620,7 +627,7 @@ private function handleFileDownload()
                 'filename' => $revision['filename'],
                 'filepath' => $revision['filepath'],
                 'filesize' => $revision['filesize'],
-                'remark' => $revision['remark'],
+                'remark' => $approvalRemark['remark'] ?? $revision['remark'] ?? '-', // Prioritaskan remarks dari document_approval
                 'updated_at' => $revision['createddate'],
                 'updated_by' => $revision['createdby'],
                 'document_title' => $relatedDocument['title'], // Ambil title dari dokumen terkait
