@@ -39,7 +39,7 @@ $routes->get('create-faculty', 'MasterData\FakultasController::create');
 $routes->get('faculty-list', 'MasterData\FakultasController::index');
 $routes->post('create-faculty/store', 'MasterData\FakultasController::store');
 $routes->get('create-faculty/edit', 'MasterData\FakultasController::edit');
-$routes->post('create-faculty/update/', 'MasterData\FakultasController::update');
+$routes->post('create-faculty/update', 'MasterData\FakultasController::update');
 $routes->post('create-faculty/delete', 'MasterData\FakultasController::delete');
 
 //menu

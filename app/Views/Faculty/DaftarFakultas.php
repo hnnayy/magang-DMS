@@ -81,7 +81,7 @@
       <div class="modal-header">
         <h5 class="modal-title">Edit Faculty</h5>
       </div>
-      <form method="post" id="editFakultasForm" action="<?= site_url('create-faculty/update/') ?>">
+      <form method="post" id="editFakultasForm" action="<?= site_url('create-faculty/update') ?>">
         <?= csrf_field() ?>
         <input type="hidden" name="id" id="editFakultasId">
         <div class="modal-body">
