@@ -353,13 +353,13 @@
                                             $colorIndex = 1;
                                             foreach ($clausesByStandard as $standardId => $data):
                                                 $colorClass = $colorIndex <= 6 ? "standard-{$colorIndex}" : "standard-default";
-                                                $clausesText = implode(', ', $data['clauses']);
+                                                $clausesText = implode('<br>', $data['clauses']);
                                                 $colorIndex++;
                                         ?>
                                             <div class="clause-group <?= $colorClass ?>">
                                                 <div class="standard-name"><?= esc($data['standard_name']) ?></div>
                                                 <div class="clause-list">
-                                                    <?= esc(strlen($clausesText) > 50 ? substr($clausesText, 0, 47) . '...' : $clausesText) ?>
+                                                    <?= $clausesText ?>
                                                 </div>
                                             </div>
                                         <?php 
@@ -531,7 +531,7 @@ foreach ($document as $row):
                                             echo count($selectedStandardNames) . ' standards selected';
                                         } elseif (count($selectedStandardNames) === 1) {
                                             $fullText = $selectedStandardNames[0];
-                                            echo strlen($fullText) > 30 ? substr($fullText, 0, 27) . '...' : $fullText;
+                                            echo $fullText;
                                         } else {
                                             echo 'Select Standard...';
                                         }
@@ -580,7 +580,7 @@ foreach ($document as $row):
                                             echo count($selectedClauseNames) . ' clauses selected';
                                         } elseif (count($selectedClauseNames) === 1) {
                                             $fullText = $selectedClauseNames[0];
-                                            echo strlen($fullText) > 30 ? substr($fullText, 0, 27) . '...' : $fullText;
+                                            echo $fullText;
                                         } else {
                                             echo 'Select Clause...';
                                         }
@@ -1277,8 +1277,7 @@ $(document).ready(function() {
             if (selectedStandardCheckboxes.length === 1) {
                 const label = document.querySelector(`label[for="${selectedStandardCheckboxes[0].id}"]`);
                 const fullText = label.textContent;
-                const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                standardText.textContent = truncatedText;
+                standardText.textContent = fullText;
             } else {
                 standardText.textContent = `${selectedStandardCheckboxes.length} standards selected`;
             }
@@ -1301,8 +1300,7 @@ $(document).ready(function() {
                 const label = modal.find(`label[for="${selectedStandardCheckboxes.first().attr('id')}"]`);
                 if (label.length > 0) {
                     const fullText = label.text();
-                    const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                    standardText.textContent = truncatedText;
+                    standardText.textContent = fullText;
                 }
             } else {
                 standardText.textContent = `${selectedStandardCheckboxes.length} standards selected`;
@@ -1320,8 +1318,7 @@ $(document).ready(function() {
             if (selectedClauseCheckboxes.length === 1) {
                 const label = document.querySelector(`label[for="${selectedClauseCheckboxes[0].id}"]`);
                 const fullText = label.textContent;
-                const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                clauseText.textContent = truncatedText;
+                clauseText.textContent = fullText;
             } else {
                 clauseText.textContent = `${selectedClauseCheckboxes.length} clauses selected`;
             }
@@ -1344,8 +1341,7 @@ $(document).ready(function() {
                 const label = modal.find(`label[for="${selectedClauseCheckboxes.first().attr('id')}"]`);
                 if (label.length > 0) {
                     const fullText = label.text();
-                    const truncatedText = fullText.length > 30 ? fullText.substring(0, 27) + '...' : fullText;
-                    clauseText.textContent = truncatedText;
+                    clauseText.textContent = fullText;
                 }
             } else {
                 clauseText.textContent = `${selectedClauseCheckboxes.length} clauses selected`;
